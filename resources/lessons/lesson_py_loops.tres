@@ -1,0 +1,81 @@
+[gd_resource type="Resource" script_class="LessonData" format=3 uid="uid://c5yyi3ym3irkl"]
+
+[ext_resource type="Script" uid="uid://b3jcovwhgerid" path="res://scripts/data/LessonData.gd" id="1_46n2l"]
+
+[resource]
+script = ExtResource("1_46n2l")
+lesson_id = "py_loops"
+title = "Loops"
+category = "python"
+icon_text = "↺"
+prerequisites = Array[String](["py_lists"])
+concept_text = "A loop repeats a block of code multiple times.
+Instead of writing the same line 10 times, you write it once inside a loop.
+
+Python has two main loop types:
+
+FOR loop — repeats for each item in a sequence:
+    for i in range(5):
+        print(i)
+    Output: 0 1 2 3 4
+
+WHILE loop — repeats while a condition is true:
+    count = 0
+    while count < 3:
+        print(count)
+        count += 1
+    Output: 0 1 2"
+real_world_example = "Imagine checking every student's grade in a class.
+Instead of reading each grade manually, you loop through the list.
+
+In Python:
+    grades = [88, 92, 75, 95]
+    for grade in grades:
+        print(grade)
+
+Output:
+    88
+    92
+    75
+    95
+
+The loop visits each item automatically — no matter how long the list is."
+guided_example = "Let's use a loop to count down from 5.
+
+Step 1 — Using range():
+    for i in range(5, 0, -1):
+        print(i)
+    Output: 5 4 3 2 1
+
+Step 2 — Loop through a list:
+    towers = [\"Array\", \"Stack\", \"Queue\"]
+    for tower in towers:
+        print(\"Deploying:\", tower)
+    Output:
+        Deploying: Array
+        Deploying: Stack
+        Deploying: Queue
+
+Step 3 — Loop with index:
+    for i in range(len(towers)):
+        print(i, towers[i])
+    Output:
+        0 Array
+        1 Stack
+        2 Queue"
+recap_text = "- Loops repeat code automatically
+- for loops iterate over a sequence or range
+- while loops repeat while a condition is true
+- range(n) generates numbers from 0 to n-1
+- range(start, stop, step) gives more control
+- Use loops to process lists without repeating code
+- Always make sure while loops have an exit condition"
+challenge_instruction = "Arrange the blocks to loop through a list of scoresand print each one."
+challenge_blocks = Array[String](["scores = [10, 20, 30]", "for score in scores: print(score)", "for score in range(scores): print score"])
+correct_sequence = Array[String](["scores = [10, 20, 30]", "for score in scores: print(score)"])
+challenge_hint = "A for loop follows this pattern:    for item in list:        do something with item"
+practice_question = "How many times will this loop print?    for i in range(3): print(\"hello\")"
+practice_options = Array[String](["2 times", "3 times", "4 times", "0 times"])
+practice_correct_index = 1
+practice_explanation = "range(3) generates: 0, 1, 2That is 3 values, so the loop runs 3 times.Remember: range(n) starts at 0 and stops before n."
+metadata/_custom_type_script = "uid://b3jcovwhgerid"

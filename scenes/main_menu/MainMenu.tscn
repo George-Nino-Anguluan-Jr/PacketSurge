@@ -1,0 +1,124 @@
+[gd_scene format=3 uid="uid://b8ihu75pl6vx4"]
+
+[ext_resource type="Script" uid="uid://st06vxbs8wmk" path="res://scenes/main_menu/main_menu.gd" id="1_isws5"]
+
+[node name="MainMenu" type="Control" unique_id=301285877]
+layout_mode = 3
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+script = ExtResource("1_isws5")
+
+[node name="Background" type="ColorRect" parent="." unique_id=1675835072]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+color = Color(0.019607844, 0.050980393, 0.101960786, 1)
+
+[node name="GridOverlay" type="ColorRect" parent="." unique_id=522458506]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+color = Color(0, 0.83137256, 1, 0.03137255)
+
+[node name="CenterContainer" type="CenterContainer" parent="." unique_id=1294989996]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+
+[node name="MainLayout" type="VBoxContainer" parent="CenterContainer" unique_id=707529798]
+layout_mode = 2
+theme_override_constants/separation = 24
+
+[node name="TitleSection" type="VBoxContainer" parent="CenterContainer/MainLayout" unique_id=1070787321]
+layout_mode = 2
+theme_override_constants/separation = 8
+alignment = 1
+
+[node name="TitleLabel" type="Label" parent="CenterContainer/MainLayout/TitleSection" unique_id=1319595900]
+layout_mode = 2
+size_flags_horizontal = 4
+theme_override_colors/font_color = Color(0, 0.83137256, 1, 1)
+theme_override_font_sizes/font_size = 64
+text = "PACKET SURGE"
+
+[node name="SubtitleLabel" type="Label" parent="CenterContainer/MainLayout/TitleSection" unique_id=1852902579]
+layout_mode = 2
+size_flags_horizontal = 4
+theme_override_colors/font_color = Color(0.2901961, 0.49803922, 0.64705884, 1)
+theme_override_font_sizes/font_size = 20
+text = "Network Defense Academy"
+
+[node name="Spacer" type="Control" parent="CenterContainer/MainLayout" unique_id=514360466]
+custom_minimum_size = Vector2(0, 40)
+layout_mode = 2
+
+[node name="ButtonSection" type="VBoxContainer" parent="CenterContainer/MainLayout" unique_id=1544369933]
+layout_mode = 2
+theme_override_constants/separation = 12
+alignment = 1
+
+[node name="ContinueButton" type="Button" parent="CenterContainer/MainLayout/ButtonSection" unique_id=1639195767]
+custom_minimum_size = Vector2(280, 52)
+layout_mode = 2
+theme_override_font_sizes/font_size = 16
+text = "CONTINUE
+"
+
+[node name="NewGameButton" type="Button" parent="CenterContainer/MainLayout/ButtonSection" unique_id=1053344066]
+custom_minimum_size = Vector2(280, 52)
+layout_mode = 2
+theme_override_font_sizes/font_size = 16
+text = "NEW GAME"
+
+[node name="AcademyButton" type="Button" parent="CenterContainer/MainLayout/ButtonSection" unique_id=415550518]
+custom_minimum_size = Vector2(280, 52)
+layout_mode = 2
+theme_override_font_sizes/font_size = 16
+text = "ACADEMY"
+
+[node name="CampaignButton" type="Button" parent="CenterContainer/MainLayout/ButtonSection" unique_id=303871429]
+custom_minimum_size = Vector2(280, 52)
+layout_mode = 2
+theme_override_font_sizes/font_size = 16
+text = "CAMPAIGN"
+
+[node name="IndexButton" type="Button" parent="CenterContainer/MainLayout/ButtonSection" unique_id=278683997]
+custom_minimum_size = Vector2(280, 52)
+layout_mode = 2
+theme_override_font_sizes/font_size = 16
+text = "INDEX"
+
+[node name="BottomBar" type="HBoxContainer" parent="." unique_id=1174544920]
+layout_mode = 1
+anchors_preset = -1
+anchor_top = 1.0
+anchor_right = 1.0
+anchor_bottom = 1.0
+offset_left = 24.0
+offset_bottom = -16.0
+grow_horizontal = 2
+grow_vertical = 0
+theme_override_constants/separation = 16
+
+[node name="VersionLabel" type="Label" parent="BottomBar" unique_id=175783894]
+layout_mode = 2
+theme_override_colors/font_color = Color(0.2901961, 0.49803922, 0.64705884, 1)
+theme_override_font_sizes/font_size = 13
+text = "v0.1.0 — Packet Surge"
+
+[node name="SoundButton" type="Button" parent="BottomBar" unique_id=1690153707]
+layout_mode = 2
+theme_override_font_sizes/font_size = 13
+text = "♪ Sound ON"

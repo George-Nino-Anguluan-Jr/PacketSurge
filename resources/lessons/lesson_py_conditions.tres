@@ -1,0 +1,81 @@
+[gd_resource type="Resource" script_class="LessonData" format=3 uid="uid://bfc86ytyp0sb5"]
+
+[ext_resource type="Script" uid="uid://b3jcovwhgerid" path="res://scripts/data/LessonData.gd" id="1_artpg"]
+
+[resource]
+script = ExtResource("1_artpg")
+lesson_id = "py_conditions"
+title = "Conditions"
+category = "python"
+icon_text = "?"
+prerequisites = Array[String](["py_loops"])
+concept_text = "A condition lets your code make decisions.
+It checks if something is true or false, then runs different code.
+
+In Python:
+    if condition:
+        # runs if true
+    elif other_condition:
+        # runs if first was false but this is true
+    else:
+        # runs if nothing above was true
+
+Example:
+    score = 85
+    if score >= 90:
+        print(\"Excellent\")
+    elif score >= 75:
+        print(\"Good\")
+    else:
+        print(\"Keep practicing\")
+    Output: Good"
+real_world_example = "Think of a tower defense game deciding what to do with an enemy.
+
+    enemy_health = 30
+    if enemy_health <= 0:
+        print(\"Enemy defeated!\")
+    elif enemy_health < 50:
+        print(\"Enemy is weak — focus fire!\")
+    else:
+        print(\"Enemy is strong — use more towers!\")
+
+Output: Enemy is weak — focus fire!
+
+Conditions let your program react to different situations automatically."
+guided_example = "Let's build a grade classifier step by step.
+
+Step 1 — Get a grade:
+    grade = 78
+
+Step 2 — Check conditions in order:
+    if grade >= 90:
+        result = \"A\"
+    elif grade >= 80:
+        result = \"B\"
+    elif grade >= 70:
+        result = \"C\"
+    else:
+        result = \"F\"
+
+Step 3 — Print the result:
+    print(\"Grade:\", result)
+    Output: Grade: C
+
+Note: Python checks conditions top to bottom.
+The first true condition wins and the rest are skipped."
+recap_text = "- if checks a condition and runs code if true
+- elif checks another condition if the first was false
+- else runs when no condition above was true
+- Comparison operators: == != > < >= <=
+- Logical operators: and, or, not
+- Conditions always evaluate to True or False
+- Python checks top to bottom — first match wins"
+challenge_instruction = "Arrange the blocks to check if a player's healthis low and print a warning."
+challenge_blocks = Array[String](["health = 20", "if health < 30: print(\"Warning: Low health!\")", "else: print(\"Health is fine.\")", "health > 30:", "if print(\"Warning: Low health!\")"])
+correct_sequence = Array[String](["health = 20", "if health < 30: print(\"Warning: Low health!\")", "else: print(\"Health is fine.\")"])
+challenge_hint = "if comes first, then the condition, then a colon :.The code inside must be indented."
+practice_question = "What will this code print?    x = 10    if x > 20: print(\"Big\")    elif x > 5: print(\"Medium\")    else: print(\"Small\")"
+practice_options = Array[String](["Big", "Medium", "Small", "Nothing"])
+practice_correct_index = 1
+practice_explanation = "x = 10.First condition: 10 > 20 is False — skip.Second condition: 10 > 5 is True — print \"Medium\".The else block is skipped because a condition already matched."
+metadata/_custom_type_script = "uid://b3jcovwhgerid"

@@ -1,0 +1,89 @@
+[gd_resource type="Resource" script_class="LessonData" format=3 uid="uid://ba2hjywpum87f"]
+
+[ext_resource type="Script" uid="uid://b3jcovwhgerid" path="res://scripts/data/LessonData.gd" id="1_eftlh"]
+
+[resource]
+script = ExtResource("1_eftlh")
+lesson_id = "ds_queues"
+title = "Queues"
+category = "data_structures"
+icon_text = "→"
+prerequisites = Array[String](["ds_stacks"])
+concept_text = "A queue is a data structure that follows First In First Out (FIFO).
+The first item you add is the first one to be removed.
+
+Think of it like a line at a store —
+the first person in line is the first to be served.
+
+Two main operations:
+    enqueue — add an item to the back
+    dequeue — remove an item from the front
+
+In Python using collections.deque:
+    from collections import deque
+    queue = deque()
+    queue.append(\"A\")      # enqueue A
+    queue.append(\"B\")      # enqueue B
+    queue.append(\"C\")      # enqueue C
+    print(queue.popleft()) # dequeue → A (first in, first out)
+    print(queue.popleft()) # dequeue → B
+
+Time complexity:
+    Enqueue: O(1)
+    Dequeue: O(1)"
+real_world_example = "Think of enemies in Packet Surge waiting to enter the map.
+The first enemy that spawned is the first to reach your towers.
+
+    from collections import deque
+    enemy_queue = deque()
+    enemy_queue.append(\"Packet_01\")   # enqueue
+    enemy_queue.append(\"Packet_02\")
+    enemy_queue.append(\"Packet_03\")
+
+    # Process enemies in order
+    current = enemy_queue.popleft()   # dequeue
+    print(\"Processing:\", current)     # Processing: Packet_01
+
+    current = enemy_queue.popleft()
+    print(\"Processing:\", current)     # Processing: Packet_02
+
+First packet in is first to be processed — exactly like a real network queue."
+guided_example = "Let's build a print job queue step by step.
+
+Step 1 — Import and create:
+    from collections import deque
+    print_queue = deque()
+
+Step 2 — Add print jobs (enqueue):
+    print_queue.append(\"Report.pdf\")
+    print_queue.append(\"Photo.jpg\")
+    print_queue.append(\"Notes.txt\")
+    print(print_queue)
+    # deque([\"Report.pdf\", \"Photo.jpg\", \"Notes.txt\"])
+
+Step 3 — Process jobs in order (dequeue):
+    job = print_queue.popleft()
+    print(\"Printing:\", job)   # Printing: Report.pdf
+
+Step 4 — Check queue size:
+    print(len(print_queue))   # 2
+
+Step 5 — Check if empty:
+    if len(print_queue) == 0:
+        print(\"Queue empty\")"
+recap_text = "- Queues follow FIFO — First In First Out
+- enqueue adds to the back — O(1)
+- dequeue removes from the front — O(1)
+- In Python use collections.deque for efficiency
+- append() to enqueue, popleft() to dequeue
+- Real uses: printer queues, network packets, enemy waves
+- Stacks = LIFO, Queues = FIFO — remember the difference"
+challenge_instruction = "Arrange the blocks to create a queue, add two items,and remove the first one."
+challenge_blocks = Array[String](["from collections import deque", "queue = deque()", "queue.append(\"first\")", "queue.append(\"second\")", "print(queue.popleft())", "print(queue.pop())", "queue = []", "queue.appendleft(\"first\")"])
+correct_sequence = Array[String](["from collections import deque", "queue = deque()", "queue.append(\"first\")", "queue.append(\"second\")", "print(queue.popleft())"])
+challenge_hint = "Queues need deque from collections.append() adds to the back.popleft() removes from the front — this is what makes it FIFO."
+practice_question = "Which method removes the first item from a deque queue?"
+practice_options = Array[String](["pop()", "remove()", "popleft()", "dequeue()"])
+practice_correct_index = 2
+practice_explanation = "popleft() removes and returns the leftmost item — the front of the queue.pop() removes from the right (back) — that would make it a stack behavior.dequeue() is not a Python method — it's just the concept name."
+metadata/_custom_type_script = "uid://b3jcovwhgerid"

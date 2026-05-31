@@ -1,0 +1,93 @@
+[gd_resource type="Resource" script_class="LessonData" format=3 uid="uid://c0e7xktjeripg"]
+
+[ext_resource type="Script" uid="uid://b3jcovwhgerid" path="res://scripts/data/LessonData.gd" id="1_csds4"]
+
+[resource]
+script = ExtResource("1_csds4")
+lesson_id = "sort_bubble"
+title = "Bubble Sort"
+category = "data_structures"
+icon_text = "↑↑"
+prerequisites = Array[String](["ds_linked_lists"])
+concept_text = "Bubble Sort is the simplest sorting algorithm.
+It repeatedly steps through the list, compares
+adjacent items, and swaps them if they are in
+the wrong order.
+
+Like bubbles rising to the surface —
+the largest values gradually \"bubble up\" to the end.
+
+In Python:
+    def bubble_sort(arr):
+        n = len(arr)
+        for i in range(n):
+            for j in range(0, n - i - 1):
+                if arr[j] > arr[j + 1]:
+                    arr[j], arr[j + 1] = arr[j + 1], arr[j]
+        return arr
+
+Time Complexity:
+    Best:    O(n)   — already sorted
+    Average: O(n²)  — random order
+    Worst:   O(n²)  — reverse sorted
+
+Space Complexity: O(1) — sorts in place"
+real_world_example = "Imagine sorting a row of students by height.
+You walk down the line comparing two students at a time.
+If the left one is taller, you swap them.
+You keep walking until no more swaps are needed.
+
+    heights = [165, 150, 172, 148, 160]
+
+Pass 1: compare pairs and swap if needed
+    [150, 165, 148, 160, 172]  ← 172 bubbled to end
+
+Pass 2:
+    [150, 148, 160, 165, 172]
+
+Pass 3:
+    [148, 150, 160, 165, 172]  ← sorted!
+
+Each pass guarantees the largest unsorted item
+reaches its correct position."
+guided_example = "Let's trace Bubble Sort step by step.
+
+Initial array: [64, 34, 25, 12, 22]
+
+Step 1 — Pass 1 (compare adjacent pairs):
+    64 > 34? Yes → swap → [34, 64, 25, 12, 22]
+    64 > 25? Yes → swap → [34, 25, 64, 12, 22]
+    64 > 12? Yes → swap → [34, 25, 12, 64, 22]
+    64 > 22? Yes → swap → [34, 25, 12, 22, 64]
+    ✓ 64 is now in its correct position
+
+Step 2 — Pass 2:
+    34 > 25? Yes → swap → [25, 34, 12, 22, 64]
+    34 > 12? Yes → swap → [25, 12, 34, 22, 64]
+    34 > 22? Yes → swap → [25, 12, 22, 34, 64]
+    ✓ 34 is now in its correct position
+
+Step 3 — Pass 3:
+    25 > 12? Yes → swap → [12, 25, 22, 34, 64]
+    25 > 22? Yes → swap → [12, 22, 25, 34, 64]
+
+Step 4 — Pass 4:
+    12 > 22? No → no swap
+    Result: [12, 22, 25, 34, 64] ✓ Sorted!"
+recap_text = "- Bubble Sort compares adjacent pairs and swaps if needed
+- Largest values bubble to the end each pass
+- Time complexity: O(n²) average and worst case
+- Best case O(n) when array is already sorted
+- Space complexity: O(1) — no extra memory needed
+- Simple to understand but inefficient for large data
+- Good for: small arrays, nearly sorted data, teaching
+- Bad for: large datasets — use better algorithms instead"
+challenge_instruction = "Arrange the blocks to implement one passof Bubble Sort on a list."
+challenge_blocks = Array[String](["arr = [64, 34, 25, 12]", "for j in range(len(arr) - 1):", "if arr[j] > arr[j + 1]:", "arr[j], arr[j + 1] = arr[j + 1], arr[j]", "print(arr)", "if arr[j] < arr[j + 1]:", "for j in range(len(arr)):", "arr[j] = arr[j + 1]"])
+correct_sequence = Array[String](["arr = [64, 34, 25, 12]", "for j in range(len(arr) - 1):", "if arr[j] > arr[j + 1]:", "arr[j], arr[j + 1] = arr[j + 1], arr[j]", "print(arr)"])
+challenge_hint = "Bubble Sort compares arr[j] with arr[j+1].If the left is greater swap them.Use range(len(arr) - 1) to avoid going out of bounds.Python swap: a, b = b, a"
+practice_question = "What is the worst case time complexity of Bubble Sortand when does it occur?"
+practice_options = Array[String](["O(n) — when array is already sorted", "O(n log n) — when array is random", "O(n²) — when array is reverse sorted", "O(1) — when array has one element"])
+practice_correct_index = 2
+practice_explanation = "Worst case is O(n²) — when the array is reverse sorted.Every comparison results in a swap.For n items you make n × (n-1) / 2 comparisons.Best case is O(n) — when already sorted and no swaps occur."
+metadata/_custom_type_script = "uid://b3jcovwhgerid"

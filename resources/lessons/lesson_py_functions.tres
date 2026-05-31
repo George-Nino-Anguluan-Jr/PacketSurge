@@ -1,0 +1,81 @@
+[gd_resource type="Resource" script_class="LessonData" format=3 uid="uid://cqsek7qtlpavv"]
+
+[ext_resource type="Script" uid="uid://b3jcovwhgerid" path="res://scripts/data/LessonData.gd" id="1_51rxj"]
+
+[resource]
+script = ExtResource("1_51rxj")
+lesson_id = "py_functions"
+title = "Functions"
+category = "python"
+icon_text = "f()"
+prerequisites = Array[String](["py_conditions"])
+concept_text = "A function is a reusable block of code with a name.
+Instead of writing the same code over and over, you define it once
+and call it whenever you need it.
+
+In Python:
+    def function_name(parameters):
+        # code here
+        return result
+
+Example:
+    def greet(name):
+        return \"Hello, \" + name
+
+    print(greet(\"Maria\"))   # Hello, Maria
+    print(greet(\"Ben\"))     # Hello, Ben
+
+def means define. return sends a value back to the caller."
+real_world_example = "Think of a function like a machine in a factory.
+You put something in (input), it does its job, and gives something back (output).
+
+In a game:
+    def calculate_damage(attack, defense):
+        damage = attack - defense
+        if damage < 0:
+            damage = 0
+        return damage
+
+    result = calculate_damage(50, 20)
+    print(result)   # 30
+
+You can call calculate_damage() anytime with any values
+without rewriting the logic."
+guided_example = "Let's build a grade calculator function step by step.
+
+Step 1 — Define the function:
+    def get_grade(score):
+
+Step 2 — Add the logic:
+    def get_grade(score):
+        if score >= 90:
+            return \"A\"
+        elif score >= 80:
+            return \"B\"
+        elif score >= 70:
+            return \"C\"
+        else:
+            return \"F\"
+
+Step 3 — Call it:
+    print(get_grade(95))   # A
+    print(get_grade(82))   # B
+    print(get_grade(60))   # F
+
+The function works for any score — write once, use many times."
+recap_text = "- def defines a function
+- Functions have a name, optional parameters, and a body
+- return sends a value back to wherever the function was called
+- Parameters are inputs — values passed into the function
+- Functions make code reusable and organized
+- Call a function by writing its name followed by ()
+- A function without return gives back None"
+challenge_instruction = "Arrange the blocks to define a function thatadds two numbers and returns the result."
+challenge_blocks = Array[String](["def add(a, b):    return a + b", "print(add(3, 4))", "return a + b", "def add(a, b)    print(a + b)"])
+correct_sequence = Array[String](["def add(a, b):    return a + b", "print(add(3, 4))"])
+challenge_hint = "def comes first, then the function name and parameters in ().Use return to send back the result.Don't forget the colon : after the def line."
+practice_question = "What does this function return when called with add(2, 3)?    def add(a, b): return a + b"
+practice_options = Array[String](["23", "5", "\"a + b\"", "Nothing"])
+practice_correct_index = 1
+practice_explanation = "The function takes a=2 and b=3.return a + b means return 2 + 3 which equals 5.It does not concatenate strings — both are numbers so + means addition."
+metadata/_custom_type_script = "uid://b3jcovwhgerid"

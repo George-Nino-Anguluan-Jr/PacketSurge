@@ -1,0 +1,89 @@
+[gd_resource type="Resource" script_class="LessonData" format=3 uid="uid://ddywnc14ns7gy"]
+
+[ext_resource type="Script" uid="uid://b3jcovwhgerid" path="res://scripts/data/LessonData.gd" id="1_ureiw"]
+
+[resource]
+script = ExtResource("1_ureiw")
+lesson_id = "ds_stacks"
+title = "Stacks"
+category = "data_structures"
+icon_text = "↑↓"
+prerequisites = Array[String](["ds_arrays"])
+concept_text = "A stack is a data structure that follows Last In First Out (LIFO).
+The last item you add is the first one you can remove.
+
+Think of it like a stack of plates —
+you can only add or remove from the top.
+
+Two main operations:
+    push  — add an item to the top
+    pop   — remove the top item
+
+In Python:
+    stack = []
+    stack.append(\"A\")   # push A
+    stack.append(\"B\")   # push B
+    stack.append(\"C\")   # push C
+    print(stack.pop())  # pop → C (last in, first out)
+    print(stack.pop())  # pop → B
+
+Time complexity:
+    Push: O(1)
+    Pop:  O(1)
+    Peek: O(1)"
+real_world_example = "Think of the Undo button in any app.
+Every action you do gets pushed onto a stack.
+When you press Undo, the most recent action is popped off.
+
+    actions = []
+    actions.append(\"typed Hello\")    # push
+    actions.append(\"deleted Hello\")  # push
+    actions.append(\"typed World\")    # push
+
+    undone = actions.pop()           # pop → \"typed World\"
+    print(\"Undone:\", undone)
+
+    undone = actions.pop()           # pop → \"deleted Hello\"
+    print(\"Undone:\", undone)
+
+This is exactly how real Undo/Redo systems work — using a stack."
+guided_example = "Let's build a stack to track a player's moves.
+
+Step 1 — Create an empty stack:
+    move_stack = []
+
+Step 2 — Push moves as player acts:
+    move_stack.append(\"move_north\")
+    move_stack.append(\"move_east\")
+    move_stack.append(\"attack\")
+    print(move_stack)
+    # [\"move_north\", \"move_east\", \"attack\"]
+
+Step 3 — Peek at the top (without removing):
+    print(move_stack[-1])   # \"attack\"
+
+Step 4 — Pop to undo last move:
+    undone = move_stack.pop()
+    print(\"Undid:\", undone)   # Undid: attack
+    print(move_stack)
+    # [\"move_north\", \"move_east\"]
+
+Step 5 — Check if empty:
+    if len(move_stack) == 0:
+        print(\"No moves to undo\")"
+recap_text = "- Stacks follow LIFO — Last In First Out
+- push adds to the top — O(1)
+- pop removes from the top — O(1)
+- peek views the top without removing — O(1)
+- In Python use a list: append() to push, pop() to pop
+- Real uses: Undo systems, browser back button, call stack
+- Only the top item is ever directly accessible"
+challenge_instruction = "Arrange the blocks to push two items onto a stackand pop the last one."
+challenge_blocks = Array[String](["stack = []", "stack.append(\"first\")", "stack.append(\"second\")", "print(stack.pop())", "stack.push(\"first\")", "print(stack[0])", "stack = {}"])
+correct_sequence = Array[String](["stack = []", "stack.append(\"first\")", "stack.append(\"second\")", "print(stack.pop())"])
+challenge_hint = "In Python, stacks use a regular list.append() is push — adds to the end (top).pop() removes and returns the last item (top)."
+practice_question = "What does LIFO stand for and which structure uses it?"
+practice_options = Array[String](["Last In First Out — Queue", "Last In First Out — Stack", "Last Item Found Online — Stack", "Linear Index For Output — Array"])
+practice_correct_index = 1
+practice_explanation = "LIFO stands for Last In First Out.Stacks use LIFO — the most recently added item is the first to be removed.Queues use FIFO (First In First Out) — the opposite."
+metadata/_custom_type_script = "uid://b3jcovwhgerid"

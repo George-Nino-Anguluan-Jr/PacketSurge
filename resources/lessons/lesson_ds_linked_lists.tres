@@ -1,0 +1,100 @@
+[gd_resource type="Resource" script_class="LessonData" format=3 uid="uid://dkofpb08ix8c8"]
+
+[ext_resource type="Script" uid="uid://b3jcovwhgerid" path="res://scripts/data/LessonData.gd" id="1_5ypmi"]
+
+[resource]
+script = ExtResource("1_5ypmi")
+lesson_id = "ds_linked_lists"
+title = "Linked Lists"
+category = "data_structures"
+icon_text = "→→"
+prerequisites = Array[String](["ds_queuesds_queues"])
+concept_text = "A linked list is a data structure where each item (called a node)
+contains a value AND a pointer to the next node.
+
+Unlike arrays, items are NOT stored in consecutive memory.
+Each node points to where the next one is.
+
+    Node structure:
+    [ value | next → ] → [ value | next → ] → [ value | None ]
+
+In Python:
+    class Node:
+        def __init__(self, value):
+            self.value = value
+            self.next  = None
+
+Key properties:
+    Access:  O(n) — must traverse from start
+    Search:  O(n) — must traverse from start
+    Insert:  O(1) — just update pointers
+    Delete:  O(1) — just update pointers (if node known)"
+real_world_example = "Think of a scavenger hunt.
+Each clue tells you the value AND where to find the next clue.
+You can't skip to clue 5 — you must follow the chain.
+
+    clue1 → clue2 → clue3 → clue4 → None
+
+In Python:
+    class Node:
+        def __init__(self, value):
+            self.value = value
+            self.next  = None
+
+    clue1      = Node(\"Library\")
+    clue2      = Node(\"Gym\")
+    clue3      = Node(\"Cafeteria\")
+    clue1.next = clue2
+    clue2.next = clue3
+
+    current = clue1
+    while current:
+        print(current.value)
+        current = current.next
+    Output: Library → Gym → Cafeteria"
+guided_example = "Let's build a simple linked list step by step.
+
+Step 1 — Define a Node class:
+    class Node:
+        def __init__(self, value):
+            self.value = value
+            self.next  = None
+
+Step 2 — Create nodes:
+    a = Node(10)
+    b = Node(20)
+    c = Node(30)
+
+Step 3 — Link them together:
+    a.next = b
+    b.next = c
+
+Step 4 — Traverse the list:
+    current = a
+    while current is not None:
+        print(current.value)
+        current = current.next
+    Output: 10 → 20 → 30
+
+Step 5 — Insert a new node between a and b:
+    new_node   = Node(15)
+    new_node.next = b
+    a.next        = new_node
+    # List is now: 10 → 15 → 20 → 30"
+recap_text = "- Linked lists store nodes that point to the next node
+- Each node has a value and a next pointer
+- Access is O(n) — no direct index access
+- Insert and delete are O(1) — just update pointers
+- No fixed size — grows and shrinks dynamically
+- The last node's next is None — marks the end
+- Real uses: music playlists, browser history, memory management
+- Arrays vs Linked Lists: arrays = fast access, linked = fast insert/delete"
+challenge_instruction = "Arrange the blocks to create two nodesand link them together."
+challenge_blocks = Array[String](["class Node:    def __init__(self, value):        self.value = value        self.next = None", "a = Node(1)", "b = Node(2)", "a.next = b", "print(a.next.value)", "a.value = b", "print(a.next)"])
+correct_sequence = Array[String](["class Node:    def __init__(self, value):        self.value = value        self.next = None", "a = Node(1)", "b = Node(2)", "a.next = b", "print(a.next.value)"])
+challenge_hint = "Define the Node class first.Create two nodes, then set a.next = b to link them.Access the second node's value through a.next.value."
+practice_question = "What is the time complexity of inserting a nodeat the beginning of a linked list?"
+practice_options = Array[String](["O(n) — must traverse the whole list", "O(log n) — binary search needed", "O(1) — just update the head pointer", "O(n²) — nested traversal needed"])
+practice_correct_index = 2
+practice_explanation = "Inserting at the beginning of a linked list is O(1).You only need to:1. Set new_node.next = current_head2. Update head = new_nodeNo traversal needed — just two pointer updates.This is one of linked list's biggest advantages over arrays."
+metadata/_custom_type_script = "uid://b3jcovwhgerid"

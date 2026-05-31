@@ -1,0 +1,181 @@
+[gd_scene format=3 uid="uid://by8jcha43ejdd"]
+
+[ext_resource type="Script" uid="uid://4cllp8ftmq33" path="res://scenes/academy/academy.gd" id="1_uaeq5"]
+
+[node name="Academy" type="Control" unique_id=1937760017]
+layout_mode = 3
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+script = ExtResource("1_uaeq5")
+
+[node name="Background" type="ColorRect" parent="." unique_id=496115796]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+color = Color(0.019607844, 0.050980393, 0.101960786, 1)
+
+[node name="TopBar" type="PanelContainer" parent="." unique_id=2111814458]
+custom_minimum_size = Vector2(0, 52)
+layout_mode = 1
+anchors_preset = 10
+anchor_right = 1.0
+offset_bottom = 52.0
+grow_horizontal = 2
+
+[node name="TopBarLayout" type="HBoxContainer" parent="TopBar" unique_id=36391602]
+layout_mode = 2
+theme_override_constants/separation = 16
+
+[node name="BackBtn" type="Button" parent="TopBar/TopBarLayout" unique_id=1304584775]
+custom_minimum_size = Vector2(90, 0)
+layout_mode = 2
+text = "← BACK"
+
+[node name="SceneTitle" type="Label" parent="TopBar/TopBarLayout" unique_id=1234655408]
+layout_mode = 2
+size_flags_horizontal = 3
+theme_override_colors/font_color = Color(0.9098039, 0.95686275, 0.99215686, 1)
+text = "ACADEMY"
+
+[node name="ProgressLabel" type="Label" parent="TopBar/TopBarLayout" unique_id=674080664]
+layout_mode = 2
+size_flags_horizontal = 8
+theme_override_colors/font_color = Color(0.2901961, 0.49803922, 0.64705884, 1)
+theme_override_font_sizes/font_size = 13
+text = " 0 / 12 Mastered"
+
+[node name="ContentArea" type="HBoxContainer" parent="." unique_id=1722657898]
+layout_mode = 1
+anchors_preset = -1
+anchor_right = 1.0
+anchor_bottom = 1.0
+offset_top = 52.0
+offset_bottom = -56.0
+grow_horizontal = 2
+grow_vertical = 2
+theme_override_constants/separation = 0
+
+[node name="Sidebar" type="PanelContainer" parent="ContentArea" unique_id=2021795818]
+custom_minimum_size = Vector2(220, 0)
+layout_mode = 2
+
+[node name="SidebarLayout" type="VBoxContainer" parent="ContentArea/Sidebar" unique_id=840977900]
+layout_mode = 2
+theme_override_constants/separation = 8
+
+[node name="SidebarTitle" type="Label" parent="ContentArea/Sidebar/SidebarLayout" unique_id=162875821]
+layout_mode = 2
+theme_override_colors/font_color = Color(0, 0.83137256, 1, 1)
+theme_override_font_sizes/font_size = 13
+text = "TOPICS"
+horizontal_alignment = 1
+
+[node name="Separator" type="HSeparator" parent="ContentArea/Sidebar/SidebarLayout" unique_id=1740970850]
+layout_mode = 2
+
+[node name="PythonSection" type="VBoxContainer" parent="ContentArea/Sidebar/SidebarLayout" unique_id=939553201]
+layout_mode = 2
+theme_override_constants/separation = 4
+
+[node name="SectionLabel" type="Label" parent="ContentArea/Sidebar/SidebarLayout/PythonSection" unique_id=2117417504]
+layout_mode = 2
+theme_override_colors/font_color = Color(0.2901961, 0.49803922, 0.64705884, 1)
+theme_override_font_sizes/font_size = 11
+text = "PYTHON"
+
+[node name="TopicList_Python" type="VBoxContainer" parent="ContentArea/Sidebar/SidebarLayout/PythonSection" unique_id=2030128004]
+layout_mode = 2
+
+[node name="DSSection" type="VBoxContainer" parent="ContentArea/Sidebar/SidebarLayout" unique_id=28281962]
+layout_mode = 2
+
+[node name="SectionLabel2" type="Label" parent="ContentArea/Sidebar/SidebarLayout/DSSection" unique_id=1951976543]
+layout_mode = 2
+theme_override_colors/font_color = Color(0.2901961, 0.49803922, 0.64705884, 1)
+theme_override_font_sizes/font_size = 11
+text = "DATA STRUCTURES"
+
+[node name="TopicList_DS" type="VBoxContainer" parent="ContentArea/Sidebar/SidebarLayout/DSSection" unique_id=1464377745]
+layout_mode = 2
+
+[node name="LessonArea" type="PanelContainer" parent="ContentArea" unique_id=981630436]
+layout_mode = 2
+size_flags_horizontal = 3
+
+[node name="LessonContainer" type="VBoxContainer" parent="ContentArea/LessonArea" unique_id=2010648092]
+layout_mode = 2
+theme_override_constants/separation = 12
+
+[node name="LessonHeader" type="VBoxContainer" parent="ContentArea/LessonArea/LessonContainer" unique_id=1392220562]
+layout_mode = 2
+
+[node name="LessonTitle" type="Label" parent="ContentArea/LessonArea/LessonContainer/LessonHeader" unique_id=877561718]
+layout_mode = 2
+theme_override_colors/font_color = Color(0.9098039, 0.95686275, 0.99215686, 1)
+theme_override_font_sizes/font_size = 28
+text = "Select a topic"
+
+[node name="LessonCategory" type="Label" parent="ContentArea/LessonArea/LessonContainer/LessonHeader" unique_id=1823317527]
+layout_mode = 2
+theme_override_colors/font_color = Color(0.2901961, 0.49803922, 0.64705884, 1)
+theme_override_font_sizes/font_size = 13
+text = "Python Fundamentals"
+
+[node name="StepIndicator" type="HBoxContainer" parent="ContentArea/LessonArea/LessonContainer" unique_id=345691908]
+layout_mode = 2
+theme_override_constants/separation = 8
+
+[node name="StepContainer" type="MarginContainer" parent="ContentArea/LessonArea/LessonContainer" unique_id=1668782549]
+layout_mode = 2
+size_flags_vertical = 3
+theme_override_constants/margin_left = 16
+theme_override_constants/margin_top = 16
+theme_override_constants/margin_right = 16
+theme_override_constants/margin_bottom = 16
+
+[node name="ScrollArea" type="ScrollContainer" parent="ContentArea/LessonArea/LessonContainer/StepContainer" unique_id=1066488883]
+layout_mode = 2
+
+[node name="ScrollContent" type="VBoxContainer" parent="ContentArea/LessonArea/LessonContainer/StepContainer/ScrollArea" unique_id=624221800]
+layout_mode = 2
+size_flags_horizontal = 3
+theme_override_constants/separation = 12
+
+[node name="BottomBar" type="PanelContainer" parent="." unique_id=182614405]
+custom_minimum_size = Vector2(0, 56)
+layout_mode = 1
+anchors_preset = 12
+anchor_top = 1.0
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 0
+
+[node name="BottomLayout" type="HBoxContainer" parent="BottomBar" unique_id=835632016]
+layout_mode = 2
+theme_override_constants/separation = 12
+
+[node name="HintButton" type="Button" parent="BottomBar/BottomLayout" unique_id=817490083]
+custom_minimum_size = Vector2(90, 0)
+layout_mode = 2
+text = "💡 Hint"
+
+[node name="Spacer" type="Control" parent="BottomBar/BottomLayout" unique_id=547580893]
+layout_mode = 2
+size_flags_horizontal = 3
+
+[node name="BackStepBtn" type="Button" parent="BottomBar/BottomLayout" unique_id=854579624]
+custom_minimum_size = Vector2(110, 0)
+layout_mode = 2
+text = " ← Previous"
+
+[node name="NextStepBtn" type="Button" parent="BottomBar/BottomLayout" unique_id=2047515145]
+custom_minimum_size = Vector2(110, 0)
+layout_mode = 2
+text = "Next →"

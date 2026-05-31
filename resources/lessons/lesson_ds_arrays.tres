@@ -1,0 +1,80 @@
+[gd_resource type="Resource" script_class="LessonData" format=3 uid="uid://jc7po1d2w1h7"]
+
+[ext_resource type="Script" uid="uid://b3jcovwhgerid" path="res://scripts/data/LessonData.gd" id="1_mo1o6"]
+
+[resource]
+script = ExtResource("1_mo1o6")
+lesson_id = "ds_arrays"
+title = "Arrays"
+category = "data_structures"
+prerequisites = Array[String](["py_functions"])
+concept_text = "An array is a data structure that stores items in a fixed sequence.
+Each item is stored at a numbered position called an index, starting at 0.
+
+Unlike Python lists, traditional arrays have a fixed size —
+you decide how many items it can hold when you create it.
+
+In Python we simulate arrays using lists:
+    array = [0, 0, 0, 0, 0]   # 5 slots, all empty
+
+Key properties:
+    Access:  O(1) — instant access by index
+    Search:  O(n) — may need to check every item
+    Insert:  O(n) — shifting items is expensive
+    Delete:  O(n) — shifting items is expensive
+
+Arrays are the foundation of almost every other data structure."
+real_world_example = "Think of a row of lockers at school.
+Each locker has a number and holds exactly one item.
+You can go directly to locker 7 without checking 1 through 6.
+
+In Python:
+    lockers = [\"\", \"\", \"\", \"\", \"\"]   # 5 empty lockers
+    lockers[0] = \"Math Book\"
+    lockers[3] = \"Lunch Box\"
+    print(lockers[0])   # Math Book — instant access!
+    print(lockers[3])   # Lunch Box — instant access!
+
+This is O(1) access — it doesn't matter if there are 5 or 5 million lockers.
+Going to locker 3 takes the same time as going to locker 3,000,000."
+guided_example = "Let's simulate a student grade array step by step.
+
+Step 1 — Create an array of 5 slots:
+    grades = [0, 0, 0, 0, 0]
+
+Step 2 — Fill in grades by index:
+    grades[0] = 88
+    grades[1] = 92
+    grades[2] = 75
+    grades[3] = 95
+    grades[4] = 60
+
+Step 3 — Access a specific grade:
+    print(grades[2])    # 75 — O(1) instant access
+
+Step 4 — Find the highest grade:
+    highest = grades[0]
+    for grade in grades:
+        if grade > highest:
+            highest = grade
+    print(highest)      # 95 — O(n) search
+
+Step 5 — Update a grade:
+    grades[4] = 70
+    print(grades)       # [88, 92, 75, 95, 70]"
+recap_text = "- Arrays store items in fixed sequential positions
+- Index starts at 0 — always
+- Access by index is O(1) — the fastest operation
+- Searching without an index is O(n) — checks each item
+- Inserting or deleting requires shifting — O(n)
+- Arrays are the base of stacks, queues, and more
+- Best used when: you know the size, need fast access by position"
+challenge_instruction = "Arrange the blocks to create an array, set a valueat index 2, and print it."
+challenge_blocks = Array[String](["data = [0, 0, 0, 0, 0]", "data[2] = 42", "print(data[2])", "data = [0, 0, 0, 0, 0", "print(data[3])", "data[2] == 42"])
+correct_sequence = Array[String](["data = [0, 0, 0, 0, 0]", "data[2] = 42", "print(data[2])"])
+challenge_hint = "Create the array first, then assign a value using index.Use = to assign, not ==.Print using the same index you assigned to."
+practice_question = "What is the time complexity of accessing an itemby index in an array?"
+practice_options = Array[String](["O(n) — depends on array size", "O(log n) — binary search", "O(1) — constant time", "O(n²) — quadratic time"])
+practice_correct_index = 2
+practice_explanation = "Array access by index is O(1) — constant time.The computer calculates the exact memory location directly.It doesn't matter if the array has 5 or 5 million items —accessing index 3 always takes the same time."
+metadata/_custom_type_script = "uid://b3jcovwhgerid"

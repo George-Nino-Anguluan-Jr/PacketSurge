@@ -1,0 +1,68 @@
+[gd_resource type="Resource" script_class="LessonData" format=3 uid="uid://n6gd71iio3v1"]
+
+[ext_resource type="Script" uid="uid://b3jcovwhgerid" path="res://scripts/data/LessonData.gd" id="1_38uo3"]
+[ext_resource type="PackedScene" uid="uid://bfmvnhmt8alcr" path="res://scenes/academy/visualizations/VizVariables.tscn" id="2_3o5rh"]
+
+[resource]
+script = ExtResource("1_38uo3")
+lesson_id = "py_variables"
+title = "Variables"
+category = "python"
+icon_text = "[x]"
+visualization_scene = ExtResource("2_3o5rh")
+concept_text = "A variable is a named container that stores a value.
+Think of it like a labeled box — you put something
+inside it and refer to it by the label whenever you need it.
+
+In Python, you create a variable like this:
+    name = \"Alice\"
+    age = 17
+    score = 0
+
+The variable name is on the left.
+The value is on the right.
+The = sign assigns the value to the name."
+real_world_example = "Imagine a scoreboard at a basketball game.
+The scoreboard has a label \"HOME\" and shows a number.
+That number changes as the game goes on.
+
+In Python:
+    home_score = 0
+    home_score = 42
+
+The label (home_score) stays the same.
+The value inside it can change anytime."
+guided_example = "Let's create variables for a student profile.
+
+Step 1 — Store the student's name:
+    student_name = \"Maria\"
+
+Step 2 — Store their year level:
+    year_level = 1
+
+Step 3 — Store their current grade:
+    grade = 88.5
+
+Step 4 — Print them out:
+    print(student_name)
+    print(year_level)
+    print(grade)
+
+Output:
+    Maria
+    1
+    88.5"
+recap_text = "- A variable stores a value under a name
+- Use = to assign a value to a variable
+- Variable names should be descriptive
+- Values can be text (str), numbers (int/float), or true/false (bool)
+- Variables can be updated anytime by assigning a new value"
+challenge_instruction = "Build a Python variable assignment.Arrange the blocks in the correct order to storea player's username and score."
+challenge_blocks = Array[String](["username = \"PlayerOne\"", "score = 0", "print(username)", "print(score)", "= \"PlayerOne\" username", "0 = score"])
+correct_sequence = Array[String](["username = \"PlayerOne\"", "score = 0", "print(username)", "print(score)"])
+challenge_hint = "Variable assignment always follows this pattern:    name = valueThe variable name comes FIRST, then =, then the value."
+practice_question = "Which of the following correctly creates a variable called 'lives' with a value of 3?"
+practice_options = Array[String](["3 = lives", "lives == 3", "lives = 3", "var lives = 3"])
+practice_correct_index = 2
+practice_explanation = "In Python, variables are assigned using a single = sign.The variable name goes on the LEFT, the value on the RIGHT.lives = 3 is correct.Note: == is for comparison, not assignment.var is used in other languages like JavaScript, not Python."
+metadata/_custom_type_script = "uid://b3jcovwhgerid"

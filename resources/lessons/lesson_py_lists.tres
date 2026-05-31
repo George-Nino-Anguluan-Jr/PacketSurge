@@ -1,0 +1,70 @@
+[gd_resource type="Resource" script_class="LessonData" format=3 uid="uid://c0s0tnbukxy8v"]
+
+[ext_resource type="Script" uid="uid://b3jcovwhgerid" path="res://scripts/data/LessonData.gd" id="1_6cnu5"]
+
+[resource]
+script = ExtResource("1_6cnu5")
+lesson_id = "py_lists"
+title = "Lists"
+category = "python"
+prerequisites = Array[String](["py_variables"])
+concept_text = "A list is a collection that holds multiple values in order.
+Think of it like a row of labeled boxes, each with a number starting from 0.
+
+In Python, you create a list like this:
+    fruits = [\"apple\", \"banana\", \"cherry\"]
+
+Each item has an index — its position in the list.
+    fruits[0] is \"apple\"
+    fruits[1] is \"banana\"
+    fruits[2] is \"cherry\"
+
+Lists can hold any type of value — numbers, text, or even other lists.
+You can also change, add, or remove items anytime."
+real_world_example = "Think of a playlist on your phone.
+Songs are arranged in order and each has a position number.
+
+In Python:
+    playlist = [\"Song A\", \"Song B\", \"Song C\"]
+
+You can:
+    Add a song:    playlist.append(\"Song D\")
+    Remove a song: playlist.remove(\"Song A\")
+    Play first:    print(playlist[0])
+
+Lists work exactly like this — ordered, changeable, and indexed from 0."
+guided_example = "Let's build a student grade list step by step.
+
+Step 1 — Create the list:
+    grades = [88, 92, 75, 95, 60]
+
+Step 2 — Access individual grades:
+    print(grades[0])   # 88 (first grade)
+    print(grades[4])   # 60 (last grade)
+
+Step 3 — Add a new grade:
+    grades.append(85)
+    print(grades)      # [88, 92, 75, 95, 60, 85]
+
+Step 4 — Find how many grades:
+    print(len(grades)) # 6
+
+Step 5 — Change a grade:
+    grades[2] = 80
+    print(grades[2])   # 80"
+recap_text = "- A list stores multiple values in order
+- Lists use square brackets: [item1, item2, item3]
+- Items are accessed by index starting at 0
+- Use append() to add items
+- Use remove() to delete items
+- Use len() to count items
+- Lists are mutable — you can change them anytime"
+challenge_instruction = "Arrange the blocks to create a list of student namesand print the first one."
+challenge_blocks = Array[String](["students = [\"Ana\", \"Ben\", \"Carl\"]", "print(students[0])", "students = \"Ana\", \"Ben\", \"Carl\"", "print(students[1])", "[students] = [\"Ana\", \"Ben\", \"Carl\"]"])
+correct_sequence = Array[String](["students = [\"Ana\", \"Ben\", \"Carl\"]", "print(students[0])"])
+challenge_hint = "Lists use square brackets [].Index 0 is always the first item."
+practice_question = "What is the output of this code?    colors = [\"red\", \"green\", \"blue\"]    print(colors[2])"
+practice_options = Array[String](["red", "green", "blue", "colors[2]"])
+practice_correct_index = 2
+practice_explanation = "Index 2 refers to the third item in the list.Lists start counting from 0, so:    colors[0] = \"red\"    colors[1] = \"green\"    colors[2] = \"blue\""
+metadata/_custom_type_script = "uid://b3jcovwhgerid"
