@@ -1,0 +1,142 @@
+[gd_scene format=3 uid="uid://db41rpeln2vri"]
+
+[ext_resource type="Script" uid="uid://deebprelp0vf0" path="res://scenes/campaign/level/Level.gd" id="1_syovl"]
+[ext_resource type="PackedScene" uid="uid://r0pj7cuytrqm" path="res://scenes/core/ToastManager.tscn" id="2_8olmj"]
+[ext_resource type="Script" uid="uid://rlbwta4qn357" path="res://scenes/campaign/level/WaveManager.gd" id="2_pu8pq"]
+[ext_resource type="Script" uid="uid://cameitq86stci" path="res://scenes/campaign/level/RAMManager.gd" id="3_q2da8"]
+
+[node name="Level" type="Node2D" unique_id=122507703]
+script = ExtResource("1_syovl")
+
+[node name="GameCamera" type="Camera2D" parent="." unique_id=51461559]
+position = Vector2(640, 360)
+
+[node name="GridLayer" type="Node2D" parent="." unique_id=1286127921]
+
+[node name="GridVisual" type="Node2D" parent="GridLayer" unique_id=632018298]
+
+[node name="PathLayer" type="Node2D" parent="." unique_id=403857757]
+
+[node name="TowerLayer" type="Node2D" parent="." unique_id=186466602]
+
+[node name="EnemyLayer" type="Node2D" parent="." unique_id=1456714861]
+
+[node name="ProjectileLayer" type="Node2D" parent="." unique_id=1583676553]
+
+[node name="Managers" type="Node" parent="." unique_id=1021027736]
+
+[node name="WaveManager" type="Node" parent="Managers" unique_id=376380177]
+script = ExtResource("2_pu8pq")
+
+[node name="RAMManager" type="Node" parent="Managers" unique_id=263684113]
+script = ExtResource("3_q2da8")
+
+[node name="HUD" type="CanvasLayer" parent="." unique_id=1704598207]
+
+[node name="HUDControl" type="Control" parent="HUD" unique_id=274235122]
+layout_mode = 3
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+
+[node name="TopHUD" type="PanelContainer" parent="HUD/HUDControl" unique_id=266127722]
+custom_minimum_size = Vector2(0, 52)
+layout_mode = 1
+anchors_preset = 10
+anchor_right = 1.0
+grow_horizontal = 2
+
+[node name="TopLayout" type="HBoxContainer" parent="HUD/HUDControl/TopHUD" unique_id=1915613723]
+layout_mode = 2
+theme_override_constants/separation = 12
+
+[node name="BackBtn" type="Button" parent="HUD/HUDControl/TopHUD/TopLayout" unique_id=1103378951]
+custom_minimum_size = Vector2(80, 0)
+layout_mode = 2
+text = "← EXIT"
+
+[node name="LevelLabel" type="Label" parent="HUD/HUDControl/TopHUD/TopLayout" unique_id=356947428]
+layout_mode = 2
+theme_override_colors/font_color = Color(0.9098039, 0.95686275, 0.99215686, 1)
+theme_override_font_sizes/font_size = 14
+text = "Level 1 — Initialization"
+
+[node name="Spacer" type="Control" parent="HUD/HUDControl/TopHUD/TopLayout" unique_id=79751596]
+layout_mode = 2
+size_flags_horizontal = 3
+
+[node name="RAMLabel" type="Label" parent="HUD/HUDControl/TopHUD/TopLayout" unique_id=1535171615]
+layout_mode = 2
+theme_override_colors/font_color = Color(0, 0.83137256, 1, 1)
+theme_override_font_sizes/font_size = 14
+text = "💾 RAM: 150"
+
+[node name="WaveLabel" type="Label" parent="HUD/HUDControl/TopHUD/TopLayout" unique_id=824865920]
+layout_mode = 2
+theme_override_colors/font_color = Color(1, 0.72156864, 0, 1)
+theme_override_font_sizes/font_size = 14
+text = "Wave: 0/3"
+
+[node name="ScoreLabel" type="Label" parent="HUD/HUDControl/TopHUD/TopLayout" unique_id=1594733835]
+layout_mode = 2
+theme_override_colors/font_color = Color(0, 1, 0.53333336, 1)
+theme_override_font_sizes/font_size = 14
+text = "Score: 0"
+
+[node name="TowerSelector" type="PanelContainer" parent="HUD/HUDControl" unique_id=1383279771]
+custom_minimum_size = Vector2(0, 80)
+layout_mode = 1
+anchors_preset = 12
+anchor_top = 1.0
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 0
+
+[node name="SelectorLayout" type="VBoxContainer" parent="HUD/HUDControl/TowerSelector" unique_id=40105491]
+layout_mode = 2
+
+[node name="TowerButtons" type="HBoxContainer" parent="HUD/HUDControl/TowerSelector/SelectorLayout" unique_id=929104316]
+layout_mode = 2
+theme_override_constants/separation = 8
+
+[node name="StartWaveBtn" type="Button" parent="HUD/HUDControl/TowerSelector/SelectorLayout" unique_id=166601471]
+custom_minimum_size = Vector2(130, 44)
+layout_mode = 2
+text = "▶ Start Wave"
+
+[node name="MicroCodingPanel" type="PanelContainer" parent="HUD/HUDControl" unique_id=1666408415]
+visible = false
+custom_minimum_size = Vector2(500, 300)
+layout_mode = 1
+anchors_preset = 8
+anchor_left = 0.5
+anchor_top = 0.5
+anchor_right = 0.5
+anchor_bottom = 0.5
+offset_left = -20.0
+offset_top = -20.0
+offset_right = 20.0
+offset_bottom = 20.0
+grow_horizontal = 2
+grow_vertical = 2
+
+[node name="GameOverPanel" type="PanelContainer" parent="HUD/HUDControl" unique_id=422444570]
+visible = false
+custom_minimum_size = Vector2(400, 300)
+layout_mode = 1
+anchors_preset = 8
+anchor_left = 0.5
+anchor_top = 0.5
+anchor_right = 0.5
+anchor_bottom = 0.5
+offset_left = -20.0
+offset_top = -20.0
+offset_right = 20.0
+offset_bottom = 20.0
+grow_horizontal = 2
+grow_vertical = 2
+
+[node name="ToastManager" parent="." unique_id=536978336 instance=ExtResource("2_8olmj")]

@@ -171,10 +171,8 @@ func _make_level_card(
 
 # ─── LEVEL SELECTED ────────────────────────────────────
 func _on_level_selected(level_number: int) -> void:
-	print("[LevelSelect] Selected level: ", level_number)
-	# Store selected level for Campaign scene to read
 	GameManager.current_level = level_number
-	GameManager.go_to("campaign")
+	GameManager.go_to("level")   # ← was "campaign"
 
 # ─── SIGNAL HANDLERS ───────────────────────────────────
 func _on_level_unlocked(_level: int) -> void:

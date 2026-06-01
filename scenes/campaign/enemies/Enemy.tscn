@@ -1,0 +1,16 @@
+[gd_scene format=3 uid="uid://cn3am1pvsxrhg"]
+
+[ext_resource type="Script" uid="uid://b01funf8glsyl" path="res://scenes/campaign/enemies/Enemy.gd" id="1_bajhn"]
+
+[sub_resource type="CircleShape2D" id="CircleShape2D_hs6j3"]
+radius = 20.0
+
+[node name="Enemy" type="CharacterBody2D" unique_id=1614113876]
+script = ExtResource("1_bajhn")
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="." unique_id=126565652]
+shape = SubResource("CircleShape2D_hs6j3")
+
+[node name="EnemyVisual" type="Node2D" parent="." unique_id=777761649]
+
+[node name="HealthBar" type="Node2D" parent="." unique_id=738273038]
