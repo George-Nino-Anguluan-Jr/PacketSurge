@@ -2,14 +2,14 @@
 extends Node
 
 const SCENES = {
-	"login":        "res://scenes/login/Login.tscn",
-	"main_menu":    "res://scenes/main_menu/MainMenu.tscn",
-	"academy":      "res://scenes/academy/Academy.tscn",
-	"campaign":     "res://scenes/campaign/level_select/LevelSelect.tscn",
-	"level":        "res://scenes/campaign/level/Level.tscn",
-	"sandbox":      "res://scenes/sandbox/Sandbox.tscn",
-	"index":        "res://scenes/index/Index.tscn",
-	"analytics":    "res://scenes/analytics/Analytics.tscn",
+	"login":     "res://scenes/login/Login.tscn",
+	"main_menu": "res://scenes/main_menu/MainMenu.tscn",
+	"academy":   "res://scenes/academy/Academy.tscn",
+	"campaign":  "res://scenes/campaign/level_select/LevelSelect.tscn",
+	"level":     "res://scenes/campaign/level/Level.tscn",
+	"sandbox":   "res://scenes/sandbox/Sandbox.tscn",
+	"index":     "res://scenes/index/Index.tscn",
+	"analytics": "res://scenes/analytics/Analytics.tscn",
 }
 
 # Currently selected level

@@ -1,0 +1,6 @@
+[gd_scene format=3 uid="uid://dfddbasatcowq"]
+
+[ext_resource type="Script" uid="uid://bm7ggpgmmpct3" path="res://scenes/campaign/towers/Tower.gd" id="1_yhtd2"]
+
+[node name="Tower" type="Node2D" unique_id=525101982]
+script = ExtResource("1_yhtd2")
