@@ -1,0 +1,35 @@
+[gd_scene format=3 uid="uid://r0pj7cuytrqm"]
+
+[ext_resource type="Script" uid="uid://d1o3435h8d8o5" path="res://scenes/core/ToastManager.gd" id="1_tql56"]
+
+[node name="ToastManager" type="CanvasLayer" unique_id=536978336]
+layer = 10
+script = ExtResource("1_tql56")
+
+[node name="ToastPanel" type="PanelContainer" parent="." unique_id=233854957]
+custom_minimum_size = Vector2(0, 60)
+anchors_preset = -1
+anchor_right = 1.0
+offset_left = 16.0
+offset_top = 8.0
+offset_right = -16.0
+offset_bottom = 68.0
+grow_horizontal = 2
+
+[node name="ToastLayout" type="HBoxContainer" parent="ToastPanel" unique_id=1015641457]
+layout_mode = 2
+theme_override_constants/separation = 12
+alignment = 1
+
+[node name="ToastIcon" type="Label" parent="ToastPanel/ToastLayout" unique_id=1720957273]
+layout_mode = 2
+theme_override_font_sizes/font_size = 20
+text = "💡"
+
+[node name="ToastText" type="Label" parent="ToastPanel/ToastLayout" unique_id=89593163]
+layout_mode = 2
+size_flags_horizontal = 3
+theme_override_colors/font_color = Color(0.9098039, 0.95686275, 0.99215686, 1)
+theme_override_font_sizes/font_size = 14
+text = "Hint text goes here"
+autowrap_mode = 3

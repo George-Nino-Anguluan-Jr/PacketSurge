@@ -2,6 +2,7 @@
 extends Control
 
 # ─── NODE REFERENCES ───────────────────────────────────
+@onready var menu_btn: Button = $TopBar/TopBarLayout/MenuBtn
 @onready var back_btn: Button              = $TopBar/TopBarLayout/BackBtn
 @onready var scene_title: Label            = $TopBar/TopBarLayout/SceneTitle
 @onready var progress_label: Label         = $TopBar/TopBarLayout/ProgressLabel
@@ -22,6 +23,7 @@ var all_lessons: Array[LessonData] = []
 var current_lesson: LessonData = null
 var current_step: int = 0
 var completed_steps: Array[int] = []
+var _sidebar_visible: bool = true
 
 const TOTAL_STEPS: int = 8
 const STEP_NAMES: Array[String] = [
@@ -142,6 +144,10 @@ func _style_topic_button(btn: Button, state: String) -> void:
 
 # ─── TOPIC SELECTED ────────────────────────────────────
 func _on_topic_selected(topic_id: String) -> void:
+	# Auto close sidebar on mobile after selecting
+	if ScreenManager.is_mobile() and _sidebar_visible:
+		_toggle_sidebar()
+
 	for lesson in all_lessons:
 		if lesson.lesson_id == topic_id:
 			_open_lesson(lesson)
@@ -515,6 +521,7 @@ func _setup_buttons() -> void:
 	back_step_btn.pressed.connect(_on_back_step_pressed)
 	next_step_btn.pressed.connect(_on_next_step_pressed)
 	hint_button.pressed.connect(_on_hint_pressed)
+	menu_btn.pressed.connect(_toggle_sidebar)
 
 func _on_back_pressed() -> void:
 	GameManager.go_to("main_menu")
@@ -533,10 +540,32 @@ func _on_next_step_pressed() -> void:
 
 func _on_hint_pressed() -> void:
 	if current_lesson == null:
+		SignalBus.hud_message_requested.emit(
+			"Select a topic from the sidebar to begin.", 3.0
+		)
 		return
+
 	var hint = AdaptiveAI.get_hint_for_topic(current_lesson.lesson_id)
-	SignalBus.hud_message_requested.emit(hint, 4.0)
-	print("[Academy] Hint: ", hint)
+
+	# Add step-specific context to hint
+	match current_step:
+		4:
+			# Try It step — coding hint
+			SignalBus.hud_message_requested.emit(
+				"💡 Code Hint: " + current_lesson.challenge_hint, 5.0
+			)
+		5:
+			# Practice step — thinking hint
+			SignalBus.hud_message_requested.emit(
+				"💡 Think: " + hint, 4.0
+			)
+		_:
+			# General concept hint
+			SignalBus.hud_message_requested.emit(
+				"💡 " + hint, 4.0
+			)
+
+	print("[Academy] Hint shown for step: ", current_step)
 
 func _update_nav_buttons() -> void:
 	if current_lesson == null:
@@ -657,13 +686,69 @@ func _apply_styles() -> void:
 	hint_style.corner_radius_bottom_right = 4
 	hint_button.add_theme_stylebox_override("normal", hint_style)
 	hint_button.add_theme_color_override("font_color", Color("#FFB800"))
+	
+	# Style menu button
+	var menu_style := StyleBoxFlat.new()
+	menu_style.bg_color               = Color("#0A1628")
+	menu_style.border_color           = Color("#00D4FF")
+	menu_style.border_width_left      = 1
+	menu_style.border_width_right     = 1
+	menu_style.border_width_top       = 1
+	menu_style.border_width_bottom    = 1
+	menu_style.corner_radius_top_left     = 4
+	menu_style.corner_radius_top_right    = 4
+	menu_style.corner_radius_bottom_left  = 4
+	menu_style.corner_radius_bottom_right = 4
+	menu_btn.add_theme_stylebox_override("normal", menu_style)
+	menu_btn.add_theme_color_override("font_color", Color("#00D4FF"))
+	menu_btn.add_theme_font_size_override("font_size", 18)
 
 # ─── RESPONSIVE ────────────────────────────────────────
 func _apply_responsive_layout() -> void:
 	if ScreenManager.is_mobile():
-		$ContentArea/Sidebar.custom_minimum_size = Vector2(160, 0)
+		_apply_mobile_layout()
+	elif ScreenManager.is_tablet():
+		_apply_tablet_layout()
 	else:
-		$ContentArea/Sidebar.custom_minimum_size = Vector2(220, 0)
+		_apply_desktop_layout()
+
+func _apply_desktop_layout() -> void:
+	# Sidebar always visible on desktop
+	$ContentArea/Sidebar.visible              = true
+	$ContentArea/Sidebar.custom_minimum_size  = Vector2(220, 0)
+	menu_btn.visible                          = false
+	_sidebar_visible                          = true
+	# Comfortable font sizes
+	lesson_title.add_theme_font_size_override("font_size", 28)
+	lesson_category.add_theme_font_size_override("font_size", 13)
+
+func _apply_tablet_layout() -> void:
+	# Sidebar narrower on tablet
+	$ContentArea/Sidebar.visible              = true
+	$ContentArea/Sidebar.custom_minimum_size  = Vector2(180, 0)
+	menu_btn.visible                          = false
+	_sidebar_visible                          = true
+	lesson_title.add_theme_font_size_override("font_size", 22)
+	lesson_category.add_theme_font_size_override("font_size", 12)
+
+func _apply_mobile_layout() -> void:
+	# Sidebar hidden by default on mobile
+	$ContentArea/Sidebar.visible              = false
+	$ContentArea/Sidebar.custom_minimum_size  = Vector2(200, 0)
+	menu_btn.visible                          = true
+	_sidebar_visible                          = false
+	# Smaller fonts for mobile
+	lesson_title.add_theme_font_size_override("font_size", 18)
+	lesson_category.add_theme_font_size_override("font_size", 11)
+	# Bigger touch targets for buttons
+	back_step_btn.custom_minimum_size = Vector2(90, 52)
+	next_step_btn.custom_minimum_size = Vector2(90, 52)
+	hint_button.custom_minimum_size   = Vector2(80, 52)
+	
+func _toggle_sidebar() -> void:
+	_sidebar_visible = !_sidebar_visible
+	$ContentArea/Sidebar.visible = _sidebar_visible
+	menu_btn.text = "✕" if _sidebar_visible else "☰"
 
 # ─── ESC KEY ───────────────────────────────────────────
 func _input(event: InputEvent) -> void:

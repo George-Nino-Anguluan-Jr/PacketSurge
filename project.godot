@@ -11,7 +11,7 @@ config_version=5
 [application]
 
 config/name="PacketSurge"
-run/main_scene="uid://b8ihu75pl6vx4"
+run/main_scene="uid://crbm2w57pccxo"
 config/features=PackedStringArray("4.6", "Forward Plus")
 config/icon="res://icon.svg"
 
@@ -22,6 +22,7 @@ ScreenManager="*uid://qjct75lfr7a3"
 ProgressManager="*uid://dh7d1o85888h5"
 AdaptiveAI="*uid://8rjpmb4rwoxe"
 GameManager="*uid://o71y1uqos13x"
+SupabaseManager="*uid://d4c6t1sdehokl"
 
 [display]
 

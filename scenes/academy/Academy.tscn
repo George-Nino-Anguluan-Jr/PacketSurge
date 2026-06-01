@@ -1,6 +1,7 @@
 [gd_scene format=3 uid="uid://by8jcha43ejdd"]
 
 [ext_resource type="Script" uid="uid://4cllp8ftmq33" path="res://scenes/academy/academy.gd" id="1_uaeq5"]
+[ext_resource type="PackedScene" uid="uid://r0pj7cuytrqm" path="res://scenes/core/ToastManager.tscn" id="2_3ajw2"]
 
 [node name="Academy" type="Control" unique_id=1937760017]
 layout_mode = 3
@@ -31,6 +32,11 @@ grow_horizontal = 2
 [node name="TopBarLayout" type="HBoxContainer" parent="TopBar" unique_id=36391602]
 layout_mode = 2
 theme_override_constants/separation = 16
+
+[node name="MenuBtn" type="Button" parent="TopBar/TopBarLayout" unique_id=40883983]
+custom_minimum_size = Vector2(44, 0)
+layout_mode = 2
+text = "☰"
 
 [node name="BackBtn" type="Button" parent="TopBar/TopBarLayout" unique_id=1304584775]
 custom_minimum_size = Vector2(90, 0)
@@ -179,3 +185,5 @@ text = " ← Previous"
 custom_minimum_size = Vector2(110, 0)
 layout_mode = 2
 text = "Next →"
+
+[node name="ToastManager" parent="." unique_id=536978336 instance=ExtResource("2_3ajw2")]

@@ -1,6 +1,7 @@
 [gd_scene format=3 uid="uid://b8ihu75pl6vx4"]
 
 [ext_resource type="Script" uid="uid://st06vxbs8wmk" path="res://scenes/main_menu/main_menu.gd" id="1_isws5"]
+[ext_resource type="PackedScene" uid="uid://r0pj7cuytrqm" path="res://scenes/core/ToastManager.tscn" id="2_axelx"]
 
 [node name="MainMenu" type="Control" unique_id=301285877]
 layout_mode = 3
@@ -122,3 +123,5 @@ text = "v0.1.0 — Packet Surge"
 layout_mode = 2
 theme_override_font_sizes/font_size = 13
 text = "♪ Sound ON"
+
+[node name="ToastManager" parent="." unique_id=536978336 instance=ExtResource("2_axelx")]
