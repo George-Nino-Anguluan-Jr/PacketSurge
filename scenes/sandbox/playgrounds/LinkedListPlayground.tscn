@@ -1,0 +1,108 @@
+[gd_scene format=3 uid="uid://cicsjc1b4yser"]
+
+[ext_resource type="Script" uid="uid://bfcu1vi22kpue" path="res://scenes/sandbox/playgrounds/LinkedListPlayground.gd" id="1_gxbb2"]
+
+[node name="LinkedListPlayground" type="Control" unique_id=902760854]
+layout_mode = 3
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+script = ExtResource("1_gxbb2")
+
+[node name="Background" type="ColorRect" parent="." unique_id=1302234354]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+color = Color(0.019607844, 0.050980393, 0.101960786, 1)
+
+[node name="TopBar" type="PanelContainer" parent="." unique_id=32204405]
+custom_minimum_size = Vector2(0, 52)
+layout_mode = 1
+anchors_preset = 10
+anchor_right = 1.0
+offset_bottom = 23.0
+grow_horizontal = 2
+
+[node name="TopBarLayout" type="HBoxContainer" parent="TopBar" unique_id=1377039301]
+layout_mode = 2
+
+[node name="BackBtn" type="Button" parent="TopBar/TopBarLayout" unique_id=430598516]
+custom_minimum_size = Vector2(90, 0)
+layout_mode = 2
+text = "← BACK"
+
+[node name="TitleLabel" type="Label" parent="TopBar/TopBarLayout" unique_id=1771618799]
+layout_mode = 2
+size_flags_horizontal = 3
+theme_override_colors/font_color = Color(0.9098039, 0.95686275, 0.99215686, 1)
+text = "Linked List Playground"
+
+[node name="ContentArea" type="MarginContainer" parent="." unique_id=267754119]
+layout_mode = 1
+anchors_preset = -1
+anchor_right = 1.0
+anchor_bottom = 1.0
+offset_top = 52.0
+grow_horizontal = 2
+grow_vertical = 2
+theme_override_constants/margin_left = 24
+theme_override_constants/margin_top = 24
+theme_override_constants/margin_right = 24
+theme_override_constants/margin_bottom = 24
+
+[node name="MainLayout" type="VBoxContainer" parent="ContentArea" unique_id=1540886789]
+layout_mode = 2
+theme_override_constants/separation = 16
+
+[node name="VisualizationArea" type="PanelContainer" parent="ContentArea/MainLayout" unique_id=547097944]
+custom_minimum_size = Vector2(0, 200)
+layout_mode = 2
+
+[node name="DrawSurface" type="Control" parent="ContentArea/MainLayout/VisualizationArea" unique_id=1863170752]
+layout_mode = 2
+
+[node name="ControlsArea" type="HBoxContainer" parent="ContentArea/MainLayout" unique_id=1572842814]
+layout_mode = 2
+theme_override_constants/separation = 12
+
+[node name="InputField" type="LineEdit" parent="ContentArea/MainLayout/ControlsArea" unique_id=538910998]
+custom_minimum_size = Vector2(160, 44)
+layout_mode = 2
+size_flags_horizontal = 3
+placeholder_text = "Enter a number..."
+
+[node name="AddBtn" type="Button" parent="ContentArea/MainLayout/ControlsArea" unique_id=1956127352]
+custom_minimum_size = Vector2(80, 44)
+layout_mode = 2
+text = "+ Insert Head"
+
+[node name="RemoveBtn" type="Button" parent="ContentArea/MainLayout/ControlsArea" unique_id=280360370]
+custom_minimum_size = Vector2(100, 44)
+layout_mode = 2
+text = "− Remove Head"
+
+[node name="ClearBtn" type="Button" parent="ContentArea/MainLayout/ControlsArea" unique_id=1865136250]
+custom_minimum_size = Vector2(80, 44)
+layout_mode = 2
+text = "↺ Clear"
+
+[node name="InfoArea" type="VBoxContainer" parent="ContentArea/MainLayout" unique_id=1437859329]
+layout_mode = 2
+theme_override_constants/separation = 8
+
+[node name="OperationLabel" type="Label" parent="ContentArea/MainLayout/InfoArea" unique_id=98932234]
+layout_mode = 2
+theme_override_colors/font_color = Color(0.9098039, 0.95686275, 0.99215686, 1)
+theme_override_font_sizes/font_size = 14
+text = "Operations will show here"
+
+[node name="ComplexityLabel" type="Label" parent="ContentArea/MainLayout/InfoArea" unique_id=839741385]
+layout_mode = 2
+theme_override_colors/font_color = Color(0.2901961, 0.49803922, 0.64705884, 1)
+theme_override_font_sizes/font_size = 13
+text = "Complexity: —"

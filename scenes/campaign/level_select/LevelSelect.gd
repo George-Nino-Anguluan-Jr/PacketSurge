@@ -74,11 +74,12 @@ func _make_level_card(
 		is_unlocked: bool,
 		is_completed: bool) -> PanelContainer:
 
-	var card     := PanelContainer.new()
-	card.custom_minimum_size = Vector2(0, 120)
+	var card := PanelContainer.new()
+	card.custom_minimum_size = Vector2(180, 100)
+	card.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 
 	# Card style
-	var style    := StyleBoxFlat.new()
+	var style := StyleBoxFlat.new()
 	style.corner_radius_top_left     = 6
 	style.corner_radius_top_right    = 6
 	style.corner_radius_bottom_left  = 6
@@ -87,6 +88,10 @@ func _make_level_card(
 	style.border_width_right     = 1
 	style.border_width_top       = 1
 	style.border_width_bottom    = 1
+	style.content_margin_left    = 16
+	style.content_margin_right   = 16
+	style.content_margin_top     = 12
+	style.content_margin_bottom  = 12
 
 	if is_completed:
 		style.bg_color     = Color("#0D2A1A")
@@ -101,12 +106,15 @@ func _make_level_card(
 	card.add_theme_stylebox_override("panel", style)
 
 	# Card layout
-	var layout   := VBoxContainer.new()
-	layout.add_theme_constant_override("separation", 6)
+	var layout := VBoxContainer.new()
+	layout.add_theme_constant_override("separation", 4)
 
-	# Level number
+	# Top row — level number + status icon
+	var top_row := HBoxContainer.new()
+
 	var num_label := Label.new()
 	num_label.text = "LEVEL " + str(info["number"])
+	num_label.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	num_label.add_theme_font_size_override("font_size", 11)
 	if is_completed:
 		num_label.add_theme_color_override("font_color", Color("#00FF88"))
@@ -114,22 +122,38 @@ func _make_level_card(
 		num_label.add_theme_color_override("font_color", Color("#00D4FF"))
 	else:
 		num_label.add_theme_color_override("font_color", Color("#2A3A4A"))
-	layout.add_child(num_label)
+	top_row.add_child(num_label)
+
+	# Status icon
+	var icon_label := Label.new()
+	icon_label.add_theme_font_size_override("font_size", 14)
+	if is_completed:
+		icon_label.text = "✅"
+	elif is_unlocked:
+		icon_label.text = "🔓"
+	else:
+		icon_label.text = "🔒"
+	top_row.add_child(icon_label)
+	layout.add_child(top_row)
 
 	# Level name
 	var name_label := Label.new()
 	name_label.text          = info["name"] if is_unlocked else "???"
 	name_label.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
-	name_label.add_theme_font_size_override("font_size", 14)
+	name_label.add_theme_font_size_override("font_size", 16)
 	if is_unlocked:
 		name_label.add_theme_color_override("font_color", Color("#E8F4FD"))
 	else:
 		name_label.add_theme_color_override("font_color", Color("#2A3A4A"))
 	layout.add_child(name_label)
 
+	# Bottom info row
+	var bottom_row := HBoxContainer.new()
+
 	# Data structure tag
 	var ds_label := Label.new()
 	ds_label.text = info["ds"] if is_unlocked else "Locked"
+	ds_label.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	ds_label.add_theme_font_size_override("font_size", 11)
 	if is_completed:
 		ds_label.add_theme_color_override("font_color", Color("#00FF88"))
@@ -137,34 +161,38 @@ func _make_level_card(
 		ds_label.add_theme_color_override("font_color", Color("#4A7FA5"))
 	else:
 		ds_label.add_theme_color_override("font_color", Color("#2A3A4A"))
-	layout.add_child(ds_label)
+	bottom_row.add_child(ds_label)
 
-	# Waves info
+	# Waves
 	if is_unlocked:
 		var waves_label := Label.new()
 		waves_label.text = str(info["waves"]) + " Waves"
 		waves_label.add_theme_font_size_override("font_size", 11)
 		waves_label.add_theme_color_override("font_color", Color("#4A7FA5"))
-		layout.add_child(waves_label)
+		bottom_row.add_child(waves_label)
 
-	# Completed badge
-	if is_completed:
-		var badge := Label.new()
-		badge.text = "✅ Completed"
-		badge.add_theme_font_size_override("font_size", 11)
-		badge.add_theme_color_override("font_color", Color("#00FF88"))
-		layout.add_child(badge)
-
+	layout.add_child(bottom_row)
 	card.add_child(layout)
 
-	# Make clickable if unlocked
+	# Invisible button overlay for click
 	if is_unlocked:
 		var btn      := Button.new()
 		btn.flat     = true
 		btn.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
-		btn.pressed.connect(
-			_on_level_selected.bind(info["number"])
-		)
+
+		# Hover effect
+		var hover_style := StyleBoxFlat.new()
+		hover_style.bg_color = Color("#00D4FF", 0.08)
+		hover_style.corner_radius_top_left     = 6
+		hover_style.corner_radius_top_right    = 6
+		hover_style.corner_radius_bottom_left  = 6
+		hover_style.corner_radius_bottom_right = 6
+		btn.add_theme_stylebox_override("hover", hover_style)
+
+		var empty_style := StyleBoxEmpty.new()
+		btn.add_theme_stylebox_override("normal",  empty_style)
+		btn.add_theme_stylebox_override("pressed", empty_style)
+		btn.pressed.connect(_on_level_selected.bind(info["number"]))
 		card.add_child(btn)
 
 	return card
@@ -205,5 +233,15 @@ func _style_back_btn() -> void:
 func _apply_responsive_layout() -> void:
 	if ScreenManager.is_mobile():
 		level_grid.columns = 2
-	else:
+		$ContentArea.add_theme_constant_override("margin_left",   12)
+		$ContentArea.add_theme_constant_override("margin_right",  12)
+		$ContentArea.add_theme_constant_override("margin_top",    12)
+		$ContentArea.add_theme_constant_override("margin_bottom", 12)
+	elif ScreenManager.is_tablet():
 		level_grid.columns = 3
+		$ContentArea.add_theme_constant_override("margin_left",   24)
+		$ContentArea.add_theme_constant_override("margin_right",  24)
+	else:
+		level_grid.columns = 4
+		$ContentArea.add_theme_constant_override("margin_left",   32)
+		$ContentArea.add_theme_constant_override("margin_right",  32)
