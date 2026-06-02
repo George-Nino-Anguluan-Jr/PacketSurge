@@ -15,6 +15,7 @@ const SCENES = {
 # Currently selected level
 var current_level: int = 1
 var current_scene_key: String = ""
+var current_sandbox_structure: String = ""
 
 func _ready() -> void:
 	SignalBus.scene_change_requested.connect(_on_scene_change_requested)

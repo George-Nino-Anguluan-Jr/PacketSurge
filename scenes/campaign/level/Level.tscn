@@ -79,6 +79,12 @@ theme_override_colors/font_color = Color(1, 0.72156864, 0, 1)
 theme_override_font_sizes/font_size = 14
 text = "Wave: 0/3"
 
+[node name="BaseHealthLabel" type="Label" parent="HUD/HUDControl/TopHUD/TopLayout" unique_id=1640363410]
+layout_mode = 2
+theme_override_colors/font_color = Color(1, 0.2, 0.4, 1)
+theme_override_font_sizes/font_size = 14
+text = "❤️ 10"
+
 [node name="ScoreLabel" type="Label" parent="HUD/HUDControl/TopHUD/TopLayout" unique_id=1594733835]
 layout_mode = 2
 theme_override_colors/font_color = Color(0, 1, 0.53333336, 1)

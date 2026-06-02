@@ -75,6 +75,7 @@ text = "SELECT A LEVEL"
 
 [node name="LevelGrid" type="GridContainer" parent="ContentArea/MainLayout" unique_id=628797675]
 layout_mode = 2
+size_flags_vertical = 3
 theme_override_constants/h_separation = 16
 theme_override_constants/v_separation = 16
 columns = 3

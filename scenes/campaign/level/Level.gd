@@ -11,6 +11,7 @@ extends Node2D
 @onready var level_label: Label         = $HUD/HUDControl/TopHUD/TopLayout/LevelLabel
 @onready var ram_label: Label           = $HUD/HUDControl/TopHUD/TopLayout/RAMLabel
 @onready var wave_label: Label          = $HUD/HUDControl/TopHUD/TopLayout/WaveLabel
+@onready var base_health_label: Label = $HUD/HUDControl/TopHUD/TopLayout/BaseHealthLabel
 @onready var score_label: Label         = $HUD/HUDControl/TopHUD/TopLayout/ScoreLabel
 @onready var tower_buttons: HBoxContainer = $HUD/HUDControl/TowerSelector/SelectorLayout/TowerButtons
 @onready var start_wave_btn: Button = $HUD/HUDControl/TowerSelector/SelectorLayout/StartWaveBtn
@@ -160,6 +161,7 @@ func _setup_hud() -> void:
 	wave_label.text  = "Wave: 0/" + str(config["waves"])
 	_update_ram_label()
 	_build_tower_selector()
+	base_health_label.text = "❤️ " + str(base_health)
 
 func _build_tower_selector() -> void:
 	for child in tower_buttons.get_children():
@@ -283,11 +285,30 @@ func _on_all_waves_completed() -> void:
 
 func _on_enemy_reached_end(_enemy_id: String) -> void:
 	base_health -= 1
-	SignalBus.hud_message_requested.emit(
-		"⚠️ Base hit! Health: " + str(base_health), 2.0
-	)
+	_update_base_health_label()
+
 	if base_health <= 0:
 		_show_game_over()
+
+func _update_base_health_label() -> void:
+	base_health_label.text = "❤️ " + str(base_health)
+
+	# Flash red when hit
+	var tween = create_tween()
+	tween.tween_property(
+		base_health_label, "modulate",
+		Color("#FF0000"), 0.1
+	)
+	tween.tween_property(
+		base_health_label, "modulate",
+		Color("#FFFFFF"), 0.3
+	)
+
+	# Show toast only as additional warning
+	if base_health <= 3:
+		SignalBus.hud_message_requested.emit(
+			"⚠️ Base critical! " + str(base_health) + " HP left!", 2.0
+		)
 
 func _on_enemy_defeated(_enemy_id: String) -> void:
 	ram_manager.earn(ram_manager.get_current() + 10)
