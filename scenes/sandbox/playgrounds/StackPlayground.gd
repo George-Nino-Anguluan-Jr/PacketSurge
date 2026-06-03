@@ -136,7 +136,7 @@ func _apply_styles() -> void:
 	viz_style.border_color = Color("#0D2040")
 	viz_style.border_width_left = 1
 	viz_style.border_width_right = 1
-	viz_style.border_width	_top = 1
+	viz_style.border_width_top = 1
 	viz_style.border_width_bottom = 1
 	viz_style.corner_radius_top_left     = 6
 	viz_style.corner_radius_top_right    = 6
