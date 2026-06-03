@@ -153,7 +153,7 @@ func _apply_styles() -> void:
 
 	var viz_style := StyleBoxFlat.new()
 	viz_style.bg_color     = Color("#080F1E")
-	viz_style.border_color = Color("#0D2040")
+	viz_style.border_color = Color("#0D2040")	
 	viz_style.border_width_left = 1
 	viz_style.border_width_right = 1
 	viz_style.border_width_top = 1

@@ -36,6 +36,9 @@ var _lesson_start_time: float = 0.0
 
 # ─── READY ─────────────────────────────────────────────
 func _ready() -> void:
+	# Guarantee base state before building UI
+	ProgressManager._ensure_base_state()
+	
 	_load_all_lessons()
 	_build_sidebar()
 	_setup_buttons()

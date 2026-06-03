@@ -1,0 +1,122 @@
+[gd_scene format=3 uid="uid://icp7bun72cni"]
+
+[ext_resource type="Script" uid="uid://b5pepg4e6707w" path="res://scenes/leaderboard/Leaderboard.gd" id="1_20cqs"]
+[ext_resource type="PackedScene" uid="uid://r0pj7cuytrqm" path="res://scenes/core/ToastManager.tscn" id="2_r3ir8"]
+
+[node name="Leaderboard" type="Control" unique_id=1186261510]
+layout_mode = 3
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+script = ExtResource("1_20cqs")
+
+[node name="Background" type="ColorRect" parent="." unique_id=38406271]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+color = Color(0.019607844, 0.050980393, 0.101960786, 1)
+
+[node name="TopBar" type="PanelContainer" parent="." unique_id=1893020178]
+custom_minimum_size = Vector2(0, 52)
+layout_mode = 1
+anchors_preset = 10
+anchor_right = 1.0
+offset_bottom = 23.0
+grow_horizontal = 2
+
+[node name="TopBarLayout" type="HBoxContainer" parent="TopBar" unique_id=1046901158]
+layout_mode = 2
+theme_override_constants/separation = 16
+
+[node name="BackBtn" type="Button" parent="TopBar/TopBarLayout" unique_id=695715361]
+custom_minimum_size = Vector2(90, 0)
+layout_mode = 2
+text = "← BACK"
+
+[node name="TitleLabel" type="Label" parent="TopBar/TopBarLayout" unique_id=607552907]
+layout_mode = 2
+size_flags_horizontal = 3
+theme_override_colors/font_color = Color(0.9098039, 0.95686275, 0.99215686, 1)
+text = "LEADERBOARD"
+
+[node name="MyRankLabel" type="Label" parent="TopBar/TopBarLayout" unique_id=208904600]
+layout_mode = 2
+size_flags_horizontal = 0
+theme_override_colors/font_color = Color(0, 0.83137256, 1, 1)
+text = "Your Rank: —"
+horizontal_alignment = 2
+
+[node name="TabBar" type="HBoxContainer" parent="." unique_id=1499676962]
+layout_mode = 1
+anchors_preset = -1
+anchor_right = 1.0
+offset_top = 52.0
+offset_bottom = 96.0
+grow_horizontal = 2
+grow_vertical = 2
+theme_override_constants/separation = 0
+
+[node name="GlobalTab" type="Button" parent="TabBar" unique_id=82612884]
+custom_minimum_size = Vector2(0, 44)
+layout_mode = 2
+size_flags_horizontal = 3
+text = "🌐 GLOBAL"
+
+[node name="SectionTab" type="Button" parent="TabBar" unique_id=1277452808]
+custom_minimum_size = Vector2(0, 44)
+layout_mode = 2
+size_flags_horizontal = 3
+text = "🏫 MY SECTION"
+
+[node name="ContentArea" type="MarginContainer" parent="." unique_id=1419231966]
+layout_mode = 1
+anchors_preset = -1
+anchor_right = 1.0
+anchor_bottom = 1.0
+offset_top = 96.0
+grow_horizontal = 2
+grow_vertical = 2
+theme_override_constants/margin_left = 16
+theme_override_constants/margin_top = 16
+theme_override_constants/margin_right = 16
+theme_override_constants/margin_bottom = 16
+
+[node name="ScrollArea" type="ScrollContainer" parent="ContentArea" unique_id=1510677758]
+layout_mode = 2
+horizontal_scroll_mode = 0
+
+[node name="GlobalPanel" type="VBoxContainer" parent="ContentArea/ScrollArea" unique_id=1590192673]
+layout_mode = 2
+size_flags_horizontal = 3
+theme_override_constants/separation = 12
+
+[node name="RefreshBtn" type="Button" parent="ContentArea/ScrollArea/GlobalPanel" unique_id=1864236247]
+custom_minimum_size = Vector2(100, 36)
+layout_mode = 2
+text = "↻ Refresh"
+
+[node name="GlobalList" type="VBoxContainer" parent="ContentArea/ScrollArea/GlobalPanel" unique_id=1378070822]
+layout_mode = 2
+theme_override_constants/separation = 8
+
+[node name="SectionPanel" type="VBoxContainer" parent="ContentArea/ScrollArea" unique_id=408629570]
+visible = false
+layout_mode = 2
+size_flags_horizontal = 3
+theme_override_constants/separation = 12
+
+[node name="SectionRefreshBtn" type="Button" parent="ContentArea/ScrollArea/SectionPanel" unique_id=363592238]
+custom_minimum_size = Vector2(100, 36)
+layout_mode = 2
+text = "↻ Refresh"
+
+[node name="SectionList" type="VBoxContainer" parent="ContentArea/ScrollArea/SectionPanel" unique_id=264097077]
+layout_mode = 2
+theme_override_constants/separation = 8
+
+[node name="ToastManager" parent="ContentArea/ScrollArea/SectionPanel/SectionList" unique_id=536978336 instance=ExtResource("2_r3ir8")]

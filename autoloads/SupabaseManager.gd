@@ -194,21 +194,20 @@ func _on_profile_loaded(
 	if code == 200:
 		var parsed = JSON.parse_string(body.get_string_from_utf8())
 		if parsed is Array and parsed.size() > 0:
-			var s    = parsed[0]
+			var s      = parsed[0]
 			full_name  = s.get("full_name",  "")
 			username   = s.get("username",   "")
 			year_level = s.get("year_level", "")
 			section    = s.get("section",    "")
 			_update_last_seen()
-			load_progress_from_cloud()
+			load_progress_from_cloud()   # ← loads progress THEN navigates
 			login_completed.emit(
 				true, "Welcome back, " + full_name + "!"
 			)
 			print("[Supabase] Logged in: ", username)
-		else:
-			login_completed.emit(false, "Profile not found.")
-	else:
-		login_completed.emit(false, "Failed to load profile.")
+			return
+	login_completed.emit(false, "Failed to load profile.")
+	GameManager.go_to("login")
 
 # ─── LOGOUT ────────────────────────────────────────────
 func logout() -> void:
@@ -289,23 +288,54 @@ func _on_progress_loaded(
 		http: HTTPRequest) -> void:
 	http.queue_free()
 	if code != 200:
+		print("[Supabase] Failed to load progress: ", code)
+		_navigate_after_login()
 		return
+
 	var parsed = JSON.parse_string(body.get_string_from_utf8())
 	if parsed is Array and parsed.size() > 0:
 		var data = parsed[0]
-		ProgressManager.topic_states      = data.get("topic_states",      {})
-		ProgressManager.coding_accuracy   = data.get("coding_accuracy",   {})
-		ProgressManager.retry_counts      = data.get("retry_counts",      {})
-		ProgressManager.time_spent        = data.get("time_spent",        {})
-		ProgressManager.campaign_progress = data.get("campaign_progress", {})
+
+		# Only overwrite if cloud actually has data
+		var cloud_states = data.get("topic_states", {})
+		if cloud_states.size() > 0:
+			ProgressManager.topic_states = {}
+			for key in cloud_states:
+				ProgressManager.topic_states[str(key)] = str(cloud_states[key])
+
+		var cloud_accuracy = data.get("coding_accuracy", {})
+		if cloud_accuracy.size() > 0:
+			ProgressManager.coding_accuracy = cloud_accuracy
+
+		var cloud_retries = data.get("retry_counts", {})
+		if cloud_retries.size() > 0:
+			ProgressManager.retry_counts = cloud_retries
+
+		var cloud_time = data.get("time_spent", {})
+		if cloud_time.size() > 0:
+			ProgressManager.time_spent = cloud_time
+
+		var cloud_campaign = data.get("campaign_progress", {})
+		if cloud_campaign.size() > 0:
+			ProgressManager.campaign_progress = cloud_campaign
+
 		var towers = data.get("unlocked_towers", [])
-		ProgressManager.unlocked_towers.clear()
-		for t in towers:
-			ProgressManager.unlocked_towers.append(str(t))
+		if towers.size() > 0:
+			ProgressManager.unlocked_towers.clear()
+			for t in towers:
+				ProgressManager.unlocked_towers.append(str(t))
+
 		print("[Supabase] Progress loaded from cloud.")
-		SignalBus.scene_change_requested.emit(
-			"res://scenes/main_menu/MainMenu.tscn"
-		)
+	else:
+		print("[Supabase] No cloud progress found — keeping local.")
+
+	# Always ensure base state after loading
+	ProgressManager._ensure_base_state()
+	_navigate_after_login()
+
+func _navigate_after_login() -> void:
+	print("[Supabase] Navigating to main menu.")
+	GameManager.go_to("main_menu")
 
 # ─── LEADERBOARD ───────────────────────────────────────
 func _create_leaderboard_entry() -> void:
@@ -328,20 +358,45 @@ func _create_leaderboard_entry() -> void:
 func update_leaderboard() -> void:
 	if not is_logged_in:
 		return
+
+	# ── Base score ──────────────────────────────
 	var mastered := 0
 	for topic_id in ProgressManager.topic_states:
 		if ProgressManager.topic_states[topic_id] == "mastered":
 			mastered += 1
-	var levels     = ProgressManager.campaign_progress.get(
+
+	var levels = ProgressManager.campaign_progress.get(
 		"waves_completed", 0
 	)
+
+	var score = (mastered * 100) + (levels * 150)
+
+	# ── Bonus points ────────────────────────────
+	for topic_id in ProgressManager.topic_states:
+		if ProgressManager.topic_states[topic_id] != "mastered":
+			continue
+		var retries  = ProgressManager.retry_counts.get(topic_id, 0)
+		var accuracy = ProgressManager.coding_accuracy.get(topic_id, 0.0)
+
+		# First try bonus
+		if retries == 0:
+			score += 50
+		elif retries < 2:
+			score += 20
+
+		# Accuracy bonus
+		if accuracy >= 0.8:
+			score += 30
+
+	# ── Total time ──────────────────────────────
 	var total_time: float = 0.0
 	for t in ProgressManager.time_spent:
 		total_time += float(ProgressManager.time_spent[t])
-	var score  = (mastered * 100) + (levels * 150)
-	var url    = SUPABASE_URL + \
+
+	# ── Push to Supabase ────────────────────────
+	var url  = SUPABASE_URL + \
 		"/rest/v1/leaderboard?student_id=eq." + student_id
-	var body   = JSON.stringify({
+	var body = JSON.stringify({
 		"topics_mastered":           mastered,
 		"campaign_levels_completed": levels,
 		"total_time_spent":          total_time,
@@ -354,28 +409,7 @@ func update_leaderboard() -> void:
 		func(_r, _c, _h, _b): http.queue_free()
 	)
 	http.request(url, _get_headers(), HTTPClient.METHOD_PATCH, body)
-
-func fetch_leaderboard(section_filter: String = "") -> void:
-	var url = SUPABASE_URL + \
-		"/rest/v1/leaderboard?order=score.desc&limit=20"
-	if section_filter != "":
-		url += "&section=eq." + section_filter.uri_encode()
-	var http := HTTPRequest.new()
-	add_child(http)
-	http.request_completed.connect(_on_leaderboard_fetched.bind(http))
-	http.request(url, _get_headers(false), HTTPClient.METHOD_GET)
-
-func _on_leaderboard_fetched(
-		result: int, code: int,
-		headers: PackedStringArray, body: PackedByteArray,
-		http: HTTPRequest) -> void:
-	http.queue_free()
-	if code != 200:
-		leaderboard_loaded.emit([])
-		return
-	var parsed = JSON.parse_string(body.get_string_from_utf8())
-	if parsed is Array:
-		leaderboard_loaded.emit(parsed)
+	print("[Supabase] Leaderboard updated. Score: ", score)
 
 # ─── CAMPAIGN SCORE ────────────────────────────────────
 func submit_campaign_score(
@@ -397,3 +431,29 @@ func submit_campaign_score(
 		func(_r, _c, _h, _b): http.queue_free()
 	)
 	http.request(url, _get_headers(), HTTPClient.METHOD_POST, body)
+
+# ─── LEADERBOARD ───────────────────────────────────────
+func fetch_leaderboard(section_filter: String = "") -> void:
+	# Sort by score DESC, then time ASC as tiebreaker
+	var url = SUPABASE_URL + \
+		"/rest/v1/leaderboard?order=score.desc,total_time_spent.asc&limit=20"
+	if section_filter != "":
+		url += "&section=eq." + section_filter.uri_encode()
+	var http := HTTPRequest.new()
+	add_child(http)
+	http.request_completed.connect(_on_leaderboard_fetched.bind(http))
+	http.request(url, _get_headers(false), HTTPClient.METHOD_GET)
+
+func _on_leaderboard_fetched(
+		result: int, code: int,
+		headers: PackedStringArray, body: PackedByteArray,
+		http: HTTPRequest) -> void:
+	http.queue_free()
+	if code != 200:
+		leaderboard_loaded.emit([])
+		return
+	var parsed = JSON.parse_string(body.get_string_from_utf8())
+	if parsed is Array:
+		leaderboard_loaded.emit(parsed)
+	else:
+		leaderboard_loaded.emit([])

@@ -102,6 +102,16 @@ func _on_login_completed(success: bool, message: String) -> void:
 	_show_loading(false)
 	if success:
 		_show_status(message, true)
+		# Don't navigate here — SupabaseManager navigates
+		# after loading cloud progress
+	else:
+		_show_status(message, false)
+
+func _on_register_completed(success: bool, message: String) -> void:
+	_show_loading(false)
+	if success:
+		_show_status(message, true)
+		# Navigate after register since no progress to load
 		await get_tree().create_timer(0.8).timeout
 		GameManager.go_to("main_menu")
 	else:
@@ -149,15 +159,6 @@ func _on_register_pressed() -> void:
 	SupabaseManager.register_student(
 		full_name, uname, email, password, year_text, section
 	)
-
-func _on_register_completed(success: bool, message: String) -> void:
-	_show_loading(false)
-	if success:
-		_show_status(message, true)
-		await get_tree().create_timer(0.8).timeout
-		GameManager.go_to("main_menu")
-	else:
-		_show_status(message, false)
 
 # ─── VALIDATION ────────────────────────────────────────
 func _is_valid_email(email: String) -> bool:

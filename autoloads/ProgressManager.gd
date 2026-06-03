@@ -47,8 +47,35 @@ var campaign_progress: Dictionary = {
 
 # ─── STARTUP ───────────────────────────────────────────
 func _ready() -> void:
-	_initialize_topics()
-	load_progress()
+	load_progress()        # Load saved data first
+	_ensure_base_state()   # Then guarantee base unlocks on top
+
+func _ensure_base_state() -> void:
+	# py_variables is ALWAYS unlocked or mastered — never locked
+	if topic_states.get("py_variables", "locked") == "locked":
+		topic_states["py_variables"] = "unlocked"
+
+	# Fill missing topics as locked
+	var all_topics = [
+		"py_variables", "py_lists", "py_loops",
+		"py_conditions", "py_functions",
+		"ds_arrays", "ds_stacks", "ds_queues", "ds_linked_lists",
+		"sort_bubble", "sort_selection", "sort_insertion",
+	]
+	for topic_id in all_topics:
+		if not topic_states.has(topic_id):
+			topic_states[topic_id] = "locked"
+
+	# Always ensure tower_array is unlocked
+	if "tower_array" not in unlocked_towers:
+		unlocked_towers.append("tower_array")
+
+	# Always ensure level 1 is unlocked
+	if campaign_progress.get("max_level_unlocked", 0) < 1:
+		campaign_progress["max_level_unlocked"] = 1
+
+	print("[ProgressManager] Base state ensured. py_variables = ",
+		topic_states.get("py_variables", "MISSING"))
 
 func _initialize_topics() -> void:
 	var all_topics = {
@@ -172,6 +199,7 @@ func is_level_unlocked(level_number: int) -> bool:
 
 # ─── SAVE & LOAD ───────────────────────────────────────
 func save_progress() -> void:
+	# Save locally first
 	var data = {
 		"topic_states":      topic_states,
 		"coding_accuracy":   coding_accuracy,
@@ -184,12 +212,21 @@ func save_progress() -> void:
 
 	if OS.get_name() == "Web":
 		JavaScriptBridge.eval(
-			"localStorage.setItem('packet_surge_save', '%s')" % json_string.replace("'", "\\'")
+			"localStorage.setItem('packet_surge_save', '%s')" \
+			% json_string.replace("'", "\\'")
 		)
 	else:
 		var file = FileAccess.open("user://save.json", FileAccess.WRITE)
 		file.store_string(json_string)
 		file.close()
+
+	# Sync to cloud if logged in
+	if Engine.has_singleton("SupabaseManager") or \
+	   get_node_or_null("/root/SupabaseManager") != null:
+		if SupabaseManager.is_logged_in:
+			SupabaseManager.save_progress_to_cloud()
+			SupabaseManager.update_leaderboard()
+
 	print("[ProgressManager] Progress saved.")
 
 func load_progress() -> void:
