@@ -17,11 +17,11 @@ config/icon="res://icon.svg"
 
 [autoload]
 
+GameManager="*uid://b8i75x71ak5sb"
 SignalBus="*uid://dxllix21rtd6a"
 ScreenManager="*uid://qjct75lfr7a3"
 ProgressManager="*uid://dh7d1o85888h5"
 AdaptiveAI="*uid://8rjpmb4rwoxe"
-GameManager="*uid://o71y1uqos13x"
 SupabaseManager="*uid://d4c6t1sdehokl"
 
 [display]

@@ -1,0 +1,156 @@
+[gd_scene format=3 uid="uid://ddy8xqxv6q41i"]
+
+[ext_resource type="Script" uid="uid://8dpyrqrlvkiq" path="res://scenes/campaign/tower_select/TowerSelect.gd" id="1_p6h16"]
+
+[node name="TowerSelect" type="Control" unique_id=730607855]
+layout_mode = 3
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+script = ExtResource("1_p6h16")
+
+[node name="Background" type="ColorRect" parent="." unique_id=1956964821]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+color = Color(0.019607844, 0.050980393, 0.101960786, 1)
+
+[node name="TopBar" type="PanelContainer" parent="." unique_id=1294844817]
+custom_minimum_size = Vector2(0, 52)
+layout_mode = 1
+anchors_preset = 10
+anchor_right = 1.0
+offset_bottom = 23.0
+grow_horizontal = 2
+
+[node name="TopBarLayout" type="HBoxContainer" parent="TopBar" unique_id=2130848458]
+layout_mode = 2
+theme_override_constants/separation = 16
+
+[node name="BackBtn" type="Button" parent="TopBar/TopBarLayout" unique_id=999531002]
+custom_minimum_size = Vector2(90, 0)
+layout_mode = 2
+text = "← BACK"
+
+[node name="TitleLabel" type="Label" parent="TopBar/TopBarLayout" unique_id=2008672205]
+layout_mode = 2
+size_flags_horizontal = 3
+text = "SELECT TOWERS"
+
+[node name="ContentArea" type="HBoxContainer" parent="." unique_id=1284765519]
+layout_mode = 1
+anchors_preset = -1
+anchor_right = 1.0
+anchor_bottom = 1.0
+offset_top = 52.0
+grow_horizontal = 2
+grow_vertical = 2
+theme_override_constants/separation = 0
+
+[node name="LeftMargin" type="MarginContainer" parent="ContentArea" unique_id=1211898295]
+custom_minimum_size = Vector2(380, 0)
+layout_mode = 2
+theme_override_constants/margin_left = 24
+theme_override_constants/margin_top = 24
+theme_override_constants/margin_right = 24
+theme_override_constants/margin_bottom = 24
+
+[node name="LeftContent" type="VBoxContainer" parent="ContentArea/LeftMargin" unique_id=409620218]
+layout_mode = 2
+theme_override_constants/separation = 12
+
+[node name="LevelNameLabel" type="Label" parent="ContentArea/LeftMargin/LeftContent" unique_id=177679071]
+layout_mode = 2
+theme_override_colors/font_color = Color(0.9098039, 0.95686275, 0.99215686, 1)
+theme_override_font_sizes/font_size = 22
+
+[node name="ConceptPanel" type="PanelContainer" parent="ContentArea/LeftMargin/LeftContent" unique_id=1016077805]
+custom_minimum_size = Vector2(0, 120)
+layout_mode = 2
+
+[node name="ConceptMargin" type="MarginContainer" parent="ContentArea/LeftMargin/LeftContent/ConceptPanel" unique_id=1745859046]
+layout_mode = 2
+theme_override_constants/margin_left = 16
+theme_override_constants/margin_top = 16
+theme_override_constants/margin_right = 16
+theme_override_constants/margin_bottom = 16
+
+[node name="ConceptContent" type="VBoxContainer" parent="ContentArea/LeftMargin/LeftContent/ConceptPanel/ConceptMargin" unique_id=1660611100]
+layout_mode = 2
+theme_override_constants/separation = 8
+
+[node name="EnemyTipPanel" type="PanelContainer" parent="ContentArea/LeftMargin/LeftContent" unique_id=56102188]
+custom_minimum_size = Vector2(0, 80)
+layout_mode = 2
+
+[node name="EnemyTipMargin" type="MarginContainer" parent="ContentArea/LeftMargin/LeftContent/EnemyTipPanel" unique_id=1553829311]
+layout_mode = 2
+theme_override_constants/margin_left = 16
+theme_override_constants/margin_top = 16
+theme_override_constants/margin_right = 16
+theme_override_constants/margin_bottom = 16
+
+[node name="EnemyTipContent" type="VBoxContainer" parent="ContentArea/LeftMargin/LeftContent/EnemyTipPanel/EnemyTipMargin" unique_id=709924417]
+layout_mode = 2
+theme_override_constants/separation = 8
+
+[node name="StatsPanel" type="PanelContainer" parent="ContentArea/LeftMargin/LeftContent" unique_id=2002342682]
+custom_minimum_size = Vector2(0, 60)
+layout_mode = 2
+
+[node name="StatsMargin" type="MarginContainer" parent="ContentArea/LeftMargin/LeftContent/StatsPanel" unique_id=770942936]
+layout_mode = 2
+theme_override_constants/margin_left = 16
+theme_override_constants/margin_top = 16
+theme_override_constants/margin_right = 16
+theme_override_constants/margin_bottom = 16
+
+[node name="StatsContent" type="VBoxContainer" parent="ContentArea/LeftMargin/LeftContent/StatsPanel/StatsMargin" unique_id=1740033384]
+layout_mode = 2
+theme_override_constants/separation = 8
+
+[node name="RightMargin" type="MarginContainer" parent="ContentArea" unique_id=1502513564]
+layout_mode = 2
+size_flags_horizontal = 3
+theme_override_constants/margin_left = 24
+theme_override_constants/margin_top = 24
+theme_override_constants/margin_right = 24
+theme_override_constants/margin_bottom = 24
+
+[node name="RightContent" type="VBoxContainer" parent="ContentArea/RightMargin" unique_id=1390286362]
+layout_mode = 2
+
+[node name="SlotLabel" type="Label" parent="ContentArea/RightMargin/RightContent" unique_id=971902654]
+layout_mode = 2
+theme_override_colors/font_color = Color(0, 0.83137256, 1, 1)
+theme_override_font_sizes/font_size = 13
+text = " SELECTED TOWERS (0/2)"
+
+[node name="SelectedRow" type="HBoxContainer" parent="ContentArea/RightMargin/RightContent" unique_id=1338276775]
+custom_minimum_size = Vector2(0, 100)
+layout_mode = 2
+theme_override_constants/separation = 12
+
+[node name="Divider" type="HSeparator" parent="ContentArea/RightMargin/RightContent" unique_id=184697214]
+layout_mode = 2
+
+[node name="AvailableLabel" type="Label" parent="ContentArea/RightMargin/RightContent" unique_id=1294433189]
+layout_mode = 2
+theme_override_colors/font_color = Color(0.2901961, 0.49803922, 0.64705884, 1)
+theme_override_font_sizes/font_size = 13
+text = "AVAILABLE TOWERS"
+
+[node name="AvailableGrid" type="GridContainer" parent="ContentArea/RightMargin/RightContent" unique_id=1392224707]
+layout_mode = 2
+theme_override_constants/h_separation = 4
+theme_override_constants/v_separation = 8
+
+[node name="StartBtn" type="Button" parent="ContentArea/RightMargin/RightContent" unique_id=1213396460]
+custom_minimum_size = Vector2(0, 56)
+layout_mode = 2
+text = "▶ START LEVEL"
