@@ -200,7 +200,7 @@ func _make_level_card(
 # ─── LEVEL SELECTED ────────────────────────────────────
 func _on_level_selected(level_number: int) -> void:
 	GameManager.current_level = level_number
-	GameManager.go_to("level")   # ← was "campaign"
+	GameManager.go_to("tower_select")
 
 # ─── SIGNAL HANDLERS ───────────────────────────────────
 func _on_level_unlocked(_level: int) -> void:
