@@ -2,8 +2,8 @@
 extends Control
 
 @onready var back_btn: Button       = $TopBar/TopBarLayout/BackBtn
-@onready var card_grid: GridContainer = $ContentArea/MainLayout/CardGrid
-@onready var sandbox_subtitle: Label  = $ContentArea/MainLayout/HeaderSection/SandboxSubtitle
+@onready var card_grid: GridContainer = $ContentArea/ScrollContainer/MainLayout/CardGrid
+@onready var sandbox_subtitle: Label  = $ContentArea/ScrollContainer/MainLayout/HeaderSection/SandboxSubtitle
 
 # ─── STRUCTURE DEFINITIONS ─────────────────────────────
 const STRUCTURES = [

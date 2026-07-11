@@ -65,6 +65,8 @@ layout_mode = 2
 
 [node name="DrawSurface" type="Control" parent="ContentArea/MainLayout/VisualizationArea" unique_id=2137768525]
 layout_mode = 2
+size_flags_horizontal = 3
+size_flags_vertical = 3
 
 [node name="ControlsArea" type="HBoxContainer" parent="ContentArea/MainLayout" unique_id=7949300]
 layout_mode = 2

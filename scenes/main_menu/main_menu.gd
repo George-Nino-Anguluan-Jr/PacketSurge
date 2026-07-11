@@ -51,9 +51,6 @@ func _setup_buttons() -> void:
 	for btn in _all_buttons:
 		_style_menu_button(btn)
 
-	# Override settings with muted style
-	_style_settings_button(settings_button)
-
 	# Continue gets accent style
 	_style_continue_button(continue_button)
 
