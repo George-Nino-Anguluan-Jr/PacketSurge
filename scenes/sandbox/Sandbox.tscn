@@ -57,28 +57,34 @@ theme_override_constants/margin_top = 32
 theme_override_constants/margin_right = 32
 theme_override_constants/margin_bottom = 32
 
-[node name="MainLayout" type="VBoxContainer" parent="ContentArea" unique_id=1965084398]
+[node name="ScrollContainer" type="ScrollContainer" parent="ContentArea" unique_id=1807806905]
 layout_mode = 2
+horizontal_scroll_mode = 0
+
+[node name="MainLayout" type="VBoxContainer" parent="ContentArea/ScrollContainer" unique_id=1965084398]
+layout_mode = 2
+size_flags_horizontal = 3
+size_flags_vertical = 3
 theme_override_constants/separation = 24
 
-[node name="HeaderSection" type="VBoxContainer" parent="ContentArea/MainLayout" unique_id=410816059]
+[node name="HeaderSection" type="VBoxContainer" parent="ContentArea/ScrollContainer/MainLayout" unique_id=410816059]
 layout_mode = 2
 theme_override_constants/separation = 8
 
-[node name="SandboxTitle" type="Label" parent="ContentArea/MainLayout/HeaderSection" unique_id=289536163]
+[node name="SandboxTitle" type="Label" parent="ContentArea/ScrollContainer/MainLayout/HeaderSection" unique_id=289536163]
 layout_mode = 2
 theme_override_colors/font_color = Color(0, 0.83137256, 1, 1)
 theme_override_font_sizes/font_size = 28
 text = "Data Structure Playground"
 
-[node name="SandboxSubtitle" type="Label" parent="ContentArea/MainLayout/HeaderSection" unique_id=1734345761]
+[node name="SandboxSubtitle" type="Label" parent="ContentArea/ScrollContainer/MainLayout/HeaderSection" unique_id=1734345761]
 layout_mode = 2
 theme_override_colors/font_color = Color(0.2901961, 0.49803922, 0.64705884, 1)
 theme_override_font_sizes/font_size = 14
 text = "Select a data structure to explore and experiment freely."
 autowrap_mode = 3
 
-[node name="CardGrid" type="GridContainer" parent="ContentArea/MainLayout" unique_id=1763969092]
+[node name="CardGrid" type="GridContainer" parent="ContentArea/ScrollContainer/MainLayout" unique_id=1763969092]
 layout_mode = 2
 theme_override_constants/h_separation = 20
 theme_override_constants/v_separation = 20

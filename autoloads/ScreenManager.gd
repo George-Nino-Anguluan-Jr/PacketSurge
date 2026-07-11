@@ -1,42 +1,53 @@
 # ScreenManager.gd
-# Detects screen size and orientation for responsive layouts
 extends Node
 
-const MOBILE_WIDTH_THRESHOLD  := 600
-const TABLET_WIDTH_THRESHOLD  := 1024
+# ─── REFERENCE RESOLUTION ──────────────────────────────
+# Everything is designed at this base resolution
+const BASE_WIDTH: float  = 1152.0
+const BASE_HEIGHT: float = 648.0
 
-signal orientation_changed(is_portrait: bool)
-
-var _last_size := Vector2.ZERO
-
-func _ready() -> void:
-	get_tree().root.size_changed.connect(_on_screen_resized)
-	_last_size = get_viewport().get_visible_rect().size
-
-func _on_screen_resized() -> void:
-	var new_size = get_viewport().get_visible_rect().size
-	var was_portrait = _last_size.x < _last_size.y
-	var is_portrait  = new_size.x < new_size.y
-	if was_portrait != is_portrait:
-		orientation_changed.emit(is_portrait)
-	_last_size = new_size
-
+# ─── SCREEN SIZE ───────────────────────────────────────
 func get_screen_size() -> Vector2:
-	return get_viewport().get_visible_rect().size
+	return DisplayServer.window_get_size()
 
+func get_scale() -> float:
+	var size = get_screen_size()
+	# Use the smaller axis so nothing gets clipped
+	var scale_x = size.x / BASE_WIDTH
+	var scale_y = size.y / BASE_HEIGHT
+	return min(scale_x, scale_y)
+
+# ─── SCALE HELPERS ─────────────────────────────────────
+# Call these everywhere instead of hardcoding pixel values
+
+func s(value: float) -> float:
+	# Scale any pixel value to the current screen
+	return max(1.0, value * get_scale())
+
+func si(value: float) -> int:
+	# Same but returns int (for font sizes)
+	return max(1, int(value * get_scale()))
+
+func sv(v: Vector2) -> Vector2:
+	# Scale a Vector2 (for minimum sizes, margins, etc.)
+	var sc = get_scale()
+	return Vector2(max(1.0, v.x * sc), max(1.0, v.y * sc))
+
+# ─── BREAKPOINTS ───────────────────────────────────────
 func is_mobile() -> bool:
-	return get_screen_size().x < MOBILE_WIDTH_THRESHOLD
+	var size = get_screen_size()
+	return size.x < 768 or size.y < 500
 
 func is_tablet() -> bool:
-	var w = get_screen_size().x
-	return w >= MOBILE_WIDTH_THRESHOLD and w < TABLET_WIDTH_THRESHOLD
+	var size = get_screen_size()
+	return size.x >= 768 and size.x < 1024
 
 func is_desktop() -> bool:
-	return get_screen_size().x >= TABLET_WIDTH_THRESHOLD
+	return get_screen_size().x >= 1024
 
-func is_portrait() -> bool:
-	var size = get_screen_size()
-	return size.x < size.y
-
-func is_landscape() -> bool:
-	return not is_portrait()
+func get_columns() -> int:
+	if is_mobile():
+		return 1
+	elif is_tablet():
+		return 2
+	return 2	

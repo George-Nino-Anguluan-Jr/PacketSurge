@@ -1,8 +1,0 @@
-# Godot
-.godot/
-*.uid
-export/
-
-# OS
-.DS_Store
-Thumbs.db

@@ -1,5 +1,4 @@
 # WaveManager.gd
-# Manages enemy waves for a level
 extends Node
 
 signal wave_started(wave_number: int, total_waves: int)
@@ -7,17 +6,16 @@ signal wave_completed(wave_number: int)
 signal all_waves_completed()
 signal enemy_spawned(enemy: Node)
 
-var current_wave: int    = 0
-var total_waves: int     = 3
-var enemies_alive: int   = 0
+var current_wave: int      = 0
+var total_waves: int       = 3
+var enemies_alive: int     = 0
 var wave_in_progress: bool = false
 var level_completed: bool  = false
 
-# Enemy scene to spawn
-var enemy_scene: PackedScene = null
-var enemy_layer: Node2D      = null
-var path_waypoints: Array[Vector2] = []
-var difficulty_modifier: float = 1.0
+var enemy_scene: PackedScene        = null
+var enemy_layer: Node2D             = null
+var path_waypoints: Array[Vector2]  = []
+var difficulty_modifier: float      = 1.0
 
 func initialize(
 		waves: int,
@@ -37,8 +35,8 @@ func start_next_wave() -> void:
 		return
 	if current_wave >= total_waves:
 		return
-	current_wave      += 1
-	wave_in_progress   = true
+	current_wave     += 1
+	wave_in_progress  = true
 	wave_started.emit(current_wave, total_waves)
 	SignalBus.wave_started.emit(current_wave)
 	print("[WaveManager] Starting wave: ", current_wave)
@@ -50,33 +48,45 @@ func _spawn_wave(wave_num: int) -> void:
 	enemies_alive   = 0
 
 	for i in range(enemy_count):
-		await get_tree().create_timer(
-			spawn_delay * i
-		).timeout
-		_spawn_enemy(wave_num)
+		await get_tree().create_timer(spawn_delay * i).timeout
+		_spawn_enemy(wave_num, i)
 
-func _spawn_enemy(wave_num: int) -> void:
+func _get_enemy_type(wave_num: int, index: int) -> String:
+	if wave_num >= 7 and index == 0:
+		return "boss_packet"
+	if wave_num >= 5 and index % 5 == 0:
+		return "stealth_packet"
+	if wave_num >= 4 and index % 4 == 0:
+		return "encrypted_packet"
+	if wave_num >= 3 and index % 3 == 0:
+		return "heavy_packet"
+	if wave_num >= 2 and index % 2 == 0:
+		return "fast_packet"
+	return "basic_packet"
+
+func _spawn_enemy(wave_num: int, index: int) -> void:
 	if enemy_scene == null or enemy_layer == null:
 		return
-	var enemy = enemy_scene.instantiate()
+	var enemy      = enemy_scene.instantiate()
 	enemy_layer.add_child(enemy)
 
-	# Set enemy properties
+	var enemy_type = _get_enemy_type(wave_num, index)
+
 	if enemy.has_method("initialize"):
 		var health = 100.0 * difficulty_modifier * (1.0 + wave_num * 0.3)
-		var speed  = 80.0  * difficulty_modifier
-		enemy.initialize(path_waypoints, health, speed)
+		var speed  = 80.0 * difficulty_modifier
+		enemy.initialize(path_waypoints, health, speed, enemy_type)
 
-	enemy.connect("enemy_defeated",  _on_enemy_defeated)
+	enemy.connect("enemy_defeated",    _on_enemy_defeated)
 	enemy.connect("enemy_reached_end", _on_enemy_reached_end)
 	enemies_alive += 1
 	enemy_spawned.emit(enemy)
 
-func _on_enemy_defeated(enemy: Node) -> void:
+func _on_enemy_defeated(_enemy: Node) -> void:
 	enemies_alive -= 1
 	_check_wave_complete()
 
-func _on_enemy_reached_end(enemy: Node) -> void:
+func _on_enemy_reached_end(_enemy: Node) -> void:
 	enemies_alive -= 1
 	_check_wave_complete()
 
