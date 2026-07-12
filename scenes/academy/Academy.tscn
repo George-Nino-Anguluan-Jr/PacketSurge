@@ -71,43 +71,48 @@ theme_override_constants/separation = 0
 custom_minimum_size = Vector2(220, 0)
 layout_mode = 2
 
-[node name="SidebarLayout" type="VBoxContainer" parent="ContentArea/Sidebar" unique_id=840977900]
+[node name="ScrollContainer" type="ScrollContainer" parent="ContentArea/Sidebar" unique_id=2079812634]
 layout_mode = 2
+
+[node name="SidebarLayout" type="VBoxContainer" parent="ContentArea/Sidebar/ScrollContainer" unique_id=840977900]
+layout_mode = 2
+size_flags_horizontal = 3
+size_flags_vertical = 3
 theme_override_constants/separation = 8
 
-[node name="SidebarTitle" type="Label" parent="ContentArea/Sidebar/SidebarLayout" unique_id=162875821]
+[node name="SidebarTitle" type="Label" parent="ContentArea/Sidebar/ScrollContainer/SidebarLayout" unique_id=162875821]
 layout_mode = 2
 theme_override_colors/font_color = Color(0, 0.83137256, 1, 1)
 theme_override_font_sizes/font_size = 13
 text = "TOPICS"
 horizontal_alignment = 1
 
-[node name="Separator" type="HSeparator" parent="ContentArea/Sidebar/SidebarLayout" unique_id=1740970850]
+[node name="Separator" type="HSeparator" parent="ContentArea/Sidebar/ScrollContainer/SidebarLayout" unique_id=1740970850]
 layout_mode = 2
 
-[node name="PythonSection" type="VBoxContainer" parent="ContentArea/Sidebar/SidebarLayout" unique_id=939553201]
+[node name="PythonSection" type="VBoxContainer" parent="ContentArea/Sidebar/ScrollContainer/SidebarLayout" unique_id=939553201]
 layout_mode = 2
 theme_override_constants/separation = 4
 
-[node name="SectionLabel" type="Label" parent="ContentArea/Sidebar/SidebarLayout/PythonSection" unique_id=2117417504]
+[node name="SectionLabel" type="Label" parent="ContentArea/Sidebar/ScrollContainer/SidebarLayout/PythonSection" unique_id=2117417504]
 layout_mode = 2
 theme_override_colors/font_color = Color(0.2901961, 0.49803922, 0.64705884, 1)
 theme_override_font_sizes/font_size = 11
 text = "PYTHON"
 
-[node name="TopicList_Python" type="VBoxContainer" parent="ContentArea/Sidebar/SidebarLayout/PythonSection" unique_id=2030128004]
+[node name="TopicList_Python" type="VBoxContainer" parent="ContentArea/Sidebar/ScrollContainer/SidebarLayout/PythonSection" unique_id=2030128004]
 layout_mode = 2
 
-[node name="DSSection" type="VBoxContainer" parent="ContentArea/Sidebar/SidebarLayout" unique_id=28281962]
+[node name="DSSection" type="VBoxContainer" parent="ContentArea/Sidebar/ScrollContainer/SidebarLayout" unique_id=28281962]
 layout_mode = 2
 
-[node name="SectionLabel2" type="Label" parent="ContentArea/Sidebar/SidebarLayout/DSSection" unique_id=1951976543]
+[node name="SectionLabel2" type="Label" parent="ContentArea/Sidebar/ScrollContainer/SidebarLayout/DSSection" unique_id=1951976543]
 layout_mode = 2
 theme_override_colors/font_color = Color(0.2901961, 0.49803922, 0.64705884, 1)
 theme_override_font_sizes/font_size = 11
 text = "DATA STRUCTURES"
 
-[node name="TopicList_DS" type="VBoxContainer" parent="ContentArea/Sidebar/SidebarLayout/DSSection" unique_id=1464377745]
+[node name="TopicList_DS" type="VBoxContainer" parent="ContentArea/Sidebar/ScrollContainer/SidebarLayout/DSSection" unique_id=1464377745]
 layout_mode = 2
 
 [node name="LessonArea" type="PanelContainer" parent="ContentArea" unique_id=981630436]

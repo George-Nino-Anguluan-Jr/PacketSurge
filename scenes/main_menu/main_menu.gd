@@ -35,6 +35,16 @@ func _ready() -> void:
 	_animate_title_in()
 	_apply_responsive_layout()
 	get_tree().root.size_changed.connect(_apply_responsive_layout)
+	_check_placement_quiz()
+	
+func _check_placement_quiz() -> void:
+	var quiz_done = ProgressManager.campaign_progress.get(
+		"placement_quiz_done", false
+	)
+	if not quiz_done:
+		# First time — show placement quiz
+		await get_tree().create_timer(0.5).timeout
+		GameManager.go_to("placement_quiz")
 
 # ─── BUTTON SETUP ──────────────────────────────────────
 func _setup_buttons() -> void:

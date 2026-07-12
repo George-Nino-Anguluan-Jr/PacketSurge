@@ -18,6 +18,7 @@ const SCENES = {
 	"leaderboard":  "res://scenes/leaderboard/Leaderboard.tscn",
 	"analytics":    "res://scenes/analytics/Analytics.tscn",
 	"settings":     "res://scenes/settings/Settings.tscn",
+	"placement_quiz": "res://scenes/placement_quiz/PlacementQuiz.tscn",
 }
 
 const LEVEL_CONFIGS = {
