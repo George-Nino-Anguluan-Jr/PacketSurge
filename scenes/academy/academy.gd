@@ -6,8 +6,8 @@ extends Control
 @onready var back_btn: Button              = $TopBar/TopBarLayout/BackBtn
 @onready var scene_title: Label            = $TopBar/TopBarLayout/SceneTitle
 @onready var progress_label: Label         = $TopBar/TopBarLayout/ProgressLabel
-@onready var topic_list_python: VBoxContainer = $ContentArea/Sidebar/SidebarLayout/PythonSection/TopicList_Python
-@onready var topic_list_ds: VBoxContainer     = $ContentArea/Sidebar/SidebarLayout/DSSection/TopicList_DS
+@onready var topic_list_python: VBoxContainer = $ContentArea/Sidebar/ScrollContainer/SidebarLayout/PythonSection/TopicList_Python
+@onready var topic_list_ds: VBoxContainer     = $ContentArea/Sidebar/ScrollContainer/SidebarLayout/DSSection/TopicList_DS
 @onready var lesson_title: Label           = $ContentArea/LessonArea/LessonContainer/LessonHeader/LessonTitle
 @onready var lesson_category: Label        = $ContentArea/LessonArea/LessonContainer/LessonHeader/LessonCategory
 @onready var step_indicator: HBoxContainer = $ContentArea/LessonArea/LessonContainer/StepIndicator
@@ -64,6 +64,12 @@ func _load_all_lessons() -> void:
 		"res://resources/lessons/lesson_sort_bubble.tres",
 		"res://resources/lessons/lesson_sort_selection.tres",
 		"res://resources/lessons/lesson_sort_insertion.tres",
+		"res://resources/lessons/lesson_sort_quick.tres",
+		"res://resources/lessons/lesson_sort_merge.tres",
+		"res://resources/lessons/lesson_sort_counting.tres",
+		"res://resources/lessons/lesson_sort_radix.tres",
+		"res://resources/lessons/lesson_search_linear.tres",
+		"res://resources/lessons/lesson_search_binary.tres",
 	]
 	for path in lesson_paths:
 		if ResourceLoader.exists(path):
@@ -72,20 +78,40 @@ func _load_all_lessons() -> void:
 				all_lessons.append(lesson)
 
 # ─── BUILD SIDEBAR ─────────────────────────────────────
+# ─── SIDEBAR STATE ─────────────────────────────────────
+var collapsed_groups: Dictionary = {}
+var current_lesson_id: String    = ""
+
+# ─── BUILD SIDEBAR ─────────────────────────────────────
 func _build_sidebar() -> void:
+	for child in topic_list_python.get_children():
+		child.queue_free()
+	for child in topic_list_ds.get_children():
+		child.queue_free()
+
 	var python_topics = [
 		"py_variables", "py_lists", "py_loops",
 		"py_conditions", "py_functions"
 	]
 	var ds_topics = [
-		"ds_arrays", "ds_stacks", "ds_queues",
-		"ds_linked_lists", "sort_bubble",
-		"sort_selection", "sort_insertion"
+		"ds_arrays", "ds_stacks", "ds_queues", "ds_linked_lists",
+		"sort_bubble", "sort_selection", "sort_insertion",
+		"sort_quick", "sort_merge", "sort_counting", "sort_radix",
+		"search_linear", "search_binary"
 	]
-	_populate_topic_list(topic_list_python, python_topics)
-	_populate_topic_list(topic_list_ds, ds_topics)
 
-func _populate_topic_list(container: VBoxContainer, topic_ids: Array) -> void:
+	_populate_topic_list(topic_list_python, "PYTHON", python_topics)
+	_populate_topic_list(topic_list_ds, "DATA STRUCTURES", ds_topics)
+
+func _populate_topic_list(
+		container: VBoxContainer,
+		group_name: String,
+		topic_ids: Array) -> void:
+
+	# Clear old buttons from tracking dict
+	for tid in topic_ids:
+		topic_buttons.erase(tid)
+
 	for topic_id in topic_ids:
 		var btn := Button.new()
 		btn.text      = _get_topic_display_name(topic_id)
@@ -110,6 +136,12 @@ func _get_topic_display_name(topic_id: String) -> String:
 		"sort_bubble":     "Bubble Sort",
 		"sort_selection":  "Selection Sort",
 		"sort_insertion":  "Insertion Sort",
+		"sort_quick":      "Quick Sort",
+		"sort_merge":      "Merge Sort",
+		"sort_counting":   "Counting Sort",
+		"sort_radix":      "Radix Sort",
+		"search_linear":   "Linear Search",
+		"search_binary":   "Binary Search",
 	}
 	return names.get(topic_id, topic_id)
 
@@ -482,20 +514,25 @@ func _show_complete_step() -> void:
 	layout.add_child(congrats)
 
 	var message := Label.new()
-	message.text                 = "You've mastered: " + current_lesson.title
+	message.text = "You've mastered: " + current_lesson.title
 	message.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	message.add_theme_color_override("font_color", Color("#E8F4FD"))
 	message.add_theme_font_size_override("font_size", 16)
 	layout.add_child(message)
 
+	# Show unlock info using new PROGRESSION_CHAIN format
 	var unlock_label := Label.new()
 	unlock_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	unlock_label.add_theme_color_override("font_color", Color("#00D4FF"))
 	unlock_label.add_theme_font_size_override("font_size", 14)
+	unlock_label.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+
 	if ProgressManager.PROGRESSION_CHAIN.has(current_lesson.lesson_id):
 		var chain = ProgressManager.PROGRESSION_CHAIN[current_lesson.lesson_id]
-		unlock_label.text = "🗼 Tower Unlocked: " + chain["unlocks_tower"] + "\n" + \
-							"⚔️  Campaign Level " + str(chain["unlocks_level"]) + " Unlocked!"
+		if chain["type"] == "tower":
+			unlock_label.text = "🗼 Tower Unlocked: " + chain["id"]
+		elif chain["type"] == "level":
+			unlock_label.text = "⚔️ Campaign Level " + str(chain["id"]) + " Unlocked!"
 	layout.add_child(unlock_label)
 
 	var complete_btn := Button.new()
@@ -588,7 +625,7 @@ func _update_progress_label() -> void:
 	for topic_id in ProgressManager.topic_states:
 		if ProgressManager.topic_states[topic_id] == "mastered":
 			mastered += 1
-	progress_label.text = str(mastered) + " / 12 Mastered"
+	progress_label.text = str(mastered) + " / 18 Mastered"
 
 # ─── SIDEBAR REFRESH ───────────────────────────────────
 func _on_topic_state_changed(_id: String) -> void:

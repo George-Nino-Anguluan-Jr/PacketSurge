@@ -1,107 +1,101 @@
 # ProgressManager.gd
-# Tracks everything the student has done across the entire game
 extends Node
 
 # ─── PROGRESSION CONSTANTS ─────────────────────────────
 const PROGRESSION_CHAIN: Dictionary = {
-	"py_variables":    {"unlocks_tower": "tower_array",      "unlocks_level": 1},
-	"py_lists":        {"unlocks_tower": "tower_stack",      "unlocks_level": 2},
-	"py_loops":        {"unlocks_tower": "tower_queue",      "unlocks_level": 3},
-	"py_conditions":   {"unlocks_tower": "tower_linked_list","unlocks_level": 4},
-	"py_functions":    {"unlocks_tower": "tower_bubble",     "unlocks_level": 5},
-	"ds_arrays":       {"unlocks_tower": "tower_selection",  "unlocks_level": 6},
-	"ds_stacks":       {"unlocks_tower": "tower_insertion",  "unlocks_level": 7},
-	"ds_queues":       {"unlocks_tower": "tower_bonus_1",    "unlocks_level": 8},
-	"ds_linked_lists": {"unlocks_tower": "tower_bonus_2",    "unlocks_level": 9},
-	"sort_bubble":     {"unlocks_tower": "tower_upgrade_1",  "unlocks_level": 10},
-	"sort_selection":  {"unlocks_tower": "tower_upgrade_2",  "unlocks_level": 11},
-	"sort_insertion":  {"unlocks_tower": "tower_mastery",    "unlocks_level": 0},
+	# Python lessons → unlock Campaign levels
+	"py_variables":    {"type": "level",  "id": 1},
+	"py_lists":        {"type": "level",  "id": 2},
+	"py_loops":        {"type": "level",  "id": 3},
+	"py_conditions":   {"type": "level",  "id": 4},
+	"py_functions":    {"type": "level",  "id": 5},
+	# DS lessons → unlock towers
+	"ds_arrays":       {"type": "tower",  "id": "tower_array"},
+	"ds_stacks":       {"type": "tower",  "id": "tower_stack"},
+	"ds_queues":       {"type": "tower",  "id": "tower_queue"},
+	"ds_linked_lists": {"type": "tower",  "id": "tower_linked_list"},
+	# Sorting lessons → unlock towers
+	"sort_bubble":     {"type": "tower",  "id": "tower_bubble"},
+	"sort_selection":  {"type": "tower",  "id": "tower_selection"},
+	"sort_insertion":  {"type": "tower",  "id": "tower_insertion"},
+	"sort_quick":      {"type": "tower",  "id": "tower_quick"},
+	"sort_merge":      {"type": "tower",  "id": "tower_merge"},
+	"sort_counting":   {"type": "tower",  "id": "tower_counting"},
+	"sort_radix":      {"type": "tower",  "id": "tower_radix"},
+	# Search lessons → unlock towers
+	"search_linear":   {"type": "tower",  "id": "tower_linear"},
+	"search_binary":   {"type": "tower",  "id": "tower_binary"},
 }
 
 const LEVEL_UNLOCKS_LESSON: Dictionary = {
-	1:  "py_lists",
-	2:  "py_loops",
-	3:  "py_conditions",
-	4:  "py_functions",
-	5:  "ds_arrays",
-	6:  "ds_stacks",
-	7:  "ds_queues",
-	8:  "ds_linked_lists",
-	9:  "sort_bubble",
-	10: "sort_selection",
-	11: "sort_insertion",
+	1:  "ds_arrays",
+	2:  "ds_stacks",
+	3:  "ds_queues",
+	4:  "ds_linked_lists",
+	5:  "sort_bubble",
+	6:  "sort_selection",
+	7:  "sort_insertion",
+	8:  "sort_quick",
+	9:  "sort_merge",
+	10: "sort_counting",
+	11: "sort_radix",
+	12: "search_linear",
+	13: "search_binary",
 }
 
+const ALL_LESSONS = [
+	"py_variables", "py_lists", "py_loops",
+	"py_conditions", "py_functions",
+	"ds_arrays", "ds_stacks", "ds_queues", "ds_linked_lists",
+	"sort_bubble", "sort_selection", "sort_insertion",
+	"sort_quick", "sort_merge", "sort_counting", "sort_radix",
+	"search_linear", "search_binary",
+]
+
 # ─── PROGRESS DATA ─────────────────────────────────────
-var topic_states: Dictionary = {}
-var coding_accuracy: Dictionary = {}
-var retry_counts: Dictionary = {}
-var time_spent: Dictionary = {}
+var topic_states: Dictionary      = {}
+var coding_accuracy: Dictionary   = {}
+var retry_counts: Dictionary      = {}
+var time_spent: Dictionary        = {}
 var unlocked_towers: Array[String] = []
-var campaign_progress: Dictionary = {
-	"current_level":      0,
-	"waves_completed":    0,
-	"towers_unlocked":    [],
+var campaign_progress: Dictionary  = {
 	"max_level_unlocked": 0,
+	"waves_completed":    0,
+	"placement_quiz_done": false,
 }
 
 # ─── STARTUP ───────────────────────────────────────────
 func _ready() -> void:
-	load_progress()        # Load saved data first
-	_ensure_base_state()   # Then guarantee base unlocks on top
+	load_progress()
+	_ensure_base_state()
 
 func _ensure_base_state() -> void:
-	# py_variables is ALWAYS unlocked or mastered — never locked
+	# py_variables always unlocked
 	if topic_states.get("py_variables", "locked") == "locked":
 		topic_states["py_variables"] = "unlocked"
 
 	# Fill missing topics as locked
-	var all_topics = [
-		"py_variables", "py_lists", "py_loops",
-		"py_conditions", "py_functions",
-		"ds_arrays", "ds_stacks", "ds_queues", "ds_linked_lists",
-		"sort_bubble", "sort_selection", "sort_insertion",
-	]
-	for topic_id in all_topics:
+	for topic_id in ALL_LESSONS:
 		if not topic_states.has(topic_id):
 			topic_states[topic_id] = "locked"
 
-	# Always ensure tower_array is unlocked
+	# tower_array always available as starter
 	if "tower_array" not in unlocked_towers:
 		unlocked_towers.append("tower_array")
 
-	# Always ensure level 1 is unlocked
-	if campaign_progress.get("max_level_unlocked", 0) < 1:
-		campaign_progress["max_level_unlocked"] = 1
+	# Level 1 always unlocked if py_variables mastered
+	if topic_states.get("py_variables") == "mastered":
+		if campaign_progress.get("max_level_unlocked", 0) < 1:
+			campaign_progress["max_level_unlocked"] = 1
 
-	print("[ProgressManager] Base state ensured. py_variables = ",
-		topic_states.get("py_variables", "MISSING"))
-
-func _initialize_topics() -> void:
-	var all_topics = {
-		"py_variables":    "unlocked",
-		"py_lists":        "locked",
-		"py_loops":        "locked",
-		"py_conditions":   "locked",
-		"py_functions":    "locked",
-		"ds_arrays":       "locked",
-		"ds_stacks":       "locked",
-		"ds_queues":       "locked",
-		"ds_linked_lists": "locked",
-		"sort_bubble":     "locked",
-		"sort_selection":  "locked",
-		"sort_insertion":  "locked",
-	}
-	for topic_id in all_topics:
-		if not topic_states.has(topic_id):
-			topic_states[topic_id] = all_topics[topic_id]
+	print("[ProgressManager] Base state ensured.")
 
 # ─── TOPIC STATE ───────────────────────────────────────
 func get_topic_state(topic_id: String) -> String:
 	return topic_states.get(topic_id, "locked")
 
 func unlock_topic(topic_id: String) -> void:
-	if topic_states.get(topic_id) == "locked":
+	if topic_states.get(topic_id, "locked") == "locked":
 		topic_states[topic_id] = "unlocked"
 		SignalBus.topic_unlocked.emit(topic_id)
 		print("[ProgressManager] Unlocked: ", topic_id)
@@ -113,8 +107,49 @@ func mark_mastered(topic_id: String) -> void:
 	print("[ProgressManager] Mastered: ", topic_id)
 	save_progress()
 
+# ─── LESSON COMPLETION ─────────────────────────────────
+func on_lesson_completed(lesson_id: String) -> void:
+	mark_mastered(lesson_id)
+
+	if not PROGRESSION_CHAIN.has(lesson_id):
+		return
+
+	var chain = PROGRESSION_CHAIN[lesson_id]
+
+	if chain["type"] == "tower":
+		# DS/Sort/Search lesson → unlock tower
+		var tower_id = chain["id"]
+		unlock_tower(tower_id)
+		SignalBus.tower_unlocked.emit(tower_id)
+		print("[ProgressManager] Tower unlocked: ", tower_id)
+
+	elif chain["type"] == "level":
+		# Python lesson → unlock campaign level
+		var level_num = chain["id"]
+		unlock_campaign_level(level_num)
+		print("[ProgressManager] Campaign level unlocked: ", level_num)
+
+	save_progress()
+
+func on_level_completed(level_number: int) -> void:
+	# Track highest level completed
+	var current = campaign_progress.get("waves_completed", 0)
+	if level_number > current:
+		campaign_progress["waves_completed"] = level_number
+
+	# Unlock next lesson
+	if LEVEL_UNLOCKS_LESSON.has(level_number):
+		var next_lesson = LEVEL_UNLOCKS_LESSON[level_number]
+		unlock_topic(next_lesson)
+		SignalBus.lesson_unlocked.emit(next_lesson)
+		print("[ProgressManager] Lesson unlocked: ", next_lesson)
+
+	save_progress()
+
 # ─── CODING PERFORMANCE ────────────────────────────────
-func record_challenge_attempt(challenge_id: String, passed: bool) -> void:
+func record_challenge_attempt(
+		challenge_id: String,
+		passed: bool) -> void:
 	if not retry_counts.has(challenge_id):
 		retry_counts[challenge_id] = 0
 	if not passed:
@@ -124,9 +159,9 @@ func record_challenge_attempt(challenge_id: String, passed: bool) -> void:
 	if not coding_accuracy.has(challenge_id):
 		coding_accuracy[challenge_id] = score
 	else:
-		coding_accuracy[challenge_id] = lerp(coding_accuracy[challenge_id], score, 0.4)
-
-	SignalBus.code_challenge_submitted.emit(challenge_id, passed)
+		coding_accuracy[challenge_id] = lerp(
+			coding_accuracy[challenge_id], score, 0.4
+		)
 	save_progress()
 
 func get_retry_count(challenge_id: String) -> int:
@@ -142,64 +177,27 @@ func add_time_spent(topic_id: String, seconds: float) -> void:
 	time_spent[topic_id] += seconds
 	save_progress()
 
-# ─── PROGRESSION ───────────────────────────────────────
-func on_lesson_completed(lesson_id: String) -> void:
-	mark_mastered(lesson_id)
-	if not PROGRESSION_CHAIN.has(lesson_id):
-		return
+# ─── UNLOCK HELPERS ────────────────────────────────────
+func unlock_campaign_level(level_number: int) -> void:
+	var current_max = campaign_progress.get("max_level_unlocked", 0)
+	if level_number > current_max:
+		campaign_progress["max_level_unlocked"] = level_number
+		SignalBus.campaign_level_unlocked.emit(level_number)
 
-	var chain = PROGRESSION_CHAIN[lesson_id]
+func unlock_tower(tower_id: String) -> void:
+	if tower_id not in unlocked_towers:
+		unlocked_towers.append(tower_id)
 
-	# Unlock tower
-	var tower = chain["unlocks_tower"]
-	if tower != "" and tower not in unlocked_towers:
-		unlocked_towers.append(tower)
-		SignalBus.tower_unlocked.emit(tower)
-		print("[ProgressManager] Tower unlocked: ", tower)
-
-	# Unlock campaign level
-	var level = chain["unlocks_level"]
-	if level > 0:
-		var current_max = campaign_progress.get("max_level_unlocked", 0)
-		if level > current_max:
-			campaign_progress["max_level_unlocked"] = level
-			SignalBus.campaign_level_unlocked.emit(level)
-			print("[ProgressManager] Campaign Level unlocked: ", level)
-
-# ── DEV MODE: unlock next lesson directly ──────────
-	# Remove this block once Campaign is built
-	if LEVEL_UNLOCKS_LESSON.has(level):
-		var next_lesson = LEVEL_UNLOCKS_LESSON[level]
-		unlock_topic(next_lesson)
-		SignalBus.lesson_unlocked.emit(next_lesson)
-		print("[ProgressManager] DEV: Lesson unlocked directly: ", next_lesson)
-	# ────────────
-	
-	save_progress()
-
-func on_level_completed(level_number: int) -> void:
-	var current = campaign_progress.get("waves_completed", 0)
-	if level_number > current:
-		campaign_progress["waves_completed"] = level_number
-
-	if LEVEL_UNLOCKS_LESSON.has(level_number):
-		var next_lesson = LEVEL_UNLOCKS_LESSON[level_number]
-		unlock_topic(next_lesson)
-		SignalBus.lesson_unlocked.emit(next_lesson)
-		print("[ProgressManager] Lesson unlocked: ", next_lesson)
-
-	save_progress()
-
-# ─── UTILITY ───────────────────────────────────────────
 func is_tower_unlocked(tower_id: String) -> bool:
 	return tower_id in unlocked_towers
 
 func is_level_unlocked(level_number: int) -> bool:
-	return level_number <= campaign_progress.get("max_level_unlocked", 0)
+	return level_number <= campaign_progress.get(
+		"max_level_unlocked", 0
+	)
 
 # ─── SAVE & LOAD ───────────────────────────────────────
 func save_progress() -> void:
-	# Save locally first
 	var data = {
 		"topic_states":      topic_states,
 		"coding_accuracy":   coding_accuracy,
@@ -216,13 +214,14 @@ func save_progress() -> void:
 			% json_string.replace("'", "\\'")
 		)
 	else:
-		var file = FileAccess.open("user://save.json", FileAccess.WRITE)
-		file.store_string(json_string)
-		file.close()
+		var file = FileAccess.open(
+			"user://save.json", FileAccess.WRITE
+		)
+		if file:
+			file.store_string(json_string)
+			file.close()
 
-	# Sync to cloud if logged in
-	if Engine.has_singleton("SupabaseManager") or \
-	   get_node_or_null("/root/SupabaseManager") != null:
+	if get_node_or_null("/root/SupabaseManager") != null:
 		if SupabaseManager.is_logged_in:
 			SupabaseManager.save_progress_to_cloud()
 			SupabaseManager.update_leaderboard()
@@ -240,9 +239,12 @@ func load_progress() -> void:
 			json_string = result
 	else:
 		if FileAccess.file_exists("user://save.json"):
-			var file = FileAccess.open("user://save.json", FileAccess.READ)
-			json_string = file.get_as_text()
-			file.close()
+			var file = FileAccess.open(
+				"user://save.json", FileAccess.READ
+			)
+			if file:
+				json_string = file.get_as_text()
+				file.close()
 
 	if json_string == "":
 		print("[ProgressManager] No save found. Starting fresh.")
@@ -250,18 +252,19 @@ func load_progress() -> void:
 
 	var parsed = JSON.parse_string(json_string)
 	if parsed == null:
-		print("[ProgressManager] Save file corrupted. Starting fresh.")
+		print("[ProgressManager] Save corrupted. Starting fresh.")
 		return
 
-	topic_states      = parsed.get("topic_states",      {})
-	coding_accuracy   = parsed.get("coding_accuracy",   {})
-	retry_counts      = parsed.get("retry_counts",      {})
-	time_spent        = parsed.get("time_spent",         {})
-	
+	topic_states    = parsed.get("topic_states",    {})
+	coding_accuracy = parsed.get("coding_accuracy", {})
+	retry_counts    = parsed.get("retry_counts",    {})
+	time_spent      = parsed.get("time_spent",      {})
+
 	var loaded_towers = parsed.get("unlocked_towers", [])
+	unlocked_towers   = []
 	for tower in loaded_towers:
-		if tower not in unlocked_towers:
-			unlocked_towers.append(str(tower))
+		unlocked_towers.append(str(tower))
+
 	campaign_progress = parsed.get("campaign_progress", {})
 	print("[ProgressManager] Progress loaded.")
 
@@ -272,10 +275,9 @@ func reset_all_progress() -> void:
 	time_spent        = {}
 	unlocked_towers   = []
 	campaign_progress = {
-		"current_level":      0,
-		"waves_completed":    0,
-		"towers_unlocked":    [],
-		"max_level_unlocked": 0,
+		"max_level_unlocked":  0,
+		"waves_completed":     0,
+		"placement_quiz_done": false,
 	}
-	_initialize_topics()
+	_ensure_base_state()
 	save_progress()
