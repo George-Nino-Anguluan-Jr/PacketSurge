@@ -1,6 +1,7 @@
 [gd_resource type="Resource" script_class="LessonData" format=3 uid="uid://bfc86ytyp0sb5"]
 
-[ext_resource type="Script" uid="uid://b3jcovwhgerid" path="res://scripts/data/LessonData.gd" id="1_artpg"]
+[ext_resource type="Script" uid="uid://ciet8k3fqk8tr" path="res://scripts/data/LessonData.gd" id="1_artpg"]
+[ext_resource type="PackedScene" uid="uid://lla8kmg1ee38" path="res://scenes/academy/visualizations/VizConditions.tscn" id="2_iddpb"]
 
 [resource]
 script = ExtResource("1_artpg")
@@ -9,6 +10,7 @@ title = "Conditions"
 category = "python"
 icon_text = "?"
 prerequisites = Array[String](["py_loops"])
+visualization_scene = ExtResource("2_iddpb")
 concept_text = "A condition lets your code make decisions.
 It checks if something is true or false, then runs different code.
 
@@ -78,4 +80,3 @@ practice_question = "What will this code print?    x = 10    if x > 20: print(\"
 practice_options = Array[String](["Big", "Medium", "Small", "Nothing"])
 practice_correct_index = 1
 practice_explanation = "x = 10.First condition: 10 > 20 is False — skip.Second condition: 10 > 5 is True — print \"Medium\".The else block is skipped because a condition already matched."
-metadata/_custom_type_script = "uid://b3jcovwhgerid"

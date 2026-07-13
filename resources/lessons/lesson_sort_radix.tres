@@ -4,4 +4,46 @@
 
 [resource]
 script = ExtResource("1_3d2s1")
+lesson_id = "sort_radix"
+title = "Radix Sort"
+category = "data_structures"
+icon_text = "0→9"
+prerequisites = Array[String](["sort_counting"])
+concept_text = "Radix Sort sorts numbers digit by digit, from least significant to most significant. It uses Counting Sort as a subroutine for each digit pass.
+
+Time complexity: O(d × (n + k)) where d is the number of digits.
+
+def radix_sort(arr):
+    max_val = max(arr)
+    exp     = 1
+    while max_val // exp > 0:
+        arr = counting_sort_by_digit(arr, exp)
+        exp *= 10
+    return arr"
+real_world_example = "Radix Sort is used for:
+- Sorting large lists of integers efficiently
+- Sorting IP addresses in network routing tables
+- Card sorting machines (the original inspiration)
+- DNA sequence sorting in bioinformatics"
+guided_example = "Trace Radix Sort on [170, 45, 75, 90, 2, 24]:
+
+Pass 1 (ones digit):
+170→0, 90→0, 2→2, 24→4, 45→5, 75→5
+Result: [170, 90, 2, 24, 45, 75]
+
+Pass 2 (tens digit):
+2→0, 24→2, 45→4, 75→7, 90→9, 170→7
+Result: [2, 24, 45, 75, 170, 90]
+
+Pass 3 (hundreds digit):
+Result: [2, 24, 45, 75, 90, 170] ✅"
+recap_text = "Radix Sort sorts digit by digit from least to most significant using Counting Sort for each pass. Achieves near-linear O(d×n) time for integer sorting — excellent for large numbers with a known digit range."
+challenge_instruction = "Arrange the code blocks to implement Radix Sort:"
+challenge_blocks = Array[String](["def radix_sort(arr):", "max_val = max(arr)", "exp = 1", "while max_val // exp > 0:", "arr = counting_sort_by_digit(arr, exp)", "exp *= 10", "return arr"])
+correct_sequence = Array[String](["def radix_sort(arr):", "max_val = max(arr)", "exp = 1", "while max_val // exp > 0:", "arr = counting_sort_by_digit(arr, exp)", "exp *= 10", "return arr"])
+challenge_hint = "Find max value, start exp=1 for ones digit, loop while digits remain, sort by current digit, multiply exp by 10."
+practice_question = "Radix Sort processes digits starting from which end?"
+practice_options = Array[String](["Most significant (left)", "Least significant (right)", "Middle digit", "Random digit"])
+practice_correct_index = 1
+practice_explanation = "Radix Sort starts from the least significant digit (rightmost/ones place) and works toward the most significant. This preserves relative order from previous passes."
 metadata/_custom_type_script = "uid://ciet8k3fqk8tr"

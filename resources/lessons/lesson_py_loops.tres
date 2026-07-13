@@ -1,6 +1,7 @@
 [gd_resource type="Resource" script_class="LessonData" format=3 uid="uid://c5yyi3ym3irkl"]
 
-[ext_resource type="Script" uid="uid://b3jcovwhgerid" path="res://scripts/data/LessonData.gd" id="1_46n2l"]
+[ext_resource type="Script" uid="uid://ciet8k3fqk8tr" path="res://scripts/data/LessonData.gd" id="1_46n2l"]
+[ext_resource type="PackedScene" uid="uid://cmwyi2allr4y0" path="res://scenes/academy/visualizations/VizLoops.tscn" id="2_24ibr"]
 
 [resource]
 script = ExtResource("1_46n2l")
@@ -9,6 +10,7 @@ title = "Loops"
 category = "python"
 icon_text = "↺"
 prerequisites = Array[String](["py_lists"])
+visualization_scene = ExtResource("2_24ibr")
 concept_text = "A loop repeats a block of code multiple times.
 Instead of writing the same line 10 times, you write it once inside a loop.
 
@@ -78,4 +80,3 @@ practice_question = "How many times will this loop print?    for i in range(3): 
 practice_options = Array[String](["2 times", "3 times", "4 times", "0 times"])
 practice_correct_index = 1
 practice_explanation = "range(3) generates: 0, 1, 2That is 3 values, so the loop runs 3 times.Remember: range(n) starts at 0 and stops before n."
-metadata/_custom_type_script = "uid://b3jcovwhgerid"

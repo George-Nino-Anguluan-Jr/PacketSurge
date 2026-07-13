@@ -4,4 +4,44 @@
 
 [resource]
 script = ExtResource("1_xgqti")
+lesson_id = "sort_quick"
+title = "Quick Sort"
+category = "data_structures"
+icon_text = "⚡"
+prerequisites = Array[String](["sort_insertion"])
+concept_text = "Quick Sort is a divide-and-conquer algorithm. It picks a pivot element and partitions the array into two halves — elements smaller than the pivot go left, larger go right. Each half is then sorted recursively.
+
+Average time complexity: O(n log n)
+
+def quick_sort(arr):
+    if len(arr) <= 1:
+        return arr
+    pivot = arr[len(arr) // 2]
+    left  = [x for x in arr if x < pivot]
+    mid   = [x for x in arr if x == pivot]
+    right = [x for x in arr if x > pivot]
+    return quick_sort(left) + mid + quick_sort(right)"
+real_world_example = "Quick Sort is used everywhere:
+- Python's built-in sort() uses a variant called Timsort
+- Database engines sort query results using Quick Sort variants
+- Operating systems sort file directories
+- Video game leaderboards sort scores using Quick Sort"
+guided_example = "Trace Quick Sort on [3, 6, 8, 10, 1, 2, 1]:
+
+pivot = arr[3] = 10
+left  = [3, 6, 8, 1, 2, 1]
+mid   = [10]
+right = []
+
+Recursively sort left:
+Result: [1, 1, 2, 3, 6, 8] + [10] = [1, 1, 2, 3, 6, 8, 10] ✅"
+recap_text = "Quick Sort picks a pivot, splits into smaller/larger halves, sorts each recursively, then combines. Average O(n log n) — fast in practice but O(n²) worst case if pivot is always the smallest or largest element."
+challenge_instruction = "Arrange the code blocks to implement Quick Sort:"
+challenge_blocks = Array[String](["def quick_sort(arr):", "if len(arr) <= 1:", "return arr", "pivot = arr[len(arr) // 2]", "left = [x for x in arr if x < pivot]", "mid = [x for x in arr if x == pivot]", "right = [x for x in arr if x > pivot]", "return quick_sort(left) + mid + quick_sort(right)"])
+correct_sequence = Array[String](["def quick_sort(arr):", "if len(arr) <= 1:", "return arr", "pivot = arr[len(arr) // 2]", "left = [x for x in arr if x < pivot]", "mid = [x for x in arr if x == pivot]", "right = [x for x in arr if x > pivot]", "return quick_sort(left) + mid + quick_sort(right)"])
+challenge_hint = "Start with the function definition, then base case, then pivot, then partition into left/mid/right, then return combined result."
+practice_question = "What is the average time complexity of Quick Sort?"
+practice_options = Array[String](["O(n²)", "O(n log n)", "O(log n)", "O(n)"])
+practice_correct_index = 1
+practice_explanation = "Quick Sort averages O(n log n) because each partition divides the array roughly in half, doing O(n) work per recursion level."
 metadata/_custom_type_script = "uid://ciet8k3fqk8tr"

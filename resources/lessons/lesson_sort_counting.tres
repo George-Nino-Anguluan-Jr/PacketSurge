@@ -4,4 +4,53 @@
 
 [resource]
 script = ExtResource("1_0x24s")
+lesson_id = "sort_counting"
+title = "Counting Sort"
+category = "data_structures"
+icon_text = "#"
+prerequisites = Array[String](["sort_merge"])
+concept_text = "Counting Sort is a non-comparison sorting algorithm. Instead of comparing elements, it counts how many times each value appears, then uses those counts to place elements correctly.
+
+Time complexity: O(n + k) where k is the range of values.
+
+def counting_sort(arr):
+    if not arr:
+        return arr
+    max_val = max(arr)
+    count   = [0] * (max_val + 1)
+    for num in arr:
+        count[num] += 1
+    result = []
+    for i, c in enumerate(count):
+        result.extend([i] * c)
+    return result"
+real_world_example = "Counting Sort is used when:
+- Sorting exam scores (0-100 range, thousands of students)
+- Sorting age groups in census data
+- Sorting pixel values in image processing (0-255)
+- As a subroutine inside Radix Sort"
+guided_example = "Trace Counting Sort on [4, 2, 2, 8, 3, 3, 1]:
+
+max_val = 8
+count = [0,0,0,0,0,0,0,0,0]
+
+Count occurrences:
+count[1]=1, count[2]=2, count[3]=2, count[4]=1, count[8]=1
+
+Build result:
+1 appears 1x → [1]
+2 appears 2x → [1, 2, 2]
+3 appears 2x → [1, 2, 2, 3, 3]
+4 appears 1x → [1, 2, 2, 3, 3, 4]
+8 appears 1x → [1, 2, 2, 3, 3, 4, 8]
+Result: [1, 2, 2, 3, 3, 4, 8] ✅"
+recap_text = "Counting Sort counts occurrences of each value then rebuilds the sorted array from those counts. Runs O(n + k) — faster than comparison sorts for small value ranges but uses extra memory proportional to the value range."
+challenge_instruction = "Arrange the code blocks to implement Counting Sort:"
+challenge_blocks = Array[String](["def counting_sort(arr):", "max_val = max(arr)", "count = [0] * (max_val + 1)", "for num in arr:", "count[num] += 1", "result = []", "for i, c in enumerate(count):", "result.extend([i] * c)"])
+correct_sequence = Array[String](["def counting_sort(arr):", "max_val = max(arr)", "count = [0] * (max_val + 1)", "for num in arr:", "count[num] += 1", "result = []", "for i, c in enumerate(count):", "result.extend([i] * c)"])
+challenge_hint = "Define function, find max value, create count array, count each number, build result from counts."
+practice_question = "What is the time complexity of Counting Sort?"
+practice_options = Array[String](["O(n log n)", "O(n²)", "O(n + k)", "O(k)"])
+practice_correct_index = 2
+practice_explanation = "Counting Sort runs in O(n + k) where n is elements and k is the value range. Faster than comparison sorts when k is small relative to n."
 metadata/_custom_type_script = "uid://ciet8k3fqk8tr"
