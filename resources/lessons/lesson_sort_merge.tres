@@ -4,4 +4,46 @@
 
 [resource]
 script = ExtResource("1_ri56b")
+lesson_id = "sort_merge"
+title = "Merge Sort"
+category = "data_structures"
+icon_text = "⊕"
+prerequisites = Array[String](["sort_quick"])
+concept_text = "Merge Sort is a stable divide-and-conquer algorithm. It splits the array in half, recursively sorts each half, then merges the sorted halves back together.
+
+Unlike Quick Sort, Merge Sort always runs in O(n log n) even in the worst case.
+
+def merge_sort(arr):
+    if len(arr) <= 1:
+        return arr
+    mid   = len(arr) // 2
+    left  = merge_sort(arr[:mid])
+    right = merge_sort(arr[mid:])
+    return merge(left, right)"
+real_world_example = "Merge Sort is used when stability matters:
+- Sorting linked lists (preferred algorithm)
+- External sorting of large files that don't fit in memory
+- Git uses merge-based algorithms to combine code changes
+- Database systems for sorting large datasets"
+guided_example = "Trace Merge Sort on [38, 27, 43, 3]:
+
+Split → [38, 27] and [43, 3]
+Split → [38],[27] and [43],[3]
+Merge [38],[27] → [27, 38]
+Merge [43],[3]  → [3, 43]
+Merge [27,38] and [3,43]:
+  3 < 27 → take 3
+  27 < 43 → take 27
+  38 < 43 → take 38
+  take 43
+Result: [3, 27, 38, 43] ✅"
+recap_text = "Merge Sort divides the array in half, recursively sorts each half, then merges them back. Guaranteed O(n log n) in all cases and stable — ideal when equal elements must keep their original order."
+challenge_instruction = "Arrange the code blocks to implement Merge Sort:"
+challenge_blocks = Array[String](["def merge_sort(arr):", "if len(arr) <= 1:", "return arr", "mid = len(arr) // 2", "left = merge_sort(arr[:mid])", "right = merge_sort(arr[mid:])", "return merge(left, right)"])
+correct_sequence = Array[String](["def merge_sort(arr):", "if len(arr) <= 1:", "return arr", "mid = len(arr) // 2", "left = merge_sort(arr[:mid])", "right = merge_sort(arr[mid:])", "return merge(left, right)"])
+challenge_hint = "Function definition, base case, find midpoint, sort left half, sort right half, merge and return."
+practice_question = "What is the worst-case time complexity of Merge Sort?"
+practice_options = Array[String](["O(n²)", "O(n)", "O(n log n)", "O(log n)"])
+practice_correct_index = 2
+practice_explanation = "Merge Sort always runs O(n log n) regardless of input because it always divides in half and always does O(n) merge work per level — unlike Quick Sort which can degrade to O(n²)."
 metadata/_custom_type_script = "uid://ciet8k3fqk8tr"

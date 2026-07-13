@@ -4,4 +4,50 @@
 
 [resource]
 script = ExtResource("1_l7yaq")
+lesson_id = "search_linear"
+title = "Binary Search"
+category = "data_structures"
+icon_text = "½"
+prerequisites = Array[String](["sort_radix"])
+concept_text = "Binary Search is a fast algorithm that works ONLY on sorted arrays. It repeatedly divides the search range in half by comparing the target to the middle element.
+
+Time complexity: O(log n) — extremely fast even for huge arrays.
+
+def binary_search(arr, target):
+    left  = 0
+    right = len(arr) - 1
+    while left <= right:
+        mid = (left + right) // 2
+        if arr[mid] == target:
+            return mid
+        elif arr[mid] < target:
+            left = mid + 1
+        else:
+            right = mid - 1
+    return -1"
+real_world_example = "Binary Search is everywhere:
+- Dictionary lookups (alphabetical = sorted)
+- Git bisect finds which commit introduced a bug
+- Database indexes find records instantly
+- Autocomplete searches sorted word lists
+- Python's bisect module implements Binary Search"
+guided_example = "Trace Binary Search for target=7 in [1,3,5,7,9,11,13]:
+
+left=0, right=6, mid=3 → arr[3]=7 == target!
+Found at index 3 ✅
+
+Try target=6:
+left=0, right=6, mid=3 → arr[3]=7 > 6, right=2
+left=0, right=2, mid=1 → arr[1]=3 < 6, left=2
+left=2, right=2, mid=2 → arr[2]=5 < 6, left=3
+left=3 > right=2 → return -1 ✅"
+recap_text = "Binary Search works on sorted arrays by repeatedly halving the search space. Runs in O(log n) — searching 1 billion elements takes only 30 steps. Trade-off: array must be sorted first."
+challenge_instruction = "Arrange the code blocks to implement Binary Search:"
+challenge_blocks = Array[String](["def binary_search(arr, target):", "left = 0", "right = len(arr) - 1", "while left <= right:", "mid = (left + right) // 2", "return mid", "left = mid + 1", "right = mid - 1", "return -1"])
+correct_sequence = Array[String](["def binary_search(arr, target):", "left = 0", "right = len(arr) - 1", "while left <= right:", "mid = (left + right) // 2", "return mid", "left = mid + 1", "right = mid - 1", "return -1"])
+challenge_hint = "Set left and right pointers, loop while not crossed, calculate mid, return if found, adjust left or right based on comparison, return -1 if loop ends."
+practice_question = "What is the key requirement for Binary Search to work?"
+practice_options = Array[String](["Array must have even number of elements", "Array must be sorted", "Array must contain only integers", "Array must have no duplicates"])
+practice_correct_index = 1
+practice_explanation = "Binary Search REQUIRES a sorted array. Without sorting, dividing the search space in half makes no sense — you have no guarantee which half contains the target."
 metadata/_custom_type_script = "uid://ciet8k3fqk8tr"

@@ -1,6 +1,7 @@
 [gd_resource type="Resource" script_class="LessonData" format=3 uid="uid://dkofpb08ix8c8"]
 
-[ext_resource type="Script" uid="uid://b3jcovwhgerid" path="res://scripts/data/LessonData.gd" id="1_5ypmi"]
+[ext_resource type="Script" uid="uid://ciet8k3fqk8tr" path="res://scripts/data/LessonData.gd" id="1_5ypmi"]
+[ext_resource type="PackedScene" uid="uid://b4jun8j02220n" path="res://scenes/academy/visualizations/VizLinkedLists.tscn" id="2_1p6j0"]
 
 [resource]
 script = ExtResource("1_5ypmi")
@@ -9,6 +10,7 @@ title = "Linked Lists"
 category = "data_structures"
 icon_text = "→→"
 prerequisites = Array[String](["ds_queuesds_queues"])
+visualization_scene = ExtResource("2_1p6j0")
 concept_text = "A linked list is a data structure where each item (called a node)
 contains a value AND a pointer to the next node.
 
@@ -97,4 +99,3 @@ practice_question = "What is the time complexity of inserting a nodeat the begin
 practice_options = Array[String](["O(n) — must traverse the whole list", "O(log n) — binary search needed", "O(1) — just update the head pointer", "O(n²) — nested traversal needed"])
 practice_correct_index = 2
 practice_explanation = "Inserting at the beginning of a linked list is O(1).You only need to:1. Set new_node.next = current_head2. Update head = new_nodeNo traversal needed — just two pointer updates.This is one of linked list's biggest advantages over arrays."
-metadata/_custom_type_script = "uid://b3jcovwhgerid"

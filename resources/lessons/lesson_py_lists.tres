@@ -1,6 +1,7 @@
 [gd_resource type="Resource" script_class="LessonData" format=3 uid="uid://c0s0tnbukxy8v"]
 
-[ext_resource type="Script" uid="uid://b3jcovwhgerid" path="res://scripts/data/LessonData.gd" id="1_6cnu5"]
+[ext_resource type="Script" uid="uid://ciet8k3fqk8tr" path="res://scripts/data/LessonData.gd" id="1_6cnu5"]
+[ext_resource type="PackedScene" uid="uid://ky81v2gcgf6" path="res://scenes/academy/visualizations/VizLists.tscn" id="2_ontg8"]
 
 [resource]
 script = ExtResource("1_6cnu5")
@@ -8,6 +9,7 @@ lesson_id = "py_lists"
 title = "Lists"
 category = "python"
 prerequisites = Array[String](["py_variables"])
+visualization_scene = ExtResource("2_ontg8")
 concept_text = "A list is a collection that holds multiple values in order.
 Think of it like a row of labeled boxes, each with a number starting from 0.
 
@@ -67,4 +69,3 @@ practice_question = "What is the output of this code?    colors = [\"red\", \"gr
 practice_options = Array[String](["red", "green", "blue", "colors[2]"])
 practice_correct_index = 2
 practice_explanation = "Index 2 refers to the third item in the list.Lists start counting from 0, so:    colors[0] = \"red\"    colors[1] = \"green\"    colors[2] = \"blue\""
-metadata/_custom_type_script = "uid://b3jcovwhgerid"
