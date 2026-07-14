@@ -12,13 +12,15 @@ const LEVEL_INFO = [
 	{"number": 2,  "name": "Stack Overflow",     "ds": "Stacks",       "waves": 4},
 	{"number": 3,  "name": "Queue Protocol",     "ds": "Queues",       "waves": 4},
 	{"number": 4,  "name": "Linked Assault",     "ds": "Linked Lists", "waves": 5},
-	{"number": 5,  "name": "Function Call",      "ds": "Functions",    "waves": 5},
-	{"number": 6,  "name": "Array Breach",       "ds": "Arrays+",      "waves": 5},
-	{"number": 7,  "name": "Stack Defense",      "ds": "Stacks+",      "waves": 6},
-	{"number": 8,  "name": "Queue Surge",        "ds": "Queues+",      "waves": 6},
-	{"number": 9,  "name": "Bubble Protocol",    "ds": "Bubble Sort",  "waves": 6},
-	{"number": 10, "name": "Selection Strike",   "ds": "Select Sort",  "waves": 7},
-	{"number": 11, "name": "Final Insertion",    "ds": "Insert Sort",  "waves": 8},
+	{"number": 5,  "name": "Bubble Protocol",    "ds": "Bubble Sort",  "waves": 5},
+	{"number": 6,  "name": "Selection Strike",   "ds": "Select Sort",  "waves": 5},
+	{"number": 7,  "name": "Stack Defense",      "ds": "Insert Sort",  "waves": 6},
+	{"number": 8,  "name": "Quick Strike",       "ds": "Quick Sort",   "waves": 6},
+	{"number": 9,  "name": "Merge Protocol",     "ds": "Merge Sort",   "waves": 6},
+	{"number": 10, "name": "Count Down",         "ds": "Counting Sort","waves": 7},
+	{"number": 11, "name": "Radix Rush",         "ds": "Radix Sort",   "waves": 7},
+	{"number": 12, "name": "Linear Sweep",       "ds": "Linear Search","waves": 7},
+	{"number": 13, "name": "Binary Endgame",     "ds": "Binary Search","waves": 8},
 ]
 
 func _ready() -> void:
@@ -64,10 +66,10 @@ func _build_level_grid() -> void:
 		level_grid.add_child(card)
 
 	# Update header
-	ram_label.text = str(unlocked_count) + " / 11 Unlocked"
+	ram_label.text = str(unlocked_count) + " / 13 Unlocked"
 
 	# Show hint if not all unlocked
-	locked_label.visible = unlocked_count < 11
+	locked_label.visible = unlocked_count < 13
 
 func _make_level_card(
 		info: Dictionary,
