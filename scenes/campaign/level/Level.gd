@@ -371,10 +371,6 @@ func _on_all_waves_completed() -> void:
 	var elapsed = (Time.get_ticks_msec() / 1000.0) - level_start_time
 	ProgressManager.on_level_completed(level_number)
 	SupabaseManager.submit_campaign_score(level_number, elapsed, score)
-	AdaptiveAI.record_level_performance(
-		_get_grade()["letter"], base_health, elapsed
-	)
-	_show_result_panel(true)
 
 func _on_enemy_reached_end(_enemy_id: String) -> void:
 	base_health -= 1

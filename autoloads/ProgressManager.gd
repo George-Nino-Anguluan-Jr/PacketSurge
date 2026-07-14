@@ -3,44 +3,37 @@ extends Node
 
 # ─── PROGRESSION CONSTANTS ─────────────────────────────
 const PROGRESSION_CHAIN: Dictionary = {
-	# Python lessons → unlock Campaign levels
-	"py_variables":    {"type": "level",  "id": 1},
-	"py_lists":        {"type": "level",  "id": 2},
-	"py_loops":        {"type": "level",  "id": 3},
-	"py_conditions":   {"type": "level",  "id": 4},
-	"py_functions":    {"type": "level",  "id": 5},
-	# DS lessons → unlock towers
-	"ds_arrays":       {"type": "tower",  "id": "tower_array"},
-	"ds_stacks":       {"type": "tower",  "id": "tower_stack"},
-	"ds_queues":       {"type": "tower",  "id": "tower_queue"},
-	"ds_linked_lists": {"type": "tower",  "id": "tower_linked_list"},
-	# Sorting lessons → unlock towers
-	"sort_bubble":     {"type": "tower",  "id": "tower_bubble"},
-	"sort_selection":  {"type": "tower",  "id": "tower_selection"},
-	"sort_insertion":  {"type": "tower",  "id": "tower_insertion"},
-	"sort_quick":      {"type": "tower",  "id": "tower_quick"},
-	"sort_merge":      {"type": "tower",  "id": "tower_merge"},
-	"sort_counting":   {"type": "tower",  "id": "tower_counting"},
-	"sort_radix":      {"type": "tower",  "id": "tower_radix"},
-	# Search lessons → unlock towers
-	"search_linear":   {"type": "tower",  "id": "tower_linear"},
-	"search_binary":   {"type": "tower",  "id": "tower_binary"},
+	# DS lessons → unlock towers and campaign levels
+	"ds_arrays":       {"type": "both",  "id": "tower_array",       "level_id": 1},
+	"ds_stacks":       {"type": "both",  "id": "tower_stack",       "level_id": 2},
+	"ds_queues":       {"type": "both",  "id": "tower_queue",       "level_id": 3},
+	"ds_linked_lists": {"type": "both",  "id": "tower_linked_list", "level_id": 4},
+	# Sorting lessons → unlock towers and campaign levels
+	"sort_bubble":     {"type": "both",  "id": "tower_bubble",      "level_id": 5},
+	"sort_selection":  {"type": "both",  "id": "tower_selection",   "level_id": 6},
+	"sort_insertion":  {"type": "both",  "id": "tower_insertion",   "level_id": 7},
+	"sort_quick":      {"type": "both",  "id": "tower_quick",       "level_id": 8},
+	"sort_merge":      {"type": "both",  "id": "tower_merge",       "level_id": 9},
+	"sort_counting":   {"type": "both",  "id": "tower_counting",    "level_id": 10},
+	"sort_radix":      {"type": "both",  "id": "tower_radix",       "level_id": 11},
+	# Search lessons → unlock towers and campaign levels
+	"search_linear":   {"type": "both",  "id": "tower_linear",      "level_id": 12},
+	"search_binary":   {"type": "both",  "id": "tower_binary",      "level_id": 13},
 }
 
 const LEVEL_UNLOCKS_LESSON: Dictionary = {
-	1:  "ds_arrays",
-	2:  "ds_stacks",
-	3:  "ds_queues",
-	4:  "ds_linked_lists",
-	5:  "sort_bubble",
-	6:  "sort_selection",
-	7:  "sort_insertion",
-	8:  "sort_quick",
-	9:  "sort_merge",
-	10: "sort_counting",
-	11: "sort_radix",
-	12: "search_linear",
-	13: "search_binary",
+	1:  "ds_stacks",
+	2:  "ds_queues",
+	3:  "ds_linked_lists",
+	4:  "sort_bubble",
+	5:  "sort_selection",
+	6:  "sort_insertion",
+	7:  "sort_quick",
+	8:  "sort_merge",
+	9:  "sort_counting",
+	10: "sort_radix",
+	11: "search_linear",
+	12: "search_binary",
 }
 
 const ALL_LESSONS = [
@@ -79,15 +72,12 @@ func _ensure_base_state() -> void:
 		if not topic_states.has(topic_id):
 			topic_states[topic_id] = "locked"
 
-	# tower_array always available as starter
-	if "tower_array" not in unlocked_towers:
-		unlocked_towers.append("tower_array")
-
-	# Level 1 always unlocked if py_variables mastered
-	if topic_states.get("py_variables") == "mastered":
+	# Level 1 always unlocked if ds_arrays mastered
+	if topic_states.get("ds_arrays") == "mastered":
 		if campaign_progress.get("max_level_unlocked", 0) < 1:
 			campaign_progress["max_level_unlocked"] = 1
 
+	check_all_unlocks()
 	print("[ProgressManager] Base state ensured.")
 
 # ─── TOPIC STATE ───────────────────────────────────────
@@ -107,38 +97,80 @@ func mark_mastered(topic_id: String) -> void:
 	print("[ProgressManager] Mastered: ", topic_id)
 	save_progress()
 
+# ─── UNLOCK CHECKER ────────────────────────────────────
+func check_all_unlocks() -> void:
+	# 1. Sequential Python unlocking
+	if get_topic_state("py_variables") == "mastered":
+		unlock_topic("py_lists")
+	if get_topic_state("py_lists") == "mastered":
+		unlock_topic("py_loops")
+	if get_topic_state("py_loops") == "mastered":
+		unlock_topic("py_conditions")
+	if get_topic_state("py_conditions") == "mastered":
+		unlock_topic("py_functions")
+	if get_topic_state("py_functions") == "mastered":
+		unlock_topic("ds_arrays")
+
+	# 2. Sequential DS / Sort / Search unlocking based on BOTH mastered lesson AND completed campaign level
+	var waves_done = campaign_progress.get("waves_completed", 0)
+
+	if get_topic_state("ds_arrays") == "mastered" and waves_done >= 1:
+		unlock_topic("ds_stacks")
+
+	if get_topic_state("ds_stacks") == "mastered" and waves_done >= 2:
+		unlock_topic("ds_queues")
+
+	if get_topic_state("ds_queues") == "mastered" and waves_done >= 3:
+		unlock_topic("ds_linked_lists")
+
+	if get_topic_state("ds_linked_lists") == "mastered" and waves_done >= 4:
+		unlock_topic("sort_bubble")
+
+	if get_topic_state("sort_bubble") == "mastered" and waves_done >= 5:
+		unlock_topic("sort_selection")
+
+	if get_topic_state("sort_selection") == "mastered" and waves_done >= 6:
+		unlock_topic("sort_insertion")
+
+	if get_topic_state("sort_insertion") == "mastered" and waves_done >= 7:
+		unlock_topic("sort_quick")
+
+	if get_topic_state("sort_quick") == "mastered" and waves_done >= 8:
+		unlock_topic("sort_merge")
+
+	if get_topic_state("sort_merge") == "mastered" and waves_done >= 9:
+		unlock_topic("sort_counting")
+
+	if get_topic_state("sort_counting") == "mastered" and waves_done >= 10:
+		unlock_topic("sort_radix")
+
+	if get_topic_state("sort_radix") == "mastered" and waves_done >= 11:
+		unlock_topic("search_linear")
+
+	if get_topic_state("search_linear") == "mastered" and waves_done >= 12:
+		unlock_topic("search_binary")
+
 # ─── LESSON COMPLETION ─────────────────────────────────
 func on_lesson_completed(lesson_id: String) -> void:
 	mark_mastered(lesson_id)
 
-	# Sequential Python lesson unlocking
-	if lesson_id == "py_variables":
-		unlock_topic("py_lists")
-	elif lesson_id == "py_lists":
-		unlock_topic("py_loops")
-	elif lesson_id == "py_loops":
-		unlock_topic("py_conditions")
-	elif lesson_id == "py_conditions":
-		unlock_topic("py_functions")
+	if PROGRESSION_CHAIN.has(lesson_id):
+		var chain = PROGRESSION_CHAIN[lesson_id]
 
-	if not PROGRESSION_CHAIN.has(lesson_id):
-		return
+		if chain["type"] == "tower" or chain["type"] == "both":
+			# DS/Sort/Search lesson → unlock tower
+			var tower_id = chain["id"]
+			unlock_tower(tower_id)
+			SignalBus.tower_unlocked.emit(tower_id)
+			print("[ProgressManager] Tower unlocked: ", tower_id)
 
-	var chain = PROGRESSION_CHAIN[lesson_id]
+		if chain["type"] == "level" or chain["type"] == "both":
+			# Python lesson or DS lesson → unlock campaign level
+			var level_num = chain.get("level_id", chain.get("id"))
+			unlock_campaign_level(level_num)
+			print("[ProgressManager] Campaign level unlocked: ", level_num)
 
-	if chain["type"] == "tower":
-		# DS/Sort/Search lesson → unlock tower
-		var tower_id = chain["id"]
-		unlock_tower(tower_id)
-		SignalBus.tower_unlocked.emit(tower_id)
-		print("[ProgressManager] Tower unlocked: ", tower_id)
-
-	elif chain["type"] == "level":
-		# Python lesson → unlock campaign level
-		var level_num = chain["id"]
-		unlock_campaign_level(level_num)
-		print("[ProgressManager] Campaign level unlocked: ", level_num)
-
+	check_all_unlocks()
 	save_progress()
 
 func on_level_completed(level_number: int) -> void:
@@ -147,12 +179,18 @@ func on_level_completed(level_number: int) -> void:
 	if level_number > current:
 		campaign_progress["waves_completed"] = level_number
 
-	# Unlock next lesson
+	# Level 1 completion always ensures Level 1 unlocked (for max_level_unlocked progression)
+	if campaign_progress.get("max_level_unlocked", 0) < level_number:
+		campaign_progress["max_level_unlocked"] = level_number
+
+	check_all_unlocks()
+
+	# Emit lesson unlocked signal for the UI notifications if applicable
 	if LEVEL_UNLOCKS_LESSON.has(level_number):
 		var next_lesson = LEVEL_UNLOCKS_LESSON[level_number]
-		unlock_topic(next_lesson)
-		SignalBus.lesson_unlocked.emit(next_lesson)
-		print("[ProgressManager] Lesson unlocked: ", next_lesson)
+		if get_topic_state(next_lesson) == "unlocked":
+			SignalBus.lesson_unlocked.emit(next_lesson)
+			print("[ProgressManager] Lesson unlocked notification: ", next_lesson)
 
 	save_progress()
 
