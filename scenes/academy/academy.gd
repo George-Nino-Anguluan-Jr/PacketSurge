@@ -89,38 +89,63 @@ func _build_sidebar() -> void:
 	for child in topic_list_ds.get_children():
 		child.queue_free()
 
+	# Python goes into TopicList_Python as before
 	var python_topics = [
 		"py_variables", "py_lists", "py_loops",
 		"py_conditions", "py_functions"
 	]
-	var ds_topics = [
-		"ds_arrays", "ds_stacks", "ds_queues", "ds_linked_lists",
-		"sort_bubble", "sort_selection", "sort_insertion",
-		"sort_quick", "sort_merge", "sort_counting", "sort_radix",
-		"search_linear", "search_binary"
-	]
-
-	_populate_topic_list(topic_list_python, "PYTHON", python_topics)
-	_populate_topic_list(topic_list_ds, "DATA STRUCTURES", ds_topics)
-
-func _populate_topic_list(
-		container: VBoxContainer,
-		group_name: String,
-		topic_ids: Array) -> void:
-
-	# Clear old buttons from tracking dict
-	for tid in topic_ids:
-		topic_buttons.erase(tid)
-
-	for topic_id in topic_ids:
+	for topic_id in python_topics:
 		var btn := Button.new()
 		btn.text      = _get_topic_display_name(topic_id)
 		btn.name      = topic_id
 		btn.alignment = HORIZONTAL_ALIGNMENT_LEFT
 		_style_topic_button(btn, ProgressManager.get_topic_state(topic_id))
 		btn.pressed.connect(_on_topic_selected.bind(topic_id))
-		container.add_child(btn)
+		topic_list_python.add_child(btn)
 		topic_buttons[topic_id] = btn
+
+	# DS, Sorting, Searching all go into TopicList_DS
+	# with visual group headers between them
+	var ds_groups = {
+		"── Data Structures ──": [
+			"ds_arrays", "ds_stacks", "ds_queues", "ds_linked_lists"
+		],
+		"── Sorting ──": [
+			"sort_bubble", "sort_selection", "sort_insertion",
+			"sort_quick", "sort_merge", "sort_counting", "sort_radix"
+		],
+		"── Searching ──": [
+			"search_linear", "search_binary"
+		],
+	}
+
+	for group_label in ds_groups:
+		# Group divider label
+		var divider := Label.new()
+		divider.text = group_label
+		divider.add_theme_font_size_override("font_size", 10)
+		divider.add_theme_color_override("font_color", Color("#00D4FF"))
+		var div_style := StyleBoxFlat.new()
+		div_style.bg_color             = Color("#050D1A")
+		div_style.border_color         = Color("#00D4FF")
+		div_style.border_width_bottom  = 1
+		div_style.content_margin_left  = 4
+		div_style.content_margin_top   = 6
+		div_style.content_margin_bottom = 6
+		divider.add_theme_stylebox_override("normal", div_style)
+		topic_list_ds.add_child(divider)
+
+		# Lesson buttons under this group
+		for topic_id in ds_groups[group_label]:
+			var btn := Button.new()
+			btn.text      = _get_topic_display_name(topic_id)
+			btn.name      = topic_id
+			btn.alignment = HORIZONTAL_ALIGNMENT_LEFT
+			_style_topic_button(btn, ProgressManager.get_topic_state(topic_id))
+			btn.pressed.connect(_on_topic_selected.bind(topic_id))
+			topic_list_ds.add_child(btn)
+			topic_buttons[topic_id] = btn
+
 
 func _get_topic_display_name(topic_id: String) -> String:
 	var names = {
@@ -193,8 +218,20 @@ func _open_lesson(lesson: LessonData) -> void:
 	current_step   = 0
 	completed_steps.clear()
 	_lesson_start_time = Time.get_ticks_msec() / 1000.0
-	lesson_title.text    = lesson.title
-	lesson_category.text = "Python Fundamentals" if lesson.category == "python" else "Data Structures"
+	lesson_title.text = lesson.title
+
+	# Set category label based on lesson_id prefix
+	if lesson.lesson_id.begins_with("py_"):
+		lesson_category.text = "Python Fundamentals"
+	elif lesson.lesson_id.begins_with("ds_"):
+		lesson_category.text = "Data Structures"
+	elif lesson.lesson_id.begins_with("sort_"):
+		lesson_category.text = "Sorting Algorithms"
+	elif lesson.lesson_id.begins_with("search_"):
+		lesson_category.text = "Searching Algorithms"
+	else:
+		lesson_category.text = "Lesson"
+
 	_build_step_indicator()
 	_show_current_step()
 	SignalBus.lesson_started.emit(lesson.lesson_id)
