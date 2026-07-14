@@ -111,6 +111,16 @@ func mark_mastered(topic_id: String) -> void:
 func on_lesson_completed(lesson_id: String) -> void:
 	mark_mastered(lesson_id)
 
+	# Sequential Python lesson unlocking
+	if lesson_id == "py_variables":
+		unlock_topic("py_lists")
+	elif lesson_id == "py_lists":
+		unlock_topic("py_loops")
+	elif lesson_id == "py_loops":
+		unlock_topic("py_conditions")
+	elif lesson_id == "py_conditions":
+		unlock_topic("py_functions")
+
 	if not PROGRESSION_CHAIN.has(lesson_id):
 		return
 

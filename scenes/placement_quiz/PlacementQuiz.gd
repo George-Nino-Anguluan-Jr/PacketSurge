@@ -277,6 +277,9 @@ func _on_passed() -> void:
 	for lesson in python_lessons:
 		ProgressManager.topic_states[lesson] = "mastered"
 
+	# Unlock ds_arrays (first DSA lesson)
+	ProgressManager.topic_states["ds_arrays"] = "unlocked"
+
 	# Unlock first 5 campaign levels and starter tower
 	for i in range(1, 6):
 		ProgressManager.unlock_campaign_level(i)
@@ -289,11 +292,27 @@ func _on_passed() -> void:
 	GameManager.go_to("campaign")
 
 func _on_failed() -> void:
+	# Lock python lessons, only variables is unlocked but not mastered
+	ProgressManager.topic_states["py_variables"] = "unlocked"
+	ProgressManager.topic_states["py_lists"] = "locked"
+	ProgressManager.topic_states["py_loops"] = "locked"
+	ProgressManager.topic_states["py_conditions"] = "locked"
+	ProgressManager.topic_states["py_functions"] = "locked"
+	ProgressManager.topic_states["ds_arrays"] = "locked"
+
 	ProgressManager.campaign_progress["placement_quiz_done"] = true
 	ProgressManager.save_progress()
 	GameManager.go_to("academy")
 
 func _skip_quiz() -> void:
+	# Lock python lessons, only variables is unlocked but not mastered
+	ProgressManager.topic_states["py_variables"] = "unlocked"
+	ProgressManager.topic_states["py_lists"] = "locked"
+	ProgressManager.topic_states["py_loops"] = "locked"
+	ProgressManager.topic_states["py_conditions"] = "locked"
+	ProgressManager.topic_states["py_functions"] = "locked"
+	ProgressManager.topic_states["ds_arrays"] = "locked"
+
 	ProgressManager.campaign_progress["placement_quiz_done"] = true
 	ProgressManager.save_progress()
 	GameManager.go_to("academy")
