@@ -115,6 +115,30 @@ text = "DATA STRUCTURES"
 [node name="TopicList_DS" type="VBoxContainer" parent="ContentArea/Sidebar/ScrollContainer/SidebarLayout/DSSection" unique_id=1464377745]
 layout_mode = 2
 
+[node name="SortSection" type="VBoxContainer" parent="ContentArea/Sidebar/ScrollContainer/SidebarLayout"]
+layout_mode = 2
+
+[node name="SectionLabel3" type="Label" parent="ContentArea/Sidebar/ScrollContainer/SidebarLayout/SortSection"]
+layout_mode = 2
+theme_override_colors/font_color = Color(0.2901961, 0.49803922, 0.64705884, 1)
+theme_override_font_sizes/font_size = 11
+text = "SORTING ALGORITHMS"
+
+[node name="TopicList_Sort" type="VBoxContainer" parent="ContentArea/Sidebar/ScrollContainer/SidebarLayout/SortSection"]
+layout_mode = 2
+
+[node name="SearchSection" type="VBoxContainer" parent="ContentArea/Sidebar/ScrollContainer/SidebarLayout"]
+layout_mode = 2
+
+[node name="SectionLabel4" type="Label" parent="ContentArea/Sidebar/ScrollContainer/SidebarLayout/SearchSection"]
+layout_mode = 2
+theme_override_colors/font_color = Color(0.2901961, 0.49803922, 0.64705884, 1)
+theme_override_font_sizes/font_size = 11
+text = "SEARCHING ALGORITHMS"
+
+[node name="TopicList_Search" type="VBoxContainer" parent="ContentArea/Sidebar/ScrollContainer/SidebarLayout/SearchSection"]
+layout_mode = 2
+
 [node name="LessonArea" type="PanelContainer" parent="ContentArea" unique_id=981630436]
 layout_mode = 2
 size_flags_horizontal = 3

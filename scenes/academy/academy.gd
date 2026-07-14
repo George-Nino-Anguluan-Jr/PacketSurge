@@ -8,6 +8,8 @@ extends Control
 @onready var progress_label: Label         = $TopBar/TopBarLayout/ProgressLabel
 @onready var topic_list_python: VBoxContainer = $ContentArea/Sidebar/ScrollContainer/SidebarLayout/PythonSection/TopicList_Python
 @onready var topic_list_ds: VBoxContainer     = $ContentArea/Sidebar/ScrollContainer/SidebarLayout/DSSection/TopicList_DS
+@onready var topic_list_sort: VBoxContainer   = $ContentArea/Sidebar/ScrollContainer/SidebarLayout/SortSection/TopicList_Sort
+@onready var topic_list_search: VBoxContainer = $ContentArea/Sidebar/ScrollContainer/SidebarLayout/SearchSection/TopicList_Search
 @onready var lesson_title: Label           = $ContentArea/LessonArea/LessonContainer/LessonHeader/LessonTitle
 @onready var lesson_category: Label        = $ContentArea/LessonArea/LessonContainer/LessonHeader/LessonCategory
 @onready var step_indicator: HBoxContainer = $ContentArea/LessonArea/LessonContainer/StepIndicator
@@ -88,8 +90,12 @@ func _build_sidebar() -> void:
 		child.queue_free()
 	for child in topic_list_ds.get_children():
 		child.queue_free()
+	for child in topic_list_sort.get_children():
+		child.queue_free()
+	for child in topic_list_search.get_children():
+		child.queue_free()
 
-	# Python goes into TopicList_Python as before
+	# Python Section
 	var python_topics = [
 		"py_variables", "py_lists", "py_loops",
 		"py_conditions", "py_functions"
@@ -104,47 +110,48 @@ func _build_sidebar() -> void:
 		topic_list_python.add_child(btn)
 		topic_buttons[topic_id] = btn
 
-	# DS, Sorting, Searching all go into TopicList_DS
-	# with visual group headers between them
-	var ds_groups = {
-		"── Data Structures ──": [
-			"ds_arrays", "ds_stacks", "ds_queues", "ds_linked_lists"
-		],
-		"── Sorting ──": [
-			"sort_bubble", "sort_selection", "sort_insertion",
-			"sort_quick", "sort_merge", "sort_counting", "sort_radix"
-		],
-		"── Searching ──": [
-			"search_linear", "search_binary"
-		],
-	}
+	# Data Structures Section
+	var ds_topics = [
+		"ds_arrays", "ds_stacks", "ds_queues", "ds_linked_lists"
+	]
+	for topic_id in ds_topics:
+		var btn := Button.new()
+		btn.text      = _get_topic_display_name(topic_id)
+		btn.name      = topic_id
+		btn.alignment = HORIZONTAL_ALIGNMENT_LEFT
+		_style_topic_button(btn, ProgressManager.get_topic_state(topic_id))
+		btn.pressed.connect(_on_topic_selected.bind(topic_id))
+		topic_list_ds.add_child(btn)
+		topic_buttons[topic_id] = btn
 
-	for group_label in ds_groups:
-		# Group divider label
-		var divider := Label.new()
-		divider.text = group_label
-		divider.add_theme_font_size_override("font_size", 10)
-		divider.add_theme_color_override("font_color", Color("#00D4FF"))
-		var div_style := StyleBoxFlat.new()
-		div_style.bg_color             = Color("#050D1A")
-		div_style.border_color         = Color("#00D4FF")
-		div_style.border_width_bottom  = 1
-		div_style.content_margin_left  = 4
-		div_style.content_margin_top   = 6
-		div_style.content_margin_bottom = 6
-		divider.add_theme_stylebox_override("normal", div_style)
-		topic_list_ds.add_child(divider)
+	# Sorting Section
+	var sort_topics = [
+		"sort_bubble", "sort_selection", "sort_insertion",
+		"sort_quick", "sort_merge", "sort_counting", "sort_radix"
+	]
+	for topic_id in sort_topics:
+		var btn := Button.new()
+		btn.text      = _get_topic_display_name(topic_id)
+		btn.name      = topic_id
+		btn.alignment = HORIZONTAL_ALIGNMENT_LEFT
+		_style_topic_button(btn, ProgressManager.get_topic_state(topic_id))
+		btn.pressed.connect(_on_topic_selected.bind(topic_id))
+		topic_list_sort.add_child(btn)
+		topic_buttons[topic_id] = btn
 
-		# Lesson buttons under this group
-		for topic_id in ds_groups[group_label]:
-			var btn := Button.new()
-			btn.text      = _get_topic_display_name(topic_id)
-			btn.name      = topic_id
-			btn.alignment = HORIZONTAL_ALIGNMENT_LEFT
-			_style_topic_button(btn, ProgressManager.get_topic_state(topic_id))
-			btn.pressed.connect(_on_topic_selected.bind(topic_id))
-			topic_list_ds.add_child(btn)
-			topic_buttons[topic_id] = btn
+	# Searching Section
+	var search_topics = [
+		"search_linear", "search_binary"
+	]
+	for topic_id in search_topics:
+		var btn := Button.new()
+		btn.text      = _get_topic_display_name(topic_id)
+		btn.name      = topic_id
+		btn.alignment = HORIZONTAL_ALIGNMENT_LEFT
+		_style_topic_button(btn, ProgressManager.get_topic_state(topic_id))
+		btn.pressed.connect(_on_topic_selected.bind(topic_id))
+		topic_list_search.add_child(btn)
+		topic_buttons[topic_id] = btn
 
 
 func _get_topic_display_name(topic_id: String) -> String:
