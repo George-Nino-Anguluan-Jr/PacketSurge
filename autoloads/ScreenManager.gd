@@ -35,14 +35,30 @@ func sv(v: Vector2) -> Vector2:
 
 # ─── BREAKPOINTS ───────────────────────────────────────
 func is_mobile() -> bool:
+	if OS.has_feature("mobile"):
+		var dpi = DisplayServer.screen_get_dpi()
+		if dpi > 0:
+			var size = get_screen_size()
+			var inches = size.length() / dpi
+			return inches < 7.0
+		return true
 	var size = get_screen_size()
 	return size.x < 768 or size.y < 500
 
 func is_tablet() -> bool:
+	if OS.has_feature("mobile"):
+		var dpi = DisplayServer.screen_get_dpi()
+		if dpi > 0:
+			var size = get_screen_size()
+			var inches = size.length() / dpi
+			return inches >= 7.0
+		return false
 	var size = get_screen_size()
 	return size.x >= 768 and size.x < 1024
 
 func is_desktop() -> bool:
+	if OS.has_feature("mobile"):
+		return false
 	return get_screen_size().x >= 1024
 
 func get_columns() -> int:
