@@ -23,6 +23,7 @@ ScreenManager="*uid://qjct75lfr7a3"
 ProgressManager="*uid://dh7d1o85888h5"
 AdaptiveAI="*uid://8rjpmb4rwoxe"
 SupabaseManager="*uid://d4c6t1sdehokl"
+SoundManager="*res://autoloads/SoundManager.gd"
 
 [display]
 

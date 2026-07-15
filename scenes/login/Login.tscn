@@ -43,12 +43,6 @@ theme_override_font_sizes/font_size = 48
 text = "PACKET SURGE"
 horizontal_alignment = 1
 
-[node name="SubtitleLabel" type="Label" parent="CenterContainer/MainLayout/TitleSection" unique_id=859104204]
-layout_mode = 2
-theme_override_colors/font_color = Color(0.2901961, 0.49803922, 0.64705884, 1)
-text = "Network Defense Academy"
-horizontal_alignment = 1
-
 [node name="FormCard" type="PanelContainer" parent="CenterContainer/MainLayout" unique_id=51315386]
 custom_minimum_size = Vector2(420, 0)
 layout_mode = 2
