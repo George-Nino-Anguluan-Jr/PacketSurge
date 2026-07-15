@@ -3,11 +3,10 @@ extends Control
 
 # ─── NODE REFERENCES ───────────────────────────────────
 @onready var continue_button: Button    = $CenterContainer/MainLayout/ButtonSection/ContinueButton
-@onready var academy_button: Button     = $CenterContainer/MainLayout/ButtonSection/CoreGrid/AcademyButton
-@onready var campaign_button: Button    = $CenterContainer/MainLayout/ButtonSection/CoreGrid/CampaignButton
-@onready var sandbox_button: Button     = $CenterContainer/MainLayout/ButtonSection/CoreGrid/SandboxButton
-@onready var index_button: Button       = $CenterContainer/MainLayout/ButtonSection/CoreGrid/IndexButton
-@onready var leaderboard_button: Button = $CenterContainer/MainLayout/ButtonSection/ExtraGrid/LeaderboardButton
+@onready var academy_button: Button     = $CenterContainer/MainLayout/ButtonSection/AcademyButton
+@onready var campaign_button: Button    = $CenterContainer/MainLayout/ButtonSection/CampaignButton
+@onready var index_button: Button       = $CenterContainer/MainLayout/ButtonSection/IndexButton
+@onready var leaderboard_button: Button = $CenterContainer/MainLayout/ButtonSection/LeaderboardButton
 @onready var settings_button: Button    = $CenterContainer/MainLayout/ButtonSection/SettingsButton
 @onready var title_label: Label         = $CenterContainer/MainLayout/TitleSection/TitleLabel
 
@@ -27,13 +26,13 @@ var _time: float = 0.0
 func _ready() -> void:
 	_core_buttons = [
 		academy_button, campaign_button,
-		sandbox_button, index_button,
+		index_button,
 		leaderboard_button,
 	]
 	_all_buttons = [
 		continue_button,
 		academy_button, campaign_button,
-		sandbox_button, index_button,
+		index_button,
 		leaderboard_button,
 		settings_button,
 	]
@@ -59,7 +58,6 @@ func _setup_buttons() -> void:
 	continue_button.pressed.connect(_on_continue_pressed)
 	academy_button.pressed.connect(func(): GameManager.go_to("academy"))
 	campaign_button.pressed.connect(func(): GameManager.go_to("campaign"))
-	sandbox_button.pressed.connect(func(): GameManager.go_to("sandbox"))
 	index_button.pressed.connect(func(): GameManager.go_to("index"))
 	leaderboard_button.pressed.connect(func(): GameManager.go_to("leaderboard"))
 	settings_button.pressed.connect(func(): GameManager.go_to("settings"))
@@ -276,24 +274,15 @@ func _style_profile_card() -> void:
 
 # ─── RESPONSIVE ────────────────────────────────────────
 func _apply_responsive_layout() -> void:
-	var core_grid = $CenterContainer/MainLayout/ButtonSection/CoreGrid
-	var extra_grid = $CenterContainer/MainLayout/ButtonSection/ExtraGrid
-
 	if ScreenManager.is_mobile():
 		title_label.add_theme_font_size_override("font_size", 38)
-		core_grid.columns  = 1
-		extra_grid.columns = 1
 		for btn in _all_buttons:
 			btn.custom_minimum_size = Vector2(260, 48)
 	elif ScreenManager.is_tablet():
 		title_label.add_theme_font_size_override("font_size", 52)
-		core_grid.columns  = 2
-		extra_grid.columns = 1
 		for btn in _all_buttons:
-			btn.custom_minimum_size = Vector2(160, 50)
+			btn.custom_minimum_size = Vector2(300, 50)
 	else:
 		title_label.add_theme_font_size_override("font_size", 64)
-		core_grid.columns  = 2
-		extra_grid.columns = 1
 		for btn in _all_buttons:
-			btn.custom_minimum_size = Vector2(180, 52)
+			btn.custom_minimum_size = Vector2(320, 52)

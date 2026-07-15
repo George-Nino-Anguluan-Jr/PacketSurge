@@ -68,52 +68,35 @@ layout_mode = 2
 
 [node name="ButtonSection" type="VBoxContainer" parent="CenterContainer/MainLayout" unique_id=343250965]
 layout_mode = 2
+theme_override_constants/separation = 12
 
 [node name="ContinueButton" type="Button" parent="CenterContainer/MainLayout/ButtonSection" unique_id=883757477]
-custom_minimum_size = Vector2(0, 52)
+custom_minimum_size = Vector2(260, 52)
 layout_mode = 2
 text = "CONTINUE"
 
-[node name="CoreGrid" type="GridContainer" parent="CenterContainer/MainLayout/ButtonSection" unique_id=215810874]
+[node name="AcademyButton" type="Button" parent="CenterContainer/MainLayout/ButtonSection" unique_id=1640463120]
+custom_minimum_size = Vector2(260, 52)
 layout_mode = 2
-theme_override_constants/h_separation = 12
-theme_override_constants/v_separation = 4
-columns = 2
-
-[node name="AcademyButton" type="Button" parent="CenterContainer/MainLayout/ButtonSection/CoreGrid" unique_id=1640463120]
-custom_minimum_size = Vector2(0, 52)
-layout_mode = 2
-size_flags_horizontal = 3
 text = "ACADEMY"
 
-[node name="CampaignButton" type="Button" parent="CenterContainer/MainLayout/ButtonSection/CoreGrid" unique_id=324031090]
+[node name="CampaignButton" type="Button" parent="CenterContainer/MainLayout/ButtonSection" unique_id=324031090]
+custom_minimum_size = Vector2(260, 52)
 layout_mode = 2
 text = "CAMPAIGN"
 
-[node name="SandboxButton" type="Button" parent="CenterContainer/MainLayout/ButtonSection/CoreGrid" unique_id=967461680]
+[node name="IndexButton" type="Button" parent="CenterContainer/MainLayout/ButtonSection" unique_id=171158732]
+custom_minimum_size = Vector2(260, 52)
 layout_mode = 2
-text = "SANDBOX"
-
-[node name="IndexButton" type="Button" parent="CenterContainer/MainLayout/ButtonSection/CoreGrid" unique_id=171158732]
-custom_minimum_size = Vector2(0, 52)
-layout_mode = 2
-size_flags_horizontal = 3
 text = "INDEX"
 
-[node name="ExtraGrid" type="GridContainer" parent="CenterContainer/MainLayout/ButtonSection" unique_id=377837432]
+[node name="LeaderboardButton" type="Button" parent="CenterContainer/MainLayout/ButtonSection" unique_id=719556249]
+custom_minimum_size = Vector2(260, 52)
 layout_mode = 2
-theme_override_constants/h_separation = 12
-theme_override_constants/v_separation = 12
-columns = 1
-
-[node name="LeaderboardButton" type="Button" parent="CenterContainer/MainLayout/ButtonSection/ExtraGrid" unique_id=719556249]
-custom_minimum_size = Vector2(0, 52)
-layout_mode = 2
-size_flags_horizontal = 3
 text = "LEADERBOARDS"
 
 [node name="SettingsButton" type="Button" parent="CenterContainer/MainLayout/ButtonSection" unique_id=1796636240]
-custom_minimum_size = Vector2(0, 52)
+custom_minimum_size = Vector2(260, 52)
 layout_mode = 2
 text = "SETTINGS"
 
