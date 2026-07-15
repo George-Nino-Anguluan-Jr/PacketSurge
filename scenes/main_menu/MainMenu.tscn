@@ -3,6 +3,8 @@
 [ext_resource type="Script" uid="uid://st06vxbs8wmk" path="res://scenes/main_menu/main_menu.gd" id="1_isws5"]
 [ext_resource type="PackedScene" uid="uid://r0pj7cuytrqm" path="res://scenes/core/ToastManager.tscn" id="2_axelx"]
 [ext_resource type="PackedScene" uid="uid://cx6nu7u8u76nv" path="res://scenes/profile/ProfilePopup.tscn" id="3_profile_popup"]
+[ext_resource type="Texture2D" path="res://assets/icons/leaderboard.svg" id="4_leaderboard"]
+[ext_resource type="Texture2D" path="res://assets/icons/settings.svg" id="5_settings"]
 
 [node name="MainMenu" type="Control" unique_id=301285877]
 layout_mode = 3
@@ -168,12 +170,14 @@ text = "Year & Section"
 custom_minimum_size = Vector2(48, 48)
 layout_mode = 2
 size_flags_vertical = 4
-text = "📊"
+icon = ExtResource("4_leaderboard")
+expand_icon = true
 
 [node name="SettingsButton" type="Button" parent="TopLeftContainer" unique_id=1796636240]
 custom_minimum_size = Vector2(48, 48)
 layout_mode = 2
 size_flags_vertical = 4
-text = "⚙"
+icon = ExtResource("5_settings")
+expand_icon = true
 
 [node name="ProfilePopup" parent="." unique_id=999888800 instance=ExtResource("3_profile_popup")]

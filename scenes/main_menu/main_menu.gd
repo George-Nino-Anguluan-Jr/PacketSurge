@@ -107,6 +107,10 @@ func _style_menu_button(button: Button) -> void:
 	button.add_theme_font_size_override("font_size", 13)
 
 func _style_icon_button(button: Button) -> void:
+	button.icon_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	button.vertical_icon_alignment = VERTICAL_ALIGNMENT_CENTER
+	button.expand_icon = false
+
 	var normal := StyleBoxFlat.new()
 	normal.bg_color            = Color("#0A1628", 0.6)
 	normal.border_color        = Color("#00D4FF", 0.4)
@@ -144,6 +148,9 @@ func _style_icon_button(button: Button) -> void:
 	button.add_theme_color_override("font_color",         Color("#00D4FF"))
 	button.add_theme_color_override("font_hover_color",   Color("#E8F4FD"))
 	button.add_theme_color_override("font_pressed_color", Color("#050D1A"))
+	button.add_theme_color_override("icon_normal_color",  Color("#00D4FF"))
+	button.add_theme_color_override("icon_hover_color",   Color("#E8F4FD"))
+	button.add_theme_color_override("icon_pressed_color", Color("#050D1A"))
 	button.add_theme_font_size_override("font_size", 22)
 
 # ─── TITLE ANIMATION ───────────────────────────────────
