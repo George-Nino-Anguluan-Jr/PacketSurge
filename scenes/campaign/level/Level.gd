@@ -24,6 +24,7 @@ var base_health: int               = 10
 var selected_tower_data: TowerData = null
 var grid_system: Node2D            = null
 var level_start_time: float        = 0.0
+var is_level_ended: bool           = false
 
 # ─── TOWER DEFINITIONS ─────────────────────────────────
 const TOWER_DEFINITIONS = {
@@ -368,14 +369,21 @@ func _on_wave_completed(wave_num: int) -> void:
 	)
 
 func _on_all_waves_completed() -> void:
+	if is_level_ended:
+		return
+	is_level_ended = true
 	var elapsed = (Time.get_ticks_msec() / 1000.0) - level_start_time
 	ProgressManager.on_level_completed(level_number)
 	SupabaseManager.submit_campaign_score(level_number, elapsed, score)
+	_show_result_panel(true)
 
 func _on_enemy_reached_end(_enemy_id: String) -> void:
+	if is_level_ended:
+		return
 	base_health -= 1
 	_update_base_health_label()
 	if base_health <= 0:
+		is_level_ended = true
 		AdaptiveAI.record_level_performance("F", 0, 0.0)
 		_show_result_panel(false)
 

@@ -2,6 +2,7 @@
 
 [ext_resource type="Script" uid="uid://st06vxbs8wmk" path="res://scenes/main_menu/main_menu.gd" id="1_isws5"]
 [ext_resource type="PackedScene" uid="uid://r0pj7cuytrqm" path="res://scenes/core/ToastManager.tscn" id="2_axelx"]
+[ext_resource type="PackedScene" uid="uid://cx6nu7u8u76nv" path="res://scenes/profile/ProfilePopup.tscn" id="3_profile_popup"]
 
 [node name="MainMenu" type="Control" unique_id=301285877]
 layout_mode = 3
@@ -141,3 +142,60 @@ theme_override_font_sizes/font_size = 13
 text = "v0.1.0 — Packet Surge"
 
 [node name="ToastManager" parent="." unique_id=536978336 instance=ExtResource("2_axelx")]
+
+[node name="ProfileCard" type="PanelContainer" parent="." unique_id=999888777]
+layout_mode = 1
+offset_left = 24.0
+offset_top = 24.0
+offset_right = 260.0
+offset_bottom = 88.0
+mouse_default_cursor_shape = 2
+
+[node name="MarginContainer" type="MarginContainer" parent="ProfileCard" unique_id=999888778]
+layout_mode = 2
+mouse_filter = 1
+theme_override_constants/margin_left = 12
+theme_override_constants/margin_top = 8
+theme_override_constants/margin_right = 12
+theme_override_constants/margin_bottom = 8
+
+[node name="ProfileLayout" type="HBoxContainer" parent="ProfileCard/MarginContainer" unique_id=999888779]
+layout_mode = 2
+mouse_filter = 1
+theme_override_constants/separation = 12
+
+[node name="AvatarPanel" type="PanelContainer" parent="ProfileCard/MarginContainer/ProfileLayout" unique_id=999888780]
+custom_minimum_size = Vector2(36, 36)
+layout_mode = 2
+mouse_filter = 1
+size_flags_vertical = 4
+
+[node name="AvatarLabel" type="Label" parent="ProfileCard/MarginContainer/ProfileLayout/AvatarPanel" unique_id=999888781]
+layout_mode = 2
+size_flags_horizontal = 4
+theme_override_colors/font_color = Color(0, 0.83137256, 1, 1)
+theme_override_font_sizes/font_size = 16
+text = "U"
+horizontal_alignment = 1
+vertical_alignment = 1
+
+[node name="TextLayout" type="VBoxContainer" parent="ProfileCard/MarginContainer/ProfileLayout" unique_id=999888782]
+layout_mode = 2
+mouse_filter = 1
+size_flags_horizontal = 3
+theme_override_constants/separation = 2
+alignment = 1
+
+[node name="UsernameLabel" type="Label" parent="ProfileCard/MarginContainer/ProfileLayout/TextLayout" unique_id=999888783]
+layout_mode = 2
+theme_override_colors/font_color = Color(0.9098039, 0.95686275, 0.99215686, 1)
+theme_override_font_sizes/font_size = 13
+text = "Username"
+
+[node name="ClassLabel" type="Label" parent="ProfileCard/MarginContainer/ProfileLayout/TextLayout" unique_id=999888784]
+layout_mode = 2
+theme_override_colors/font_color = Color(0.2901961, 0.49803922, 0.64705884, 1)
+theme_override_font_sizes/font_size = 11
+text = "Year & Section"
+
+[node name="ProfilePopup" parent="." unique_id=999888800 instance=ExtResource("3_profile_popup")]

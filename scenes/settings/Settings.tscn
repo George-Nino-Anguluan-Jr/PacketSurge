@@ -54,12 +54,6 @@ grow_horizontal = 2
 grow_vertical = 2
 theme_override_constants/separation = 0
 
-[node name="ProfileTab" type="Button" parent="TabBar" unique_id=1525389297]
-custom_minimum_size = Vector2(0, 44)
-layout_mode = 2
-size_flags_horizontal = 3
-text = "👤 PROFILE"
-
 [node name="GeneralTab" type="Button" parent="TabBar" unique_id=355829274]
 custom_minimum_size = Vector2(0, 44)
 layout_mode = 2
@@ -84,15 +78,6 @@ theme_override_constants/margin_left = 24
 theme_override_constants/margin_top = 24
 theme_override_constants/margin_right = 24
 theme_override_constants/margin_bottom = 24
-
-[node name="ProfilePanel" type="ScrollContainer" parent="ContentArea" unique_id=423544268]
-layout_mode = 2
-horizontal_scroll_mode = 0
-
-[node name="ProfileContent" type="VBoxContainer" parent="ContentArea/ProfilePanel" unique_id=1888607253]
-layout_mode = 2
-size_flags_horizontal = 3
-theme_override_constants/separation = 16
 
 [node name="GeneralPanel" type="ScrollContainer" parent="ContentArea" unique_id=1669138179]
 visible = false
