@@ -153,6 +153,38 @@ func _build_sidebar() -> void:
 		topic_list_search.add_child(btn)
 		topic_buttons[topic_id] = btn
 
+	# Sandbox/Playgrounds Section at the bottom of the sidebar
+	var sidebar_layout = $ContentArea/Sidebar/ScrollContainer/SidebarLayout
+	var old_sec = sidebar_layout.get_node_or_null("SandboxSection")
+	if old_sec:
+		old_sec.queue_free()
+	var old_sep = sidebar_layout.get_node_or_null("SandboxSeparator")
+	if old_sep:
+		old_sep.queue_free()
+		
+	var sep := HSeparator.new()
+	sep.name = "SandboxSeparator"
+	sidebar_layout.add_child(sep)
+	
+	var sandbox_section := VBoxContainer.new()
+	sandbox_section.name = "SandboxSection"
+	sandbox_section.add_theme_constant_override("separation", 4)
+	
+	var label := Label.new()
+	label.text = "PLAYGROUND"
+	label.add_theme_color_override("font_color", Color("#4A7FA5"))
+	label.add_theme_font_size_override("font_size", 11)
+	sandbox_section.add_child(label)
+	
+	var sandbox_btn := Button.new()
+	sandbox_btn.text = "🧪 Open Sandbox"
+	sandbox_btn.alignment = HORIZONTAL_ALIGNMENT_LEFT
+	_style_topic_button(sandbox_btn, "unlocked")
+	sandbox_btn.pressed.connect(func(): GameManager.go_to("sandbox"))
+	sandbox_section.add_child(sandbox_btn)
+	
+	sidebar_layout.add_child(sandbox_section)
+
 
 func _get_topic_display_name(topic_id: String) -> String:
 	var names = {

@@ -94,11 +94,11 @@ func _setup_buttons() -> void:
 	back_btn.pressed.connect(_on_back_pressed)
 
 func _on_back_pressed() -> void:
-	GameManager.go_to("main_menu")
+	GameManager.go_to("academy")
 
 func _input(event: InputEvent) -> void:
 	if event.is_action_pressed("ui_cancel"):
-		GameManager.go_to("main_menu")
+		GameManager.go_to("academy")
 
 # ─── BUILD CARDS ───────────────────────────────────────
 func _build_cards() -> void:
