@@ -10,15 +10,19 @@ extends Control
 @onready var stats_content: VBoxContainer   = $ContentArea/LeftMargin/LeftContent/StatsPanel/StatsMargin/StatsContent
 @onready var slot_label: Label              = $ContentArea/RightMargin/RightContent/SlotLabel
 @onready var selected_row: HBoxContainer    = $ContentArea/RightMargin/RightContent/SelectedRow
-@onready var available_grid: GridContainer  = $ContentArea/RightMargin/RightContent/AvailableGrid
+@onready var available_grid: GridContainer  = $ContentArea/RightMargin/RightContent/ScrollContainer/AvailableGrid
 @onready var start_btn: Button              = $ContentArea/RightMargin/RightContent/StartBtn
+@onready var card_layer: Control            = $CardLayer
 
 # ─── STATE ─────────────────────────────────────────────
 var level_config: Dictionary = {}
 var level_number: int        = 1
-var max_slots: int           = 2
+var max_slots: int           = 5 # ALWAYS 5 SELECTED SLOTS FOR ANY LEVEL
 var selected_towers: Array   = []
-var available_towers: Array  = []
+var available_towers: Array  = [] # Holds all unlocked towers
+
+# Floating Card instances
+var active_cards: Array = []
 
 # ─── TOWER DEFINITIONS ─────────────────────────────────
 const TOWER_DEFINITIONS = {
@@ -119,20 +123,21 @@ const TOWER_DEFINITIONS = {
 func _ready() -> void:
 	level_number    = GameManager.current_level
 	level_config    = _get_level_config()
-	max_slots       = level_config.get("tower_slots", 2)
+	max_slots       = 5 # Fixed 5 tower slots for any level
 	selected_towers = []
-
-	# Required towers pre-selected and locked in
-	var required = level_config.get("required_towers", [])
-	for t in required:
-		if ProgressManager.is_tower_unlocked(t):
-			selected_towers.append(t)
 
 	_setup_buttons()
 	_apply_styles()
 	_build_left_panel()
-	_build_available_list()
-	_refresh_selected_row()
+	
+	# Determine unlocked towers first to build placeholders correctly
+	_determine_unlocked_towers()
+	_build_placeholders()
+	
+	# Wait one frame so that container layouts solve and positions are valid
+	await get_tree().process_frame
+	_build_tower_cards()
+	_refresh_slots()
 	_refresh_start_btn()
 
 # ─── LEFT PANEL ────────────────────────────────────────
@@ -212,176 +217,219 @@ func _add_stat(
 
 	container.add_child(col)
 
-# ─── AVAILABLE TOWERS GRID ─────────────────────────────
-func _build_available_list() -> void:
-	for child in available_grid.get_children():
-		child.queue_free()
+# ─── DETERMINE UNLOCKED TOWERS ─────────────────────────
+func _determine_unlocked_towers() -> void:
+	available_towers = []
+	for t in TOWER_DEFINITIONS.keys():
+		if ProgressManager.is_tower_unlocked(t):
+			available_towers.append(t)
 
-	var config_towers = level_config.get("towers", [])
-	available_towers  = []
-
-	for tower_id in config_towers:
-		if not ProgressManager.is_tower_unlocked(tower_id):
-			continue
-		if not TOWER_DEFINITIONS.has(tower_id):
-			continue
-		available_towers.append(tower_id)
-
-		var def          = TOWER_DEFINITIONS[tower_id]
-		var btn          := Button.new()
-		btn.custom_minimum_size = Vector2(90, 90)
-		btn.name         = tower_id
-
-		var is_required  = tower_id in level_config.get("required_towers", [])
-		var is_selected  = selected_towers.has(tower_id)
-
-		_style_tower_card(btn, def, is_selected, is_required)
-
-		if is_required:
-			btn.disabled     = true
-			btn.tooltip_text = "Required for this level"
-		else:
-			btn.pressed.connect(_on_tower_card_pressed.bind(tower_id))
-
-		available_grid.add_child(btn)
-
-func _style_tower_card(
-		btn: Button,
-		def: Dictionary,
-		is_selected: bool,
-		is_required: bool) -> void:
-	var color = Color(def["color"])
-	var style := StyleBoxFlat.new()
-	style.corner_radius_top_left     = 6
-	style.corner_radius_top_right    = 6
-	style.corner_radius_bottom_left  = 6
-	style.corner_radius_bottom_right = 6
-	style.border_width_left   = 2
-	style.border_width_right  = 2
-	style.border_width_top    = 2
-	style.border_width_bottom = 2
-	style.content_margin_left   = 8
-	style.content_margin_right  = 8
-	style.content_margin_top    = 8
-	style.content_margin_bottom = 8
-
-	if is_required:
-		style.bg_color     = Color(color, 0.3)
-		style.border_color = color
-		btn.text = def["icon_text"] + "\n" + \
-			def["tower_name"].replace(" Tower", "") + \
-			"\n🔒 REQUIRED"
-	elif is_selected:
-		style.bg_color     = Color(color, 0.25)
-		style.border_color = color
-		btn.text = def["icon_text"] + "\n" + \
-			def["tower_name"].replace(" Tower", "") + \
-			"\n✅ SELECTED"
-	else:
-		style.bg_color     = Color("#0A1628")
-		style.border_color = Color("#1A3A5A")
-		btn.text = def["icon_text"] + "\n" + \
-			def["tower_name"].replace(" Tower", "") + \
-			"\n" + str(def["ram_cost"]) + " RAM"
-
-	btn.add_theme_stylebox_override("normal", style)
-	btn.add_theme_color_override(
-		"font_color",
-		color if (is_selected or is_required) else Color("#4A7FA5")
-	)
-	btn.add_theme_font_size_override("font_size", 11)
-
-# ─── TOWER SELECTION LOGIC ─────────────────────────────
-func _on_tower_card_pressed(tower_id: String) -> void:
-	if selected_towers.has(tower_id):
-		selected_towers.erase(tower_id)
-	else:
-		if selected_towers.size() >= max_slots:
-			SignalBus.hud_message_requested.emit(
-				"Only " + str(max_slots) + " tower slots for this level!", 2.0
-			)
-			return
-		selected_towers.append(tower_id)
-
-	_refresh_available_grid()
-	_refresh_selected_row()
-	_refresh_start_btn()
-
-func _refresh_available_grid() -> void:
-	for btn in available_grid.get_children():
-		var tower_id = btn.name
-		if not TOWER_DEFINITIONS.has(tower_id):
-			continue
-		var def      = TOWER_DEFINITIONS[tower_id]
-		var is_req   = tower_id in level_config.get("required_towers", [])
-		var is_sel   = selected_towers.has(tower_id)
-		_style_tower_card(btn, def, is_sel, is_req)
-
-func _refresh_selected_row() -> void:
+# ─── PLACEHOLDERS ──────────────────────────────────────
+func _build_placeholders() -> void:
+	# Clear layout rows
 	for child in selected_row.get_children():
 		child.queue_free()
-
-	slot_label.text = "SELECTED TOWERS (" + \
-		str(selected_towers.size()) + "/" + str(max_slots) + ")"
-
-	# Filled slots
-	for tower_id in selected_towers:
-		if not TOWER_DEFINITIONS.has(tower_id):
-			continue
-		var def   = TOWER_DEFINITIONS[tower_id]
-		var color = Color(def["color"])
-		var card  := PanelContainer.new()
-		card.custom_minimum_size = Vector2(80, 80)
-
+	for child in available_grid.get_children():
+		child.queue_free()
+		
+	# 1. Selected Slot Placeholders (Exactly 5 slots)
+	for i in range(max_slots):
+		var p_slot := PanelContainer.new()
+		p_slot.custom_minimum_size = Vector2(96, 130)
+		p_slot.name = "SelectedSlot_" + str(i)
+		
 		var style := StyleBoxFlat.new()
-		style.bg_color            = Color(color, 0.2)
-		style.border_color        = color
-		style.border_width_left   = 2
-		style.border_width_right  = 2
-		style.border_width_top    = 2
-		style.border_width_bottom = 2
-		style.corner_radius_top_left     = 6
-		style.corner_radius_top_right    = 6
-		style.corner_radius_bottom_left  = 6
-		style.corner_radius_bottom_right = 6
-		card.add_theme_stylebox_override("panel", style)
-
-		var lbl := Label.new()
-		lbl.text = def["icon_text"] + "\n" + \
-			def["tower_name"].replace(" Tower", "")
-		lbl.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
-		lbl.vertical_alignment   = VERTICAL_ALIGNMENT_CENTER
-		lbl.add_theme_font_size_override("font_size", 11)
-		lbl.add_theme_color_override("font_color", color)
-		card.add_child(lbl)
-		selected_row.add_child(card)
-
-	# Empty slots
-	for i in range(max_slots - selected_towers.size()):
-		var empty := PanelContainer.new()
-		empty.custom_minimum_size = Vector2(80, 80)
-
-		var style := StyleBoxFlat.new()
-		style.bg_color            = Color("#0A1628")
-		style.border_color        = Color("#1A3A5A")
-		style.border_width_left   = 2
-		style.border_width_right  = 2
-		style.border_width_top    = 2
-		style.border_width_bottom = 2
-		style.corner_radius_top_left     = 6
-		style.corner_radius_top_right    = 6
-		style.corner_radius_bottom_left  = 6
-		style.corner_radius_bottom_right = 6
-		empty.add_theme_stylebox_override("panel", style)
-
+		style.bg_color = Color("#0A1628", 0.3)
+		style.border_color = Color("#1A3A5A")
+		style.border_width_left = 1
+		style.border_width_right = 1
+		style.border_width_top = 1
+		style.border_width_bottom = 1
+		style.corner_radius_top_left = 8
+		style.corner_radius_top_right = 8
+		style.corner_radius_bottom_left = 8
+		style.corner_radius_bottom_right = 8
+		p_slot.add_theme_stylebox_override("panel", style)
+		
 		var lbl := Label.new()
 		lbl.text = "+"
 		lbl.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
-		lbl.vertical_alignment   = VERTICAL_ALIGNMENT_CENTER
+		lbl.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
 		lbl.add_theme_font_size_override("font_size", 24)
 		lbl.add_theme_color_override("font_color", Color("#1A3A5A"))
-		empty.add_child(lbl)
-		selected_row.add_child(empty)
+		p_slot.add_child(lbl)
+		
+		selected_row.add_child(p_slot)
+		
+	# 2. Available Slot Placeholders (Matching number of unlocked towers)
+	for i in range(available_towers.size()):
+		var p_slot := PanelContainer.new()
+		p_slot.custom_minimum_size = Vector2(96, 130)
+		p_slot.name = "AvailableSlot_" + str(i)
+		
+		var style := StyleBoxFlat.new()
+		style.bg_color = Color("#030A14", 0.5)
+		style.border_color = Color("#0F2238")
+		style.border_width_left = 1
+		style.border_width_right = 1
+		style.border_width_top = 1
+		style.border_width_bottom = 1
+		style.corner_radius_top_left = 8
+		style.corner_radius_top_right = 8
+		style.corner_radius_bottom_left = 8
+		style.corner_radius_bottom_right = 8
+		p_slot.add_theme_stylebox_override("panel", style)
+		
+		available_grid.add_child(p_slot)
+
+# ─── TOWER CARD PREPARATION ────────────────────────────
+func _build_tower_cards() -> void:
+	# Clean up previous cards
+	for c in active_cards:
+		if is_instance_valid(c):
+			c.queue_free()
+	active_cards.clear()
+	
+	var required = level_config.get("required_towers", [])
+	
+	# Pre-select required towers
+	selected_towers = []
+	for t in required:
+		if available_towers.has(t):
+			selected_towers.append(t)
+			
+	# Create a floating card scene instance for each unlocked available tower
+	var card_scene = preload("res://scenes/campaign/tower_select/TowerCard.tscn")
+	
+	for i in range(available_towers.size()):
+		var tower_id = available_towers[i]
+		var def = TOWER_DEFINITIONS[tower_id]
+		var is_req = tower_id in required
+		
+		var card = card_scene.instantiate()
+		card_layer.add_child(card)
+		card.setup(tower_id, def, is_req)
+		
+		# Hook up interaction signals
+		card.clicked.connect(_on_card_clicked)
+		card.drag_started.connect(_on_card_drag_started)
+		card.drag_ended.connect(_on_card_drag_ended)
+		
+		# Store coordinates of home position matching available placeholder slot i
+		var anchor = available_grid.get_child(i)
+		card.home_position = anchor.global_position
+		
+		if is_req:
+			# Place locked required towers directly in selected slots if possible
+			var slot_idx = selected_towers.find(tower_id)
+			if slot_idx != -1 and slot_idx < max_slots:
+				card.current_slot_idx = slot_idx
+				card.set_selected(true)
+				card.global_position = selected_row.get_child(slot_idx).global_position
+			else:
+				card.global_position = card.home_position
+		else:
+			card.global_position = card.home_position
+			
+		active_cards.append(card)
+
+# ─── SELECTION LOGIC ───────────────────────────────────
+func _on_card_clicked(tower_id: String) -> void:
+	var card = _get_card_by_id(tower_id)
+	if not card or card.is_required:
+		return
+		
+	if card.is_selected:
+		# Deselect: return home
+		selected_towers.erase(tower_id)
+		card.current_slot_idx = -1
+		card.set_selected(false)
+		card.animate_to(card.home_position)
+	else:
+		# Select: find first open selected placeholder slot
+		var open_idx = _get_first_empty_slot_idx()
+		if open_idx == -1:
+			SignalBus.hud_message_requested.emit(
+				"Only " + str(max_slots) + " tower slots allowed!", 2.0
+			)
+			return
+			
+		selected_towers.append(tower_id)
+		card.current_slot_idx = open_idx
+		card.set_selected(true)
+		
+		var target_pos = selected_row.get_child(open_idx).global_position
+		card.animate_to(target_pos)
+		
+	_refresh_slots()
+	_refresh_start_btn()
+
+# ─── DRAG & DROP RESOLUTION ─────────────────────────────
+func _on_card_drag_started(card) -> void:
+	# Temporarily lift card from any previous slot calculations to avoid double assignments
+	if card.is_selected:
+		selected_towers.erase(card.tower_id)
+		card.current_slot_idx = -1
+		card.set_selected(false)
+		_refresh_slots()
+		_refresh_start_btn()
+
+func _on_card_drag_ended(card, _release_pos: Vector2) -> void:
+	# Find closest selected slot placeholder within snapping distance
+	var closest_slot_idx = -1
+	var min_dist = 64.0 # Maximum drop-snapping radius in pixels
+	
+	for i in range(max_slots):
+		var placeholder = selected_row.get_child(i)
+		var dist = card.global_position.distance_to(placeholder.global_position)
+		if dist < min_dist:
+			min_dist = dist
+			closest_slot_idx = i
+			
+	if closest_slot_idx != -1:
+		# We dropped it near a slot! Let's check if another card is already occupying this slot
+		var existing_card = _get_card_in_slot(closest_slot_idx)
+		if existing_card:
+			# Displace/kick back the existing card home to keep it super clean!
+			selected_towers.erase(existing_card.tower_id)
+			existing_card.current_slot_idx = -1
+			existing_card.set_selected(false)
+			existing_card.animate_to(existing_card.home_position)
+			
+		# Snap this card to the slot!
+		selected_towers.append(card.tower_id)
+		card.current_slot_idx = closest_slot_idx
+		card.set_selected(true)
+		card.animate_to(selected_row.get_child(closest_slot_idx).global_position, 0.2)
+	else:
+		# Return home safely
+		card.animate_to(card.home_position, 0.3)
+		
+	_refresh_slots()
+	_refresh_start_btn()
+
+# ─── HELPER METHODS ────────────────────────────────────
+func _get_card_by_id(tower_id: String):
+	for c in active_cards:
+		if c.tower_id == tower_id:
+			return c
+	return null
+
+func _get_card_in_slot(slot_idx: int):
+	for c in active_cards:
+		if c.current_slot_idx == slot_idx:
+			return c
+	return null
+
+func _get_first_empty_slot_idx() -> int:
+	for i in range(max_slots):
+		if _get_card_in_slot(i) == null:
+			return i
+	return -1
+
+func _refresh_slots() -> void:
+	slot_label.text = "SELECTED TOWERS (" + \
+		str(selected_towers.size()) + "/" + str(max_slots) + ")"
 
 func _refresh_start_btn() -> void:
 	var required         = level_config.get("required_towers", [])
@@ -418,6 +466,7 @@ func _on_start_pressed() -> void:
 			"Select at least one tower!", 2.0
 		)
 		return
+		
 	GameManager.selected_towers = selected_towers
 	GameManager.go_to("level")
 
