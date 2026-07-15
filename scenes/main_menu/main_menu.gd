@@ -2,20 +2,19 @@
 extends Control
 
 # ─── NODE REFERENCES ───────────────────────────────────
-@onready var continue_button: Button    = $CenterContainer/MainLayout/ButtonSection/ContinueButton
 @onready var academy_button: Button     = $CenterContainer/MainLayout/ButtonSection/AcademyButton
 @onready var campaign_button: Button    = $CenterContainer/MainLayout/ButtonSection/CampaignButton
 @onready var index_button: Button       = $CenterContainer/MainLayout/ButtonSection/IndexButton
-@onready var leaderboard_button: Button = $CenterContainer/MainLayout/ButtonSection/LeaderboardButton
-@onready var settings_button: Button    = $CenterContainer/MainLayout/ButtonSection/SettingsButton
+@onready var leaderboard_button: Button = $TopLeftContainer/LeaderboardButton
+@onready var settings_button: Button    = $TopLeftContainer/SettingsButton
 @onready var title_label: Label         = $CenterContainer/MainLayout/TitleSection/TitleLabel
 
 # Profile UI Nodes
-@onready var profile_card: PanelContainer   = $ProfileCard
-@onready var avatar_panel: PanelContainer   = $ProfileCard/MarginContainer/ProfileLayout/AvatarPanel
-@onready var avatar_label: Label           = $ProfileCard/MarginContainer/ProfileLayout/AvatarPanel/AvatarLabel
-@onready var username_label: Label         = $ProfileCard/MarginContainer/ProfileLayout/TextLayout/UsernameLabel
-@onready var class_label: Label            = $ProfileCard/MarginContainer/ProfileLayout/TextLayout/ClassLabel
+@onready var profile_card: PanelContainer   = $TopLeftContainer/ProfileCard
+@onready var avatar_panel: PanelContainer   = $TopLeftContainer/ProfileCard/MarginContainer/ProfileLayout/AvatarPanel
+@onready var avatar_label: Label           = $TopLeftContainer/ProfileCard/MarginContainer/ProfileLayout/AvatarPanel/AvatarLabel
+@onready var username_label: Label         = $TopLeftContainer/ProfileCard/MarginContainer/ProfileLayout/TextLayout/UsernameLabel
+@onready var class_label: Label            = $TopLeftContainer/ProfileCard/MarginContainer/ProfileLayout/TextLayout/ClassLabel
 @onready var profile_popup: ColorRect       = $ProfilePopup
 
 var _core_buttons: Array[Button]  = []
@@ -25,20 +24,17 @@ var _time: float = 0.0
 # ─── READY ─────────────────────────────────────────────
 func _ready() -> void:
 	_core_buttons = [
-		academy_button, campaign_button,
+		campaign_button,
+		academy_button,
 		index_button,
-		leaderboard_button,
 	]
 	_all_buttons = [
-		continue_button,
-		academy_button, campaign_button,
+		campaign_button,
+		academy_button,
 		index_button,
-		leaderboard_button,
-		settings_button,
 	]
 	_setup_buttons()
 	_setup_profile_card()
-	_check_continue_button()
 	_animate_title_in()
 	_apply_responsive_layout()
 	get_tree().root.size_changed.connect(_apply_responsive_layout)
@@ -55,7 +51,6 @@ func _check_placement_quiz() -> void:
 
 # ─── BUTTON SETUP ──────────────────────────────────────
 func _setup_buttons() -> void:
-	continue_button.pressed.connect(_on_continue_pressed)
 	academy_button.pressed.connect(func(): GameManager.go_to("academy"))
 	campaign_button.pressed.connect(func(): GameManager.go_to("campaign"))
 	index_button.pressed.connect(func(): GameManager.go_to("index"))
@@ -66,8 +61,9 @@ func _setup_buttons() -> void:
 	for btn in _all_buttons:
 		_style_menu_button(btn)
 
-	# Continue gets accent style
-	_style_continue_button(continue_button)
+	# Style icon buttons
+	_style_icon_button(leaderboard_button)
+	_style_icon_button(settings_button)
 
 # ─── BUTTON STYLES ─────────────────────────────────────
 func _style_menu_button(button: Button) -> void:
@@ -110,81 +106,45 @@ func _style_menu_button(button: Button) -> void:
 	button.add_theme_color_override("font_pressed_color", Color("#050D1A"))
 	button.add_theme_font_size_override("font_size", 13)
 
-func _style_continue_button(button: Button) -> void:
+func _style_icon_button(button: Button) -> void:
 	var normal := StyleBoxFlat.new()
-	normal.bg_color            = Color("#00D4FF", 0.15)
-	normal.border_color        = Color("#00D4FF")
-	normal.border_width_left   = 2
-	normal.border_width_right  = 2
-	normal.border_width_top    = 2
-	normal.border_width_bottom = 2
-	normal.corner_radius_top_left     = 4
-	normal.corner_radius_top_right    = 4
-	normal.corner_radius_bottom_left  = 4
-	normal.corner_radius_bottom_right = 4
-
-	var hover := StyleBoxFlat.new()
-	hover.bg_color             = Color("#00D4FF", 0.25)
-	hover.border_color         = Color("#00D4FF")
-	hover.border_width_left    = 2
-	hover.border_width_right   = 2
-	hover.border_width_top     = 2
-	hover.border_width_bottom  = 2
-	hover.corner_radius_top_left     = 4
-	hover.corner_radius_top_right    = 4
-	hover.corner_radius_bottom_left  = 4
-	hover.corner_radius_bottom_right = 4
-
-	button.add_theme_stylebox_override("normal", normal)
-	button.add_theme_stylebox_override("hover",  hover)
-	button.add_theme_color_override("font_color",       Color("#00D4FF"))
-	button.add_theme_color_override("font_hover_color", Color("#E8F4FD"))
-	button.add_theme_font_size_override("font_size", 14)
-
-func _style_settings_button(button: Button) -> void:
-	var normal := StyleBoxFlat.new()
-	normal.bg_color            = Color("#080F1E")
-	normal.border_color        = Color("#2A3A4A")
+	normal.bg_color            = Color("#0A1628", 0.6)
+	normal.border_color        = Color("#00D4FF", 0.4)
 	normal.border_width_left   = 1
 	normal.border_width_right  = 1
 	normal.border_width_top    = 1
 	normal.border_width_bottom = 1
-	normal.corner_radius_top_left     = 4
-	normal.corner_radius_top_right    = 4
-	normal.corner_radius_bottom_left  = 4
-	normal.corner_radius_bottom_right = 4
+	normal.corner_radius_top_left     = 8
+	normal.corner_radius_top_right    = 8
+	normal.corner_radius_bottom_left  = 8
+	normal.corner_radius_bottom_right = 8
 
 	var hover := StyleBoxFlat.new()
-	hover.bg_color             = Color("#0A1628")
-	hover.border_color         = Color("#4A7FA5")
-	hover.border_width_left    = 1
-	hover.border_width_right   = 1
-	hover.border_width_top     = 1
-	hover.border_width_bottom  = 1
-	hover.corner_radius_top_left     = 4
-	hover.corner_radius_top_right    = 4
-	hover.corner_radius_bottom_left  = 4
-	hover.corner_radius_bottom_right = 4
+	hover.bg_color             = Color("#0D2040", 0.8)
+	hover.border_color         = Color("#00D4FF")
+	hover.border_width_left    = 1.5
+	hover.border_width_right   = 1.5
+	hover.border_width_top     = 1.5
+	hover.border_width_bottom  = 1.5
+	hover.corner_radius_top_left     = 8
+	hover.corner_radius_top_right    = 8
+	hover.corner_radius_bottom_left  = 8
+	hover.corner_radius_bottom_right = 8
 
-	button.add_theme_stylebox_override("normal", normal)
-	button.add_theme_stylebox_override("hover",  hover)
-	button.add_theme_color_override("font_color",       Color("#4A7FA5"))
-	button.add_theme_color_override("font_hover_color", Color("#E8F4FD"))
-	button.add_theme_font_size_override("font_size", 12)
+	var pressed := StyleBoxFlat.new()
+	pressed.bg_color = Color("#00D4FF")
+	pressed.corner_radius_top_left     = 8
+	pressed.corner_radius_top_right    = 8
+	pressed.corner_radius_bottom_left  = 8
+	pressed.corner_radius_bottom_right = 8
 
-# ─── CONTINUE ──────────────────────────────────────────
-func _check_continue_button() -> void:
-	var has_progress := false
-	for topic_id in ProgressManager.topic_states:
-		if ProgressManager.topic_states[topic_id] == "mastered":
-			has_progress = true
-			break
-	continue_button.visible = has_progress
-
-func _on_continue_pressed() -> void:
-	if SupabaseManager.is_logged_in:
-		SupabaseManager.load_progress_from_cloud()
-	GameManager.go_to("academy")
+	button.add_theme_stylebox_override("normal",  normal)
+	button.add_theme_stylebox_override("hover",   hover)
+	button.add_theme_stylebox_override("pressed", pressed)
+	button.add_theme_color_override("font_color",         Color("#00D4FF"))
+	button.add_theme_color_override("font_hover_color",   Color("#E8F4FD"))
+	button.add_theme_color_override("font_pressed_color", Color("#050D1A"))
+	button.add_theme_font_size_override("font_size", 22)
 
 # ─── TITLE ANIMATION ───────────────────────────────────
 func _animate_title_in() -> void:

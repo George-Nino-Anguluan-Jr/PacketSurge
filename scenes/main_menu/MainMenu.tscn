@@ -70,35 +70,20 @@ layout_mode = 2
 layout_mode = 2
 theme_override_constants/separation = 12
 
-[node name="ContinueButton" type="Button" parent="CenterContainer/MainLayout/ButtonSection" unique_id=883757477]
+[node name="CampaignButton" type="Button" parent="CenterContainer/MainLayout/ButtonSection" unique_id=324031090]
 custom_minimum_size = Vector2(260, 52)
 layout_mode = 2
-text = "CONTINUE"
+text = "CAMPAIGN"
 
 [node name="AcademyButton" type="Button" parent="CenterContainer/MainLayout/ButtonSection" unique_id=1640463120]
 custom_minimum_size = Vector2(260, 52)
 layout_mode = 2
 text = "ACADEMY"
 
-[node name="CampaignButton" type="Button" parent="CenterContainer/MainLayout/ButtonSection" unique_id=324031090]
-custom_minimum_size = Vector2(260, 52)
-layout_mode = 2
-text = "CAMPAIGN"
-
 [node name="IndexButton" type="Button" parent="CenterContainer/MainLayout/ButtonSection" unique_id=171158732]
 custom_minimum_size = Vector2(260, 52)
 layout_mode = 2
 text = "INDEX"
-
-[node name="LeaderboardButton" type="Button" parent="CenterContainer/MainLayout/ButtonSection" unique_id=719556249]
-custom_minimum_size = Vector2(260, 52)
-layout_mode = 2
-text = "LEADERBOARDS"
-
-[node name="SettingsButton" type="Button" parent="CenterContainer/MainLayout/ButtonSection" unique_id=1796636240]
-custom_minimum_size = Vector2(260, 52)
-layout_mode = 2
-text = "SETTINGS"
 
 [node name="BottomBar" type="HBoxContainer" parent="." unique_id=1174544920]
 layout_mode = 1
@@ -120,15 +105,19 @@ text = "v0.1.0 — Packet Surge"
 
 [node name="ToastManager" parent="." unique_id=536978336 instance=ExtResource("2_axelx")]
 
-[node name="ProfileCard" type="PanelContainer" parent="." unique_id=999888777]
+[node name="TopLeftContainer" type="HBoxContainer" parent="." unique_id=111222333]
 layout_mode = 1
 offset_left = 24.0
 offset_top = 24.0
-offset_right = 260.0
+offset_right = 500.0
 offset_bottom = 88.0
+theme_override_constants/separation = 12
+
+[node name="ProfileCard" type="PanelContainer" parent="TopLeftContainer" unique_id=999888777]
+layout_mode = 2
 mouse_default_cursor_shape = 2
 
-[node name="MarginContainer" type="MarginContainer" parent="ProfileCard" unique_id=999888778]
+[node name="MarginContainer" type="MarginContainer" parent="TopLeftContainer/ProfileCard" unique_id=999888778]
 layout_mode = 2
 mouse_filter = 1
 theme_override_constants/margin_left = 12
@@ -136,18 +125,18 @@ theme_override_constants/margin_top = 8
 theme_override_constants/margin_right = 12
 theme_override_constants/margin_bottom = 8
 
-[node name="ProfileLayout" type="HBoxContainer" parent="ProfileCard/MarginContainer" unique_id=999888779]
+[node name="ProfileLayout" type="HBoxContainer" parent="TopLeftContainer/ProfileCard/MarginContainer" unique_id=999888779]
 layout_mode = 2
 mouse_filter = 1
 theme_override_constants/separation = 12
 
-[node name="AvatarPanel" type="PanelContainer" parent="ProfileCard/MarginContainer/ProfileLayout" unique_id=999888780]
+[node name="AvatarPanel" type="PanelContainer" parent="TopLeftContainer/ProfileCard/MarginContainer/ProfileLayout" unique_id=999888780]
 custom_minimum_size = Vector2(36, 36)
 layout_mode = 2
 mouse_filter = 1
 size_flags_vertical = 4
 
-[node name="AvatarLabel" type="Label" parent="ProfileCard/MarginContainer/ProfileLayout/AvatarPanel" unique_id=999888781]
+[node name="AvatarLabel" type="Label" parent="TopLeftContainer/ProfileCard/MarginContainer/ProfileLayout/AvatarPanel" unique_id=999888781]
 layout_mode = 2
 size_flags_horizontal = 4
 theme_override_colors/font_color = Color(0, 0.83137256, 1, 1)
@@ -156,23 +145,35 @@ text = "U"
 horizontal_alignment = 1
 vertical_alignment = 1
 
-[node name="TextLayout" type="VBoxContainer" parent="ProfileCard/MarginContainer/ProfileLayout" unique_id=999888782]
+[node name="TextLayout" type="VBoxContainer" parent="TopLeftContainer/ProfileCard/MarginContainer/ProfileLayout" unique_id=999888782]
 layout_mode = 2
 mouse_filter = 1
 size_flags_horizontal = 3
 theme_override_constants/separation = 2
 alignment = 1
 
-[node name="UsernameLabel" type="Label" parent="ProfileCard/MarginContainer/ProfileLayout/TextLayout" unique_id=999888783]
+[node name="UsernameLabel" type="Label" parent="TopLeftContainer/ProfileCard/MarginContainer/ProfileLayout/TextLayout" unique_id=999888783]
 layout_mode = 2
 theme_override_colors/font_color = Color(0.9098039, 0.95686275, 0.99215686, 1)
 theme_override_font_sizes/font_size = 13
 text = "Username"
 
-[node name="ClassLabel" type="Label" parent="ProfileCard/MarginContainer/ProfileLayout/TextLayout" unique_id=999888784]
+[node name="ClassLabel" type="Label" parent="TopLeftContainer/ProfileCard/MarginContainer/ProfileLayout/TextLayout" unique_id=999888784]
 layout_mode = 2
 theme_override_colors/font_color = Color(0.2901961, 0.49803922, 0.64705884, 1)
 theme_override_font_sizes/font_size = 11
 text = "Year & Section"
+
+[node name="LeaderboardButton" type="Button" parent="TopLeftContainer" unique_id=719556249]
+custom_minimum_size = Vector2(48, 48)
+layout_mode = 2
+size_flags_vertical = 4
+text = "📊"
+
+[node name="SettingsButton" type="Button" parent="TopLeftContainer" unique_id=1796636240]
+custom_minimum_size = Vector2(48, 48)
+layout_mode = 2
+size_flags_vertical = 4
+text = "⚙"
 
 [node name="ProfilePopup" parent="." unique_id=999888800 instance=ExtResource("3_profile_popup")]
