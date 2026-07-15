@@ -12,6 +12,14 @@ extends Control
 @onready var settings_button: Button    = $CenterContainer/MainLayout/ButtonSection/SettingsButton
 @onready var title_label: Label         = $CenterContainer/MainLayout/TitleSection/TitleLabel
 
+# Profile UI Nodes
+@onready var profile_card: PanelContainer   = $ProfileCard
+@onready var avatar_panel: PanelContainer   = $ProfileCard/MarginContainer/ProfileLayout/AvatarPanel
+@onready var avatar_label: Label           = $ProfileCard/MarginContainer/ProfileLayout/AvatarPanel/AvatarLabel
+@onready var username_label: Label         = $ProfileCard/MarginContainer/ProfileLayout/TextLayout/UsernameLabel
+@onready var class_label: Label            = $ProfileCard/MarginContainer/ProfileLayout/TextLayout/ClassLabel
+@onready var profile_popup: ColorRect       = $ProfilePopup
+
 var _core_buttons: Array[Button]  = []
 var _all_buttons: Array[Button]   = []
 var _time: float = 0.0
@@ -31,6 +39,7 @@ func _ready() -> void:
 		settings_button,
 	]
 	_setup_buttons()
+	_setup_profile_card()
 	_check_continue_button()
 	_animate_title_in()
 	_apply_responsive_layout()
@@ -202,6 +211,70 @@ func _process(delta: float) -> void:
 	title_label.add_theme_color_override(
 		"font_color", base_color.lerp(bright_color, pulse * 0.4)
 	)
+
+# ─── PROFILE CARD ──────────────────────────────────────
+func _setup_profile_card() -> void:
+	if not SupabaseManager.is_logged_in:
+		profile_card.visible = false
+		return
+	
+	profile_card.visible = true
+	
+	# Set user data
+	var uname = SupabaseManager.username
+	username_label.text = uname if uname != "" else "Student"
+	avatar_label.text = uname.left(1).to_upper() if uname != "" else "S"
+	
+	var y_level = SupabaseManager.year_level
+	var sect = SupabaseManager.section
+	if y_level != "" and sect != "":
+		class_label.text = y_level + " — " + sect
+	elif y_level != "":
+		class_label.text = y_level
+	elif sect != "":
+		class_label.text = sect
+	else:
+		class_label.text = "Registered Student"
+		
+	# Connect click signal
+	if not profile_card.gui_input.is_connected(_on_profile_card_gui_input):
+		profile_card.gui_input.connect(_on_profile_card_gui_input)
+		
+	_style_profile_card()
+
+func _on_profile_card_gui_input(event: InputEvent) -> void:
+	if event is InputEventMouseButton and event.button_index == MOUSE_BUTTON_LEFT and event.pressed:
+		if profile_popup.has_method("open"):
+			profile_popup.open()
+
+func _style_profile_card() -> void:
+	# Card glass/tech style
+	var card_style := StyleBoxFlat.new()
+	card_style.bg_color               = Color("#0A1628", 0.85)
+	card_style.border_color           = Color("#00D4FF")
+	card_style.border_width_left      = 1
+	card_style.border_width_right     = 1
+	card_style.border_width_top       = 1
+	card_style.border_width_bottom    = 1
+	card_style.corner_radius_top_left     = 8
+	card_style.corner_radius_top_right    = 8
+	card_style.corner_radius_bottom_left  = 8
+	card_style.corner_radius_bottom_right = 8
+	profile_card.add_theme_stylebox_override("panel", card_style)
+
+	# Avatar tech panel style
+	var avatar_style := StyleBoxFlat.new()
+	avatar_style.bg_color               = Color("#080F1E")
+	avatar_style.border_color           = Color("#00D4FF", 0.5)
+	avatar_style.border_width_left      = 1
+	avatar_style.border_width_right     = 1
+	avatar_style.border_width_top       = 1
+	avatar_style.border_width_bottom    = 1
+	avatar_style.corner_radius_top_left     = 4
+	avatar_style.corner_radius_top_right    = 4
+	avatar_style.corner_radius_bottom_left  = 4
+	avatar_style.corner_radius_bottom_right = 4
+	avatar_panel.add_theme_stylebox_override("panel", avatar_style)
 
 # ─── RESPONSIVE ────────────────────────────────────────
 func _apply_responsive_layout() -> void:

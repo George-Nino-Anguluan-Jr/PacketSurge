@@ -3,13 +3,10 @@ extends Control
 
 # ─── NODE REFERENCES ───────────────────────────────────
 @onready var back_btn: Button               = $TopBar/TopBarLayout/BackBtn
-@onready var profile_tab: Button            = $TabBar/ProfileTab
 @onready var general_tab: Button            = $TabBar/GeneralTab
 @onready var account_tab: Button            = $TabBar/AccountTab
-@onready var profile_panel: ScrollContainer = $ContentArea/ProfilePanel
 @onready var general_panel: ScrollContainer = $ContentArea/GeneralPanel
 @onready var account_panel: ScrollContainer = $ContentArea/AccountPanel
-@onready var profile_content: VBoxContainer = $ContentArea/ProfilePanel/ProfileContent
 @onready var general_content: VBoxContainer = $ContentArea/GeneralPanel/GeneralContent
 @onready var account_content: VBoxContainer = $ContentArea/AccountPanel/AccountContent
 
@@ -17,20 +14,19 @@ extends Control
 var sound_enabled: bool = true
 var music_enabled: bool = true
 var shake_enabled: bool = true
-var active_tab: String  = "profile"
+var active_tab: String  = "general"
 
 # ─── READY ─────────────────────────────────────────────
 func _ready() -> void:
 	_setup_buttons()
 	_apply_styles()
-	_show_profile_tab()
+	_show_general_tab()
 	_apply_responsive_layout()
 	get_tree().root.size_changed.connect(_apply_responsive_layout)
 
 # ─── BUTTON SETUP ──────────────────────────────────────
 func _setup_buttons() -> void:
 	back_btn.pressed.connect(_on_back_pressed)
-	profile_tab.pressed.connect(_show_profile_tab)
 	general_tab.pressed.connect(_show_general_tab)
 	account_tab.pressed.connect(_show_account_tab)
 
@@ -42,93 +38,21 @@ func _input(event: InputEvent) -> void:
 		GameManager.go_to("main_menu")
 
 # ─── TAB SWITCHING ─────────────────────────────────────
-func _show_profile_tab() -> void:
-	active_tab            = "profile"
-	profile_panel.visible = true
-	general_panel.visible = false
-	account_panel.visible = false
-	_style_active_tab(profile_tab, true)
-	_style_active_tab(general_tab, false)
-	_style_active_tab(account_tab, false)
-	_build_profile()
-
 func _show_general_tab() -> void:
 	active_tab            = "general"
-	profile_panel.visible = false
 	general_panel.visible = true
 	account_panel.visible = false
-	_style_active_tab(profile_tab, false)
 	_style_active_tab(general_tab, true)
 	_style_active_tab(account_tab, false)
 	_build_general()
 
 func _show_account_tab() -> void:
 	active_tab            = "account"
-	profile_panel.visible = false
 	general_panel.visible = false
 	account_panel.visible = true
-	_style_active_tab(profile_tab, false)
 	_style_active_tab(general_tab, false)
 	_style_active_tab(account_tab, true)
 	_build_account()
-
-# ─── PROFILE TAB ───────────────────────────────────────
-func _build_profile() -> void:
-	for child in profile_content.get_children():
-		child.queue_free()
-
-	profile_content.add_child(_make_section_label("STUDENT INFO"))
-
-	var fields = {
-		"Full Name":  SupabaseManager.full_name,
-		"Username":   SupabaseManager.username,
-		"Year Level": SupabaseManager.year_level,
-		"Section":    SupabaseManager.section,
-	}
-	for field_name in fields:
-		profile_content.add_child(
-			_make_info_row(field_name, fields[field_name])
-		)
-
-	profile_content.add_child(_make_divider())
-	profile_content.add_child(_make_section_label("SECURITY"))
-
-	var change_pass_btn := Button.new()
-	change_pass_btn.text = "📧 Send Password Reset Email"
-	change_pass_btn.custom_minimum_size = Vector2(0, 48)
-	_style_secondary_button(change_pass_btn)
-	change_pass_btn.pressed.connect(_on_change_password_pressed)
-	profile_content.add_child(change_pass_btn)
-
-	profile_content.add_child(_make_divider())
-	profile_content.add_child(_make_section_label("PROGRESS SUMMARY"))
-
-	var mastered := 0
-	for t in ProgressManager.topic_states:
-		if ProgressManager.topic_states[t] == "mastered":
-			mastered += 1
-	var levels = ProgressManager.campaign_progress.get("waves_completed", 0)
-	var towers = ProgressManager.unlocked_towers.size()
-
-	var stats_row := HBoxContainer.new()
-	stats_row.add_theme_constant_override("separation", 12)
-	stats_row.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-	stats_row.add_child(
-		_make_mini_stat("Lessons\nMastered", str(mastered) + "/12", Color("#00FF88"))
-	)
-	stats_row.add_child(
-		_make_mini_stat("Campaign\nLevels", str(levels) + "/11", Color("#FFB800"))
-	)
-	stats_row.add_child(
-		_make_mini_stat("Towers\nUnlocked", str(towers), Color("#00D4FF"))
-	)
-	profile_content.add_child(stats_row)
-
-func _on_change_password_pressed() -> void:
-	SignalBus.hud_message_requested.emit(
-		"Password reset email sent! Check your inbox.", 4.0
-	)
-	print("[Settings] Password reset requested.")
 
 # ─── GENERAL TAB ───────────────────────────────────────
 func _build_general() -> void:
