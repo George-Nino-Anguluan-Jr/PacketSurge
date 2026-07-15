@@ -241,15 +241,31 @@ func _style_profile_card() -> void:
 
 # ─── RESPONSIVE ────────────────────────────────────────
 func _apply_responsive_layout() -> void:
+	var top_left_container: HBoxContainer = $TopLeftContainer
 	if ScreenManager.is_mobile():
 		title_label.add_theme_font_size_override("font_size", 38)
 		for btn in _all_buttons:
 			btn.custom_minimum_size = Vector2(260, 48)
+		top_left_container.offset_left = 12.0
+		top_left_container.offset_top = 12.0
+		top_left_container.add_theme_constant_override("separation", 8)
+		leaderboard_button.custom_minimum_size = Vector2(40, 40)
+		settings_button.custom_minimum_size = Vector2(40, 40)
 	elif ScreenManager.is_tablet():
 		title_label.add_theme_font_size_override("font_size", 52)
 		for btn in _all_buttons:
 			btn.custom_minimum_size = Vector2(300, 50)
+		top_left_container.offset_left = 18.0
+		top_left_container.offset_top = 18.0
+		top_left_container.add_theme_constant_override("separation", 10)
+		leaderboard_button.custom_minimum_size = Vector2(44, 44)
+		settings_button.custom_minimum_size = Vector2(44, 44)
 	else:
 		title_label.add_theme_font_size_override("font_size", 64)
 		for btn in _all_buttons:
 			btn.custom_minimum_size = Vector2(320, 52)
+		top_left_container.offset_left = 24.0
+		top_left_container.offset_top = 24.0
+		top_left_container.add_theme_constant_override("separation", 12)
+		leaderboard_button.custom_minimum_size = Vector2(48, 48)
+		settings_button.custom_minimum_size = Vector2(48, 48)
