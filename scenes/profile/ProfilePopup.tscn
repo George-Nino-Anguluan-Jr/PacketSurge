@@ -1,4 +1,4 @@
- [gd_scene load_steps=2 format=3 uid="uid://cx6nu7u8u76nv"]
+[gd_scene load_steps=2 format=3 uid="uid://cx6nu7u8u76nv"]
 
 [ext_resource type="Script" path="res://scenes/profile/ProfilePopup.gd" id="1_profile"]
 
@@ -21,19 +21,19 @@ grow_horizontal = 2
 grow_vertical = 2
 
 [node name="PopupCard" type="PanelContainer" parent="CenterContainer" unique_id=999888802]
-custom_minimum_size = Vector2(580, 520)
+custom_minimum_size = Vector2(440, 380)
 layout_mode = 2
 
 [node name="MarginContainer" type="MarginContainer" parent="CenterContainer/PopupCard" unique_id=999888803]
 layout_mode = 2
-theme_override_constants/margin_left = 20
-theme_override_constants/margin_top = 20
-theme_override_constants/margin_right = 20
-theme_override_constants/margin_bottom = 20
+theme_override_constants/margin_left = 24
+theme_override_constants/margin_top = 24
+theme_override_constants/margin_right = 24
+theme_override_constants/margin_bottom = 24
 
 [node name="ContentLayout" type="VBoxContainer" parent="CenterContainer/PopupCard/MarginContainer" unique_id=999888804]
 layout_mode = 2
-theme_override_constants/separation = 12
+theme_override_constants/separation = 16
 
 [node name="Header" type="HBoxContainer" parent="CenterContainer/PopupCard/MarginContainer/ContentLayout" unique_id=999888805]
 layout_mode = 2
@@ -50,157 +50,88 @@ custom_minimum_size = Vector2(32, 32)
 layout_mode = 2
 text = "X"
 
-[node name="TabBar" type="HBoxContainer" parent="CenterContainer/PopupCard/MarginContainer/ContentLayout" unique_id=999888850]
-layout_mode = 2
-theme_override_constants/separation = 4
-
-[node name="ProfileTab" type="Button" parent="CenterContainer/PopupCard/MarginContainer/ContentLayout/TabBar" unique_id=999888851]
-custom_minimum_size = Vector2(0, 36)
-layout_mode = 2
-size_flags_horizontal = 3
-text = "👤 Profile"
-
-[node name="AnalyticsTab" type="Button" parent="CenterContainer/PopupCard/MarginContainer/ContentLayout/TabBar" unique_id=999888852]
-custom_minimum_size = Vector2(0, 36)
-layout_mode = 2
-size_flags_horizontal = 3
-text = "📊 Analytics"
-
-[node name="ClassTab" type="Button" parent="CenterContainer/PopupCard/MarginContainer/ContentLayout/TabBar" unique_id=999888853]
-custom_minimum_size = Vector2(0, 36)
-layout_mode = 2
-size_flags_horizontal = 3
-text = "🏫 Class"
-
 [node name="Divider" type="HSeparator" parent="CenterContainer/PopupCard/MarginContainer/ContentLayout" unique_id=999888808]
 layout_mode = 2
 
-[node name="PanelsArea" type="Control" parent="CenterContainer/PopupCard/MarginContainer/ContentLayout" unique_id=999888860]
+[node name="DetailsSection" type="VBoxContainer" parent="CenterContainer/PopupCard/MarginContainer/ContentLayout" unique_id=999888809]
 layout_mode = 2
-size_flags_vertical = 3
+theme_override_constants/separation = 6
 
-[node name="ProfilePanel" type="VBoxContainer" parent="CenterContainer/PopupCard/MarginContainer/ContentLayout/PanelsArea" unique_id=999888861]
-layout_mode = 1
-anchors_preset = 15
-anchor_right = 1.0
-anchor_bottom = 1.0
-grow_horizontal = 2
-grow_vertical = 2
-theme_override_constants/separation = 16
-
-[node name="DetailsSection" type="VBoxContainer" parent="CenterContainer/PopupCard/MarginContainer/ContentLayout/PanelsArea/ProfilePanel" unique_id=999888809]
-layout_mode = 2
-theme_override_constants/separation = 8
-
-[node name="FullNameRow" type="HBoxContainer" parent="CenterContainer/PopupCard/MarginContainer/ContentLayout/PanelsArea/ProfilePanel/DetailsSection" unique_id=999888810]
+[node name="FullNameRow" type="HBoxContainer" parent="CenterContainer/PopupCard/MarginContainer/ContentLayout/DetailsSection" unique_id=999888810]
 layout_mode = 2
 
-[node name="Label" type="Label" parent="CenterContainer/PopupCard/MarginContainer/ContentLayout/PanelsArea/ProfilePanel/DetailsSection/FullNameRow" unique_id=999888811]
-custom_minimum_size = Vector2(140, 0)
+[node name="Label" type="Label" parent="CenterContainer/PopupCard/MarginContainer/ContentLayout/DetailsSection/FullNameRow" unique_id=999888811]
+custom_minimum_size = Vector2(120, 0)
 layout_mode = 2
 theme_override_colors/font_color = Color(0.290196, 0.498039, 0.647059, 1)
 theme_override_font_sizes/font_size = 13
 text = "Full Name"
 
-[node name="Value" type="Label" parent="CenterContainer/PopupCard/MarginContainer/ContentLayout/PanelsArea/ProfilePanel/DetailsSection/FullNameRow" unique_id=999888812]
+[node name="Value" type="Label" parent="CenterContainer/PopupCard/MarginContainer/ContentLayout/DetailsSection/FullNameRow" unique_id=999888812]
 layout_mode = 2
 theme_override_colors/font_color = Color(0.909804, 0.956863, 0.992157, 1)
 theme_override_font_sizes/font_size = 13
 text = "John Doe"
 
-[node name="UsernameRow" type="HBoxContainer" parent="CenterContainer/PopupCard/MarginContainer/ContentLayout/PanelsArea/ProfilePanel/DetailsSection" unique_id=999888813]
+[node name="UsernameRow" type="HBoxContainer" parent="CenterContainer/PopupCard/MarginContainer/ContentLayout/DetailsSection" unique_id=999888813]
 layout_mode = 2
 
-[node name="Label" type="Label" parent="CenterContainer/PopupCard/MarginContainer/ContentLayout/PanelsArea/ProfilePanel/DetailsSection/UsernameRow" unique_id=999888814]
-custom_minimum_size = Vector2(140, 0)
+[node name="Label" type="Label" parent="CenterContainer/PopupCard/MarginContainer/ContentLayout/DetailsSection/UsernameRow" unique_id=999888814]
+custom_minimum_size = Vector2(120, 0)
 layout_mode = 2
 theme_override_colors/font_color = Color(0.290196, 0.498039, 0.647059, 1)
 theme_override_font_sizes/font_size = 13
 text = "Username"
 
-[node name="Value" type="Label" parent="CenterContainer/PopupCard/MarginContainer/ContentLayout/PanelsArea/ProfilePanel/DetailsSection/UsernameRow" unique_id=999888815]
+[node name="Value" type="Label" parent="CenterContainer/PopupCard/MarginContainer/ContentLayout/DetailsSection/UsernameRow" unique_id=999888815]
 layout_mode = 2
 theme_override_colors/font_color = Color(0.909804, 0.956863, 0.992157, 1)
 theme_override_font_sizes/font_size = 13
 text = "johndoe"
 
-[node name="ClassRow" type="HBoxContainer" parent="CenterContainer/PopupCard/MarginContainer/ContentLayout/PanelsArea/ProfilePanel/DetailsSection" unique_id=999888816]
+[node name="ClassRow" type="HBoxContainer" parent="CenterContainer/PopupCard/MarginContainer/ContentLayout/DetailsSection" unique_id=999888816]
 layout_mode = 2
 
-[node name="Label" type="Label" parent="CenterContainer/PopupCard/MarginContainer/ContentLayout/PanelsArea/ProfilePanel/DetailsSection/ClassRow" unique_id=999888817]
-custom_minimum_size = Vector2(140, 0)
+[node name="Label" type="Label" parent="CenterContainer/PopupCard/MarginContainer/ContentLayout/DetailsSection/ClassRow" unique_id=999888817]
+custom_minimum_size = Vector2(120, 0)
 layout_mode = 2
 theme_override_colors/font_color = Color(0.290196, 0.498039, 0.647059, 1)
 theme_override_font_sizes/font_size = 13
 text = "Year & Section"
 
-[node name="Value" type="Label" parent="CenterContainer/PopupCard/MarginContainer/ContentLayout/PanelsArea/ProfilePanel/DetailsSection/ClassRow" unique_id=999888818]
+[node name="Value" type="Label" parent="CenterContainer/PopupCard/MarginContainer/ContentLayout/DetailsSection/ClassRow" unique_id=999888818]
 layout_mode = 2
 theme_override_colors/font_color = Color(0.909804, 0.956863, 0.992157, 1)
 theme_override_font_sizes/font_size = 13
 text = "1st Year - Section A"
 
-[node name="Divider2" type="HSeparator" parent="CenterContainer/PopupCard/MarginContainer/ContentLayout/PanelsArea/ProfilePanel" unique_id=999888819]
+[node name="Divider2" type="HSeparator" parent="CenterContainer/PopupCard/MarginContainer/ContentLayout" unique_id=999888819]
 layout_mode = 2
 
-[node name="StatsSection" type="VBoxContainer" parent="CenterContainer/PopupCard/MarginContainer/ContentLayout/PanelsArea/ProfilePanel" unique_id=999888820]
+[node name="StatsSection" type="VBoxContainer" parent="CenterContainer/PopupCard/MarginContainer/ContentLayout" unique_id=999888820]
 layout_mode = 2
 theme_override_constants/separation = 8
 
-[node name="StatsTitle" type="Label" parent="CenterContainer/PopupCard/MarginContainer/ContentLayout/PanelsArea/ProfilePanel/StatsSection" unique_id=999888821]
+[node name="StatsTitle" type="Label" parent="CenterContainer/PopupCard/MarginContainer/ContentLayout/StatsSection" unique_id=999888821]
 layout_mode = 2
 theme_override_colors/font_color = Color(0, 0.831373, 1, 1)
 theme_override_font_sizes/font_size = 12
 text = "PROGRESS SUMMARY"
 
-[node name="StatsRow" type="HBoxContainer" parent="CenterContainer/PopupCard/MarginContainer/ContentLayout/PanelsArea/ProfilePanel/StatsSection" unique_id=999888822]
+[node name="StatsRow" type="HBoxContainer" parent="CenterContainer/PopupCard/MarginContainer/ContentLayout/StatsSection" unique_id=999888822]
 layout_mode = 2
 theme_override_constants/separation = 12
 
-[node name="Spacer" type="Control" parent="CenterContainer/PopupCard/MarginContainer/ContentLayout/PanelsArea/ProfilePanel" unique_id=999888840]
+[node name="ActionSection" type="VBoxContainer" parent="CenterContainer/PopupCard/MarginContainer/ContentLayout" unique_id=999888830]
 layout_mode = 2
-size_flags_vertical = 3
+theme_override_constants/separation = 10
 
-[node name="ActionSection" type="VBoxContainer" parent="CenterContainer/PopupCard/MarginContainer/ContentLayout/PanelsArea/ProfilePanel" unique_id=999888830]
-layout_mode = 2
-theme_override_constants/separation = 8
-
-[node name="ResetPasswordButton" type="Button" parent="CenterContainer/PopupCard/MarginContainer/ContentLayout/PanelsArea/ProfilePanel/ActionSection" unique_id=999888831]
+[node name="ResetPasswordButton" type="Button" parent="CenterContainer/PopupCard/MarginContainer/ContentLayout/ActionSection" unique_id=999888831]
 custom_minimum_size = Vector2(0, 38)
 layout_mode = 2
 text = "📧 Send Password Reset Email"
 
-[node name="LogoutButton" type="Button" parent="CenterContainer/PopupCard/MarginContainer/ContentLayout/PanelsArea/ProfilePanel/ActionSection" unique_id=999888832]
+[node name="LogoutButton" type="Button" parent="CenterContainer/PopupCard/MarginContainer/ContentLayout/ActionSection" unique_id=999888832]
 custom_minimum_size = Vector2(0, 38)
 layout_mode = 2
 text = "🚪 Logout"
-
-[node name="AnalyticsPanel" type="ScrollContainer" parent="CenterContainer/PopupCard/MarginContainer/ContentLayout/PanelsArea" unique_id=999888870]
-visible = false
-layout_mode = 1
-anchors_preset = 15
-anchor_right = 1.0
-anchor_bottom = 1.0
-grow_horizontal = 2
-grow_vertical = 2
-horizontal_scroll_mode = 0
-
-[node name="AnalyticsContent" type="VBoxContainer" parent="CenterContainer/PopupCard/MarginContainer/ContentLayout/PanelsArea/AnalyticsPanel" unique_id=999888871]
-layout_mode = 2
-size_flags_horizontal = 3
-theme_override_constants/separation = 16
-
-[node name="ClassPanel" type="ScrollContainer" parent="CenterContainer/PopupCard/MarginContainer/ContentLayout/PanelsArea" unique_id=999888880]
-visible = false
-layout_mode = 1
-anchors_preset = 15
-anchor_right = 1.0
-anchor_bottom = 1.0
-grow_horizontal = 2
-grow_vertical = 2
-horizontal_scroll_mode = 0
-
-[node name="ClassContent" type="VBoxContainer" parent="CenterContainer/PopupCard/MarginContainer/ContentLayout/PanelsArea/ClassPanel" unique_id=999888881]
-layout_mode = 2
-size_flags_horizontal = 3
-theme_override_constants/separation = 16
