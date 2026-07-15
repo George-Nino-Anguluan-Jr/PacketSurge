@@ -126,6 +126,11 @@ theme_override_constants/separation = 12
 layout_mode = 2
 theme_override_constants/separation = 10
 
+[node name="AnalyticsButton" type="Button" parent="CenterContainer/PopupCard/MarginContainer/ContentLayout/ActionSection" unique_id=999888833]
+custom_minimum_size = Vector2(0, 38)
+layout_mode = 2
+text = "📊 View Detailed Analytics"
+
 [node name="ResetPasswordButton" type="Button" parent="CenterContainer/PopupCard/MarginContainer/ContentLayout/ActionSection" unique_id=999888831]
 custom_minimum_size = Vector2(0, 38)
 layout_mode = 2

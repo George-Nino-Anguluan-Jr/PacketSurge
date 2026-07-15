@@ -104,19 +104,13 @@ text = "INDEX"
 layout_mode = 2
 theme_override_constants/h_separation = 12
 theme_override_constants/v_separation = 12
-columns = 2
+columns = 1
 
 [node name="LeaderboardButton" type="Button" parent="CenterContainer/MainLayout/ButtonSection/ExtraGrid" unique_id=719556249]
 custom_minimum_size = Vector2(0, 52)
 layout_mode = 2
 size_flags_horizontal = 3
 text = "LEADERBOARDS"
-
-[node name="AnalyticsButton" type="Button" parent="CenterContainer/MainLayout/ButtonSection/ExtraGrid" unique_id=1071115448]
-custom_minimum_size = Vector2(0, 52)
-layout_mode = 2
-size_flags_horizontal = 3
-text = "ANALYTICS"
 
 [node name="SettingsButton" type="Button" parent="CenterContainer/MainLayout/ButtonSection" unique_id=1796636240]
 custom_minimum_size = Vector2(0, 52)

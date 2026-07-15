@@ -9,6 +9,10 @@ extends ColorRect
 @onready var stats_row: HBoxContainer      = $CenterContainer/PopupCard/MarginContainer/ContentLayout/StatsSection/StatsRow
 @onready var reset_pass_btn: Button        = $CenterContainer/PopupCard/MarginContainer/ContentLayout/ActionSection/ResetPasswordButton
 @onready var logout_btn: Button            = $CenterContainer/PopupCard/MarginContainer/ContentLayout/ActionSection/LogoutButton
+@onready var analytics_btn: Button         = $CenterContainer/PopupCard/MarginContainer/ContentLayout/ActionSection/AnalyticsButton
+
+var analytics_scene = preload("res://scenes/analytics/Analytics.tscn")
+var analytics_instance: Control = null
 
 func _ready() -> void:
 	# Hide by default
@@ -16,12 +20,40 @@ func _ready() -> void:
 	
 	# Connect close button
 	close_btn.pressed.connect(close)
+	analytics_btn.pressed.connect(_on_analytics_pressed)
 	reset_pass_btn.pressed.connect(_on_reset_password_pressed)
 	logout_btn.pressed.connect(_on_logout_pressed)
 	
 	_style_popup()
 
 func open() -> void:
+	# Load User Data
+	fullname_label.text = SupabaseManager.full_name if SupabaseManager.full_name != "" else "Student Player"
+	username_label.text = SupabaseManager.username if SupabaseManager.username != "" else "student"
+	
+	var y_level = SupabaseManager.year_level
+	var sect = SupabaseManager.section
+	if y_level != "" and sect != "":
+		class_label.text = y_level + " — " + sect
+	elif y_level != "":
+		class_label.text = y_level
+	elif sect != "":
+		class_label.text = sect
+	else:
+		class_label.text = "Registered Student"
+		
+	# Build Stats Row
+	_build_stats_row()
+	
+	# Reset views so we start on ProfilePopup view
+	popup_card.visible = true
+	if analytics_instance:
+		analytics_instance.visible = false
+	
+	# Show Popup
+	visible = true
+
+func open_with_no_reset() -> void:
 	# Load User Data
 	fullname_label.text = SupabaseManager.full_name if SupabaseManager.full_name != "" else "Student Player"
 	username_label.text = SupabaseManager.username if SupabaseManager.username != "" else "student"
@@ -145,6 +177,36 @@ func _style_popup() -> void:
 	close_btn.add_theme_color_override("font_color",         Color("#E8F4FD"))
 	close_btn.add_theme_color_override("font_hover_color",   Color("#050D1A"))
 
+	# Style Analytics button
+	var analytics_normal := StyleBoxFlat.new()
+	analytics_normal.bg_color               = Color("#0A1628")
+	analytics_normal.border_color           = Color("#00D4FF")
+	analytics_normal.border_width_left      = 1
+	analytics_normal.border_width_right     = 1
+	analytics_normal.border_width_top       = 1
+	analytics_normal.border_width_bottom    = 1
+	analytics_normal.corner_radius_top_left     = 4
+	analytics_normal.corner_radius_top_right    = 4
+	analytics_normal.corner_radius_bottom_left  = 4
+	analytics_normal.corner_radius_bottom_right = 4
+	
+	var analytics_hover := StyleBoxFlat.new()
+	analytics_hover.bg_color                = Color("#00D4FF", 0.1)
+	analytics_hover.border_color            = Color("#00D4FF")
+	analytics_hover.border_width_left       = 1
+	analytics_hover.border_width_right      = 1
+	analytics_hover.border_width_top        = 1
+	analytics_hover.border_width_bottom     = 1
+	analytics_hover.corner_radius_top_left      = 4
+	analytics_hover.corner_radius_top_right     = 4
+	analytics_hover.corner_radius_bottom_left   = 4
+	analytics_hover.corner_radius_bottom_right  = 4
+	
+	analytics_btn.add_theme_stylebox_override("normal", analytics_normal)
+	analytics_btn.add_theme_stylebox_override("hover",  analytics_hover)
+	analytics_btn.add_theme_color_override("font_color",       Color("#00D4FF"))
+	analytics_btn.add_theme_color_override("font_hover_color", Color("#E8F4FD"))
+
 	# Style Password Reset button
 	var reset_normal := StyleBoxFlat.new()
 	reset_normal.bg_color               = Color("#0A1628")
@@ -215,3 +277,22 @@ func _on_reset_password_pressed() -> void:
 func _on_logout_pressed() -> void:
 	close()
 	SupabaseManager.logout()
+
+func _on_analytics_pressed() -> void:
+	popup_card.visible = false
+	if not analytics_instance:
+		analytics_instance = analytics_scene.instantiate()
+		analytics_instance.is_popup_mode = true
+		analytics_instance.back_requested.connect(_on_analytics_back)
+		add_child(analytics_instance)
+		analytics_instance.set_anchors_preset(Control.PRESET_FULL_RECT)
+	else:
+		analytics_instance.visible = true
+		# Refresh/trigger the statistics building if applicable (or ready handles it)
+		if analytics_instance.has_method("_build_my_stats"):
+			analytics_instance._build_my_stats()
+
+func _on_analytics_back() -> void:
+	if analytics_instance:
+		analytics_instance.visible = false
+	popup_card.visible = true

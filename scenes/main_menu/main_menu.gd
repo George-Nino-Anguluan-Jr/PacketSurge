@@ -8,7 +8,6 @@ extends Control
 @onready var sandbox_button: Button     = $CenterContainer/MainLayout/ButtonSection/CoreGrid/SandboxButton
 @onready var index_button: Button       = $CenterContainer/MainLayout/ButtonSection/CoreGrid/IndexButton
 @onready var leaderboard_button: Button = $CenterContainer/MainLayout/ButtonSection/ExtraGrid/LeaderboardButton
-@onready var analytics_button: Button   = $CenterContainer/MainLayout/ButtonSection/ExtraGrid/AnalyticsButton
 @onready var settings_button: Button    = $CenterContainer/MainLayout/ButtonSection/SettingsButton
 @onready var title_label: Label         = $CenterContainer/MainLayout/TitleSection/TitleLabel
 
@@ -29,13 +28,13 @@ func _ready() -> void:
 	_core_buttons = [
 		academy_button, campaign_button,
 		sandbox_button, index_button,
-		leaderboard_button, analytics_button,
+		leaderboard_button,
 	]
 	_all_buttons = [
 		continue_button,
 		academy_button, campaign_button,
 		sandbox_button, index_button,
-		leaderboard_button, analytics_button,
+		leaderboard_button,
 		settings_button,
 	]
 	_setup_buttons()
@@ -63,7 +62,6 @@ func _setup_buttons() -> void:
 	sandbox_button.pressed.connect(func(): GameManager.go_to("sandbox"))
 	index_button.pressed.connect(func(): GameManager.go_to("index"))
 	leaderboard_button.pressed.connect(func(): GameManager.go_to("leaderboard"))
-	analytics_button.pressed.connect(func(): GameManager.go_to("analytics"))
 	settings_button.pressed.connect(func(): GameManager.go_to("settings"))
 
 	# Style main buttons
@@ -290,12 +288,12 @@ func _apply_responsive_layout() -> void:
 	elif ScreenManager.is_tablet():
 		title_label.add_theme_font_size_override("font_size", 52)
 		core_grid.columns  = 2
-		extra_grid.columns = 2
+		extra_grid.columns = 1
 		for btn in _all_buttons:
 			btn.custom_minimum_size = Vector2(160, 50)
 	else:
 		title_label.add_theme_font_size_override("font_size", 64)
 		core_grid.columns  = 2
-		extra_grid.columns = 2
+		extra_grid.columns = 1
 		for btn in _all_buttons:
 			btn.custom_minimum_size = Vector2(180, 52)
