@@ -25,6 +25,10 @@ var _turret_angle: float       = -PI / 2
 var _recoil: float             = 0.0
 var _anim_time: float          = 0.0
 
+# ─── PROJECTILE & EXPLOSION STATE ─────────────────────
+var _projectiles: Array[Dictionary] = []
+var _explosions: Array[Dictionary]  = []
+
 @onready var sprite: Sprite2D = $TowerSprite
 
 func initialize(data: TowerData, cell: Vector2i, e_layer: Node2D) -> void:
@@ -78,6 +82,51 @@ func _process(delta: float) -> void:
 	if _shoot_flash > 0:
 		_shoot_flash -= delta * 4.0
 
+	# ─── UPDATE ACTIVE FLYING PROJECTILES ──────────────────
+	var remaining_projectiles: Array[Dictionary] = []
+	for p in _projectiles:
+		p["elapsed_time"] += delta
+		
+		# Locate target coordinates (or fallback to last known coordinate)
+		var target_pos = p["target_last_pos"]
+		if is_instance_valid(p["target"]):
+			target_pos = p["target"].position
+			p["target_last_pos"] = target_pos
+			
+		var current_pos = p["pos"]
+		var next_pos = current_pos.move_toward(target_pos, p["speed"] * delta)
+		p["pos"] = next_pos
+		
+		# Parabolic 3D Mortar Arc offset calculation
+		if p["style"] == "mortar":
+			var dir_vec = target_pos - p["start_pos"]
+			var d_total = dir_vec.length()
+			var d_current = (next_pos - p["start_pos"]).length()
+			if d_total > 0:
+				var t = clamp(d_current / d_total, 0.0, 1.0)
+				var arc_height = sin(t * PI) * -45.0
+				p["draw_pos"] = next_pos + Vector2(0, arc_height)
+			else:
+				p["draw_pos"] = next_pos
+		else:
+			p["draw_pos"] = next_pos
+			
+		# Impact threshold check
+		if next_pos.distance_to(target_pos) < 6.0:
+			_on_projectile_impact(p)
+		else:
+			remaining_projectiles.append(p)
+	_projectiles = remaining_projectiles
+
+	# ─── UPDATE ACTIVE IMPACT EXPLOSIONS ──────────────────
+	var remaining_explosions: Array[Dictionary] = []
+	for e in _explosions:
+		e["elapsed"] += delta
+		e["radius"] = lerp(0.0, e["max_radius"], e["elapsed"] / e["lifetime"])
+		if e["elapsed"] < e["lifetime"]:
+			remaining_explosions.append(e)
+	_explosions = remaining_explosions
+
 	# Continuously request frame redraw to keep procedural 2D animations fluid and tracking alive
 	queue_redraw()
 
@@ -108,23 +157,24 @@ func _attack() -> void:
 	_flash_targets.clear()
 	_recoil = 1.0 # Trigger physical recoil barrel blowback on every tower type!
 	match tower_id:
-		"tower_array":     _attack_array()
-		"tower_stack":     _attack_stack()
-		"tower_queue":     _attack_queue()
-		"tower_linked_list": _attack_linked()
-		"tower_bubble":    _attack_bubble()
-		"tower_selection": _attack_selection()
-		"tower_insertion": _attack_insertion()
-		_:                 _attack_default()
+		"tower_array":        _attack_array()
+		"tower_stack":        _attack_stack()
+		"tower_queue":        _attack_queue()
+		"tower_linked_list":  _attack_linked()
+		"tower_bubble":       _attack_bubble()
+		"tower_selection":    _attack_selection()
+		"tower_insertion":    _attack_insertion()
+		"tower_quick":        _attack_quick()
+		"tower_binary":       _attack_binary()
+		"tower_radix":        _attack_radix()
+		_:                    _attack_default()
 
 # ─── ARRAY — fast single target, closest enemy (O(1) access) ──
 func _attack_array() -> void:
 	var target = _get_closest_enemy()
 	if target:
-		target.take_damage(damage)
 		current_target = target
-		_flash_targets.append(target.position - position)
-		_shoot_flash = 1.0
+		_spawn_projectile("bullet", damage, 320.0, target)
 		queue_redraw()
 
 # ─── STACK — hits the LAST enemy that entered range (LIFO) ────
@@ -133,10 +183,8 @@ func _attack_stack() -> void:
 		return
 	var target = _entry_order[_entry_order.size() - 1]  # last in
 	if is_instance_valid(target):
-		target.take_damage(damage * 1.4)  # Stack hits harder
 		current_target = target
-		_flash_targets.append(target.position - position)
-		_shoot_flash = 1.0
+		_spawn_projectile("mortar", damage * 1.4, 180.0, target)
 		queue_redraw()
 
 # ─── QUEUE — hits FIRST enemy in range, pierces to 1 enemy behind it (FIFO) ──
@@ -146,16 +194,12 @@ func _attack_queue() -> void:
 	var target = _entry_order[0]  # first in
 	if not is_instance_valid(target):
 		return
-	target.take_damage(damage)
 	current_target = target
-	_flash_targets.append(target.position - position)
+	_spawn_projectile("rail", damage, 380.0, target)
 
 	# Pierce — also hit the 2nd enemy in the queue for less damage
 	if _entry_order.size() > 1 and is_instance_valid(_entry_order[1]):
-		_entry_order[1].take_damage(damage * 0.5)
-		_flash_targets.append(_entry_order[1].position - position)
-
-	_shoot_flash = 1.0
+		_spawn_projectile("rail", damage * 0.5, 380.0, _entry_order[1])
 	queue_redraw()
 
 # ─── LINKED LIST — chain hit: jumps to 2 nearby enemies (pointer chasing) ──
@@ -203,31 +247,100 @@ func _attack_bubble() -> void:
 func _attack_selection() -> void:
 	var target = _get_lowest_hp_enemy()
 	if target:
-		target.take_damage(damage * 1.8)  # guaranteed strong hit, like a "finishing" tower
 		current_target = target
-		_flash_targets.append(target.position - position)
-		_shoot_flash = 1.0
+		_spawn_projectile("seeker", damage * 1.8, 220.0, target)
 		queue_redraw()
 
 # ─── INSERTION SORT — damage-over-time stacking effect ────
 func _attack_insertion() -> void:
 	var target = _get_closest_enemy()
-	if target and target.has_method("apply_dot"):
-		target.apply_dot(damage * 0.3, 3.0)  # 30% damage per tick over 3s
+	if target:
 		current_target = target
-		_flash_targets.append(target.position - position)
-		_shoot_flash = 1.0
+		_spawn_projectile("stake", damage, 300.0, target)
 		queue_redraw()
-	elif target:
-		# Fallback if Enemy.gd doesn't have apply_dot yet
-		target.take_damage(damage)
+
+# ─── QUICK SORT — Swivel split shot hits 2 different targets simultaneously ──
+func _attack_quick() -> void:
+	if enemy_layer == null:
+		return
+	var targets: Array[Node] = []
+	for enemy in enemy_layer.get_children():
+		if enemy.has_method("take_damage") and position.distance_to(enemy.position) <= attack_range:
+			targets.append(enemy)
+			if targets.size() >= 2:
+				break
+				
+	for t in targets:
+		_spawn_projectile("plasma", damage * 0.8, 280.0, t)
+		
+	if not targets.is_empty():
+		current_target = targets[0]
+		queue_redraw()
+
+# ─── BINARY SNIPER — Precision heavy focal sniper charge bolt ──
+func _attack_binary() -> void:
+	var target = _get_closest_enemy()
+	if target:
 		current_target = target
-		_flash_targets.append(target.position - position)
-		_shoot_flash = 1.0
+		_spawn_projectile("rail", damage * 2.2, 450.0, target)
+		queue_redraw()
+
+# ─── RADIX SORT — 3 rapid-fire micro-bursts sequentially in time ──
+func _attack_radix() -> void:
+	var target = _get_closest_enemy()
+	if target:
+		current_target = target
+		for i in range(3):
+			var timer_offset = i * 0.08
+			get_tree().create_timer(timer_offset).timeout.connect(func():
+				if is_instance_valid(target) and is_instance_valid(self):
+					_spawn_projectile("plasma", damage * 0.4, 320.0, target)
+			)
 		queue_redraw()
 
 func _attack_default() -> void:
 	_attack_array()
+
+# ─── PROJECTILE SPAWN & SIMULATION SYSTEM ─────────────────────────────
+func _spawn_projectile(p_style: String, p_damage: float, p_speed: float, p_target: Node) -> void:
+	if not is_instance_valid(p_target):
+		return
+	# Spawn at muzzle (relative height of -14px offset)
+	var spawn_origin = position + Vector2(0, -14).rotated(_turret_angle)
+	var p = {
+		"pos": spawn_origin,
+		"start_pos": spawn_origin,
+		"draw_pos": spawn_origin, # Initialize draw_pos immediately to avoid draw-process frame race condition!
+		"target": p_target,
+		"target_last_pos": p_target.position,
+		"speed": p_speed,
+		"damage": p_damage,
+		"style": p_style,
+		"elapsed_time": 0.0,
+		"total_dist": (p_target.position - spawn_origin).length()
+	}
+	_projectiles.append(p)
+
+func _on_projectile_impact(p: Dictionary) -> void:
+	if is_instance_valid(p["target"]) and p["target"].has_method("take_damage"):
+		if p["style"] == "stake" and p["target"].has_method("apply_dot"):
+			p["target"].apply_dot(p["damage"] * 0.3, 3.0)
+		else:
+			p["target"].take_damage(p["damage"])
+			
+	# Trigger a beautiful custom particle/shockwave explosion at target impact site
+	_spawn_impact_explosion(p["target_last_pos"], p["style"])
+
+func _spawn_impact_explosion(pos: Vector2, style: String) -> void:
+	var e = {
+		"pos": pos - position, # relative to drawing space
+		"style": style,
+		"radius": 0.0,
+		"max_radius": 18.0 if style == "mortar" else (14.0 if style == "rail" else 8.0),
+		"elapsed": 0.0,
+		"lifetime": 0.22
+	}
+	_explosions.append(e)
 
 # ─── TARGETING HELPERS ─────────────────────────────────
 func _get_closest_enemy() -> Node:
@@ -641,15 +754,113 @@ func _draw_turret_assembly(color: Color) -> void:
 	# Reset coordinate transformation back to unrotated system
 	draw_set_transform(Vector2.ZERO, 0.0, Vector2.ONE)
 
+func _draw_shaded_capsule(center: Vector2, radius: float, base_color: Color, highlight_color: Color) -> void:
+	# Draw shaded volumetric sphere for physical mortar bomb
+	draw_circle(center, radius, base_color)
+	draw_circle(center, radius, Color(highlight_color, 0.35))
+	draw_circle(center - Vector2(radius * 0.25, radius * 0.25), radius * 0.5, Color.WHITE)
+
+func _draw_binary_trail(pos: Vector2, trail_color: Color) -> void:
+	# Draw gorgeous high-tech vector binary '1' and '0' particle trails
+	var is_one = int(pos.x + pos.y + _anim_time * 20.0) % 2 == 0
+	var col = Color(trail_color, 0.5)
+	if is_one:
+		# Draw a '1'
+		draw_line(pos - Vector2(0, 3), pos + Vector2(0, 3), col, 1.5)
+	else:
+		# Draw a hollow '0'
+		draw_rect(Rect2(pos - Vector2(2, 3), Vector2(4, 6)), col, false, 1.0)
+
 func _draw_overlays(color: Color) -> void:
-	# Draw shooting flash effects
+	# 1. DRAW ACTIVE FLYING PROJECTILES
+	for p in _projectiles:
+		var relative_draw_pos = p["draw_pos"] - position
+		var relative_pos = p["pos"] - position
+		
+		match p["style"]:
+			"mortar":
+				# Draw dropshadow on ground plane
+				draw_circle(relative_pos + Vector2(2, 5), 4.5, Color(0, 0, 0, 0.2))
+				# Draw physical arcing bomb shell
+				_draw_shaded_capsule(relative_draw_pos, 5.0, Color("#4B5B6D"), color)
+				# Fuse trail
+				draw_circle(relative_draw_pos - Vector2(3, -2), 1.5, color)
+				
+			"rail":
+				# Ultra-high speed kinetic energy penetrator rail bolt
+				var target_vec = p["target_last_pos"] - p["pos"]
+				if target_vec.length() > 0:
+					var heading = target_vec.normalized()
+					var line_start = relative_draw_pos - heading * 14.0
+					draw_line(line_start, relative_draw_pos, Color.WHITE, 3.5)
+					draw_line(line_start, relative_draw_pos, color, 1.5)
+					# Write binary characters stream as a trail!
+					_draw_binary_trail(relative_draw_pos - heading * 24.0, color)
+					_draw_binary_trail(relative_draw_pos - heading * 40.0, color)
+					
+			"seeker":
+				# Homing tracking rocket sphere
+				draw_circle(relative_draw_pos, 4.5, Color.WHITE)
+				draw_circle(relative_draw_pos, 7.0, Color(color, 0.4))
+				# Outer orbiting gyroscope node rings
+				var orbit_ang = _anim_time * 12.0
+				for i in range(3):
+					var angle = orbit_ang + i * (TAU / 3.0)
+					draw_circle(relative_draw_pos + Vector2(cos(angle), sin(angle)) * 6.5, 1.8, color)
+					
+			"plasma":
+				# Swirling twin plasma orbits
+				draw_circle(relative_draw_pos, 3.5, Color.WHITE)
+				draw_circle(relative_draw_pos, 6.0, Color(color, 0.45))
+				draw_arc(relative_draw_pos, 8.0, _anim_time * 10.0, _anim_time * 10.0 + PI, 8, color, 1.5)
+				
+			"stake":
+				# Linear mechanical piston stake
+				var heading = (p["target_last_pos"] - p["pos"]).normalized()
+				var start_pt = relative_draw_pos - heading * 9.0
+				draw_line(start_pt, relative_draw_pos, Color("#6C7C8C"), 3.5)
+				draw_line(start_pt, relative_draw_pos, Color.WHITE, 1.5)
+				
+			"bullet", _:
+				# High velocity blaster plasma bullet
+				draw_circle(relative_draw_pos, 2.8, Color.WHITE)
+				draw_circle(relative_draw_pos, 4.8, color)
+
+	# 2. DRAW ACTIVE IMPACT EXPLOSIONS
+	for e in _explosions:
+		var life_ratio = e["elapsed"] / e["lifetime"]
+		var flash_val = 1.0 - life_ratio
+		var e_color = Color(color, flash_val)
+		match e["style"]:
+			"mortar":
+				# Massive shockwave circular blast ring
+				draw_arc(e["pos"], e["radius"], 0, TAU, 32, e_color, 2.5)
+				draw_circle(e["pos"], e["radius"] * 0.6, Color(color, flash_val * 0.35))
+			"rail":
+				# Sharp focal electrical energy spike bursts
+				draw_line(e["pos"] - Vector2(e["radius"], 0), e["pos"] + Vector2(e["radius"], 0), e_color, 2.0)
+				draw_line(e["pos"] - Vector2(0, e["radius"]), e["pos"] + Vector2(0, e["radius"]), e_color, 2.0)
+				draw_circle(e["pos"], 4.5 * flash_val, Color.WHITE)
+			"stake":
+				# Stacking chemical green DoT acid rings (Insertion Sort)
+				draw_arc(e["pos"], e["radius"], 0, TAU, 16, Color("#1ABC9C", flash_val), 1.5)
+				draw_arc(e["pos"], e["radius"] * 0.5, 0, TAU, 16, Color("#1ABC9C", flash_val * 0.6), 1.0)
+			"seeker":
+				# Sharp flash ring
+				draw_arc(e["pos"], e["radius"], 0, TAU, 24, e_color, 2.0)
+				draw_circle(e["pos"], 3.5 * flash_val, Color.WHITE)
+			"plasma", "bullet", _:
+				# Rapid standard blast expander ring
+				draw_arc(e["pos"], e["radius"], 0, TAU, 16, e_color, 1.5)
+
+	# 3. DRAW INSTANT OVERLAY BEAMS (e.g., Linked lightning pointer lines)
 	if _shoot_flash > 0:
 		var flash_color = Color(color, _shoot_flash)
-		# Draw vector flash lines leading from the turret pivot to the active targets
+		# Draw instant pointer vector lines
 		for target_offset in _flash_targets:
 			draw_line(Vector2.ZERO, target_offset, flash_color, 2.5)
 		
-		# Draw glowing energy ring around muzzle flash
+		# Draw glowing energy muzzle rings
 		draw_circle(Vector2.ZERO, 8.0 * _shoot_flash, flash_color)
 		draw_circle(Vector2.ZERO, 4.0 * _shoot_flash, Color.WHITE)
 		

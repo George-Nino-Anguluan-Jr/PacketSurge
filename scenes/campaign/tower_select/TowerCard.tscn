@@ -1,0 +1,43 @@
+[gd_scene format=3 uid="uid://chvj7e7v6p4v1"]
+
+[ext_resource type="Script" uid="uid://dw7evqxr6q41d" path="res://scenes/campaign/tower_select/TowerCard.gd" id="1_twrcd"]
+
+[node name="TowerCard" type="PanelContainer"]
+custom_minimum_size = Vector2(96, 130)
+offset_right = 96.0
+offset_bottom = 130.0
+pivot_offset = Vector2(48, 65)
+size_flags_horizontal = 4
+size_flags_vertical = 4
+mouse_default_cursor_shape = 2
+script = ExtResource("1_twrcd")
+
+[node name="CardLayout" type="VBoxContainer" parent="."]
+layout_mode = 2
+theme_override_constants/separation = 4
+alignment = 1
+
+[node name="NameLabel" type="Label" parent="CardLayout"]
+layout_mode = 2
+theme_override_colors/font_color = Color(0.627451, 0.752941, 0.878431, 1)
+theme_override_font_sizes/font_size = 11
+text = "Array"
+horizontal_alignment = 1
+vertical_alignment = 1
+text_overrun_behavior = 1
+
+[node name="TowerViewport" type="Control" parent="CardLayout"]
+custom_minimum_size = Vector2(0, 72)
+layout_mode = 2
+mouse_filter = 2
+
+[node name="TowerContainer" type="Node2D" parent="CardLayout/TowerViewport"]
+position = Vector2(40, 36)
+
+[node name="CostLabel" type="Label" parent="CardLayout"]
+layout_mode = 2
+theme_override_colors/font_color = Color(0.290196, 0.498039, 0.647059, 1)
+theme_override_font_sizes/font_size = 10
+text = "50 RAM"
+horizontal_alignment = 1
+vertical_alignment = 1
