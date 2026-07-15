@@ -44,34 +44,12 @@ size_flags_horizontal = 3
 theme_override_colors/font_color = Color(0.9098039, 0.95686275, 0.99215686, 1)
 text = "SETTINGS"
 
-[node name="TabBar" type="HBoxContainer" parent="." unique_id=1218672530]
-layout_mode = 1
-anchors_preset = -1
-anchor_right = 1.0
-offset_top = 52.0
-offset_bottom = 96.0
-grow_horizontal = 2
-grow_vertical = 2
-theme_override_constants/separation = 0
-
-[node name="GeneralTab" type="Button" parent="TabBar" unique_id=355829274]
-custom_minimum_size = Vector2(0, 44)
-layout_mode = 2
-size_flags_horizontal = 3
-text = "⚙️ GENERAL"
-
-[node name="AccountTab" type="Button" parent="TabBar" unique_id=285592820]
-custom_minimum_size = Vector2(0, 44)
-layout_mode = 2
-size_flags_horizontal = 3
-text = "🔐 ACCOUNT"
-
 [node name="ContentArea" type="MarginContainer" parent="." unique_id=366766470]
 layout_mode = 1
 anchors_preset = -1
 anchor_right = 1.0
 anchor_bottom = 1.0
-offset_top = 96.0
+offset_top = 52.0
 grow_horizontal = 2
 grow_vertical = 2
 theme_override_constants/margin_left = 24
@@ -80,21 +58,10 @@ theme_override_constants/margin_right = 24
 theme_override_constants/margin_bottom = 24
 
 [node name="GeneralPanel" type="ScrollContainer" parent="ContentArea" unique_id=1669138179]
-visible = false
 layout_mode = 2
 horizontal_scroll_mode = 0
 
 [node name="GeneralContent" type="VBoxContainer" parent="ContentArea/GeneralPanel" unique_id=1278419444]
-layout_mode = 2
-size_flags_horizontal = 3
-theme_override_constants/separation = 16
-
-[node name="AccountPanel" type="ScrollContainer" parent="ContentArea" unique_id=1344696962]
-visible = false
-layout_mode = 2
-horizontal_scroll_mode = 0
-
-[node name="AccountContent" type="VBoxContainer" parent="ContentArea/AccountPanel" unique_id=209440869]
 layout_mode = 2
 size_flags_horizontal = 3
 theme_override_constants/separation = 16
