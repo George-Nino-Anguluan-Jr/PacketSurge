@@ -3,7 +3,8 @@ extends Control
 
 @onready var back_btn: Button         = $TopBar/TopBarLayout/BackBtn
 @onready var ram_label: Label         = $TopBar/TopBarLayout/RAMLabel
-@onready var level_grid: GridContainer = $ContentArea/MainLayout/LevelGrid
+@onready var map_scroll: ScrollContainer = %MapScroll
+@onready var map_canvas: Control      = %MapCanvas
 @onready var locked_label: Label      = $ContentArea/MainLayout/LockedLabel
 
 # Level definitions
@@ -23,13 +24,44 @@ const LEVEL_INFO = [
 	{"number": 13, "name": "Binary Endgame",     "ds": "Binary Search","waves": 8},
 ]
 
+# Visual zig-zag coordinates for our nodes on the 2100px wide canvas
+const LEVEL_POSITIONS = {
+	1: Vector2(100, 180),
+	2: Vector2(250, 90),
+	3: Vector2(400, 240),
+	4: Vector2(550, 140),
+	5: Vector2(700, 240),
+	6: Vector2(850, 90),
+	7: Vector2(1000, 180),
+	8: Vector2(1150, 90),
+	9: Vector2(1300, 240),
+	10: Vector2(1450, 140),
+	11: Vector2(1600, 240),
+	12: Vector2(1750, 90),
+	13: Vector2(1900, 180),
+}
+
+var tooltip_panel: PanelContainer = null
+var active_nodes: Array = []
+
 func _ready() -> void:
 	_setup_buttons()
-	_build_level_grid()
 	_apply_styles()
-	_apply_responsive_layout()
-	get_tree().root.size_changed.connect(_apply_responsive_layout)
+	
+	# Connect procedural map drawing
+	map_canvas.draw.connect(_on_map_canvas_draw)
+	
+	# Build the node map layout
+	_build_level_nodes()
+	
 	SignalBus.campaign_level_unlocked.connect(_on_level_unlocked)
+	
+	# Create hover tooltip card at screen level (so it doesn't get clipped by scrolling)
+	_setup_floating_tooltip()
+	
+	# Smoothly auto-scroll to center on current/unlocked progress
+	await get_tree().process_frame
+	_auto_scroll_to_current()
 
 func _setup_buttons() -> void:
 	back_btn.pressed.connect(_on_back_pressed)
@@ -42,162 +74,229 @@ func _input(event: InputEvent) -> void:
 	if event.is_action_pressed("ui_cancel"):
 		GameManager.go_to("main_menu")
 
-# ─── BUILD LEVEL GRID ──────────────────────────────────
-func _build_level_grid() -> void:
-	# Clear existing cards
-	for child in level_grid.get_children():
-		child.queue_free()
-
-	var unlocked_count := 0
-
+# ─── AUTO SCROLL TO CURRENT PROGRESS ───────────────────
+func _auto_scroll_to_current() -> void:
+	var highest_unlocked := 1
 	for info in LEVEL_INFO:
-		var level_num   = info["number"]
-		var is_unlocked = ProgressManager.is_level_unlocked(level_num)
-		var is_completed = ProgressManager.campaign_progress.get(
-			"waves_completed", 0
-		) >= level_num
+		var lvl = info["number"]
+		if ProgressManager.is_level_unlocked(lvl):
+			highest_unlocked = lvl
+			
+	var target_pos = LEVEL_POSITIONS[highest_unlocked]
+	# Center the scrollbar around target pos
+	var center_offset = target_pos.x - (size.x / 2.0)
+	center_offset = clamp(center_offset, 0.0, map_canvas.custom_minimum_size.x - size.x)
+	
+	var tween = create_tween()
+	tween.set_ease(Tween.EASE_OUT)
+	tween.set_trans(Tween.TRANS_QUAD)
+	tween.tween_property(map_scroll, "h_scroll", int(center_offset), 0.8)
 
+# ─── floating tooltip CARD setup ───────────────────────
+func _setup_floating_tooltip() -> void:
+	tooltip_panel = PanelContainer.new()
+	tooltip_panel.custom_minimum_size = Vector2(200, 100)
+	tooltip_panel.modulate.a = 0.0
+	tooltip_panel.scale = Vector2(0.8, 0.8)
+	tooltip_panel.pivot_offset = Vector2(100, 50)
+	tooltip_panel.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	add_child(tooltip_panel)
+	
+	var style := StyleBoxFlat.new()
+	style.bg_color = Color("#0A1628", 0.95)
+	style.border_color = Color("#00D4FF")
+	style.border_width_left = 1
+	style.border_width_right = 1
+	style.border_width_top = 1
+	style.border_width_bottom = 1
+	style.corner_radius_top_left = 6
+	style.corner_radius_top_right = 6
+	style.corner_radius_bottom_left = 6
+	style.corner_radius_bottom_right = 6
+	style.shadow_color = Color(0, 0, 0, 0.4)
+	style.shadow_size = 8
+	tooltip_panel.add_theme_stylebox_override("panel", style)
+	
+	var layout := VBoxContainer.new()
+	layout.name = "Layout"
+	layout.add_theme_constant_override("separation", 2)
+	tooltip_panel.add_child(layout)
+	
+	var title := Label.new()
+	title.name = "Title"
+	title.text = "Level Info"
+	title.add_theme_font_size_override("font_size", 14)
+	title.add_theme_color_override("font_color", Color.WHITE)
+	layout.add_child(title)
+	
+	var ds := Label.new()
+	ds.name = "DS"
+	ds.text = "Arrays"
+	ds.add_theme_font_size_override("font_size", 11)
+	ds.add_theme_color_override("font_color", Color("#00D4FF"))
+	layout.add_child(ds)
+	
+	var stats := Label.new()
+	stats.name = "Stats"
+	stats.text = "Waves: 3"
+	stats.add_theme_font_size_override("font_size", 11)
+	stats.add_theme_color_override("font_color", Color("#4A7FA5"))
+	layout.add_child(stats)
+
+func _show_tooltip(global_pos: Vector2, info: Dictionary, is_unlocked: bool, is_completed: bool) -> void:
+	var layout = tooltip_panel.get_node("Layout")
+	var title = layout.get_node("Title")
+	var ds = layout.get_node("DS")
+	var stats = layout.get_node("Stats")
+	
+	if is_unlocked:
+		title.text = info["name"]
+		ds.text = "Structure: " + info["ds"]
+		stats.text = str(info["waves"]) + " Waves" + (" (Completed)" if is_completed else "")
+		tooltip_panel.get_theme_stylebox("panel").border_color = Color("#00FF88") if is_completed else Color("#00D4FF")
+		ds.add_theme_color_override("font_color", Color("#00FF88") if is_completed else Color("#00D4FF"))
+	else:
+		title.text = "Locked System"
+		ds.text = "Requires earlier systems"
+		stats.text = "Unlock progress in Academy"
+		tooltip_panel.get_theme_stylebox("panel").border_color = Color("#2A3A4A")
+		ds.add_theme_color_override("font_color", Color("#2A3A4A"))
+		
+	# Adjust tooltip screen position above hovered node
+	tooltip_panel.global_position = global_pos - Vector2(100, 110)
+	
+	var tween = create_tween().set_parallel(true)
+	tween.tween_property(tooltip_panel, "modulate:a", 1.0, 0.15)
+	tween.tween_property(tooltip_panel, "scale", Vector2(1.0, 1.0), 0.15).set_trans(Tween.TRANS_BACK)
+
+func _hide_tooltip() -> void:
+	var tween = create_tween().set_parallel(true)
+	tween.tween_property(tooltip_panel, "modulate:a", 0.0, 0.1)
+	tween.tween_property(tooltip_panel, "scale", Vector2(0.8, 0.8), 0.1)
+
+# ─── BUILD LEVEL NODES ──────────────────────────────────
+func _build_level_nodes() -> void:
+	for child in map_canvas.get_children():
+		child.queue_free()
+	active_nodes.clear()
+	
+	var unlocked_count := 0
+	
+	for info in LEVEL_INFO:
+		var level_num = info["number"]
+		var is_unlocked = ProgressManager.is_level_unlocked(level_num)
+		var is_completed = ProgressManager.campaign_progress.get("waves_completed", 0) >= level_num
+		
 		if is_unlocked:
 			unlocked_count += 1
-
-		var card = _make_level_card(
-			info, is_unlocked, is_completed
-		)
-		level_grid.add_child(card)
-
-	# Update header
+			
+		var node_pos = LEVEL_POSITIONS[level_num]
+		var node_btn = _create_node_button(info, is_unlocked, is_completed, node_pos)
+		map_canvas.add_child(node_btn)
+		active_nodes.append(node_btn)
+		
 	ram_label.text = str(unlocked_count) + " / 13 Unlocked"
-
-	# Show hint if not all unlocked
 	locked_label.visible = unlocked_count < 13
+	map_canvas.queue_redraw()
 
-func _make_level_card(
-		info: Dictionary,
-		is_unlocked: bool,
-		is_completed: bool) -> PanelContainer:
-
-	var card := PanelContainer.new()
-	card.custom_minimum_size = Vector2(180, 100)
-	card.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-
-	# Card style
+func _create_node_button(info: Dictionary, is_unlocked: bool, is_completed: bool, pos: Vector2) -> Button:
+	var btn := Button.new()
+	# Compact circular size
+	btn.custom_minimum_size = Vector2(56, 56)
+	btn.size = Vector2(56, 56)
+	btn.pivot_offset = Vector2(28, 28)
+	btn.mouse_default_cursor_shape = Control.CURSOR_POINTING_HAND if is_unlocked else Control.CURSOR_ARROW
+	
+	# Center position on target vector coordinate
+	btn.position = pos - Vector2(28, 28)
+	
 	var style := StyleBoxFlat.new()
-	style.corner_radius_top_left     = 6
-	style.corner_radius_top_right    = 6
-	style.corner_radius_bottom_left  = 6
-	style.corner_radius_bottom_right = 6
-	style.border_width_left      = 1
-	style.border_width_right     = 1
-	style.border_width_top       = 1
-	style.border_width_bottom    = 1
-	style.content_margin_left    = 16
-	style.content_margin_right   = 16
-	style.content_margin_top     = 12
-	style.content_margin_bottom  = 12
-
+	style.corner_radius_top_left = 99
+	style.corner_radius_top_right = 99
+	style.corner_radius_bottom_left = 99
+	style.corner_radius_bottom_right = 99
+	style.border_width_left = 2
+	style.border_width_right = 2
+	style.border_width_top = 2
+	style.border_width_bottom = 2
+	
+	# Styling themes based on complete/unlock progress
 	if is_completed:
-		style.bg_color     = Color("#0D2A1A")
+		style.bg_color = Color("#0D2A1A")
 		style.border_color = Color("#00FF88")
+		btn.text = "✓"
+		btn.add_theme_color_override("font_color", Color("#00FF88"))
 	elif is_unlocked:
-		style.bg_color     = Color("#0D2040")
+		style.bg_color = Color("#0D2040")
 		style.border_color = Color("#00D4FF")
+		btn.text = str(info["number"])
+		btn.add_theme_color_override("font_color", Color("#00D4FF"))
 	else:
-		style.bg_color     = Color("#0A1628")
-		style.border_color = Color("#2A3A4A")
-
-	card.add_theme_stylebox_override("panel", style)
-
-	# Card layout
-	var layout := VBoxContainer.new()
-	layout.add_theme_constant_override("separation", 4)
-
-	# Top row — level number + status icon
-	var top_row := HBoxContainer.new()
-
-	var num_label := Label.new()
-	num_label.text = "LEVEL " + str(info["number"])
-	num_label.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-	num_label.add_theme_font_size_override("font_size", 11)
-	if is_completed:
-		num_label.add_theme_color_override("font_color", Color("#00FF88"))
-	elif is_unlocked:
-		num_label.add_theme_color_override("font_color", Color("#00D4FF"))
-	else:
-		num_label.add_theme_color_override("font_color", Color("#2A3A4A"))
-	top_row.add_child(num_label)
-
-	# Status icon
-	var icon_label := Label.new()
-	icon_label.add_theme_font_size_override("font_size", 14)
-	if is_completed:
-		icon_label.text = "✅"
-	elif is_unlocked:
-		icon_label.text = "🔓"
-	else:
-		icon_label.text = "🔒"
-	top_row.add_child(icon_label)
-	layout.add_child(top_row)
-
-	# Level name
-	var name_label := Label.new()
-	name_label.text          = info["name"] if is_unlocked else "???"
-	name_label.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
-	name_label.add_theme_font_size_override("font_size", 16)
+		style.bg_color = Color("#0A1628")
+		style.border_color = Color("#1A2D3D")
+		btn.text = "🔒"
+		btn.add_theme_color_override("font_color", Color("#1A2D3D"))
+		
+	btn.add_theme_stylebox_override("normal", style)
+	btn.add_theme_stylebox_override("hover", style)
+	btn.add_theme_stylebox_override("pressed", style)
+	btn.add_theme_stylebox_override("focus", StyleBoxEmpty.new())
+	btn.add_theme_font_size_override("font_size", 14)
+	
+	# Hover and click logic
 	if is_unlocked:
-		name_label.add_theme_color_override("font_color", Color("#E8F4FD"))
-	else:
-		name_label.add_theme_color_override("font_color", Color("#2A3A4A"))
-	layout.add_child(name_label)
-
-	# Bottom info row
-	var bottom_row := HBoxContainer.new()
-
-	# Data structure tag
-	var ds_label := Label.new()
-	ds_label.text = info["ds"] if is_unlocked else "Locked"
-	ds_label.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-	ds_label.add_theme_font_size_override("font_size", 11)
-	if is_completed:
-		ds_label.add_theme_color_override("font_color", Color("#00FF88"))
-	elif is_unlocked:
-		ds_label.add_theme_color_override("font_color", Color("#4A7FA5"))
-	else:
-		ds_label.add_theme_color_override("font_color", Color("#2A3A4A"))
-	bottom_row.add_child(ds_label)
-
-	# Waves
-	if is_unlocked:
-		var waves_label := Label.new()
-		waves_label.text = str(info["waves"]) + " Waves"
-		waves_label.add_theme_font_size_override("font_size", 11)
-		waves_label.add_theme_color_override("font_color", Color("#4A7FA5"))
-		bottom_row.add_child(waves_label)
-
-	layout.add_child(bottom_row)
-	card.add_child(layout)
-
-	# Invisible button overlay for click
-	if is_unlocked:
-		var btn      := Button.new()
-		btn.flat     = true
-		btn.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
-
-		# Hover effect
-		var hover_style := StyleBoxFlat.new()
-		hover_style.bg_color = Color("#00D4FF", 0.08)
-		hover_style.corner_radius_top_left     = 6
-		hover_style.corner_radius_top_right    = 6
-		hover_style.corner_radius_bottom_left  = 6
-		hover_style.corner_radius_bottom_right = 6
-		btn.add_theme_stylebox_override("hover", hover_style)
-
-		var empty_style := StyleBoxEmpty.new()
-		btn.add_theme_stylebox_override("normal",  empty_style)
-		btn.add_theme_stylebox_override("pressed", empty_style)
 		btn.pressed.connect(_on_level_selected.bind(info["number"]))
-		card.add_child(btn)
+		
+	btn.mouse_entered.connect(func():
+		_show_tooltip(btn.global_position, info, is_unlocked, is_completed)
+		var t = create_tween()
+		t.tween_property(btn, "scale", Vector2(1.15, 1.15), 0.15).set_trans(Tween.TRANS_QUAD).set_ease(Tween.EASE_OUT)
+		if is_unlocked:
+			var s_dup = style.duplicate()
+			s_dup.border_color = Color.WHITE
+			btn.add_theme_stylebox_override("normal", s_dup)
+	)
+	
+	btn.mouse_exited.connect(func():
+		_hide_tooltip()
+		var t = create_tween()
+		t.tween_property(btn, "scale", Vector2(1.0, 1.0), 0.15).set_trans(Tween.TRANS_QUAD).set_ease(Tween.EASE_OUT)
+		btn.add_theme_stylebox_override("normal", style)
+	)
+	
+	return btn
 
-	return card
+# ─── PROCEDURAL LINKING DRAW LOGIC ─────────────────────
+func _on_map_canvas_draw() -> void:
+	for i in range(1, 13):
+		var pos_a = LEVEL_POSITIONS[i]
+		var pos_b = LEVEL_POSITIONS[i + 1]
+		
+		var unlocked_b = ProgressManager.is_level_unlocked(i + 1)
+		var completed_b = ProgressManager.campaign_progress.get("waves_completed", 0) >= (i + 1)
+		
+		if completed_b:
+			# Fully completed neon connection
+			map_canvas.draw_line(pos_a, pos_b, Color("#00FF88"), 4.0)
+		elif unlocked_b:
+			# Unlocked path connection
+			map_canvas.draw_line(pos_a, pos_b, Color("#00D4FF"), 4.0)
+		else:
+			# Dim dashed locked line
+			_draw_dashed_line(pos_a, pos_b, Color("#1A2D3D"), 2.0, 8.0)
+
+func _draw_dashed_line(from: Vector2, to: Vector2, color: Color, width: float, dash_len: float) -> void:
+	var dir = (to - from).normalized()
+	var dist = (to - from).length()
+	var curr = 0.0
+	var draw_seg = true
+	
+	while curr < dist:
+		var step = min(dash_len, dist - curr)
+		if draw_seg:
+			map_canvas.draw_line(from + dir * curr, from + dir * (curr + step), color, width)
+		curr += step
+		draw_seg = !draw_seg
 
 # ─── LEVEL SELECTED ────────────────────────────────────
 func _on_level_selected(level_number: int) -> void:
@@ -206,7 +305,7 @@ func _on_level_selected(level_number: int) -> void:
 
 # ─── SIGNAL HANDLERS ───────────────────────────────────
 func _on_level_unlocked(_level: int) -> void:
-	_build_level_grid()
+	_build_level_nodes()
 
 # ─── STYLES ────────────────────────────────────────────
 func _apply_styles() -> void:
@@ -231,19 +330,6 @@ func _style_back_btn() -> void:
 	back_btn.add_theme_stylebox_override("normal", style)
 	back_btn.add_theme_color_override("font_color", Color("#00D4FF"))
 
-# ─── RESPONSIVE ────────────────────────────────────────
 func _apply_responsive_layout() -> void:
-	if ScreenManager.is_mobile():
-		level_grid.columns = 2
-		$ContentArea.add_theme_constant_override("margin_left",   12)
-		$ContentArea.add_theme_constant_override("margin_right",  12)
-		$ContentArea.add_theme_constant_override("margin_top",    12)
-		$ContentArea.add_theme_constant_override("margin_bottom", 12)
-	elif ScreenManager.is_tablet():
-		level_grid.columns = 3
-		$ContentArea.add_theme_constant_override("margin_left",   24)
-		$ContentArea.add_theme_constant_override("margin_right",  24)
-	else:
-		level_grid.columns = 4
-		$ContentArea.add_theme_constant_override("margin_left",   32)
-		$ContentArea.add_theme_constant_override("margin_right",  32)
+	# Since we are using an absolute MapCanvas horizontally scrollable system, plain responsive layouts of Grid columns are not required!
+	pass
