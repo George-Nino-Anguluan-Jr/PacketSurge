@@ -205,26 +205,26 @@ func _attack_queue() -> void:
 # ─── LINKED LIST — chain hit: jumps to 2 nearby enemies (pointer chasing) ──
 func _attack_linked() -> void:
 	var target = _get_closest_enemy()
-	if not target:
-		return
-	target.take_damage(damage)
-	current_target = target
-	_flash_targets.append(target.position - position)
-
-	# Chain to next closest enemies from the first target's position
-	var chained: Array[Node] = [target]
-	for i in range(2):  # chain up to 2 more
-		var next_link = _get_closest_to_point(target.position, chained)
-		if next_link:
-			next_link.take_damage(damage * 0.7)
-			_flash_targets.append(next_link.position - position)
-			chained.append(next_link)
-			target = next_link
-		else:
-			break
-
-	_shoot_flash = 1.0
-	queue_redraw()
+	if target:
+		current_target = target
+		# Spawn the first chain lightning projectile starting from the muzzle
+		var spawn_origin = position + Vector2(0, -14).rotated(_turret_angle)
+		var p = {
+			"pos": spawn_origin,
+			"start_pos": spawn_origin,
+			"draw_pos": spawn_origin,
+			"target": target,
+			"target_last_pos": target.position,
+			"speed": 340.0,
+			"damage": damage,
+			"style": "chain_lightning",
+			"elapsed_time": 0.0,
+			"total_dist": (target.position - spawn_origin).length(),
+			"chains_left": 2,
+			"chained_targets": [target]
+		}
+		_projectiles.append(p)
+		queue_redraw()
 
 # ─── BUBBLE SORT — AoE pulse, hits ALL enemies in range (O(n²) = touches everyone) ──
 func _attack_bubble() -> void:
@@ -331,16 +331,71 @@ func _on_projectile_impact(p: Dictionary) -> void:
 	# Trigger a beautiful custom particle/shockwave explosion at target impact site
 	_spawn_impact_explosion(p["target_last_pos"], p["style"])
 
+	# Cascade lightning chaining on impact for Linked List!
+	if p["style"] == "chain_lightning" and p.has("chains_left") and p["chains_left"] > 0:
+		var next_target = _get_closest_to_point(p["target_last_pos"], p["chained_targets"])
+		if next_target:
+			var new_chains_left = p["chains_left"] - 1
+			var new_chained_list = p["chained_targets"].duplicate()
+			new_chained_list.append(next_target)
+			
+			var p_next = {
+				"pos": p["target_last_pos"],
+				"start_pos": p["target_last_pos"],
+				"draw_pos": p["target_last_pos"],
+				"target": next_target,
+				"target_last_pos": next_target.position,
+				"speed": 340.0,
+				"damage": p["damage"] * 0.8,
+				"style": "chain_lightning",
+				"elapsed_time": 0.0,
+				"total_dist": (next_target.position - p["target_last_pos"]).length(),
+				"chains_left": new_chains_left,
+				"chained_targets": new_chained_list
+			}
+			_projectiles.append(p_next)
+
 func _spawn_impact_explosion(pos: Vector2, style: String) -> void:
 	var e = {
 		"pos": pos - position, # relative to drawing space
 		"style": style,
 		"radius": 0.0,
-		"max_radius": 18.0 if style == "mortar" else (14.0 if style == "rail" else 8.0),
+		"max_radius": 18.0 if style == "mortar" else (22.0 if style == "chain_lightning" else (14.0 if style == "rail" else 8.0)),
 		"elapsed": 0.0,
 		"lifetime": 0.22
 	}
 	_explosions.append(e)
+
+func _draw_ellipse(center: Vector2, radius: float, color: Color, filled: bool = true, width: float = -1.0) -> void:
+	# Custom ellipse drawer that scales purely on math and never touches/messes with canvas transforms
+	var points = PackedVector2Array()
+	var steps = 24
+	for i in range(steps + 1):
+		var angle = i * (TAU / steps)
+		points.append(center + Vector2(cos(angle) * radius, sin(angle) * radius * SQUASH))
+	if filled:
+		draw_colored_polygon(points, color)
+	else:
+		draw_polyline(points, color, width)
+
+func _draw_lightning_bolt(from: Vector2, to: Vector2, color: Color) -> void:
+	var steps = 4
+	var points = PackedVector2Array()
+	points.append(from)
+	var dir = to - from
+	var dist = dir.length()
+	
+	if dist > 4.0:
+		var normal = Vector2(-dir.y, dir.x).normalized()
+		for i in range(1, steps):
+			var t = float(i) / steps
+			var jag = sin(_anim_time * 25.0 + i * 5.0) * (dist * 0.12)
+			var pt = from + dir * t + normal * jag
+			points.append(pt)
+	points.append(to)
+	
+	draw_polyline(points, color, 2.5)
+	draw_polyline(points, Color.WHITE, 1.0)
 
 # ─── TARGETING HELPERS ─────────────────────────────────
 func _get_closest_enemy() -> Node:

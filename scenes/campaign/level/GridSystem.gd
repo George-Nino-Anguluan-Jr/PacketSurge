@@ -313,8 +313,8 @@ func _draw() -> void:
 	_draw_hover()
 
 func _draw_background() -> void:
-	# Core background backdrop
-	var rect_full = Rect2(0, 0, GRID_COLS * CELL_SIZE, GRID_ROWS * CELL_SIZE)
+	# Core background backdrop - cover the entire viewport screen to eliminate gray margins
+	var rect_full = Rect2(-2000, -2000, 5000, 4000)
 	draw_rect(rect_full, _theme.get("bg_color", Color("#050D1A")))
 
 	# Grid cells overlay
