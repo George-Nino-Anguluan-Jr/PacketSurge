@@ -53,11 +53,13 @@ layout_mode = 2
 theme_override_constants/separation = 12
 
 [node name="BackBtn" type="Button" parent="HUD/HUDControl/TopHUD/TopLayout" unique_id=1103378951]
+visible = false
 custom_minimum_size = Vector2(80, 0)
 layout_mode = 2
 text = "← EXIT"
 
 [node name="LevelLabel" type="Label" parent="HUD/HUDControl/TopHUD/TopLayout" unique_id=356947428]
+visible = false
 layout_mode = 2
 theme_override_colors/font_color = Color(0.9098039, 0.95686275, 0.99215686, 1)
 theme_override_font_sizes/font_size = 14
@@ -66,6 +68,36 @@ text = "Level 1 — Initialization"
 [node name="Spacer" type="Control" parent="HUD/HUDControl/TopHUD/TopLayout" unique_id=79751596]
 layout_mode = 2
 size_flags_horizontal = 3
+
+[node name="WaveProgressTimeline" type="Control" parent="HUD/HUDControl/TopHUD/TopLayout" unique_id=12145890]
+custom_minimum_size = Vector2(200, 24)
+layout_mode = 2
+size_flags_vertical = 4
+
+[node name="ProgressBar" type="ProgressBar" parent="HUD/HUDControl/TopHUD/TopLayout/WaveProgressTimeline" unique_id=12145891]
+custom_minimum_size = Vector2(200, 10)
+layout_mode = 1
+anchors_preset = 14
+anchor_top = 0.5
+anchor_right = 1.0
+anchor_bottom = 0.5
+grow_horizontal = 2
+grow_vertical = 2
+show_percentage = false
+
+[node name="FlagsContainer" type="Control" parent="HUD/HUDControl/TopHUD/TopLayout/WaveProgressTimeline" unique_id=12145892]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+
+[node name="SkipWaveBtn" type="Button" parent="HUD/HUDControl/TopHUD/TopLayout" unique_id=12145893]
+custom_minimum_size = Vector2(36, 28)
+layout_mode = 2
+size_flags_vertical = 4
+text = "⏩"
 
 [node name="RAMLabel" type="Label" parent="HUD/HUDControl/TopHUD/TopLayout" unique_id=1535171615]
 layout_mode = 2
@@ -91,27 +123,102 @@ theme_override_colors/font_color = Color(0, 1, 0.53333336, 1)
 theme_override_font_sizes/font_size = 14
 text = "Score: 0"
 
+[node name="PauseBtn" type="Button" parent="HUD/HUDControl/TopHUD/TopLayout" unique_id=98716254]
+custom_minimum_size = Vector2(44, 0)
+layout_mode = 2
+text = "⏸"
+
 [node name="TowerSelector" type="PanelContainer" parent="HUD/HUDControl" unique_id=1383279771]
-custom_minimum_size = Vector2(0, 80)
+custom_minimum_size = Vector2(160, 0)
 layout_mode = 1
-anchors_preset = 12
-anchor_top = 1.0
-anchor_right = 1.0
+anchors_preset = 9
 anchor_bottom = 1.0
-grow_horizontal = 2
-grow_vertical = 0
+grow_vertical = 2
 
 [node name="SelectorLayout" type="VBoxContainer" parent="HUD/HUDControl/TowerSelector" unique_id=40105491]
 layout_mode = 2
 
-[node name="TowerButtons" type="HBoxContainer" parent="HUD/HUDControl/TowerSelector/SelectorLayout" unique_id=929104316]
+[node name="TowerButtons" type="VBoxContainer" parent="HUD/HUDControl/TowerSelector/SelectorLayout" unique_id=929104316]
 layout_mode = 2
 theme_override_constants/separation = 8
 
-[node name="StartWaveBtn" type="Button" parent="HUD/HUDControl/TowerSelector/SelectorLayout" unique_id=166601471]
-custom_minimum_size = Vector2(130, 44)
+[node name="PauseMenu" type="PanelContainer" parent="HUD/HUDControl" unique_id=98716382]
+process_mode = 3
+visible = false
+custom_minimum_size = Vector2(300, 250)
+layout_mode = 1
+anchors_preset = 8
+anchor_left = 0.5
+anchor_top = 0.5
+anchor_right = 0.5
+anchor_bottom = 0.5
+grow_horizontal = 2
+grow_vertical = 2
+
+[node name="PauseMenuLayout" type="VBoxContainer" parent="HUD/HUDControl/PauseMenu" unique_id=98716383]
 layout_mode = 2
-text = "▶ Start Wave"
+theme_override_constants/separation = 12
+alignment = 1
+
+[node name="PauseTitle" type="Label" parent="HUD/HUDControl/PauseMenu/PauseMenuLayout" unique_id=98716384]
+layout_mode = 2
+theme_override_font_sizes/font_size = 24
+text = "GAME PAUSED"
+horizontal_alignment = 1
+
+[node name="ResumeBtn" type="Button" parent="HUD/HUDControl/PauseMenu/PauseMenuLayout" unique_id=98716385]
+custom_minimum_size = Vector2(160, 36)
+layout_mode = 2
+size_flags_horizontal = 4
+text = "▶ Resume"
+
+[node name="RetryBtn" type="Button" parent="HUD/HUDControl/PauseMenu/PauseMenuLayout" unique_id=98716386]
+custom_minimum_size = Vector2(160, 36)
+layout_mode = 2
+size_flags_horizontal = 4
+text = "↺ Retry"
+
+[node name="SelectLevelBtn" type="Button" parent="HUD/HUDControl/PauseMenu/PauseMenuLayout" unique_id=98716387]
+custom_minimum_size = Vector2(160, 36)
+layout_mode = 2
+size_flags_horizontal = 4
+text = "🗺 Select Level"
+
+[node name="MainMenuBtn" type="Button" parent="HUD/HUDControl/PauseMenu/PauseMenuLayout" unique_id=98716388]
+custom_minimum_size = Vector2(160, 36)
+layout_mode = 2
+size_flags_horizontal = 4
+text = "🏠 Main Menu"
+
+[node name="WaveSplash" type="Control" parent="HUD/HUDControl" unique_id=74128590]
+visible = false
+layout_mode = 1
+anchors_preset = 8
+anchor_left = 0.5
+anchor_top = 0.5
+anchor_right = 0.5
+anchor_bottom = 0.5
+grow_horizontal = 2
+grow_vertical = 2
+
+[node name="WaveSplashLabel" type="Label" parent="HUD/HUDControl/WaveSplash" unique_id=74128591]
+layout_mode = 1
+anchors_preset = 8
+anchor_left = 0.5
+anchor_top = 0.5
+anchor_right = 0.5
+anchor_bottom = 0.5
+offset_left = -300.0
+offset_top = -50.0
+offset_right = 300.0
+offset_bottom = 50.0
+grow_horizontal = 2
+grow_vertical = 2
+theme_override_colors/font_color = Color(0, 1, 0.53333336, 1)
+theme_override_font_sizes/font_size = 48
+text = "WAVE 1"
+horizontal_alignment = 1
+vertical_alignment = 1
 
 [node name="MicroCodingPanel" type="PanelContainer" parent="HUD/HUDControl" unique_id=1666408415]
 visible = false
