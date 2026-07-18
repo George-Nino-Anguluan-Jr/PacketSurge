@@ -25,6 +25,12 @@ func _ready() -> void:
 	_apply_responsive_layout()
 	get_tree().root.size_changed.connect(_apply_responsive_layout)
 	SupabaseManager.leaderboard_loaded.connect(_on_class_data_loaded)
+	
+	# Also update responsive layout whenever visibility changes
+	visibility_changed.connect(func():
+		if visible:
+			_apply_responsive_layout()
+	)
 
 # ─── BUTTON SETUP ──────────────────────────────────────
 func _setup_buttons() -> void:
@@ -880,6 +886,26 @@ func _style_active_tab(btn: Button, active: bool) -> void:
 
 # ─── RESPONSIVE ────────────────────────────────────────
 func _apply_responsive_layout() -> void:
+	# Force Analytics to cover the entire viewport/screen
+	set_anchors_preset(Control.PRESET_FULL_RECT)
+	anchor_right = 1.0
+	anchor_bottom = 1.0
+	offset_left = 0
+	offset_right = 0
+	offset_top = 0
+	offset_bottom = 0
+
+	# Ensure CenterContainer also fills the entire screen to center the card
+	var center_container = get_node_or_null("CenterContainer")
+	if center_container:
+		center_container.set_anchors_preset(Control.PRESET_FULL_RECT)
+		center_container.anchor_right = 1.0
+		center_container.anchor_bottom = 1.0
+		center_container.offset_left = 0
+		center_container.offset_right = 0
+		center_container.offset_top = 0
+		center_container.offset_bottom = 0
+
 	var card = $CenterContainer/PopupCard
 	var margin_container = $CenterContainer/PopupCard/MarginContainer
 	var content_layout = $CenterContainer/PopupCard/MarginContainer/ContentLayout
