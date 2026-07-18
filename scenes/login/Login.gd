@@ -37,9 +37,9 @@ var _is_decoding: bool = true
 
 # ─── READY ─────────────────────────────────────────────
 func _ready() -> void:
-	# Apply cyber grid background shader
+	# Apply minimal performance-friendly background shader
 	var bg_material := ShaderMaterial.new()
-	bg_material.shader = load("res://assets/themes/cyber_grid.gdshader")
+	bg_material.shader = load("res://assets/themes/minimal_system_bg.gdshader")
 	if has_node("Background"):
 		$Background.material = bg_material
 
@@ -207,50 +207,6 @@ func _animate_title() -> void:
 	tween.set_trans(Tween.TRANS_CUBIC)
 	tween.tween_property(title_label, "modulate:a", 1.0, 1.0)
 
-func _process(delta: float) -> void:
-	_time += delta
-	_play_hacker_decode_animation(delta)
-
-func _play_hacker_decode_animation(delta: float) -> void:
-	if not _is_decoding:
-		# Pulsing effect after decoding is done
-		var pulse        = (sin(_time * 3.0) + 1.0) / 2.0
-		var base_color   = Color("#00D4FF")
-		var bright_color = Color("#80EAFF")
-		title_label.add_theme_color_override(
-			"font_color", base_color.lerp(bright_color, pulse * 0.4)
-		)
-		# Blinking caret
-		var caret = " █" if int(_time * 2.0) % 2 == 0 else "  "
-		title_label.text = _final_title + caret
-		return
-
-	_decode_timer += delta
-	if _decode_timer >= 0.04:
-		_decode_timer = 0.0
-		_current_decoded_length += 1
-		# Play dynamic tick sound as letters decrypt!
-		var sfx = get_node_or_null("/root/SoundManager")
-		if sfx:
-			sfx.play_tick()
-		if _current_decoded_length > _final_title.length():
-			_is_decoding = false
-			title_label.text = _final_title + " █"
-			return
-			
-	# Generate scrambled text
-	var scrambled = ""
-	var chars = "01$#@%&*?+=/\\"
-	for i in range(_final_title.length()):
-		if i < _current_decoded_length:
-			scrambled += _final_title[i]
-		else:
-			if _final_title[i] == " ":
-				scrambled += " "
-			else:
-				var rand_idx = randi() % chars.length()
-				scrambled += chars[rand_idx]
-	title_label.text = scrambled
 
 # ─── STYLES ────────────────────────────────────────────
 func _apply_styles() -> void:
