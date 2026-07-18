@@ -7,9 +7,9 @@ extends CanvasLayer
 
 var _is_showing: bool = false
 var _queue: Array     = []
+var _active_tween: Tween = null
 
-const SHOWN_OFFSET: float = 8.0
-const HIDDEN_OFFSET: float = -100.0
+const SHOWN_OFFSET: float = 16.0
 const PANEL_HEIGHT: float = 60.0
 const SIDE_MARGIN: float = 16.0
 
@@ -17,7 +17,8 @@ func _ready() -> void:
 	_apply_style()
 	SignalBus.hud_message_requested.connect(_on_message_requested)
 	toast_panel.visible = false
-	_set_offsets(HIDDEN_OFFSET)
+	toast_panel.modulate.a = 0.0
+	_set_offsets(SHOWN_OFFSET)
 
 func _set_offsets(top: float) -> void:
 	toast_panel.set_anchor_and_offset(SIDE_LEFT,   0.0, SIDE_MARGIN)
@@ -28,7 +29,7 @@ func _set_offsets(top: float) -> void:
 func _apply_style() -> void:
 	var style := StyleBoxFlat.new()
 	style.bg_color               = Color("#0A1628")
-	style.border_color           = Color("#FFB800")
+	style.border_color           = Color("#00D4FF")
 	style.border_width_left      = 1
 	style.border_width_right     = 1
 	style.border_width_top       = 1
@@ -45,7 +46,7 @@ func _apply_style() -> void:
 
 func _on_message_requested(message: String, duration: float) -> void:
 	if _is_showing:
-		_queue.append({"message": message, "duration": duration})
+		_interrupt_and_show_toast(message, duration)
 		return
 	_show_toast(message, duration)
 
@@ -53,34 +54,74 @@ func _show_toast(message: String, duration: float) -> void:
 	_is_showing         = true
 	toast_text.text     = message
 	toast_panel.visible = true
-	_set_offsets(HIDDEN_OFFSET)
+	toast_panel.modulate.a = 0.0
+	_set_offsets(SHOWN_OFFSET)
 
-	var tween = create_tween()
-	tween.set_ease(Tween.EASE_OUT)
-	tween.set_trans(Tween.TRANS_BACK)
-	tween.tween_method(_set_offsets, HIDDEN_OFFSET, SHOWN_OFFSET, 0.4)
+	if _active_tween:
+		_active_tween.kill()
 
-	await get_tree().create_timer(duration).timeout
-	_hide_toast()
+	_active_tween = create_tween()
+	_active_tween.set_ease(Tween.EASE_OUT)
+	_active_tween.set_trans(Tween.TRANS_CUBIC)
+	_active_tween.tween_property(toast_panel, "modulate:a", 1.0, 0.3)
+	
+	_active_tween.finished.connect(func():
+		_start_hide_timer(duration)
+	)
+
+func _interrupt_and_show_toast(message: String, duration: float) -> void:
+	_queue.clear()
+	toast_text.text = message
+
+	if _active_tween:
+		_active_tween.kill()
+
+	_active_tween = create_tween()
+	_active_tween.set_parallel(true)
+	
+	# Bump animation: quickly slide up and back down to the SHOWN_OFFSET
+	_active_tween.tween_method(_set_offsets, SHOWN_OFFSET - 12.0, SHOWN_OFFSET, 0.25)\
+		.set_ease(Tween.EASE_OUT)\
+		.set_trans(Tween.TRANS_BACK)
+	
+	# Instantly restore full visibility/opacity
+	_active_tween.tween_property(toast_panel, "modulate:a", 1.0, 0.1)
+
+	_active_tween.chain().finished.connect(func():
+		_start_hide_timer(duration)
+	)
+
+func _start_hide_timer(duration: float) -> void:
+	if _active_tween:
+		_active_tween.kill()
+
+	_active_tween = create_tween()
+	_active_tween.tween_interval(duration)
+	_active_tween.finished.connect(_hide_toast)
 
 func _hide_toast() -> void:
-	var tween = create_tween()
-	tween.set_ease(Tween.EASE_IN)
-	tween.set_trans(Tween.TRANS_CUBIC)
-	tween.tween_method(_set_offsets, SHOWN_OFFSET, HIDDEN_OFFSET, 0.3)
-	await tween.finished
-	toast_panel.visible = false
-	_is_showing         = false
+	if _active_tween:
+		_active_tween.kill()
 
-	if _queue.size() > 0:
-		var next = _queue.pop_front()
-		_show_toast(next["message"], next["duration"])
+	_active_tween = create_tween()
+	_active_tween.set_ease(Tween.EASE_IN)
+	_active_tween.set_trans(Tween.TRANS_CUBIC)
+	_active_tween.tween_property(toast_panel, "modulate:a", 0.0, 0.3)
+	
+	_active_tween.finished.connect(func():
+		toast_panel.visible = false
+		_is_showing         = false
+		
+		if _queue.size() > 0:
+			var next = _queue.pop_front()
+			_show_toast(next["message"], next["duration"])
+	)
 
 func show_message(
 		message: String,
 		duration: float = 3.0,
 		icon: String    = "💡",
-		color: String   = "#FFB800") -> void:
+		color: String   = "#00D4FF") -> void:
 	toast_icon.text = icon
 	var style := StyleBoxFlat.new()
 	style.bg_color               = Color("#0A1628")
