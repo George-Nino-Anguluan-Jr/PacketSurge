@@ -25,6 +25,8 @@ func _ready() -> void:
 	logout_btn.pressed.connect(_on_logout_pressed)
 	
 	_style_popup()
+	_apply_responsive_layout()
+	get_tree().root.size_changed.connect(_apply_responsive_layout)
 
 func open() -> void:
 	# Load User Data
@@ -296,3 +298,26 @@ func _on_analytics_back() -> void:
 	if analytics_instance:
 		analytics_instance.visible = false
 	popup_card.visible = true
+
+# ─── RESPONSIVE ────────────────────────────────────────
+func _apply_responsive_layout() -> void:
+	var margin_container = $CenterContainer/PopupCard/MarginContainer
+	var content_layout = $CenterContainer/PopupCard/MarginContainer/ContentLayout
+	var details_section = $CenterContainer/PopupCard/MarginContainer/ContentLayout/DetailsSection
+	
+	if ScreenManager.is_mobile():
+		popup_card.custom_minimum_size = Vector2(340, 310)
+		margin_container.add_theme_constant_override("margin_left", 12)
+		margin_container.add_theme_constant_override("margin_top", 12)
+		margin_container.add_theme_constant_override("margin_right", 12)
+		margin_container.add_theme_constant_override("margin_bottom", 12)
+		content_layout.add_theme_constant_override("separation", 8)
+		details_section.add_theme_constant_override("separation", 4)
+	else:
+		popup_card.custom_minimum_size = Vector2(440, 380)
+		margin_container.add_theme_constant_override("margin_left", 24)
+		margin_container.add_theme_constant_override("margin_top", 24)
+		margin_container.add_theme_constant_override("margin_right", 24)
+		margin_container.add_theme_constant_override("margin_bottom", 24)
+		content_layout.add_theme_constant_override("separation", 16)
+		details_section.add_theme_constant_override("separation", 6)

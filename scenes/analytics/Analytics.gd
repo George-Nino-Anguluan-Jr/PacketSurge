@@ -880,7 +880,30 @@ func _style_active_tab(btn: Button, active: bool) -> void:
 
 # ─── RESPONSIVE ────────────────────────────────────────
 func _apply_responsive_layout() -> void:
+	var card = $CenterContainer/PopupCard
+	var margin_container = $CenterContainer/PopupCard/MarginContainer
+	var content_layout = $CenterContainer/PopupCard/MarginContainer/ContentLayout
+	var content_area = $CenterContainer/PopupCard/MarginContainer/ContentLayout/ContentArea
+	
 	if ScreenManager.is_mobile():
-		pass
+		card.custom_minimum_size = Vector2(480, 290)
+		margin_container.add_theme_constant_override("margin_left", 12)
+		margin_container.add_theme_constant_override("margin_top", 12)
+		margin_container.add_theme_constant_override("margin_right", 12)
+		margin_container.add_theme_constant_override("margin_bottom", 12)
+		content_layout.add_theme_constant_override("separation", 8)
+		content_area.add_theme_constant_override("margin_left", 8)
+		content_area.add_theme_constant_override("margin_top", 8)
+		content_area.add_theme_constant_override("margin_right", 8)
+		content_area.add_theme_constant_override("margin_bottom", 8)
 	else:
-		pass
+		card.custom_minimum_size = Vector2(900, 650)
+		margin_container.add_theme_constant_override("margin_left", 24)
+		margin_container.add_theme_constant_override("margin_top", 24)
+		margin_container.add_theme_constant_override("margin_right", 24)
+		margin_container.add_theme_constant_override("margin_bottom", 24)
+		content_layout.add_theme_constant_override("separation", 16)
+		content_area.add_theme_constant_override("margin_left", 16)
+		content_area.add_theme_constant_override("margin_top", 16)
+		content_area.add_theme_constant_override("margin_right", 16)
+		content_area.add_theme_constant_override("margin_bottom", 16)
