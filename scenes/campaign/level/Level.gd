@@ -13,21 +13,9 @@ extends Node2D
 @onready var wave_label: Label               = $HUD/HUDControl/TopHUD/TopLayout/WaveLabel
 @onready var base_health_label: Label        = $HUD/HUDControl/TopHUD/TopLayout/BaseHealthLabel
 @onready var score_label: Label              = $HUD/HUDControl/TopHUD/TopLayout/ScoreLabel
-@onready var tower_buttons: VBoxContainer    = $HUD/HUDControl/TowerSelector/SelectorLayout/TowerButtons
+@onready var tower_buttons: HBoxContainer    = $HUD/HUDControl/TowerSelector/SelectorLayout/TowerButtons
+@onready var start_wave_btn: Button          = $HUD/HUDControl/TowerSelector/SelectorLayout/StartWaveBtn
 @onready var game_over_panel: PanelContainer = $HUD/HUDControl/GameOverPanel
-
-@onready var pause_btn: Button               = $HUD/HUDControl/TopHUD/TopLayout/PauseBtn
-@onready var pause_menu: PanelContainer      = $HUD/HUDControl/PauseMenu
-@onready var resume_btn: Button              = $HUD/HUDControl/PauseMenu/PauseMenuLayout/ResumeBtn
-@onready var retry_btn: Button               = $HUD/HUDControl/PauseMenu/PauseMenuLayout/RetryBtn
-@onready var select_level_btn: Button        = $HUD/HUDControl/PauseMenu/PauseMenuLayout/SelectLevelBtn
-@onready var main_menu_btn: Button           = $HUD/HUDControl/PauseMenu/PauseMenuLayout/MainMenuBtn
-
-@onready var wave_progress_bar: ProgressBar = $HUD/HUDControl/TopHUD/TopLayout/WaveProgressTimeline/ProgressBar
-@onready var timeline_flags: Control        = $HUD/HUDControl/TopHUD/TopLayout/WaveProgressTimeline/FlagsContainer
-@onready var skip_wave_btn: Button           = $HUD/HUDControl/TopHUD/TopLayout/SkipWaveBtn
-@onready var wave_splash: Control            = $HUD/HUDControl/WaveSplash
-@onready var wave_splash_label: Label        = $HUD/HUDControl/WaveSplash/WaveSplashLabel
 
 # ─── LEVEL STATE ───────────────────────────────────────
 var level_number: int              = 1
@@ -37,10 +25,6 @@ var selected_tower_data: TowerData = null
 var grid_system: Node2D            = null
 var level_start_time: float        = 0.0
 var is_level_ended: bool           = false
-
-const INTER_WAVE_DURATION: float  = 15.0
-var wave_countdown: float          = INTER_WAVE_DURATION
-var countdown_active: bool         = true
 
 # ─── TOWER DEFINITIONS ─────────────────────────────────
 const TOWER_DEFINITIONS = {
@@ -225,10 +209,6 @@ func _ready() -> void:
 	_setup_buttons()
 	_connect_signals()
 	_apply_hud_styles()
-	
-	# Dynamically handle auto-centering of the grid system on any viewport screen size
-	get_viewport().size_changed.connect(_on_viewport_size_changed)
-	_on_viewport_size_changed()
 
 # ─── SETUP ─────────────────────────────────────────────
 func _setup_grid() -> void:
@@ -275,40 +255,8 @@ func _setup_hud() -> void:
 	wave_label.text        = "Wave: 0/" + str(config["waves"])
 	base_health_label.text = "❤️ " + str(base_health)
 	score_label.text       = "Score: 0"
-	back_btn.visible       = false
-	level_label.visible    = false
 	_update_ram_label()
 	_build_tower_selector()
-	_setup_wave_timeline()
-
-func _setup_wave_timeline() -> void:
-	for child in timeline_flags.get_children():
-		child.queue_free()
-
-	var total_waves = wave_manager.total_waves
-	var timeline_width = 200.0
-
-	wave_progress_bar.max_value = float(total_waves)
-	wave_progress_bar.value = 0.0
-
-	for i in range(1, total_waves + 1):
-		var fraction = float(i) / float(total_waves)
-		var x_pos = fraction * timeline_width
-
-		var flag := Label.new()
-		flag.text = "🚩"
-		flag.add_theme_font_size_override("font_size", 10)
-		flag.add_theme_color_override("font_color", Color("#FF3366"))
-		flag.custom_minimum_size = Vector2(16, 16)
-		flag.position = Vector2(x_pos - 8, -4)
-		timeline_flags.add_child(flag)
-
-func _on_viewport_size_changed() -> void:
-	var vp_width = get_viewport().get_visible_rect().size.x
-	var panel_width = 160.0
-	var visible_center = panel_width + (vp_width - panel_width) / 2.0
-	var shift = (vp_width / 2.0) - visible_center
-	$GameCamera.position.x = 576.0 + shift
 
 func _build_tower_selector() -> void:
 	for child in tower_buttons.get_children():
@@ -322,62 +270,17 @@ func _build_tower_selector() -> void:
 		if not TOWER_DEFINITIONS.has(tower_id):
 			continue
 		var def  = TOWER_DEFINITIONS[tower_id]
-		
 		var btn  := Button.new()
-		btn.custom_minimum_size = Vector2(150, 72)
-		btn.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-		btn.pressed.connect(_on_tower_selected.bind(tower_id))
-		
-		var hbox := HBoxContainer.new()
-		hbox.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
-		hbox.add_theme_constant_override("separation", 10)
-		hbox.mouse_filter = Control.MOUSE_FILTER_PASS
-		
-		# Left side: Model of the tower
-		var model_lbl := Label.new()
-		model_lbl.text = def["icon_text"]
-		model_lbl.custom_minimum_size = Vector2(32, 32)
-		model_lbl.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
-		model_lbl.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
-		model_lbl.add_theme_font_size_override("font_size", 16)
-		model_lbl.add_theme_color_override("font_color", Color(def["color"]))
-		model_lbl.mouse_filter = Control.MOUSE_FILTER_PASS
-		hbox.add_child(model_lbl)
-		
-		# Right side: Name and RAM cost
-		var vbox := VBoxContainer.new()
-		vbox.alignment = BoxContainer.ALIGNMENT_CENTER
-		vbox.mouse_filter = Control.MOUSE_FILTER_PASS
-		vbox.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-		
-		var name_lbl := Label.new()
-		name_lbl.text = def["tower_name"]
-		name_lbl.add_theme_font_size_override("font_size", 12)
-		name_lbl.add_theme_color_override("font_color", Color("#E8F4FD"))
-		name_lbl.mouse_filter = Control.MOUSE_FILTER_PASS
-		vbox.add_child(name_lbl)
-		
-		var ram_lbl := Label.new()
-		ram_lbl.text = str(def["ram_cost"]) + " RAM"
-		ram_lbl.add_theme_font_size_override("font_size", 10)
-		ram_lbl.add_theme_color_override("font_color", Color(def["color"]))
-		ram_lbl.mouse_filter = Control.MOUSE_FILTER_PASS
-		vbox.add_child(ram_lbl)
-		
-		hbox.add_child(vbox)
-		btn.add_child(hbox)
-		
+		btn.text = def["tower_name"] + "\n" + \
+			str(def["ram_cost"]) + " RAM"
+		btn.custom_minimum_size = Vector2(110, 60)
 		_style_tower_btn(btn, Color(def["color"]))
+		btn.pressed.connect(_on_tower_selected.bind(tower_id))
 		tower_buttons.add_child(btn)
 
 func _setup_buttons() -> void:
 	back_btn.pressed.connect(_on_back_pressed)
-	pause_btn.pressed.connect(_on_pause_pressed)
-	resume_btn.pressed.connect(_on_resume_pressed)
-	retry_btn.pressed.connect(_on_retry_pressed)
-	select_level_btn.pressed.connect(_on_select_level_pressed)
-	main_menu_btn.pressed.connect(_on_main_menu_pressed)
-	skip_wave_btn.pressed.connect(_on_skip_wave_pressed)
+	start_wave_btn.pressed.connect(wave_manager.start_next_wave)
 
 func _connect_signals() -> void:
 	ram_manager.ram_changed.connect(_on_ram_changed)
@@ -440,84 +343,10 @@ func _on_tower_selected(tower_id: String) -> void:
 		" (" + str(def["ram_cost"]) + " RAM)", 2.0
 	)
 
-# ─── PROCESS ───────────────────────────────────────────
-func _process(delta: float) -> void:
-	if countdown_active and not is_level_ended:
-		wave_countdown -= delta
-		if wave_countdown <= 0.0:
-			wave_countdown = 0.0
-			countdown_active = false
-			_trigger_wave_start()
-	_update_wave_progress_bar()
-
-func _trigger_wave_start() -> void:
-	if wave_manager.wave_in_progress or is_level_ended:
-		return
-	wave_manager.start_next_wave()
-
-func _update_wave_progress_bar() -> void:
-	if is_level_ended:
-		skip_wave_btn.disabled = true
-		return
-
-	var total_waves = wave_manager.total_waves
-	var current_wave = wave_manager.current_wave
-
-	if wave_manager.wave_in_progress:
-		wave_progress_bar.value = float(current_wave)
-		skip_wave_btn.disabled = true
-	else:
-		if current_wave >= total_waves:
-			wave_progress_bar.value = float(total_waves)
-			skip_wave_btn.disabled = true
-		else:
-			var progress_frac = 1.0 - (wave_countdown / INTER_WAVE_DURATION)
-			wave_progress_bar.value = float(current_wave) + progress_frac
-			skip_wave_btn.disabled = false
-
-func _show_wave_splash_animation(wave_num: int) -> void:
-	wave_splash_label.text = "WAVE %d" % wave_num
-	wave_splash_label.modulate = Color("#00FF88")
-	wave_splash_label.scale = Vector2(0.5, 0.5)
-	wave_splash_label.pivot_offset = wave_splash_label.size / 2.0
-	wave_splash.visible = true
-	
-	var tween = create_tween().set_parallel(true)
-	tween.tween_property(wave_splash_label, "modulate:a", 1.0, 0.4).from(0.0)
-	tween.tween_property(wave_splash_label, "scale", Vector2(1.2, 1.2), 0.4).set_trans(Tween.TRANS_BACK).set_ease(Tween.EASE_OUT)
-	
-	var seq = create_tween()
-	seq.tween_interval(1.2)
-	seq.tween_property(wave_splash_label, "modulate:a", 0.0, 0.4)
-	seq.tween_callback(func(): wave_splash.visible = false)
-
 # ─── INPUT ─────────────────────────────────────────────
 func _input(event: InputEvent) -> void:
 	if event.is_action_pressed("ui_cancel"):
-		_on_pause_pressed()
-
-# ─── PAUSE HANDLERS ────────────────────────────────────
-func _on_pause_pressed() -> void:
-	get_tree().paused = true
-	pause_menu.visible = true
-
-func _on_resume_pressed() -> void:
-	get_tree().paused = false
-	pause_menu.visible = false
-
-func _on_select_level_pressed() -> void:
-	get_tree().paused = false
-	GameManager.go_to("campaign")
-
-func _on_main_menu_pressed() -> void:
-	get_tree().paused = false
-	GameManager.go_to("main_menu")
-
-func _on_skip_wave_pressed() -> void:
-	if not wave_manager.wave_in_progress and not is_level_ended:
-		wave_countdown = 0.0
-		countdown_active = false
-		_trigger_wave_start()
+		_on_back_pressed()
 
 # ─── SIGNAL HANDLERS ───────────────────────────────────
 func _on_ram_changed(_current: int, _max_ram: int) -> void:
@@ -525,8 +354,7 @@ func _on_ram_changed(_current: int, _max_ram: int) -> void:
 
 func _on_wave_started(wave_num: int, total: int) -> void:
 	wave_label.text = "Wave: " + str(wave_num) + "/" + str(total)
-	countdown_active = false
-	_show_wave_splash_animation(wave_num)
+	start_wave_btn.disabled = true
 	SignalBus.hud_message_requested.emit(
 		"⚔️ Wave " + str(wave_num) + " incoming!", 2.0
 	)
@@ -535,8 +363,7 @@ func _on_wave_completed(wave_num: int) -> void:
 	score            += 100 * wave_num
 	score_label.text  = "Score: " + str(score)
 	ram_manager.earn(50)
-	wave_countdown = INTER_WAVE_DURATION
-	countdown_active = true
+	start_wave_btn.disabled = false
 	SignalBus.hud_message_requested.emit(
 		"✅ Wave " + str(wave_num) + " complete! +50 RAM", 3.0
 	)
@@ -712,13 +539,16 @@ func _get_level_config() -> Dictionary:
 
 # ─── HUD STYLES ────────────────────────────────────────
 func _apply_hud_styles() -> void:
-	var top_style := StyleBoxEmpty.new()
+	var top_style := StyleBoxFlat.new()
+	top_style.bg_color            = Color("#0A1628")
+	top_style.border_color        = Color("#00D4FF")
+	top_style.border_width_bottom = 1
 	$HUD/HUDControl/TopHUD.add_theme_stylebox_override("panel", top_style)
 
 	var sel_style := StyleBoxFlat.new()
-	sel_style.bg_color           = Color("#0A1628")
-	sel_style.border_color       = Color("#00D4FF")
-	sel_style.border_width_right = 1
+	sel_style.bg_color         = Color("#0A1628")
+	sel_style.border_color     = Color("#00D4FF")
+	sel_style.border_width_top = 1
 	$HUD/HUDControl/TowerSelector.add_theme_stylebox_override(
 		"panel", sel_style
 	)
@@ -738,57 +568,29 @@ func _apply_hud_styles() -> void:
 		"panel", go_style
 	)
 
-	var pause_menu_style := StyleBoxFlat.new()
-	pause_menu_style.bg_color                    = Color("#050D1A")
-	pause_menu_style.border_color                = Color("#00D4FF")
-	pause_menu_style.border_width_left           = 1
-	pause_menu_style.border_width_right          = 1
-	pause_menu_style.border_width_top            = 1
-	pause_menu_style.border_width_bottom         = 1
-	pause_menu_style.corner_radius_top_left      = 8
-	pause_menu_style.corner_radius_top_right     = 8
-	pause_menu_style.corner_radius_bottom_left   = 8
-	pause_menu_style.corner_radius_bottom_right  = 8
-	pause_menu.add_theme_stylebox_override("panel", pause_menu_style)
+	var back_style := StyleBoxFlat.new()
+	back_style.bg_color                   = Color("#0A1628")
+	back_style.border_color               = Color("#FF3366")
+	back_style.border_width_left          = 1
+	back_style.border_width_right         = 1
+	back_style.border_width_top           = 1
+	back_style.border_width_bottom        = 1
+	back_style.corner_radius_top_left     = 4
+	back_style.corner_radius_top_right    = 4
+	back_style.corner_radius_bottom_left  = 4
+	back_style.corner_radius_bottom_right = 4
+	back_btn.add_theme_stylebox_override("normal", back_style)
+	back_btn.add_theme_color_override("font_color", Color("#FF3366"))
 
-	var pause_btn_style := StyleBoxFlat.new()
-	pause_btn_style.bg_color                   = Color("#0A1628")
-	pause_btn_style.border_color               = Color("#00D4FF")
-	pause_btn_style.border_width_left          = 1
-	pause_btn_style.border_width_right         = 1
-	pause_btn_style.border_width_top           = 1
-	pause_btn_style.border_width_bottom        = 1
-	pause_btn_style.corner_radius_top_left     = 4
-	pause_btn_style.corner_radius_top_right    = 4
-	pause_btn_style.corner_radius_bottom_left  = 4
-	pause_btn_style.corner_radius_bottom_right = 4
-	pause_btn.add_theme_stylebox_override("normal", pause_btn_style)
-	pause_btn.add_theme_color_override("font_color", Color("#00D4FF"))
-
-	var skip_btn_style := StyleBoxFlat.new()
-	skip_btn_style.bg_color                   = Color("#FFB800")
-	skip_btn_style.corner_radius_top_left     = 4
-	skip_btn_style.corner_radius_top_right    = 4
-	skip_btn_style.corner_radius_bottom_left  = 4
-	skip_btn_style.corner_radius_bottom_right = 4
-	skip_wave_btn.add_theme_stylebox_override("normal", skip_btn_style)
-	skip_wave_btn.add_theme_color_override("font_color", Color("#050D1A"))
-
-	var bg_bar_style := StyleBoxFlat.new()
-	bg_bar_style.bg_color = Color("#050D1A")
-	bg_bar_style.corner_radius_top_left = 4
-	bg_bar_style.corner_radius_top_right = 4
-	bg_bar_style.corner_radius_bottom_left = 4
-	bg_bar_style.corner_radius_bottom_right = 4
-	wave_progress_bar.add_theme_stylebox_override("background", bg_bar_style)
-
-	var fill_bar_style := StyleBoxFlat.new()
-	fill_bar_style.bg_color = Color("#00FF88")
-	fill_bar_style.corner_radius_top_left = 4
-	fill_bar_style.corner_radius_top_right = 4
-	fill_bar_style.corner_radius_bottom_left = 4
-	fill_bar_style.corner_radius_bottom_right = 4
-	wave_progress_bar.add_theme_stylebox_override("fill", fill_bar_style)
+	var wave_style := StyleBoxFlat.new()
+	wave_style.bg_color                   = Color("#FFB800")
+	wave_style.corner_radius_top_left     = 4
+	wave_style.corner_radius_top_right    = 4
+	wave_style.corner_radius_bottom_left  = 4
+	wave_style.corner_radius_bottom_right = 4
+	start_wave_btn.add_theme_stylebox_override("normal", wave_style)
+	start_wave_btn.add_theme_color_override("font_color", Color("#050D1A"))
+	start_wave_btn.add_theme_font_size_override("font_size", 13)
 
 func _style_tower_btn(btn: Button, color: Color) -> void:
 	var style := StyleBoxFlat.new()

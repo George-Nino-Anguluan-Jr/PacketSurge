@@ -6,6 +6,32 @@ extends Node
 const BASE_WIDTH: float  = 1152.0
 const BASE_HEIGHT: float = 648.0
 
+func _ready() -> void:
+	# Force landscape orientation on mobile devices
+	if OS.has_feature("mobile") or OS.has_feature("Android") or OS.has_feature("iOS"):
+		DisplayServer.screen_set_orientation(DisplayServer.SCREEN_LANDSCAPE)
+	
+	# Dynamically adjust content scale factor for mobile devices so texts and icons are legible
+	update_content_scale()
+	get_window().size_changed.connect(update_content_scale)
+
+func update_content_scale() -> void:
+	var scale_factor: float = 1.0
+	
+	if is_mobile():
+		# On a physically small screen with high resolution, scale up everything so text and icons are larger and legible
+		scale_factor = 1.5
+	elif is_tablet():
+		# On tablets, slightly smaller upscale is perfect
+		scale_factor = 1.2
+	elif OS.has_feature("web"):
+		# On web, check if window dimensions look like mobile
+		var size = get_screen_size()
+		if size.x < 1000 or size.y < 600:
+			scale_factor = 1.35
+			
+	get_window().content_scale_factor = scale_factor
+
 # ─── SCREEN SIZE ───────────────────────────────────────
 func get_screen_size() -> Vector2:
 	return DisplayServer.window_get_size()
@@ -35,7 +61,7 @@ func sv(v: Vector2) -> Vector2:
 
 # ─── BREAKPOINTS ───────────────────────────────────────
 func is_mobile() -> bool:
-	if OS.has_feature("mobile"):
+	if OS.has_feature("mobile") or OS.has_feature("Android") or OS.has_feature("iOS"):
 		var dpi = DisplayServer.screen_get_dpi()
 		if dpi > 0:
 			var size = get_screen_size()
@@ -43,23 +69,21 @@ func is_mobile() -> bool:
 			return inches < 7.0
 		return true
 	var size = get_screen_size()
-	return size.x < 768 or size.y < 500
+	return size.x < 960 or size.y < 540
 
 func is_tablet() -> bool:
-	if OS.has_feature("mobile"):
+	if OS.has_feature("mobile") or OS.has_feature("Android") or OS.has_feature("iOS"):
 		var dpi = DisplayServer.screen_get_dpi()
 		if dpi > 0:
 			var size = get_screen_size()
 			var inches = size.length() / dpi
-			return inches >= 7.0
+			return inches >= 7.0 and inches < 11.0
 		return false
 	var size = get_screen_size()
-	return size.x >= 768 and size.x < 1024
+	return (size.x >= 960 and size.x < 1280) or (size.y >= 540 and size.y < 720)
 
 func is_desktop() -> bool:
-	if OS.has_feature("mobile"):
-		return false
-	return get_screen_size().x >= 1024
+	return not is_mobile() and not is_tablet()
 
 func get_columns() -> int:
 	if is_mobile():

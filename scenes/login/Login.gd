@@ -11,20 +11,20 @@ extends Control
 @onready var loading_overlay: ColorRect = $LoadingOverlay
 
 # Login form fields
-@onready var email_field: LineEdit      = $CenterContainer/MainLayout/FormCard/CardLayout/LoginForm/EmailField
-@onready var password_field: LineEdit   = $CenterContainer/MainLayout/FormCard/CardLayout/LoginForm/PasswordField
-@onready var login_btn: Button          = $CenterContainer/MainLayout/FormCard/CardLayout/LoginForm/LoginBtn
-@onready var forgot_label: Label        = $CenterContainer/MainLayout/FormCard/CardLayout/LoginForm/ForgotLabel
+@onready var login_username_field: LineEdit = %LoginUsernameField
+@onready var password_field: LineEdit   = %PasswordField
+@onready var login_btn: Button          = %LoginBtn
+@onready var forgot_label: Label        = %ForgotLabel
 
 # Register form fields
-@onready var full_name_field: LineEdit  = $CenterContainer/MainLayout/FormCard/CardLayout/RegisterForm/FullNameField
-@onready var username_field: LineEdit   = $CenterContainer/MainLayout/FormCard/CardLayout/RegisterForm/UsernameField
-@onready var reg_email_field: LineEdit  = $CenterContainer/MainLayout/FormCard/CardLayout/RegisterForm/RegEmailField
-@onready var reg_password_field: LineEdit = $CenterContainer/MainLayout/FormCard/CardLayout/RegisterForm/RegPasswordField
-@onready var confirm_field: LineEdit    = $CenterContainer/MainLayout/FormCard/CardLayout/RegisterForm/ConfirmField
-@onready var year_option: OptionButton  = $CenterContainer/MainLayout/FormCard/CardLayout/RegisterForm/YearOptionButton
-@onready var section_field: LineEdit    = $CenterContainer/MainLayout/FormCard/CardLayout/RegisterForm/SectionField
-@onready var register_btn: Button       = $CenterContainer/MainLayout/FormCard/CardLayout/RegisterForm/RegisterBtn
+@onready var first_name_field: LineEdit = %FirstNameField
+@onready var last_name_field: LineEdit  = %LastNameField
+@onready var username_field: LineEdit   = %UsernameField
+@onready var reg_password_field: LineEdit = %RegPasswordField
+@onready var confirm_field: LineEdit    = %ConfirmField
+@onready var year_field: LineEdit       = %YearField
+@onready var section_option: OptionButton = %SectionOptionButton
+@onready var register_btn: Button       = %RegisterBtn
 
 # ─── STATE ─────────────────────────────────────────────
 var _time: float = 0.0
@@ -50,7 +50,7 @@ func _ready() -> void:
 	title_label.add_theme_constant_override("shadow_offset_x", 4)
 	title_label.add_theme_constant_override("shadow_offset_y", 4)
 
-	_setup_year_options()
+	_setup_section_options()
 	_setup_buttons()
 	_apply_styles()
 	_show_login_tab()
@@ -74,14 +74,12 @@ func _connect_button_sounds(node: Node) -> void:
 	for child in node.get_children():
 		_connect_button_sounds(child)
 
-# ─── YEAR OPTIONS ──────────────────────────────────────
-func _setup_year_options() -> void:
-	year_option.add_item("Year Level")
-	year_option.add_item("1st Year")
-	year_option.add_item("2nd Year")
-	year_option.add_item("3rd Year")
-	year_option.add_item("4th Year")
-	year_option.select(0)
+# ─── SECTION OPTIONS ───────────────────────────────────
+func _setup_section_options() -> void:
+	section_option.add_item("Select Section")
+	for letter in ["A", "B", "C", "D", "E", "F", "G", "H", "I", "J"]:
+		section_option.add_item(letter)
+	section_option.select(0)
 
 # ─── BUTTON SETUP ──────────────────────────────────────
 func _setup_buttons() -> void:
@@ -91,9 +89,8 @@ func _setup_buttons() -> void:
 	register_btn.pressed.connect(_on_register_pressed)
 
 	# Allow Enter key to submit
-	email_field.text_submitted.connect(func(_t): _on_login_pressed())
+	login_username_field.text_submitted.connect(func(_t): _on_login_pressed())
 	password_field.text_submitted.connect(func(_t): _on_login_pressed())
-	section_field.text_submitted.connect(func(_t): _on_register_pressed())
 
 # ─── TAB SWITCHING ─────────────────────────────────────
 func _show_login_tab() -> void:
@@ -114,16 +111,14 @@ func _show_register_tab() -> void:
 
 # ─── LOGIN ─────────────────────────────────────────────
 func _on_login_pressed() -> void:
-	var email    = email_field.text.strip_edges()
+	var uname    = login_username_field.text.strip_edges()
 	var password = password_field.text
 
-	if email == "" or password == "":
+	if uname == "" or password == "":
 		_show_status("Please fill in all fields.", false)
 		return
 
-	if not _is_valid_email(email):
-		_show_status("Please enter a valid email.", false)
-		return
+	var email = uname.to_lower() + "@packetsurge.com"
 
 	_show_loading(true)
 	SupabaseManager.login_student(email, password)
@@ -149,23 +144,25 @@ func _on_register_completed(success: bool, message: String) -> void:
 
 # ─── REGISTER ──────────────────────────────────────────
 func _on_register_pressed() -> void:
-	var full_name = full_name_field.text.strip_edges()
-	var uname     = username_field.text.strip_edges()
-	var email     = reg_email_field.text.strip_edges()
-	var password  = reg_password_field.text
-	var confirm   = confirm_field.text
-	var year_idx  = year_option.selected
-	var section   = section_field.text.strip_edges()
+	var first_name = first_name_field.text.strip_edges()
+	var last_name  = last_name_field.text.strip_edges()
+	var uname      = username_field.text.strip_edges()
+	var password   = reg_password_field.text
+	var confirm    = confirm_field.text
+	var year_text  = year_field.text.strip_edges()
+	var sec_idx    = section_option.selected
 
 	# Validation
-	if full_name == "" or uname == "" or email == "" or \
-	   password == "" or confirm == "" or section == "":
+	if first_name == "" or last_name == "" or uname == "" or \
+	   password == "" or confirm == "":
 		_show_status("Please fill in all fields.", false)
 		return
 
-	if not _is_valid_email(email):
-		_show_status("Please enter a valid email.", false)
+	if sec_idx == 0:
+		_show_status("Please select your section.", false)
 		return
+
+	var section_text = section_option.get_item_text(sec_idx)
 
 	if uname.length() < 3:
 		_show_status("Username must be at least 3 characters.", false)
@@ -179,15 +176,12 @@ func _on_register_pressed() -> void:
 		_show_status("Passwords do not match.", false)
 		return
 
-	if year_idx == 0:
-		_show_status("Please select your year level.", false)
-		return
-
-	var year_text = year_option.get_item_text(year_idx)
+	var full_name = first_name + " " + last_name
+	var email     = uname.to_lower() + "@packetsurge.com"
 
 	_show_loading(true)
 	SupabaseManager.register_student(
-		full_name, uname, email, password, year_text, section
+		full_name, uname, email, password, year_text, section_text
 	)
 
 # ─── VALIDATION ────────────────────────────────────────
@@ -278,15 +272,15 @@ func _apply_styles() -> void:
 
 	# Style all LineEdit fields
 	for field in [
-		email_field, password_field,
-		full_name_field, username_field,
-		reg_email_field, reg_password_field,
-		confirm_field, section_field
+		login_username_field, password_field,
+		first_name_field, last_name_field,
+		username_field, reg_password_field,
+		confirm_field, year_field
 	]:
 		_style_input_field(field)
 
 	# Style OptionButton
-	_style_option_button(year_option)
+	_style_option_button(section_option)
 
 	# Style buttons
 	_style_accent_button(login_btn)
