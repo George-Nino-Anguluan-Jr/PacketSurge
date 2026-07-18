@@ -11,20 +11,20 @@ extends Control
 @onready var loading_overlay: ColorRect = $LoadingOverlay
 
 # Login form fields
-@onready var login_username_field: LineEdit = %LoginUsernameField
-@onready var password_field: LineEdit   = %PasswordField
-@onready var login_btn: Button          = %LoginBtn
-@onready var forgot_label: Label        = %ForgotLabel
+@onready var login_username_field: LineEdit = $CenterContainer/MainLayout/FormCard/CardLayout/LoginForm/LoginUsernameField
+@onready var password_field: LineEdit   = $CenterContainer/MainLayout/FormCard/CardLayout/LoginForm/PasswordField
+@onready var login_btn: Button          = $CenterContainer/MainLayout/FormCard/CardLayout/LoginForm/LoginBtn
+@onready var forgot_label: Label        = $CenterContainer/MainLayout/FormCard/CardLayout/LoginForm/ForgotLabel
 
 # Register form fields
-@onready var first_name_field: LineEdit = %FirstNameField
-@onready var last_name_field: LineEdit  = %LastNameField
-@onready var username_field: LineEdit   = %UsernameField
-@onready var reg_password_field: LineEdit = %RegPasswordField
-@onready var confirm_field: LineEdit    = %ConfirmField
-@onready var year_field: LineEdit       = %YearField
-@onready var section_option: OptionButton = %SectionOptionButton
-@onready var register_btn: Button       = %RegisterBtn
+@onready var first_name_field: LineEdit = $CenterContainer/MainLayout/FormCard/CardLayout/RegisterForm/NameFieldsLayout/FirstNameField
+@onready var last_name_field: LineEdit  = $CenterContainer/MainLayout/FormCard/CardLayout/RegisterForm/NameFieldsLayout/LastNameField
+@onready var username_field: LineEdit   = $CenterContainer/MainLayout/FormCard/CardLayout/RegisterForm/UsernameField
+@onready var reg_password_field: LineEdit = $CenterContainer/MainLayout/FormCard/CardLayout/RegisterForm/RegPasswordField
+@onready var confirm_field: LineEdit    = $CenterContainer/MainLayout/FormCard/CardLayout/RegisterForm/ConfirmField
+@onready var year_field: LineEdit       = $CenterContainer/MainLayout/FormCard/CardLayout/RegisterForm/ClassFieldsLayout/YearField
+@onready var section_option: OptionButton = $CenterContainer/MainLayout/FormCard/CardLayout/RegisterForm/ClassFieldsLayout/SectionOptionButton
+@onready var register_btn: Button       = $CenterContainer/MainLayout/FormCard/CardLayout/RegisterForm/RegisterBtn
 
 # ─── STATE ─────────────────────────────────────────────
 var _time: float = 0.0
