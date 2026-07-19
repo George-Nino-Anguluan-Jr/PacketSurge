@@ -96,6 +96,21 @@ func mark_mastered(topic_id: String) -> void:
 	print("[ProgressManager] Mastered: ", topic_id)
 	save_progress()
 
+func set_topic_state(topic_id: String, state: String) -> void:
+	if state not in ["locked", "unlocked", "practice", "struggling", "mastered"]:
+		return
+	if topic_states.get(topic_id) == "mastered" and state != "mastered":
+		return
+	topic_states[topic_id] = state
+	save_progress()
+
+func get_topic_for_level(level_number: int) -> String:
+	for topic_id in PROGRESSION_CHAIN:
+		var entry = PROGRESSION_CHAIN[topic_id]
+		if entry.get("level_id") == level_number:
+			return topic_id
+	return ""
+
 # ─── UNLOCK CHECKER ────────────────────────────────────
 func check_all_unlocks() -> void:
 	# 1. Sequential Python unlocking

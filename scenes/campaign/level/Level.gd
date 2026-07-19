@@ -53,7 +53,7 @@ const TOWER_DEFINITIONS = {
 		"description":    "Fast attack. O(1) access speed.",
 		"data_structure": "Array",
 		"ram_cost":       40,
-		"damage":         18.0,
+		"damage":         500.0,
 		"attack_speed":   2.0,
 		"attack_range":   140.0,
 		"time_complexity":"O(1)",
@@ -990,9 +990,12 @@ func _on_all_waves_completed() -> void:
 	is_level_ended = true
 	var elapsed = (Time.get_ticks_msec() / 1000.0) - level_start_time
 	var stars = _get_stars()
+	var grade = ["F", "C", "B", "A"][stars]
+	var topic_id = ProgressManager.get_topic_for_level(level_number)
 	ProgressManager.set_level_stars(level_number, stars)
 	ProgressManager.on_level_completed(level_number)
 	SupabaseManager.submit_campaign_score(level_number, elapsed, score)
+	AdaptiveAI.record_level_performance(topic_id, grade, score, elapsed)
 	_show_result_panel(true)
 
 func _on_enemy_reached_end(_enemy_id: String) -> void:
@@ -1002,7 +1005,8 @@ func _on_enemy_reached_end(_enemy_id: String) -> void:
 	_update_base_health_label()
 	if base_health <= 0:
 		is_level_ended = true
-		AdaptiveAI.record_level_performance("F", 0, 0.0)
+		var topic_id = ProgressManager.get_topic_for_level(level_number)
+		AdaptiveAI.record_level_performance(topic_id, "F", 0, 0.0)
 		_show_result_panel(false)
 
 func _on_enemy_defeated(_enemy_id: String) -> void:
