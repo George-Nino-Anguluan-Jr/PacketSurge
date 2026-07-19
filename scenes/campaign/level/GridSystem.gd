@@ -292,8 +292,10 @@ func _input(event: InputEvent) -> void:
 			var cell = world_to_cell(
 				get_global_mouse_position() - global_position
 			)
-			if can_place_tower(cell):
-				cell_clicked.emit(cell)
+			if cell.x >= 0 and cell.x < GRID_COLS and cell.y >= 0 and cell.y < GRID_ROWS:
+				var state = cells.get(cell, CellState.BLOCKED)
+				if state == CellState.TOWER_SPOT or state == CellState.TOWER_PLACED:
+					cell_clicked.emit(cell)
 		return
 	if event is InputEventMouseMotion:
 		var cell = world_to_cell(

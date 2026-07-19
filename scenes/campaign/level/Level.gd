@@ -338,6 +338,7 @@ func _connect_signals() -> void:
 # ─── OVERLAY MENU FOR PLACEMENT (CIRCULAR MODE - SHOWS EQUIPPED TOWER MODELS) ───────
 var overlay_menu: Control = null
 var current_clicked_cell: Vector2i = Vector2i(-1, -1)
+var _current_menu_cell: Vector2i = Vector2i(-1, -1)
 
 var _tutorial_step: int = 0
 var _tutorial_overlay: Control = null
@@ -477,6 +478,9 @@ func _on_overlay_tower_selected(tower_id: String) -> void:
 
 # ─── GRID INTERACTION ──────────────────────────────────
 func _on_cell_clicked(cell: Vector2i) -> void:
+	if overlay_menu.visible and cell == _current_menu_cell:
+		return
+	_current_menu_cell = cell
 	overlay_menu.visible = false
 	for child in overlay_menu.get_children():
 		child.queue_free()
@@ -501,10 +505,19 @@ func _show_tower_menu(cell: Vector2i, tower: Node) -> void:
 	var canvas_pos = get_canvas_transform() * cell_center
 	overlay_menu.position = canvas_pos
 
+	var margin := 10
+	var btn_w := 140
+	var btn_h := 26
+	var sep := 4
+	var title_h := 18
+	var num_rows = 1 + (1 if tower.current_level < tower.max_level else 0) + 1 + 1 + 1
+	var total_h = title_h + num_rows * btn_h + (num_rows + 1) * sep + margin * 2
+	var total_w = btn_w + margin * 2
+
 	var bg := Panel.new()
-	bg.custom_minimum_size = Vector2(160, 110)
-	bg.size = Vector2(160, 110)
-	bg.position = Vector2(-80, -55)
+	bg.custom_minimum_size = Vector2(total_w, total_h)
+	bg.size = Vector2(total_w, total_h)
+	bg.position = Vector2(-total_w / 2, -total_h / 2)
 	var bg_style := StyleBoxFlat.new()
 	bg_style.bg_color = Color("#070F1E", 0.95)
 	bg_style.border_color = Color("#00D4FF")
@@ -520,23 +533,26 @@ func _show_tower_menu(cell: Vector2i, tower: Node) -> void:
 	overlay_menu.add_child(bg)
 
 	var layout := VBoxContainer.new()
-	layout.position = Vector2(-70, -30)
-	layout.size = Vector2(140, 60)
-	layout.add_theme_constant_override("separation", 6)
+	layout.position = Vector2(margin, margin + title_h + sep)
+	layout.size = Vector2(btn_w, total_h - margin * 2 - title_h - sep)
+	layout.add_theme_constant_override("separation", sep)
 	bg.add_child(layout)
 
 	var lvl_lbl := Label.new()
 	lvl_lbl.text = tower.tower_name + " Lv." + str(tower.current_level)
 	lvl_lbl.add_theme_color_override("font_color", Color("#00D4FF"))
-	lvl_lbl.add_theme_font_size_override("font_size", 12)
+	lvl_lbl.add_theme_font_size_override("font_size", 11)
 	lvl_lbl.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
-	layout.add_child(lvl_lbl)
+	lvl_lbl.position = Vector2(margin, margin)
+	lvl_lbl.size = Vector2(btn_w, title_h)
+	bg.add_child(lvl_lbl)
 
 	if tower.current_level < tower.max_level:
 		var cost = tower.ram_cost * tower.current_level
 		var upg_btn := Button.new()
 		upg_btn.text = "⬆ Upgrade (" + str(cost) + "⚡)"
-		upg_btn.custom_minimum_size = Vector2(120, 28)
+		upg_btn.custom_minimum_size = Vector2(btn_w, btn_h)
+		upg_btn.size = Vector2(btn_w, btn_h)
 		upg_btn.add_theme_font_size_override("font_size", 10)
 		if ram_manager.can_afford(cost):
 			upg_btn.add_theme_color_override("font_color", Color("#00FF88"))
@@ -548,7 +564,8 @@ func _show_tower_menu(cell: Vector2i, tower: Node) -> void:
 	var abil_cost = tower.get_ability_cost()
 	var abil_btn := Button.new()
 	abil_btn.text = "⚡ " + tower.get_ability_name() + " (" + str(abil_cost) + "⚡)"
-	abil_btn.custom_minimum_size = Vector2(120, 24)
+	abil_btn.custom_minimum_size = Vector2(btn_w, btn_h)
+	abil_btn.size = Vector2(btn_w, btn_h)
 	abil_btn.add_theme_font_size_override("font_size", 9)
 	if tower.is_ability_ready() and ram_manager.can_afford(abil_cost):
 		abil_btn.add_theme_color_override("font_color", Color("#FFB800"))
@@ -557,15 +574,33 @@ func _show_tower_menu(cell: Vector2i, tower: Node) -> void:
 	abil_btn.pressed.connect(_on_ability_used.bind(tower, abil_cost))
 	layout.add_child(abil_btn)
 
+	var sell_value = tower.ram_cost * tower.current_level
+	var sell_btn := Button.new()
+	sell_btn.text = "💰 Sell (" + str(sell_value) + "⚡)"
+	sell_btn.custom_minimum_size = Vector2(btn_w, btn_h)
+	sell_btn.size = Vector2(btn_w, btn_h)
+	sell_btn.add_theme_font_size_override("font_size", 9)
+	sell_btn.add_theme_color_override("font_color", Color("#FF8844"))
+	sell_btn.pressed.connect(_on_sell_tower.bind(cell, tower, sell_value))
+	layout.add_child(sell_btn)
+
 	var close_btn := Button.new()
 	close_btn.text = "✕ Close"
-	close_btn.custom_minimum_size = Vector2(120, 24)
+	close_btn.custom_minimum_size = Vector2(btn_w, btn_h)
+	close_btn.size = Vector2(btn_w, btn_h)
 	close_btn.add_theme_font_size_override("font_size", 9)
 	close_btn.add_theme_color_override("font_color", Color("#4A7FA5"))
-	close_btn.pressed.connect(func(): overlay_menu.visible = false)
+	close_btn.pressed.connect(func(): overlay_menu.visible = false; _current_menu_cell = Vector2i(-1, -1))
 	layout.add_child(close_btn)
 
 	overlay_menu.visible = true
+
+func _on_sell_tower(cell: Vector2i, tower: Node, value: int) -> void:
+	ram_manager.earn(value)
+	grid_system.remove_tower(cell)
+	tower.queue_free()
+	overlay_menu.visible = false
+	SignalBus.hud_message_requested.emit("Sold! +" + str(value) + " RAM", 2.0)
 
 func _on_upgrade_tower(tower: Node, cost: int) -> void:
 	if not ram_manager.spend(cost):
@@ -706,7 +741,7 @@ func _show_placement_radial(cell: Vector2i) -> void:
 	close_style.corner_radius_bottom_right = 12
 	center_close.add_theme_stylebox_override("normal", close_style)
 	
-	center_close.pressed.connect(func(): overlay_menu.visible = false)
+	center_close.pressed.connect(func(): overlay_menu.visible = false; _current_menu_cell = Vector2i(-1, -1))
 	overlay_menu.add_child(center_close)
 	
 	# Clamp positions of buttons inside screen borders for mobile viewports
