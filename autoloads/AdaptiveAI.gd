@@ -49,8 +49,6 @@ func should_show_hint(topic_id: String) -> bool:
 	return evaluate_topic(topic_id) == "struggling"
 
 func get_hint_for_topic(topic_id: String) -> String:
-	# Returns a contextual hint string
-	# You'll expand this with real hints per topic later
 	var hints = {
 		"py_variables": "A variable is like a labeled box. You put a value in, and refer to it by name.",
 		"py_lists":     "A list holds multiple values in order. Use [] brackets and index from 0.",
@@ -60,5 +58,24 @@ func get_hint_for_topic(topic_id: String) -> String:
 		"ds_queues":    "A queue is First In, First Out — like a line at a counter.",
 	}
 	return hints.get(topic_id, "Review the concept explanation and try the example again.")
+
+func record_level_performance(topic_id: String, grade: String, score: int, elapsed: float) -> void:
+	if topic_id.is_empty():
+		return
+	match grade:
+		"A", "B":
+			ProgressManager.set_topic_state(topic_id, "mastered")
+		"C", "D":
+			if ProgressManager.topic_states.get(topic_id) != "mastered":
+				ProgressManager.set_topic_state(topic_id, "practice")
+		"F", _:
+			ProgressManager.set_topic_state(topic_id, "struggling")
+	current_difficulty = _recalc_difficulty()
+
+func _recalc_difficulty() -> DifficultyLevel:
+	match evaluate_overall():
+		"struggling": return DifficultyLevel.EASY
+		"excelling":  return DifficultyLevel.HARD
+		_:            return DifficultyLevel.NORMAL
 
 

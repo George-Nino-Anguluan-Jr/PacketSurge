@@ -234,19 +234,43 @@ func _process(delta: float) -> void:
 	var remaining_projectiles: Array[Dictionary] = []
 	for p in _projectiles:
 		p["elapsed_time"] += delta
-		
-		# Locate target coordinates (or fallback to last known coordinate)
+
+		if p.has("delay") and p["delay"] > 0:
+			p["delay"] -= delta
+			if p["delay"] > 0:
+				remaining_projectiles.append(p)
+				continue
+
+		if p["style"] == "bubble_swap":
+			var ta_pos = p["target_a_last"]
+			if is_instance_valid(p["target_a"]):
+				ta_pos = p["target_a"].position
+				p["target_a_last"] = ta_pos
+			var tb_pos = p["target_b_last"]
+			if is_instance_valid(p["target_b"]):
+				tb_pos = p["target_b"].position
+				p["target_b_last"] = tb_pos
+			var mid = (ta_pos + tb_pos) / 2.0
+			var current_pos = p["pos"]
+			var next_pos = current_pos.move_toward(mid, p["speed"] * delta)
+			p["pos"] = next_pos
+			p["draw_pos"] = next_pos
+			if next_pos.distance_to(mid) < 6.0 or p["elapsed_time"] > 2.0:
+				_on_projectile_impact(p)
+			else:
+				remaining_projectiles.append(p)
+			continue
+
 		var target_pos = p["target_last_pos"]
 		if is_instance_valid(p["target"]):
 			target_pos = p["target"].position
 			p["target_last_pos"] = target_pos
-			
+
 		var current_pos = p["pos"]
 		var next_pos = current_pos.move_toward(target_pos, p["speed"] * delta)
 		p["pos"] = next_pos
-		
-		# Parabolic 3D Mortar Arc offset calculation
-		if p["style"] == "mortar":
+
+		if p["style"] == "stack_mortar":
 			var dir_vec = target_pos - p["start_pos"]
 			var d_total = dir_vec.length()
 			var d_current = (next_pos - p["start_pos"]).length()
@@ -258,8 +282,7 @@ func _process(delta: float) -> void:
 				p["draw_pos"] = next_pos
 		else:
 			p["draw_pos"] = next_pos
-			
-		# Impact threshold check
+
 		if next_pos.distance_to(target_pos) < 6.0:
 			_on_projectile_impact(p)
 		else:
@@ -313,49 +336,105 @@ func _attack() -> void:
 		"tower_selection":    _attack_selection()
 		"tower_insertion":    _attack_insertion()
 		"tower_quick":        _attack_quick()
-		"tower_binary":       _attack_binary()
+		"tower_merge":        _attack_merge()
+		"tower_counting":     _attack_counting()
 		"tower_radix":        _attack_radix()
+		"tower_linear":       _attack_linear()
+		"tower_binary":       _attack_binary()
 		_:                    _attack_default()
 
 # ─── ARRAY — fast single target, closest enemy (O(1) access) ──
 func _attack_array() -> void:
-	var target = _get_closest_enemy()
-	if target:
-		current_target = target
-		_spawn_projectile("bullet", damage, 320.0, target)
-		queue_redraw()
+	if enemy_layer == null:
+		return
+	var targets: Array[Node] = []
+	for enemy in enemy_layer.get_children():
+		if enemy.has_method("take_damage") and position.distance_to(enemy.position) <= attack_range:
+			targets.append(enemy)
+	if targets.is_empty():
+		return
+	current_target = targets[0]
+	var spawn_origin = position + Vector2(0, -14).rotated(_turret_angle)
+	for i in range(min(5, targets.size())):
+		var p = {
+			"pos": spawn_origin,
+			"start_pos": spawn_origin,
+			"draw_pos": spawn_origin,
+			"target": targets[i],
+			"target_last_pos": targets[i].position,
+			"speed": 300.0 + i * 30.0,
+			"damage": damage * 0.4,
+			"style": "index_bolt",
+			"elapsed_time": 0.0,
+			"index": i,
+			"delay": i * 0.06
+		}
+		_projectiles.append(p)
+	queue_redraw()
 
-# ─── STACK — hits the LAST enemy that entered range (LIFO) ────
 func _attack_stack() -> void:
 	if _entry_order.is_empty():
 		return
-	var target = _entry_order[_entry_order.size() - 1]  # last in
+	var target = _entry_order[_entry_order.size() - 1]
 	if is_instance_valid(target):
 		current_target = target
-		_spawn_projectile("mortar", damage * 1.4, 180.0, target)
+		var spawn_origin = position + Vector2(0, -14).rotated(_turret_angle)
+		var p = {
+			"pos": spawn_origin,
+			"start_pos": spawn_origin,
+			"draw_pos": spawn_origin,
+			"target": target,
+			"target_last_pos": target.position,
+			"speed": 180.0,
+			"damage": damage * 1.4,
+			"style": "stack_mortar",
+			"elapsed_time": 0.0,
+			"total_dist": (target.position - spawn_origin).length()
+		}
+		_projectiles.append(p)
 		queue_redraw()
 
-# ─── QUEUE — hits FIRST enemy in range, pierces to 1 enemy behind it (FIFO) ──
 func _attack_queue() -> void:
 	if _entry_order.is_empty():
 		return
-	var target = _entry_order[0]  # first in
+	var target = _entry_order[0]
 	if not is_instance_valid(target):
 		return
 	current_target = target
-	_spawn_projectile("rail", damage, 380.0, target)
-
-	# Pierce — also hit the 2nd enemy in the queue for less damage
+	var spawn_origin = position + Vector2(0, -14).rotated(_turret_angle)
+	var p = {
+		"pos": spawn_origin,
+		"start_pos": spawn_origin,
+		"draw_pos": spawn_origin,
+		"target": target,
+		"target_last_pos": target.position,
+		"speed": 380.0,
+		"damage": damage,
+		"style": "queue_rail",
+		"elapsed_time": 0.0,
+		"total_dist": (target.position - spawn_origin).length()
+	}
+	_projectiles.append(p)
 	if _entry_order.size() > 1 and is_instance_valid(_entry_order[1]):
-		_spawn_projectile("rail", damage * 0.5, 380.0, _entry_order[1])
+		var p2 = {
+			"pos": spawn_origin,
+			"start_pos": spawn_origin,
+			"draw_pos": spawn_origin,
+			"target": _entry_order[1],
+			"target_last_pos": _entry_order[1].position,
+			"speed": 380.0,
+			"damage": damage * 0.5,
+			"style": "queue_rail",
+			"elapsed_time": 0.0,
+			"total_dist": (_entry_order[1].position - spawn_origin).length()
+		}
+		_projectiles.append(p2)
 	queue_redraw()
 
-# ─── LINKED LIST — chain hit: jumps to 2 nearby enemies (pointer chasing) ──
 func _attack_linked() -> void:
 	var target = _get_closest_enemy()
 	if target:
 		current_target = target
-		# Spawn the first chain lightning projectile starting from the muzzle
 		var spawn_origin = position + Vector2(0, -14).rotated(_turret_angle)
 		var p = {
 			"pos": spawn_origin,
@@ -369,45 +448,85 @@ func _attack_linked() -> void:
 			"elapsed_time": 0.0,
 			"total_dist": (target.position - spawn_origin).length(),
 			"chains_left": 2,
-			"chained_targets": [target]
+			"chained_targets": [target] as Array[Node]
 		}
 		_projectiles.append(p)
 		queue_redraw()
 
-# ─── BUBBLE SORT — AoE pulse, hits ALL enemies in range (O(n²) = touches everyone) ──
 func _attack_bubble() -> void:
 	if enemy_layer == null:
 		return
-	var hit_any = false
+	var enemies: Array[Node] = []
 	for enemy in enemy_layer.get_children():
-		if not enemy.has_method("take_damage"):
-			continue
-		var dist = position.distance_to(enemy.position)
-		if dist <= attack_range:
-			enemy.take_damage(damage * 0.6)  # weaker per-hit since it hits everyone
-			_flash_targets.append(enemy.position - position)
-			hit_any = true
-	if hit_any:
-		_shoot_flash = 1.0
+		if enemy.has_method("take_damage") and position.distance_to(enemy.position) <= attack_range:
+			enemies.append(enemy)
+	if enemies.size() < 2:
+		for e in enemies:
+			e.take_damage(damage * 0.6)
+			_flash_targets.append(e.position - position)
+		if not enemies.is_empty():
+			_shoot_flash = 1.0
 		queue_redraw()
+		return
+	current_target = enemies[0]
+	var spawn_origin = position + Vector2(0, -14).rotated(_turret_angle)
+	var p = {
+		"pos": spawn_origin,
+		"start_pos": spawn_origin,
+		"draw_pos": spawn_origin,
+		"target_a": enemies[0],
+		"target_b": enemies[1],
+		"target_a_last": enemies[0].position,
+		"target_b_last": enemies[1].position,
+		"speed": 200.0,
+		"damage": damage * 0.8,
+		"style": "bubble_swap",
+		"elapsed_time": 0.0,
+		"swapped": false
+	}
+	_projectiles.append(p)
+	queue_redraw()
 
-# ─── SELECTION SORT — always targets lowest HP enemy (finds the "minimum") ──
 func _attack_selection() -> void:
 	var target = _get_lowest_hp_enemy()
 	if target:
 		current_target = target
-		_spawn_projectile("seeker", damage * 1.8, 220.0, target)
+		var spawn_origin = position + Vector2(0, -14).rotated(_turret_angle)
+		var p = {
+			"pos": spawn_origin,
+			"start_pos": spawn_origin,
+			"draw_pos": spawn_origin,
+			"target": target,
+			"target_last_pos": target.position,
+			"speed": 220.0,
+			"damage": damage * 1.8,
+			"style": "seeker",
+			"elapsed_time": 0.0,
+			"total_dist": (target.position - spawn_origin).length()
+		}
+		_projectiles.append(p)
 		queue_redraw()
 
-# ─── INSERTION SORT — damage-over-time stacking effect ────
 func _attack_insertion() -> void:
 	var target = _get_closest_enemy()
 	if target:
 		current_target = target
-		_spawn_projectile("stake", damage, 300.0, target)
+		var spawn_origin = position + Vector2(0, -14).rotated(_turret_angle)
+		var p = {
+			"pos": spawn_origin,
+			"start_pos": spawn_origin,
+			"draw_pos": spawn_origin,
+			"target": target,
+			"target_last_pos": target.position,
+			"speed": 300.0,
+			"damage": damage,
+			"style": "insertion_stake",
+			"elapsed_time": 0.0,
+			"total_dist": (target.position - spawn_origin).length()
+		}
+		_projectiles.append(p)
 		queue_redraw()
 
-# ─── QUICK SORT — Swivel split shot hits 2 different targets simultaneously ──
 func _attack_quick() -> void:
 	if enemy_layer == null:
 		return
@@ -417,33 +536,139 @@ func _attack_quick() -> void:
 			targets.append(enemy)
 			if targets.size() >= 2:
 				break
-				
+	if targets.is_empty():
+		return
+	current_target = targets[0]
+	var spawn_origin = position + Vector2(0, -14).rotated(_turret_angle)
 	for t in targets:
-		_spawn_projectile("plasma", damage * 0.8, 280.0, t)
-		
-	if not targets.is_empty():
-		current_target = targets[0]
-		queue_redraw()
+		var p = {
+			"pos": spawn_origin,
+			"start_pos": spawn_origin,
+			"draw_pos": spawn_origin,
+			"target": t,
+			"target_last_pos": t.position,
+			"speed": 280.0,
+			"damage": damage * 0.8,
+			"style": "quick_split",
+			"elapsed_time": 0.0,
+			"total_dist": (t.position - spawn_origin).length()
+		}
+		_projectiles.append(p)
+	queue_redraw()
 
-# ─── BINARY SNIPER — Precision heavy focal sniper charge bolt ──
+func _attack_merge() -> void:
+	if enemy_layer == null:
+		return
+	var target = _get_closest_enemy()
+	if not target:
+		return
+	current_target = target
+	var spawn_origin = position + Vector2(0, -14).rotated(_turret_angle)
+	var offset_l = Vector2(-6, -6).rotated(_turret_angle)
+	var offset_r = Vector2(-6, 6).rotated(_turret_angle)
+	for offset in [offset_l, offset_r]:
+		var p = {
+			"pos": spawn_origin + offset,
+			"start_pos": spawn_origin + offset,
+			"draw_pos": spawn_origin + offset,
+			"target": target,
+			"target_last_pos": target.position,
+			"speed": 260.0,
+			"damage": damage * 0.6,
+			"style": "merge_beam",
+			"elapsed_time": 0.0,
+			"total_dist": (target.position - spawn_origin).length(),
+			"merge_side": "left" if offset == offset_l else "right"
+		}
+		_projectiles.append(p)
+	queue_redraw()
+
+func _attack_counting() -> void:
+	var target = _get_closest_enemy()
+	if not target:
+		return
+	current_target = target
+	var spawn_origin = position + Vector2(0, -14).rotated(_turret_angle)
+	for i in range(5):
+		var p = {
+			"pos": spawn_origin,
+			"start_pos": spawn_origin,
+			"draw_pos": spawn_origin,
+			"target": target,
+			"target_last_pos": target.position,
+			"speed": 200.0 + i * 40.0,
+			"damage": damage * 0.25,
+			"style": "counting_pellet",
+			"elapsed_time": 0.0,
+			"digit": i + 1,
+			"delay": i * 0.05
+		}
+		_projectiles.append(p)
+	queue_redraw()
+
+func _attack_radix() -> void:
+	var target = _get_closest_enemy()
+	if not target:
+		return
+	current_target = target
+	var spawn_origin = position + Vector2(0, -14).rotated(_turret_angle)
+	for i in range(3):
+		var digits = [1, 10, 100]
+		var p = {
+			"pos": spawn_origin,
+			"start_pos": spawn_origin,
+			"draw_pos": spawn_origin,
+			"target": target,
+			"target_last_pos": target.position,
+			"speed": 320.0,
+			"damage": damage * 0.4,
+			"style": "radix_digit",
+			"elapsed_time": 0.0,
+			"digit": digits[i],
+			"delay": i * 0.08
+		}
+		_projectiles.append(p)
+	queue_redraw()
+
+func _attack_linear() -> void:
+	var target = _get_closest_enemy()
+	if not target:
+		return
+	current_target = target
+	var spawn_origin = position + Vector2(0, -14).rotated(_turret_angle)
+	var p = {
+		"pos": spawn_origin,
+		"start_pos": spawn_origin,
+		"draw_pos": spawn_origin,
+		"target": target,
+		"target_last_pos": target.position,
+		"speed": 350.0,
+		"damage": damage,
+		"style": "linear_scan",
+		"elapsed_time": 0.0,
+		"total_dist": (target.position - spawn_origin).length()
+	}
+	_projectiles.append(p)
+	queue_redraw()
+
 func _attack_binary() -> void:
 	var target = _get_closest_enemy()
 	if target:
 		current_target = target
-		_spawn_projectile("rail", damage * 2.2, 450.0, target)
-		queue_redraw()
-
-# ─── RADIX SORT — 3 rapid-fire micro-bursts sequentially in time ──
-func _attack_radix() -> void:
-	var target = _get_closest_enemy()
-	if target:
-		current_target = target
-		for i in range(3):
-			var timer_offset = i * 0.08
-			get_tree().create_timer(timer_offset).timeout.connect(func():
-				if is_instance_valid(target) and is_instance_valid(self):
-					_spawn_projectile("plasma", damage * 0.4, 320.0, target)
-			)
+		var spawn_origin = position + Vector2(0, -14).rotated(_turret_angle)
+		var p = {
+			"pos": spawn_origin,
+			"start_pos": spawn_origin,
+			"draw_pos": spawn_origin,
+			"target": target,
+			"target_last_pos": target.position,
+			"speed": 450.0,
+			"damage": damage * 2.2,
+			"style": "binary_sniper",
+			"elapsed_time": 0.0,
+			"total_dist": (target.position - spawn_origin).length()
+		}
+		_projectiles.append(p)
 		queue_redraw()
 
 func _attack_default() -> void:
@@ -470,13 +695,21 @@ func _spawn_projectile(p_style: String, p_damage: float, p_speed: float, p_targe
 	_projectiles.append(p)
 
 func _on_projectile_impact(p: Dictionary) -> void:
+	if p["style"] == "bubble_swap":
+		if is_instance_valid(p["target_a"]) and p["target_a"].has_method("take_damage"):
+			p["target_a"].take_damage(p["damage"])
+		if is_instance_valid(p["target_b"]) and p["target_b"].has_method("take_damage"):
+			p["target_b"].take_damage(p["damage"])
+		_spawn_impact_explosion(p["target_a_last"], "bubble_swap")
+		_spawn_impact_explosion(p["target_b_last"], "bubble_swap")
+		return
+
 	if is_instance_valid(p["target"]) and p["target"].has_method("take_damage"):
-		if p["style"] == "stake" and p["target"].has_method("apply_dot"):
+		if p["style"] == "insertion_stake" and p["target"].has_method("apply_dot"):
 			p["target"].apply_dot(p["damage"] * 0.3, 3.0)
 		else:
 			p["target"].take_damage(p["damage"])
-			
-	# Trigger a beautiful custom particle/shockwave explosion at target impact site
+
 	_spawn_impact_explosion(p["target_last_pos"], p["style"])
 
 	# Cascade lightning chaining on impact for Linked List!
@@ -484,7 +717,9 @@ func _on_projectile_impact(p: Dictionary) -> void:
 		var next_target = _get_closest_to_point(p["target_last_pos"], p["chained_targets"])
 		if next_target:
 			var new_chains_left = p["chains_left"] - 1
-			var new_chained_list = p["chained_targets"].duplicate()
+			var new_chained_list: Array[Node] = []
+			for n in p["chained_targets"]:
+				new_chained_list.append(n)
 			new_chained_list.append(next_target)
 			
 			var p_next = {
@@ -504,11 +739,19 @@ func _on_projectile_impact(p: Dictionary) -> void:
 			_projectiles.append(p_next)
 
 func _spawn_impact_explosion(pos: Vector2, style: String) -> void:
+	var radius_map = {
+		"stack_mortar": 18.0, "chain_lightning": 22.0, "queue_rail": 14.0,
+		"binary_sniper": 16.0, "bubble_swap": 20.0, "seeker": 12.0,
+		"insertion_stake": 10.0, "index_bolt": 8.0, "quick_split": 12.0,
+		"merge_beam": 14.0, "counting_pellet": 10.0, "radix_digit": 8.0,
+		"linear_scan": 12.0
+	}
+	var max_r = radius_map.get(style, 8.0)
 	var e = {
-		"pos": pos - position, # relative to drawing space
+		"pos": pos - position,
 		"style": style,
 		"radius": 0.0,
-		"max_radius": 18.0 if style == "mortar" else (22.0 if style == "chain_lightning" else (14.0 if style == "rail" else 8.0)),
+		"max_radius": max_r,
 		"elapsed": 0.0,
 		"lifetime": 0.22
 	}
@@ -941,102 +1184,191 @@ func _draw_binary_trail(pos: Vector2, trail_color: Color) -> void:
 		draw_rect(Rect2(pos - Vector2(2, 3), Vector2(4, 6)), col, false, 1.0)
 
 func _draw_overlays(color: Color) -> void:
-	# 1. DRAW ACTIVE FLYING PROJECTILES
 	for p in _projectiles:
-		var relative_draw_pos = p["draw_pos"] - position
-		var relative_pos = p["pos"] - position
-		
+		var rd = p["draw_pos"] - position
+		var rp = p["pos"] - position
 		match p["style"]:
-			"mortar":
-				# Draw dropshadow on ground plane
-				draw_circle(relative_pos + Vector2(2, 5), 4.5, Color(0, 0, 0, 0.2))
-				# Draw physical arcing bomb shell
-				_draw_shaded_capsule(relative_draw_pos, 5.0, Color("#4B5B6D"), color)
-				# Fuse trail
-				draw_circle(relative_draw_pos - Vector2(3, -2), 1.5, color)
-				
-			"rail":
-				# Ultra-high speed kinetic energy penetrator rail bolt
-				var target_vec = p["target_last_pos"] - p["pos"]
-				if target_vec.length() > 0:
-					var heading = target_vec.normalized()
-					var line_start = relative_draw_pos - heading * 14.0
-					draw_line(line_start, relative_draw_pos, Color.WHITE, 3.5)
-					draw_line(line_start, relative_draw_pos, color, 1.5)
-					# Write binary characters stream as a trail!
-					_draw_binary_trail(relative_draw_pos - heading * 24.0, color)
-					_draw_binary_trail(relative_draw_pos - heading * 40.0, color)
-					
-			"seeker":
-				# Homing tracking rocket sphere
-				draw_circle(relative_draw_pos, 4.5, Color.WHITE)
-				draw_circle(relative_draw_pos, 7.0, Color(color, 0.4))
-				# Outer orbiting gyroscope node rings
-				var orbit_ang = _anim_time * 12.0
-				for i in range(3):
-					var angle = orbit_ang + i * (TAU / 3.0)
-					draw_circle(relative_draw_pos + Vector2(cos(angle), sin(angle)) * 6.5, 1.8, color)
-					
-			"plasma":
-				# Swirling twin plasma orbits
-				draw_circle(relative_draw_pos, 3.5, Color.WHITE)
-				draw_circle(relative_draw_pos, 6.0, Color(color, 0.45))
-				draw_arc(relative_draw_pos, 8.0, _anim_time * 10.0, _anim_time * 10.0 + PI, 8, color, 1.5)
-				
-			"stake":
-				# Linear mechanical piston stake
-				var heading = (p["target_last_pos"] - p["pos"]).normalized()
-				var start_pt = relative_draw_pos - heading * 9.0
-				draw_line(start_pt, relative_draw_pos, Color("#6C7C8C"), 3.5)
-				draw_line(start_pt, relative_draw_pos, Color.WHITE, 1.5)
-				
-			"bullet", _:
-				# High velocity blaster plasma bullet
-				draw_circle(relative_draw_pos, 2.8, Color.WHITE)
-				draw_circle(relative_draw_pos, 4.8, color)
+			"index_bolt":
+				var idx = p.get("index", 0)
+				var phase = sin(_anim_time * 20.0 + idx) * 1.5
+				var sz = 3.0 + phase * 0.3
+				var pts = PackedVector2Array([
+					rd + Vector2(sz, 0), rd + Vector2(0, -sz),
+					rd + Vector2(-sz, 0), rd + Vector2(0, sz)
+				])
+				draw_colored_polygon(pts, Color.WHITE)
+				draw_colored_polygon(pts, Color(color, 0.5))
+				draw_string(ThemeDB.fallback_font, rd + Vector2(-3, 3), str(idx), HORIZONTAL_ALIGNMENT_CENTER, -1, 7, color)
+				draw_circle(rp + Vector2(2, 5), 3.0, Color(0, 0, 0, 0.15))
 
-	# 2. DRAW ACTIVE IMPACT EXPLOSIONS
+			"stack_mortar":
+				var t = p["elapsed_time"] / (p["total_dist"] / p["speed"]) if p["total_dist"] > 0 else 1.0
+				var grow = 4.0 + sin(t * PI) * 2.0
+				draw_circle(rp + Vector2(2, 5), 5.0, Color(0, 0, 0, 0.2))
+				_draw_shaded_capsule(rd, grow, Color("#4B5B6D"), color)
+				draw_circle(rd - Vector2(3, -2), 1.5, Color(color, 0.7))
+				draw_line(rd - Vector2(0, grow), rd - Vector2(0, grow + 4), Color("#8899AA"), 2.0)
+
+			"queue_rail":
+				var heading = (p["target_last_pos"] - p["pos"]).normalized()
+				var line_start = rd - heading * 16.0
+				draw_line(line_start, rd, Color.WHITE, 4.0)
+				draw_line(line_start, rd, color, 2.0)
+				for j in range(3):
+					var dot_pos = line_start + heading * j * 5.0
+					draw_circle(dot_pos, 1.5, Color(color, 0.6 - j * 0.15))
+
+			"chain_lightning":
+				var heading = (p["target_last_pos"] - p["pos"]).normalized() if (p["target_last_pos"] - p["pos"]).length() > 0 else Vector2.RIGHT
+				var dist = p["total_dist"]
+				var travel = clamp(p["elapsed_time"] / (dist / p["speed"]), 0.0, 1.0) if dist > 0 else 1.0
+				var segments = 6
+				var prev = rd
+				for j in range(segments):
+					var frac = (j + 1.0) / segments
+					var base_pos = rd + heading * frac * dist * travel * 0.5
+					var jitter = Vector2(cos(_anim_time * 40.0 + j * 3.0), sin(_anim_time * 40.0 + j * 3.0)) * 4.0
+					var next = base_pos + jitter
+					draw_line(prev, next, Color.WHITE, 2.5 - j * 0.3)
+					draw_line(prev, next, color, 1.0)
+					prev = next
+
+			"bubble_swap":
+				var heading = (p["target_a_last"] - p["pos"]).normalized() if (p["target_a_last"] - p["pos"]).length() > 0 else Vector2.RIGHT
+				draw_circle(rd, 4.0, Color.WHITE)
+				draw_circle(rd, 6.0, Color(color, 0.4))
+				draw_arc(rd, 8.0, _anim_time * 6.0, _anim_time * 6.0 + PI, 8, color, 1.5)
+				var to_a = p["target_a_last"] - p["pos"]
+				var to_b = p["target_b_last"] - p["pos"]
+				if to_a.length() > 0 and to_b.length() > 0:
+					var dir_a = to_a.normalized()
+					var dir_b = to_b.normalized()
+					draw_line(rd, rd + dir_a * 12.0, Color(color, 0.3), 1.0)
+					draw_line(rd, rd + dir_b * 12.0, Color(color, 0.3), 1.0)
+
+			"seeker":
+				draw_circle(rd, 4.5, Color.WHITE)
+				draw_circle(rd, 7.0, Color(color, 0.4))
+				var orbit_ang = _anim_time * 12.0
+				for j in range(3):
+					var angle = orbit_ang + j * (TAU / 3.0)
+					draw_circle(rd + Vector2(cos(angle), sin(angle)) * 6.5, 1.8, color)
+				var to_target = (p["target_last_pos"] - p["pos"]).normalized()
+				if to_target.length() > 0:
+					draw_line(rd, rd + to_target * 12.0, Color(color, 0.2), 1.5)
+
+			"insertion_stake":
+				var heading = (p["target_last_pos"] - p["pos"]).normalized() if (p["target_last_pos"] - p["pos"]).length() > 0 else Vector2.RIGHT
+				var start_pt = rd - heading * 9.0
+				draw_line(start_pt, rd, Color("#6C7C8C"), 3.5)
+				draw_line(start_pt, rd, Color.WHITE, 1.5)
+				draw_circle(rd - heading * 4.0, 2.0, Color(color, 0.6))
+
+			"quick_split":
+				var heading = (p["target_last_pos"] - p["pos"]).normalized() if (p["target_last_pos"] - p["pos"]).length() > 0 else Vector2.RIGHT
+				var perp = Vector2(-heading.y, heading.x)
+				var split_offset = perp * 4.0 * (1.0 - sin(_anim_time * 15.0 + p.get("_split_seed", 0)) * 0.3)
+				var split_pos = rd + split_offset
+				draw_circle(split_pos, 3.5, Color.WHITE)
+				draw_circle(split_pos, 6.0, Color(color, 0.45))
+				draw_arc(split_pos, 8.0, _anim_time * 10.0, _anim_time * 10.0 + PI, 8, color, 1.5)
+
+			"merge_beam":
+				var frac = clamp(p["elapsed_time"] / (p["total_dist"] / p["speed"]), 0.0, 1.0) if p["total_dist"] > 0 else 1.0
+				var side = p.get("merge_side", "left")
+				var offset = Vector2((-6 if side == "left" else 6) * (1.0 - frac), (-6 if side == "left" else 6) * (1.0 - frac))
+				var beam_pos = rd + offset
+				draw_line(rd, beam_pos, Color(color, 0.6), 2.5)
+				draw_circle(beam_pos, 3.0, Color.WHITE)
+				draw_circle(beam_pos, 5.0, Color(color, 0.3))
+
+			"counting_pellet":
+				var digit = p.get("digit", 1)
+				var trail_pts = PackedVector2Array()
+				var step = 4
+				for j in range(5):
+					var t_pos = rd - Vector2(j * step, sin(_anim_time * 10.0 + j + digit) * 2.0)
+					trail_pts.append(t_pos)
+				for j in range(trail_pts.size() - 1):
+					draw_line(trail_pts[j], trail_pts[j + 1], Color(color, 0.4 - j * 0.07), 1.5)
+				var sz = 2.0 + digit * 0.3
+				draw_circle(rd, sz, Color.WHITE)
+				draw_circle(rd, sz + 1.5, Color(color, 0.5))
+				draw_string(ThemeDB.fallback_font, rd + Vector2(-2, 3), str(digit), HORIZONTAL_ALIGNMENT_CENTER, -1, 6, color)
+
+			"radix_digit":
+				var digit = p.get("digit", 1)
+				var rot_off = _anim_time * 8.0 + digit
+				var orbit_pos = rd + Vector2(cos(rot_off) * 4.0, sin(rot_off) * 4.0)
+				draw_circle(orbit_pos, 2.5, Color.WHITE)
+				draw_circle(orbit_pos, 4.5, Color(color, 0.5 - (digit % 10) * 0.05))
+				draw_arc(orbit_pos, 6.0, rot_off, rot_off + PI * 0.8, 6, color, 1.5)
+				draw_string(ThemeDB.fallback_font, orbit_pos + Vector2(-3, 3), str(digit), HORIZONTAL_ALIGNMENT_CENTER, -1, 6, Color("#FFFFFF"))
+
+			"linear_scan":
+				var heading = (p["target_last_pos"] - p["pos"]).normalized() if (p["target_last_pos"] - p["pos"]).length() > 0 else Vector2.RIGHT
+				var perp = Vector2(-heading.y, heading.x)
+				draw_line(rd - perp * 8.0, rd + perp * 8.0, Color.WHITE, 2.0)
+				draw_line(rd - perp * 8.0, rd + perp * 8.0, Color(color, 0.6), 1.0)
+				draw_circle(rd, 2.0, Color.WHITE)
+				draw_circle(rd, 4.0, Color(color, 0.4))
+
+			"binary_sniper":
+				var heading = (p["target_last_pos"] - p["pos"]).normalized() if (p["target_last_pos"] - p["pos"]).length() > 0 else Vector2.RIGHT
+				var perp = Vector2(-heading.y, heading.x)
+				var ch = 4.0 + sin(_anim_time * 15.0) * 1.0
+				draw_line(rd + perp * ch, rd - perp * ch, Color.WHITE, 2.0)
+				draw_line(rd + heading * ch, rd - heading * ch, Color.WHITE, 2.0)
+				draw_circle(rd, 2.5, Color.WHITE)
+				draw_circle(rd, 5.0, Color(color, 0.6))
+				draw_line(rd - heading * 6.0, rd, Color(color, 0.8), 2.5)
+
+			_:
+				draw_circle(rd, 2.8, Color.WHITE)
+				draw_circle(rd, 4.8, color)
+
 	for e in _explosions:
 		var life_ratio = e["elapsed"] / e["lifetime"]
 		var flash_val = 1.0 - life_ratio
 		var e_color = Color(color, flash_val)
 		match e["style"]:
-			"mortar":
-				# Massive shockwave circular blast ring
+			"stack_mortar":
 				draw_arc(e["pos"], e["radius"], 0, TAU, 32, e_color, 2.5)
 				draw_circle(e["pos"], e["radius"] * 0.6, Color(color, flash_val * 0.35))
-			"rail":
-				# Sharp focal electrical energy spike bursts
+				draw_string(ThemeDB.fallback_font, e["pos"] + Vector2(-8, -8), "POP", HORIZONTAL_ALIGNMENT_CENTER, -1, 10, Color("#FFB800"))
+			"queue_rail", "binary_sniper":
 				draw_line(e["pos"] - Vector2(e["radius"], 0), e["pos"] + Vector2(e["radius"], 0), e_color, 2.0)
 				draw_line(e["pos"] - Vector2(0, e["radius"]), e["pos"] + Vector2(0, e["radius"]), e_color, 2.0)
 				draw_circle(e["pos"], 4.5 * flash_val, Color.WHITE)
-			"stake":
-				# Stacking chemical green DoT acid rings (Insertion Sort)
+			"insertion_stake":
 				draw_arc(e["pos"], e["radius"], 0, TAU, 16, Color("#1ABC9C", flash_val), 1.5)
 				draw_arc(e["pos"], e["radius"] * 0.5, 0, TAU, 16, Color("#1ABC9C", flash_val * 0.6), 1.0)
 			"seeker":
-				# Sharp flash ring
 				draw_arc(e["pos"], e["radius"], 0, TAU, 24, e_color, 2.0)
 				draw_circle(e["pos"], 3.5 * flash_val, Color.WHITE)
-			"plasma", "bullet", _:
-				# Rapid standard blast expander ring
+			"bubble_swap":
+				draw_arc(e["pos"], e["radius"], 0, PI, 12, e_color, 2.0)
+				draw_arc(e["pos"], e["radius"], PI, TAU, 12, Color(color, flash_val * 0.5), 1.5)
+			"counting_pellet", "radix_digit":
+				var count = 5
+				for j in range(count):
+					var a = (TAU / count) * j + _anim_time * 5.0
+					draw_circle(e["pos"] + Vector2(cos(a), sin(a)) * e["radius"] * 0.6, 2.0, Color(color, flash_val * (1.0 - j * 0.1)))
+			"index_bolt":
+				draw_circle(e["pos"], e["radius"] * 0.5, Color.WHITE)
+				draw_circle(e["pos"], e["radius"], Color(color, flash_val * 0.5))
+			_:
 				draw_arc(e["pos"], e["radius"], 0, TAU, 16, e_color, 1.5)
 
-	# 3. DRAW INSTANT OVERLAY BEAMS (e.g., Linked lightning pointer lines)
 	if _shoot_flash > 0:
 		var flash_color = Color(color, _shoot_flash)
-		# Draw instant pointer vector lines
 		for target_offset in _flash_targets:
 			draw_line(Vector2.ZERO, target_offset, flash_color, 2.5)
-		
-		# Draw glowing energy muzzle rings
 		draw_circle(Vector2.ZERO, 8.0 * _shoot_flash, flash_color)
 		draw_circle(Vector2.ZERO, 4.0 * _shoot_flash, Color.WHITE)
-		
-	# Draw faint subtle range ring if the player is placing a tower or selects it
+
 	if Engine.is_editor_hint():
 		draw_arc(Vector2.ZERO, attack_range, 0, TAU, 64, Color(color, 0.15), 1.0)
 	elif OS.is_debug_build() or Input.is_mouse_button_pressed(MOUSE_BUTTON_LEFT):
-		# We can draw the range outline during placement or selections dynamically if needed
 		pass
 
