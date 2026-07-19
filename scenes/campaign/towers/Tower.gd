@@ -39,6 +39,11 @@ var _explosions: Array[Dictionary]  = []
 
 @onready var sprite: Sprite2D = $TowerSprite
 
+func _ready() -> void:
+	# Hide sprite for icon rendering if tower is not fully initialized
+	if tower_id == "":
+		_setup_sprite()
+
 func initialize(data: TowerData, cell: Vector2i, e_layer: Node2D) -> void:
 	tower_id      = data.tower_id
 	tower_name    = data.tower_name
