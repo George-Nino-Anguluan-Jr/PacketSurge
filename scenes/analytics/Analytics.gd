@@ -121,14 +121,6 @@ func _make_overview_cards() -> HBoxContainer:
 		"waves_completed", 0
 	)
 
-	# Average accuracy
-	var total_acc: float = 0.0
-	var acc_count: int   = 0
-	for t in ProgressManager.coding_accuracy:
-		total_acc  += float(ProgressManager.coding_accuracy[t])
-		acc_count  += 1
-	var avg_acc = (total_acc / acc_count * 100.0) if acc_count > 0 else 0.0
-
 	row.add_child(_make_stat_card(
 		"LESSONS\nMASTERED", str(mastered) + "/12",
 		Color("#00FF88")
@@ -140,10 +132,6 @@ func _make_overview_cards() -> HBoxContainer:
 	row.add_child(_make_stat_card(
 		"TOTAL\nTIME", _format_time(total_time),
 		Color("#9B59B6")
-	))
-	row.add_child(_make_stat_card(
-		"AVG\nACCURACY", str(int(avg_acc)) + "%",
-		Color("#00D4FF")
 	))
 	return row
 
@@ -282,31 +270,18 @@ func _make_accuracy_chart() -> Control:
 
 		for i in range(count):
 			var topic   = topics[i]
-			var acc     = float(
-				ProgressManager.coding_accuracy.get(topic, 0.0)
-			)
+			var mastered = ProgressManager.topic_states.get(topic, "locked") == "mastered"
 			var x       = 20 + i * bar_w
-			var bar_h   = max_h * acc
-			var bar_col = Color("#00FF88") if acc >= 0.8 \
-						  else Color("#FFB800") if acc >= 0.5 \
-						  else Color("#FF3366")
+			var bar_h   = max_h * (1.0 if mastered else 0.3)
+			var bar_col = Color("#00FF88") if mastered else Color("#4A7FA5")
 
-			if acc > 0:
+			if mastered:
 				var rect = Rect2(
 					x + 2, size.y - 20 - bar_h,
 					bar_w - 4, bar_h
 				)
 				chart.draw_rect(rect, Color(bar_col, 0.3))
 				chart.draw_rect(rect, bar_col, false, 1.5)
-
-				# Percentage label
-				chart.draw_string(
-					ThemeDB.fallback_font,
-					Vector2(x + 2, size.y - 22 - bar_h),
-					str(int(acc * 100)) + "%",
-					HORIZONTAL_ALIGNMENT_LEFT, -1, 9,
-					bar_col
-				)
 			else:
 				# Empty bar placeholder
 				var rect = Rect2(
@@ -417,11 +392,9 @@ func _make_lesson_breakdown() -> VBoxContainer:
 
 	for topic_id in topics:
 		var state    = ProgressManager.topic_states.get(topic_id, "locked")
-		var accuracy = ProgressManager.coding_accuracy.get(topic_id, 0.0)
-		var retries  = ProgressManager.retry_counts.get(topic_id, 0)
 		var time     = float(ProgressManager.time_spent.get(topic_id, 0.0))
 		var row      = _make_lesson_row(
-			topics[topic_id], state, accuracy, retries, time
+			topics[topic_id], state, time
 		)
 		layout.add_child(row)
 
@@ -430,8 +403,6 @@ func _make_lesson_breakdown() -> VBoxContainer:
 func _make_lesson_row(
 		name: String,
 		state: String,
-		accuracy: float,
-		retries: int,
 		time: float) -> PanelContainer:
 
 	var card  := PanelContainer.new()
@@ -483,59 +454,6 @@ func _make_lesson_row(
 	layout.add_child(name_lbl)
 
 	if state in ["unlocked", "mastered"]:
-		# Accuracy bar
-		var acc_container := VBoxContainer.new()
-		acc_container.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-		acc_container.add_theme_constant_override("separation", 2)
-
-		var acc_row := HBoxContainer.new()
-		var acc_lbl := Label.new()
-		acc_lbl.text = "Accuracy"
-		acc_lbl.add_theme_font_size_override("font_size", 10)
-		acc_lbl.add_theme_color_override("font_color", Color("#4A7FA5"))
-		acc_row.add_child(acc_lbl)
-
-		var spacer := Control.new()
-		spacer.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-		acc_row.add_child(spacer)
-
-		var acc_val := Label.new()
-		acc_val.text = str(int(accuracy * 100)) + "%"
-		acc_val.add_theme_font_size_override("font_size", 10)
-		var acc_color = Color("#00FF88") if accuracy >= 0.8 \
-					   else Color("#FFB800") if accuracy >= 0.5 \
-					   else Color("#FF3366")
-		acc_val.add_theme_color_override("font_color", acc_color)
-		acc_row.add_child(acc_val)
-		acc_container.add_child(acc_row)
-
-		# Progress bar
-		var bar_bg  := Panel.new()
-		bar_bg.custom_minimum_size = Vector2(0, 6)
-		bar_bg.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-		var bg_style := StyleBoxFlat.new()
-		bg_style.bg_color = Color("#1A3A5A")
-		bg_style.corner_radius_top_left     = 3
-		bg_style.corner_radius_top_right    = 3
-		bg_style.corner_radius_bottom_left  = 3
-		bg_style.corner_radius_bottom_right = 3
-		bar_bg.add_theme_stylebox_override("panel", bg_style)
-		acc_container.add_child(bar_bg)
-
-		layout.add_child(acc_container)
-
-		# Retries
-		var retry_lbl := Label.new()
-		retry_lbl.text = str(retries) + " retries"
-		retry_lbl.custom_minimum_size = Vector2(70, 0)
-		retry_lbl.add_theme_font_size_override("font_size", 11)
-		retry_lbl.add_theme_color_override(
-			"font_color",
-			Color("#00FF88") if retries == 0 else Color("#FFB800")
-		)
-		retry_lbl.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
-		layout.add_child(retry_lbl)
-
 		# Time
 		var time_lbl := Label.new()
 		time_lbl.text = _format_time(time)

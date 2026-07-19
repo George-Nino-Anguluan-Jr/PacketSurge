@@ -431,6 +431,23 @@ func _show_try_it_step() -> void:
 	check_btn.pressed.connect(_check_code_answer.bind(answer_area))
 	layout.add_child(check_btn)
 
+	var playground_map = {
+		"ds_arrays": "res://scenes/sandbox/playgrounds/ArrayPlayground.tscn",
+		"ds_stacks": "res://scenes/sandbox/playgrounds/StackPlayground.tscn",
+		"ds_queues": "res://scenes/sandbox/playgrounds/QueuePlayground.tscn",
+		"ds_linked_lists": "res://scenes/sandbox/playgrounds/LinkedListPlayground.tscn",
+	}
+	if playground_map.has(current_lesson.lesson_id):
+		var sandbox_btn := Button.new()
+		sandbox_btn.text = "🔬 Try in Sandbox →"
+		sandbox_btn.custom_minimum_size = Vector2(200, 36)
+		sandbox_btn.add_theme_font_size_override("font_size", 11)
+		sandbox_btn.add_theme_color_override("font_color", Color("#FFB800"))
+		sandbox_btn.pressed.connect(func():
+			GameManager.go_to("sandbox")
+		)
+		layout.add_child(sandbox_btn)
+
 	var result_label := Label.new()
 	result_label.name = "ResultLabel"
 	result_label.text = ""
@@ -509,7 +526,6 @@ func _check_code_answer(answer_area: VBoxContainer) -> void:
 			student_answer.append(child.text)
 
 	var passed = student_answer == current_lesson.correct_sequence
-	ProgressManager.record_challenge_attempt(current_lesson.lesson_id, passed)
 
 	if result_label:
 		if passed:
@@ -555,7 +571,6 @@ func _show_practice_step() -> void:
 func _check_practice_answer(index: int, layout: VBoxContainer) -> void:
 	var explanation = layout.get_node_or_null("ExplanationLabel")
 	var passed      = index == current_lesson.practice_correct_index
-	ProgressManager.record_challenge_attempt(current_lesson.lesson_id + "_practice", passed)
 	if explanation:
 		explanation.text = current_lesson.practice_explanation
 		if passed:

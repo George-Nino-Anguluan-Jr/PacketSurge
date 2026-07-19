@@ -24,6 +24,10 @@ var _flash_targets: Array[Vector2] = []  # Multiple flash lines for AoE/chain at
 var current_level: int         = 1
 var max_level: int             = 3
 
+# Ability state
+var ability_cooldown: float    = 0.0
+var ability_max_cooldown: float = 8.0
+
 # ─── ANIMATION STATE ───────────────────────────────────
 var _turret_angle: float       = -PI / 2
 var _recoil: float             = 0.0
@@ -49,6 +53,68 @@ func initialize(data: TowerData, cell: Vector2i, e_layer: Node2D) -> void:
 	current_level = 1
 	_setup_sprite()
 	_animate_placement()
+	queue_redraw()
+
+func get_ability_name() -> String:
+	match tower_id:
+		"tower_array":      return "O(1) Burst"
+		"tower_stack":      return "Stack Pop"
+		"tower_queue":      return "FIFO Pierce"
+		"tower_linked_list":return "Chain Link"
+		"tower_bubble":     return "AoE Pulse"
+		"tower_selection":  return "Find Weakest"
+		"tower_insertion":  return "Insert DOT"
+		"tower_quick":      return "Quick Split"
+		"tower_merge":      return "Merge Blast"
+		"tower_counting":   return "Count Barrage"
+		"tower_radix":      return "Radix Volley"
+		"tower_linear":     return "Linear Sweep"
+		"tower_binary":     return "Binary Snipe"
+		_:                  return "Special"
+
+func get_ability_cost() -> int:
+	return ram_cost * 2
+
+func is_ability_ready() -> bool:
+	return ability_cooldown <= 0.0
+
+func activate_ability() -> bool:
+	if not is_ability_ready():
+		return false
+	# One-time big damage burst
+	var dmg_mult = 2.5 + current_level * 0.5
+	_apply_ability_damage(damage * dmg_mult)
+	ability_cooldown = ability_max_cooldown
+	_animate_upgrade()
+	return true
+
+func _apply_ability_damage(dmg: float) -> void:
+	if not enemy_layer:
+		return
+	var enemies = []
+	for child in enemy_layer.get_children():
+		if is_instance_valid(child) and child.has_method("take_damage"):
+			var dist = global_position.distance_to(child.global_position)
+			if dist <= attack_range * 1.5:
+				enemies.append(child)
+	if enemies.is_empty():
+		return
+	match tower_id:
+		"tower_array":
+			if enemies.size() > 0:
+				enemies[0].take_damage(dmg * 2)
+		"tower_stack":
+			enemies[-1].take_damage(dmg)
+		"tower_queue":
+			for e in enemies:
+				e.take_damage(dmg * 0.6)
+		"tower_linked_list":
+			for i in range(min(3, enemies.size())):
+				enemies[i].take_damage(dmg)
+		_:
+			for e in enemies:
+				e.take_damage(dmg)
+	_shoot_flash = 2.0
 	queue_redraw()
 
 func upgrade() -> int:
@@ -140,6 +206,8 @@ func _animate_placement() -> void:
 func _process(delta: float) -> void:
 	_anim_time += delta
 	attack_timer += delta
+	if ability_cooldown > 0:
+		ability_cooldown -= delta
 	_update_entry_order()
 
 	# Handle physical recoil decay
@@ -534,6 +602,16 @@ func _draw() -> void:
 	_draw_turret_assembly(tower_color)
 	
 	_draw_overlays(tower_color)
+	
+	# Draw level indicator
+	if current_level > 1:
+		draw_string(
+			ThemeDB.fallback_font,
+			Vector2(10, -36),
+			"Lv" + str(current_level),
+			HORIZONTAL_ALIGNMENT_LEFT, -1, 9,
+			Color("#FFB800")
+		)
 
 # ─── VOLUMETRIC 3D PRIMITIVE DRAWING HELPERS ───────────────────────
 func _draw_3d_cylinder(center: Vector2, radius: float, height: float, color: Color, outline_color: Color = Color.WHITE, line_width: float = 1.5) -> void:

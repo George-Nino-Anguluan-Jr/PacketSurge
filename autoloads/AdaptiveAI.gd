@@ -2,24 +2,16 @@
 # Watches student performance and adjusts difficulty automatically
 extends Node
 
-# ─── THRESHOLDS ────────────────────────────────────────
-const STRUGGLE_RETRY_THRESHOLD  := 3      # retries before we help
-const STRUGGLE_ACCURACY_FLOOR   := 0.55   # below this = struggling
-const EXCELLENCE_ACCURACY_CEIL  := 0.90   # above this = excelling
-const EXCELLENCE_RETRY_MAX      := 1      # max retries for excelling
-
 # ─── CURRENT DIFFICULTY ────────────────────────────────
 enum DifficultyLevel { EASY, NORMAL, HARD }
 var current_difficulty: DifficultyLevel = DifficultyLevel.NORMAL
 
 # ─── EVALUATE A SPECIFIC TOPIC ─────────────────────────
 func evaluate_topic(topic_id: String) -> String:
-	var retries  = ProgressManager.get_retry_count(topic_id)
-	var accuracy = ProgressManager.get_accuracy(topic_id)
-
-	if retries >= STRUGGLE_RETRY_THRESHOLD or accuracy < STRUGGLE_ACCURACY_FLOOR:
+	var state = ProgressManager.topic_states.get(topic_id, "locked")
+	if state == "locked":
 		return "struggling"
-	elif retries <= EXCELLENCE_RETRY_MAX and accuracy >= EXCELLENCE_ACCURACY_CEIL:
+	elif state == "mastered":
 		return "excelling"
 	return "normal"
 
@@ -69,9 +61,4 @@ func get_hint_for_topic(topic_id: String) -> String:
 	}
 	return hints.get(topic_id, "Review the concept explanation and try the example again.")
 
-# ─── MICRO CODING DIFFICULTY ───────────────────────────
-func get_micro_challenge_type() -> String:
-	match evaluate_overall():
-		"struggling": return "fill_blank"       # easiest
-		"excelling":  return "fix_and_optimize" # hardest
-		_:            return "fix_syntax"       # default
+

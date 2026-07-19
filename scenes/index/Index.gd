@@ -11,6 +11,9 @@ extends Control
 @onready var towers_content: VBoxContainer  = $ContentArea/TowersPanel/TowersContent
 @onready var enemies_content: VBoxContainer = $ContentArea/EnemiesPanel/EnemiesContent
 
+var path_tab: Button = null
+var path_panel: ScrollContainer = null
+
 # ─── DATA ──────────────────────────────────────────────
 const TOWER_DATA = [
 	{
@@ -219,6 +222,7 @@ func _ready() -> void:
 	_apply_styles()
 	_build_towers_tab()
 	_build_enemies_tab()
+	_build_path_tab()
 	_show_towers_tab()
 	_apply_responsive_layout()
 	get_tree().root.size_changed.connect(_apply_responsive_layout)
@@ -229,6 +233,21 @@ func _setup_buttons() -> void:
 	towers_tab.pressed.connect(_show_towers_tab)
 	enemies_tab.pressed.connect(_show_enemies_tab)
 	search_field.text_changed.connect(_on_search_changed)
+
+	path_tab = Button.new()
+	path_tab.text = "📊 Path"
+	path_tab.custom_minimum_size = Vector2(80, 32)
+	path_tab.pressed.connect(_show_path_tab)
+	path_tab.add_theme_font_size_override("font_size", 12)
+	$TabBar.add_child(path_tab)
+
+	path_panel = ScrollContainer.new()
+	path_panel.name = "PathPanel"
+	path_panel.custom_minimum_size = Vector2(0, 0)
+	path_panel.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	path_panel.size_flags_vertical = Control.SIZE_EXPAND_FILL
+	path_panel.visible = false
+	$ContentArea.add_child(path_panel)
 
 func _on_back_pressed() -> void:
 	GameManager.go_to("main_menu")
@@ -242,17 +261,125 @@ func _show_towers_tab() -> void:
 	active_tab             = "towers"
 	towers_panel.visible   = true
 	enemies_panel.visible  = false
+	path_panel.visible     = false
 	_style_active_tab(towers_tab,  true)
 	_style_active_tab(enemies_tab, false)
+	if path_tab: _style_active_tab(path_tab, false)
 
 func _show_enemies_tab() -> void:
 	active_tab             = "enemies"
 	towers_panel.visible   = false
 	enemies_panel.visible  = true
+	path_panel.visible     = false
 	_style_active_tab(towers_tab,  false)
 	_style_active_tab(enemies_tab, true)
+	if path_tab: _style_active_tab(path_tab, false)
 
 # ─── BUILD TOWERS TAB ──────────────────────────────────
+func _show_path_tab() -> void:
+	active_tab             = "path"
+	towers_panel.visible   = false
+	enemies_panel.visible  = false
+	path_panel.visible     = true
+	_style_active_tab(towers_tab,  false)
+	_style_active_tab(enemies_tab, false)
+	if path_tab: _style_active_tab(path_tab, true)
+	path_panel.queue_redraw()
+
+func _build_path_tab() -> void:
+	var content := VBoxContainer.new()
+	content.name = "PathContent"
+	content.add_theme_constant_override("separation", 4)
+	path_panel.add_child(content)
+
+	var title := Label.new()
+	title.text = "YOUR LEARNING PATH"
+	title.add_theme_font_size_override("font_size", 16)
+	title.add_theme_color_override("font_color", Color("#00D4FF"))
+	title.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	content.add_child(title)
+
+	var groups = [
+		["Python", ["py_variables", "py_lists", "py_loops", "py_conditions", "py_functions"]],
+		["Data Structures", ["ds_arrays", "ds_stacks", "ds_queues", "ds_linked_lists"]],
+		["Sorting", ["sort_bubble", "sort_selection", "sort_insertion", "sort_quick", "sort_merge", "sort_counting", "sort_radix"]],
+		["Search", ["search_linear", "search_binary"]],
+	]
+
+	var tower_map = {}
+	for k in ProgressManager.PROGRESSION_CHAIN:
+		var v = ProgressManager.PROGRESSION_CHAIN[k]
+		if v.get("type") in ["both", "tower"]:
+			tower_map[k] = v["id"]
+
+	for group in groups:
+		var section := VBoxContainer.new()
+		section.add_theme_constant_override("separation", 2)
+		section.add_theme_constant_override("margin_left", 16)
+		section.add_theme_constant_override("margin_right", 16)
+		content.add_child(section)
+
+		var hdr := Label.new()
+		hdr.text = "── " + group[0] + " ──"
+		hdr.add_theme_font_size_override("font_size", 11)
+		hdr.add_theme_color_override("font_color", Color("#4A7FA5"))
+		hdr.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+		section.add_child(hdr)
+
+		for lesson_id in group[1]:
+			var state = ProgressManager.get_topic_state(lesson_id)
+			var row := HBoxContainer.new()
+			row.add_theme_constant_override("separation", 8)
+			section.add_child(row)
+
+			var dot := Label.new()
+			dot.custom_minimum_size = Vector2(20, 20)
+			dot.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+			match state:
+				"mastered":
+					dot.text = "✅"
+				"unlocked":
+					dot.text = "🔓"
+				_:
+					dot.text = "🔒"
+			row.add_child(dot)
+
+			var lbl := Label.new()
+			lbl.text = lesson_id
+			lbl.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+			if state == "mastered":
+				lbl.add_theme_color_override("font_color", Color("#00FF88"))
+			elif state == "unlocked":
+				lbl.add_theme_color_override("font_color", Color("#00D4FF"))
+			else:
+				lbl.add_theme_color_override("font_color", Color("#2A3A4A"))
+			lbl.add_theme_font_size_override("font_size", 11)
+			row.add_child(lbl)
+
+			# Show tower / level unlock
+			if tower_map.has(lesson_id):
+				var tname = str(tower_map[lesson_id])
+				var tlocked = ProgressManager.is_tower_unlocked(tower_map[lesson_id])
+				var tlabel := Label.new()
+				tlabel.text = "→ " + tname
+				tlabel.add_theme_font_size_override("font_size", 9)
+				tlabel.add_theme_color_override("font_color", Color("#00FF88") if tlocked else Color("#2A3A4A"))
+				row.add_child(tlabel)
+
+			var chain = ProgressManager.PROGRESSION_CHAIN.get(lesson_id, {})
+			var lid = chain.get("level_id", 0)
+			if lid > 0:
+				var unlocked = ProgressManager.is_level_unlocked(lid)
+				var llbl := Label.new()
+				llbl.text = "Lv." + str(lid)
+				llbl.add_theme_font_size_override("font_size", 9)
+				llbl.add_theme_color_override("font_color", Color("#FFB800") if unlocked else Color("#2A3A4A"))
+				row.add_child(llbl)
+
+		var sep := HSeparator.new()
+		sep.add_theme_color_override("color", Color("#1A2D3D"))
+		content.add_child(sep)
+
 func _build_towers_tab() -> void:
 	for child in towers_content.get_children():
 		child.queue_free()
@@ -559,10 +686,9 @@ func _make_enemy_card(data: Dictionary) -> PanelContainer:
 # ─── SEARCH ────────────────────────────────────────────
 func _on_search_changed(new_text: String) -> void:
 	search_query = new_text.to_lower().strip_edges()
-	if active_tab == "towers":
-		_build_towers_tab()
-	else:
-		_build_enemies_tab()
+	match active_tab:
+		"towers":  _build_towers_tab()
+		"enemies": _build_enemies_tab()
 
 # ─── HELPERS ───────────────────────────────────────────
 func _add_stat(

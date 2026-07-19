@@ -275,6 +275,9 @@ func place_tower(cell: Vector2i, tower_node: Node = null) -> void:
 		placed_towers[cell] = tower_node
 	queue_redraw()
 
+func get_tower_at(cell: Vector2i):
+	return placed_towers.get(cell, null)
+
 func remove_tower(cell: Vector2i) -> void:
 	if cells.get(cell) == CellState.TOWER_PLACED:
 		cells[cell] = CellState.TOWER_SPOT
