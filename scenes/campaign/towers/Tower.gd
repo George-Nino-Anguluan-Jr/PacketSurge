@@ -39,6 +39,8 @@ var _explosions: Array[Dictionary]  = []
 
 @onready var sprite: Sprite2D = $TowerSprite
 
+const TowerSpriteGen = preload("res://scenes/campaign/towers/TowerSpriteGen.gd")
+
 func initialize(data: TowerData, cell: Vector2i, e_layer: Node2D) -> void:
 	tower_id      = data.tower_id
 	tower_name    = data.tower_name
@@ -123,6 +125,7 @@ func upgrade() -> int:
 		return current_level
 	
 	current_level += 1
+	update_level_label()
 	
 	# Apply upgrade bonuses based on tower type
 	match tower_id:
@@ -186,14 +189,30 @@ func _animate_upgrade() -> void:
 	
 	# Flash effect
 	_shoot_flash = 1.5
-	queue_redraw()
 
 func _setup_sprite() -> void:
-	# Hide default flat texture so our high-quality procedural 2D models draw cleanly
 	if sprite:
-		sprite.visible = false
-	elif has_node("TowerSprite"):
-		get_node("TowerSprite").visible = false
+		var tex = TowerSpriteGen.generate(tower_id, tower_color)
+		sprite.texture = tex
+		sprite.scale = Vector2(0.5, 0.5)
+		sprite.visible = true
+	update_level_label()
+
+func update_level_label() -> void:
+	if not sprite:
+		return
+	var existing = sprite.get_node_or_null("LevelLabel")
+	if existing:
+		existing.queue_free()
+	if current_level <= 1:
+		return
+	var lbl = Label.new()
+	lbl.name = "LevelLabel"
+	lbl.text = "Lv" + str(current_level)
+	lbl.add_theme_color_override("font_color", Color("#FFB800"))
+	lbl.add_theme_font_size_override("font_size", 10)
+	lbl.position = Vector2(-8, -36)
+	sprite.add_child(lbl)
 
 func _animate_placement() -> void:
 	# Keep placement animation by tweening a simple scaling effect drawn in _draw
@@ -228,6 +247,10 @@ func _process(delta: float) -> void:
 
 	if _shoot_flash > 0:
 		_shoot_flash -= delta * 4.0
+
+	# Rotate sprite to track target
+	if sprite:
+		sprite.rotation = _turret_angle + PI / 2
 
 	# ─── UPDATE ACTIVE FLYING PROJECTILES ──────────────────
 	var remaining_projectiles: Array[Dictionary] = []
@@ -274,9 +297,7 @@ func _process(delta: float) -> void:
 			remaining_explosions.append(e)
 	_explosions = remaining_explosions
 
-	# Continuously request frame redraw to keep procedural 2D animations fluid and tracking alive
-	queue_redraw()
-
+	# ─── FIRE WHEN TIMER ELAPSES ──────────────────────────
 	if attack_timer >= 1.0 / attack_speed:
 		attack_timer = 0.0
 		_attack()
@@ -595,23 +616,8 @@ func _get_lowest_hp_enemy() -> Node:
 const SQUASH: float = 0.65  # Perspective squashing ratio to simulate an angled 3D camera lookup
 
 func _draw() -> void:
-	# 3D Depth Bases are drawn at ground level
-	_draw_3d_base_plates(tower_color)
-	
-	# Rotating Turrets are offset upwards to look like they float/mount in 3D volume space
-	_draw_turret_assembly(tower_color)
-	
-	_draw_overlays(tower_color)
-	
-	# Draw level indicator
-	if current_level > 1:
-		draw_string(
-			ThemeDB.fallback_font,
-			Vector2(10, -36),
-			"Lv" + str(current_level),
-			HORIZONTAL_ALIGNMENT_LEFT, -1, 9,
-			Color("#FFB800")
-		)
+	# Sprite-based rendering via TowerSpriteGen
+	pass
 
 # ─── VOLUMETRIC 3D PRIMITIVE DRAWING HELPERS ───────────────────────
 func _draw_3d_cylinder(center: Vector2, radius: float, height: float, color: Color, outline_color: Color = Color.WHITE, line_width: float = 1.5) -> void:
