@@ -1,7 +1,6 @@
 [gd_scene format=3 uid="uid://dfddbasatcowq"]
 
 [ext_resource type="Script" uid="uid://bm7ggpgmmpct3" path="res://scenes/campaign/towers/Tower.gd" id="1_yhtd2"]
-[ext_resource type="Texture2D" uid="uid://cucd450nmmc75" path="res://sprites/towers/tower_array.png" id="2_qikjh"]
 
 [node name="Tower" type="Node2D" unique_id=525101982]
 script = ExtResource("1_yhtd2")
@@ -9,4 +8,5 @@ script = ExtResource("1_yhtd2")
 [node name="TowerSprite" type="Sprite2D" parent="." unique_id=577379951]
 position = Vector2(5.9604645e-08, -1.9999998)
 scale = Vector2(0.13, 0.13)
-texture = ExtResource("2_qikjh")
+texture = null
+visible = false

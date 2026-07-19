@@ -622,19 +622,27 @@ func _make_tower_card(data: Dictionary) -> PanelContainer:
 
 	# ── LEFT: Icon + Name ──
 	var left        := VBoxContainer.new()
-	left.custom_minimum_size = Vector2(160, 0)
+	left.custom_minimum_size = Vector2(120, 0)
 	left.add_theme_constant_override("separation", 8)
 
-	# Icon circle
-	var icon_label  := Label.new()
-	icon_label.text = data["icon"]
-	icon_label.add_theme_font_size_override("font_size", 32)
-	icon_label.add_theme_color_override(
-		"font_color",
-		color if is_unlocked else Color("#2A3A4A")
-	)
-	icon_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
-	left.add_child(icon_label)
+	# Icon (rendered 3D model)
+	var icon_rect := TextureRect.new()
+	var icon_tex = _get_tower_icon(data["id"], color)
+	if icon_tex:
+		icon_rect.texture = icon_tex
+		icon_rect.expand_mode = TextureRect.EXPAND_KEEP_SIZE
+		icon_rect.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_CENTERED
+		icon_rect.custom_minimum_size = Vector2(40, 40)
+		icon_rect.size = Vector2(40, 40)
+		left.add_child(icon_rect)
+	else:
+		# Fallback to text symbol if rendering fails
+		var icon_label = Label.new()
+		icon_label.text = data["icon"]
+		icon_label.add_theme_font_size_override("font_size", 32)
+		icon_label.add_theme_color_override("font_color", color)
+		icon_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+		left.add_child(icon_label)
 
 	var name_label  := Label.new()
 	name_label.text = data["name"]
@@ -801,15 +809,27 @@ func _make_enemy_card(data: Dictionary) -> PanelContainer:
 
 	# ── LEFT: Icon + Name ──
 	var left        := VBoxContainer.new()
-	left.custom_minimum_size = Vector2(140, 0)
+	left.custom_minimum_size = Vector2(100, 0)
 	left.add_theme_constant_override("separation", 8)
 
-	var icon_label  := Label.new()
-	icon_label.text = data["icon"]
-	icon_label.add_theme_font_size_override("font_size", 32)
-	icon_label.add_theme_color_override("font_color", color)
-	icon_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
-	left.add_child(icon_label)
+	# Icon (rendered 3D model)
+	var icon_rect := TextureRect.new()
+	var icon_tex = _get_enemy_icon(data["id"], color)
+	if icon_tex:
+		icon_rect.texture = icon_tex
+		icon_rect.expand_mode = TextureRect.EXPAND_KEEP_SIZE
+		icon_rect.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_CENTERED
+		icon_rect.custom_minimum_size = Vector2(36, 36)
+		icon_rect.size = Vector2(36, 36)
+		left.add_child(icon_rect)
+	else:
+		# Fallback to text symbol if rendering fails
+		var icon_label = Label.new()
+		icon_label.text = data["icon"]
+		icon_label.add_theme_font_size_override("font_size", 32)
+		icon_label.add_theme_color_override("font_color", color)
+		icon_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+		left.add_child(icon_label)
 
 	var name_label  := Label.new()
 	name_label.text = data["name"]
@@ -925,6 +945,89 @@ func _get_lesson_name(lesson_id: String) -> String:
 		"sort_selection":  "Selection Sort",
 	}
 	return names.get(lesson_id, lesson_id)
+
+# ─── ICON RENDERING ───────────────────────────────────────
+# Cache for rendered icons
+var _tower_icon_cache: Dictionary = {}
+var _enemy_icon_cache: Dictionary = {}
+
+# Viewport for 2D rendering
+var _render_viewport: SubViewport
+
+func _init_viewport() -> void:
+	if _render_viewport:
+		return
+	
+	_render_viewport = SubViewport.new()
+	_render_viewport.size = Vector2(64, 64)
+	_render_viewport.render_target_update_mode = SubViewport.UPDATE_ALWAYS
+	_render_viewport.transparent_bg = true
+	add_child(_render_viewport)
+
+func _render_model_icon(model_scene: PackedScene, color: Color) -> ImageTexture:
+	_init_viewport()
+	
+	var model = model_scene.instantiate()
+	if not model:
+		return null
+	
+	# Set color on the model if it has the property
+	model.tower_color = color
+	
+	# Center the model in the viewport
+	model.position = Vector2(32, 32)
+	
+	_render_viewport.add_child(model)
+	
+	# Get the rendered texture
+	var tex = _render_viewport.get_texture()
+	if not tex:
+		model.queue_free()
+		return null
+	
+	var img = tex.get_image()
+	var result = ImageTexture.create_from_image(img)
+	
+	model.queue_free()
+	
+	return result
+
+func _get_tower_icon(tower_id: String, color: Color) -> ImageTexture:
+	if _tower_icon_cache.has(tower_id):
+		return _tower_icon_cache[tower_id]
+	
+	var tower_scene = preload("res://scenes/campaign/towers/Tower.tscn")
+	var tex = _render_model_icon(tower_scene, color)
+	_tower_icon_cache[tower_id] = tex
+	return tex
+
+func _get_enemy_icon(enemy_id: String, color: Color) -> ImageTexture:
+	if _enemy_icon_cache.has(enemy_id):
+		return _enemy_icon_cache[enemy_id]
+	
+	_init_viewport()
+	
+	var icon_scene = preload("res://scenes/index/IconRenderer.tscn")
+	var icon = icon_scene.instantiate()
+	icon.enemy_type = enemy_id
+	icon.draw_color = color
+	icon.position = Vector2(32, 32)
+	
+	_render_viewport.add_child(icon)
+	
+	# Get the rendered texture
+	var viewport_tex = _render_viewport.get_texture()
+	if not viewport_tex:
+		icon.queue_free()
+		return null
+	
+	var img = viewport_tex.get_image()
+	var result = ImageTexture.create_from_image(img)
+	
+	icon.queue_free()
+	
+	_enemy_icon_cache[enemy_id] = result
+	return result
 
 # ─── STYLES ────────────────────────────────────────────
 func _apply_styles() -> void:
