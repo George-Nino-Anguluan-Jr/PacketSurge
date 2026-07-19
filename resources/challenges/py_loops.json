@@ -1,0 +1,70 @@
+{
+  "challenge_id": "py_loops",
+  "topic": "py_loops",
+  "difficulty": "easy",
+  "types": ["fill_blank", "fix_syntax", "fix_and_optimize"],
+  "challenges": {
+    "fill_blank": [
+      {
+        "id": "py_loops_fill_1",
+        "prompt": "Write a for loop that prints numbers 0 to 4.",
+        "template": "for i in ___:\n    print(i)",
+        "answer": "range(5)",
+        "explanation": "range(5) generates 0, 1, 2, 3, 4.",
+        "hints": ["range(n) gives 0 to n-1", "Don't forget the colon"]
+      },
+      {
+        "id": "py_loops_fill_2",
+        "prompt": "Loop through each item in 'fruits' list.",
+        "template": "for fruit in ___:\n    print(fruit)",
+        "answer": "fruits",
+        "explanation": "Direct iteration over list items.",
+        "hints": ["Just use the list name", "No index needed"]
+      },
+      {
+        "id": "py_loops_fill_3",
+        "prompt": "Create a while loop that runs while count < 5.",
+        "template": "count = 0\nwhile count < 5:\n    print(count)\n    count = count + ___",
+        "answer": "1",
+        "explanation": "Increment counter to avoid infinite loop.",
+        "hints": ["Must increment counter", "Add 1 each iteration"]
+      }
+    ],
+    "fix_syntax": [
+      {
+        "id": "py_loops_fix_1",
+        "prompt": "Fix the for loop syntax:",
+        "code": "for i in range(5)\n    print(i)",
+        "answer": "for i in range(5):\n    print(i)",
+        "explanation": "For loops need a colon at the end.",
+        "hints": ["Missing colon", "After range(5)"]
+      },
+      {
+        "id": "py_loops_fix_2",
+        "prompt": "Fix the indentation error:",
+        "code": "for i in range(3):\nprint(i)\n    print(\"done\")",
+        "answer": "for i in range(3):\n    print(i)\n    print(\"done\")",
+        "explanation": "Loop body must be consistently indented.",
+        "hints": ["Both lines in loop", "Same indentation level"]
+      }
+    ],
+    "fix_and_optimize": [
+      {
+        "id": "py_loops_opt_1",
+        "prompt": "Optimize - sum numbers 0 to 9:",
+        "code": "total = 0\nfor i in range(10):\n    total = total + i",
+        "answer": "total = sum(range(10))",
+        "explanation": "sum() built-in is faster and cleaner.",
+        "hints": ["sum() adds all elements", "Works on any iterable"]
+      },
+      {
+        "id": "py_loops_opt_2",
+        "prompt": "Optimize - print each item with index:",
+        "code": "items = [\"a\", \"b\", \"c\"]\ni = 0\nwhile i < len(items):\n    print(i, items[i])\n    i += 1",
+        "answer": "items = [\"a\", \"b\", \"c\"]\nfor i, item in enumerate(items):\n    print(i, item)",
+        "explanation": "enumerate() gives index and value together.",
+        "hints": ["enumerate() returns pairs", "Cleaner than manual index"]
+      }
+    ]
+  }
+}

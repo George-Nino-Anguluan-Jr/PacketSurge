@@ -120,7 +120,7 @@ func _build_intro() -> void:
 	# Description
 	var desc := Label.new()
 	desc.text = "Answer 10 quick questions about Python basics.\n\n" + \
-		"Score 80% or higher  →  Skip Python lessons, Campaign unlocks now\n" + \
+		"Score 80% or higher  →  Skip Python lessons, Level 1 unlocks now\n" + \
 		"Score below 80%  →  Start Academy from the beginning\n\n" + \
 		"This takes about 2 minutes."
 	desc.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
@@ -280,9 +280,8 @@ func _on_passed() -> void:
 	# Unlock ds_arrays (first DSA lesson)
 	ProgressManager.topic_states["ds_arrays"] = "unlocked"
 
-	# Unlock first 5 campaign levels and starter tower
-	for i in range(1, 6):
-		ProgressManager.unlock_campaign_level(i)
+	# Unlock first campaign level and starter tower
+	ProgressManager.unlock_campaign_level(1)
 	ProgressManager.unlock_tower("tower_array")
 
 	# Mark quiz done

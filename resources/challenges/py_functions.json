@@ -1,0 +1,70 @@
+{
+  "challenge_id": "py_functions",
+  "topic": "py_functions",
+  "difficulty": "medium",
+  "types": ["fill_blank", "fix_syntax", "fix_and_optimize"],
+  "challenges": {
+    "fill_blank": [
+      {
+        "id": "py_functions_fill_1",
+        "prompt": "Define a function named 'greet' that takes one parameter 'name'.",
+        "template": "___ greet(name):\n    print(\"Hello, \" + name)",
+        "answer": "def",
+        "explanation": "def keyword defines a function.",
+        "hints": ["Function definition keyword", "Short for define"]
+      },
+      {
+        "id": "py_functions_fill_2",
+        "prompt": "Return the sum of a and b from this function.",
+        "template": "def add(a, b):\n    ___ a + b",
+        "answer": "return",
+        "explanation": "return sends a value back to the caller.",
+        "hints": ["Keyword to send value back", "Ends function execution"]
+      },
+      {
+        "id": "py_functions_fill_3",
+        "prompt": "Call the function 'calculate' with arguments 5 and 3.",
+        "template": "result = ___",
+        "answer": "calculate(5, 3)",
+        "explanation": "Call functions with parentheses and arguments inside.",
+        "hints": ["Function name + parentheses", "Arguments separated by comma"]
+      }
+    ],
+    "fix_syntax": [
+      {
+        "id": "py_functions_fix_1",
+        "prompt": "Fix the function definition - missing colon and indent:",
+        "code": "def multiply(a, b)\nreturn a * b",
+        "answer": "def multiply(a, b):\n    return a * b",
+        "explanation": "Function def needs colon. Body must be indented.",
+        "hints": ["Add colon after parameters", "Indent return statement"]
+      },
+      {
+        "id": "py_functions_fix_2",
+        "prompt": "Fix - function doesn't return anything:",
+        "code": "def get_name():\n    name = \"Player\"\n\nplayer = get_name()\nprint(player)",
+        "answer": "def get_name():\n    name = \"Player\"\n    return name\n\nplayer = get_name()\nprint(player)",
+        "explanation": "Functions return None by default. Add return to send value back.",
+        "hints": ["Add return statement", "Return the variable you want"]
+      }
+    ],
+    "fix_and_optimize": [
+      {
+        "id": "py_functions_opt_1",
+        "prompt": "Optimize - use default parameter:",
+        "code": "def greet(name):\n    if name == \"\":\n        name = \"Guest\"\n    print(\"Hello, \" + name)",
+        "answer": "def greet(name=\"Guest\"):\n    print(\"Hello, \" + name)",
+        "explanation": "Default parameters handle missing arguments cleanly.",
+        "hints": ["Default value in parameter", "Used when argument omitted"]
+      },
+      {
+        "id": "py_functions_opt_2",
+        "prompt": "Optimize - use lambda for simple function:",
+        "code": "def square(x):\n    return x * x\n\nresult = square(5)",
+        "answer": "square = lambda x: x * x\nresult = square(5)",
+        "explanation": "Lambda creates anonymous functions inline.",
+        "hints": ["lambda keyword", "Single expression only"]
+      }
+    ]
+  }
+}

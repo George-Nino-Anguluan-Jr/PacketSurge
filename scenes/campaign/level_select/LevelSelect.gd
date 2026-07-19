@@ -7,25 +7,100 @@ extends Control
 @onready var map_canvas: Control      = %MapCanvas
 @onready var locked_label: Label      = $ContentArea/MainLayout/LockedLabel
 
-# Level definitions
-const LEVEL_INFO = [
-	{"number": 1,  "name": "Initialization",    "ds": "Arrays",       "waves": 3},
-	{"number": 2,  "name": "Stack Overflow",     "ds": "Stacks",       "waves": 4},
-	{"number": 3,  "name": "Queue Protocol",     "ds": "Queues",       "waves": 4},
-	{"number": 4,  "name": "Linked Assault",     "ds": "Linked Lists", "waves": 5},
-	{"number": 5,  "name": "Bubble Protocol",    "ds": "Bubble Sort",  "waves": 5},
-	{"number": 6,  "name": "Selection Strike",   "ds": "Select Sort",  "waves": 5},
-	{"number": 7,  "name": "Stack Defense",      "ds": "Insert Sort",  "waves": 6},
-	{"number": 8,  "name": "Quick Strike",       "ds": "Quick Sort",   "waves": 6},
-	{"number": 9,  "name": "Merge Protocol",     "ds": "Merge Sort",   "waves": 6},
-	{"number": 10, "name": "Count Down",         "ds": "Counting Sort","waves": 7},
-	{"number": 11, "name": "Radix Rush",         "ds": "Radix Sort",   "waves": 7},
-	{"number": 12, "name": "Linear Sweep",       "ds": "Linear Search","waves": 7},
-	{"number": 13, "name": "Binary Endgame",     "ds": "Binary Search","waves": 8},
-]
+# Level definitions - now using sub-levels (39 total: 13 main × 3 sub)
+const SUB_LEVEL_TYPES = ["lesson", "practice", "challenge"]
+const SUB_LEVELS_PER_LEVEL = 3
+const TOTAL_MAIN_LEVELS = 13
+const TOTAL_SUB_LEVELS = TOTAL_MAIN_LEVELS * SUB_LEVELS_PER_LEVEL  # 39
 
-# Visual zig-zag coordinates for our nodes on the 2100px wide canvas
-const LEVEL_POSITIONS = {
+# Sub-level configurations
+const SUB_LEVEL_CONFIGS = {
+	# Level 1: Variables
+	0: {  # Lesson
+		"main_level": 1, "sub_index": 0, "type": "lesson",
+		"title": "1A: Lesson - Variables",
+		"topic_id": "py_variables", "difficulty": "easy",
+		"description": "Learn to create and use variables in Python",
+		"challenge_type": "fill_blank",
+	},
+	1: {  # Practice
+		"main_level": 1, "sub_index": 1, "type": "practice",
+		"title": "1B: Practice - Variables",
+		"topic_id": "py_variables", "difficulty": "easy",
+		"description": "Practice creating variables and basic operations",
+		"challenge_type": "fix_syntax",
+	},
+	2: {  # Challenge
+		"main_level": 1, "sub_index": 2, "type": "challenge",
+		"title": "1C: Challenge - Variables",
+		"topic_id": "py_variables", "difficulty": "easy",
+		"description": "Optimize variable usage and fix bugs",
+		"challenge_type": "fix_and_optimize",
+	},
+	
+	# Level 2: Lists
+	3: { "main_level": 2, "sub_index": 0, "type": "lesson", "title": "2A: Lesson - Lists", "topic_id": "py_lists", "difficulty": "easy", "description": "Learn to create and manipulate lists", "challenge_type": "fill_blank" },
+	4: { "main_level": 2, "sub_index": 1, "type": "practice", "title": "2B: Practice - Lists", "topic_id": "py_lists", "difficulty": "easy", "description": "Practice list operations", "challenge_type": "fix_syntax" },
+	5: { "main_level": 2, "sub_index": 2, "type": "challenge", "title": "2C: Challenge - Lists", "topic_id": "py_lists", "difficulty": "easy", "description": "Optimize list operations", "challenge_type": "fix_and_optimize" },
+	
+	# Level 3: Loops
+	6: { "main_level": 3, "sub_index": 0, "type": "lesson", "title": "3A: Lesson - Loops", "topic_id": "py_loops", "difficulty": "easy", "description": "Learn for and while loops", "challenge_type": "fill_blank" },
+	7: { "main_level": 3, "sub_index": 1, "type": "practice", "title": "3B: Practice - Loops", "topic_id": "py_loops", "difficulty": "easy", "description": "Practice loop patterns", "challenge_type": "fix_syntax" },
+	8: { "main_level": 3, "sub_index": 2, "type": "challenge", "title": "3C: Challenge - Loops", "topic_id": "py_loops", "difficulty": "easy", "description": "Optimize loop performance", "challenge_type": "fix_and_optimize" },
+	
+	# Level 4: Conditions
+	9: { "main_level": 4, "sub_index": 0, "type": "lesson", "title": "4A: Lesson - Conditions", "topic_id": "py_conditions", "difficulty": "easy", "description": "Learn if/elif/else statements", "challenge_type": "fill_blank" },
+	10: { "main_level": 4, "sub_index": 1, "type": "practice", "title": "4B: Practice - Conditions", "topic_id": "py_conditions", "difficulty": "easy", "description": "Practice conditional logic", "challenge_type": "fix_syntax" },
+	11: { "main_level": 4, "sub_index": 2, "type": "challenge", "title": "4C: Challenge - Conditions", "topic_id": "py_conditions", "difficulty": "easy", "description": "Optimize conditional expressions", "challenge_type": "fix_and_optimize" },
+	
+	# Level 5: Functions
+	12: { "main_level": 5, "sub_index": 0, "type": "lesson", "title": "5A: Lesson - Functions", "topic_id": "py_functions", "difficulty": "medium", "description": "Learn to define and call functions", "challenge_type": "fill_blank" },
+	13: { "main_level": 5, "sub_index": 1, "type": "practice", "title": "5B: Practice - Functions", "topic_id": "py_functions", "difficulty": "medium", "description": "Practice function definitions", "challenge_type": "fix_syntax" },
+	14: { "main_level": 5, "sub_index": 2, "type": "challenge", "title": "5C: Challenge - Functions", "topic_id": "py_functions", "difficulty": "medium", "description": "Optimize function implementations", "challenge_type": "fix_and_optimize" },
+	
+	# Level 6: Arrays
+	15: { "main_level": 6, "sub_index": 0, "type": "lesson", "title": "6A: Lesson - Arrays", "topic_id": "ds_arrays", "difficulty": "medium", "description": "Learn array operations and algorithms", "challenge_type": "fill_blank" },
+	16: { "main_level": 6, "sub_index": 1, "type": "practice", "title": "6B: Practice - Arrays", "topic_id": "ds_arrays", "difficulty": "medium", "description": "Practice array manipulation", "challenge_type": "fix_syntax" },
+	17: { "main_level": 6, "sub_index": 2, "type": "challenge", "title": "6C: Challenge - Arrays", "topic_id": "ds_arrays", "difficulty": "medium", "description": "Optimize array algorithms", "challenge_type": "fix_and_optimize" },
+	
+	# Level 7: Stacks
+	18: { "main_level": 7, "sub_index": 0, "type": "lesson", "title": "7A: Lesson - Stacks", "topic_id": "ds_stacks", "difficulty": "medium", "description": "Learn stack operations (LIFO)", "challenge_type": "fill_blank" },
+	19: { "main_level": 7, "sub_index": 1, "type": "practice", "title": "7B: Practice - Stacks", "topic_id": "ds_stacks", "difficulty": "medium", "description": "Practice stack algorithms", "challenge_type": "fix_syntax" },
+	20: { "main_level": 7, "sub_index": 2, "type": "challenge", "title": "7C: Challenge - Stacks", "topic_id": "ds_stacks", "difficulty": "medium", "description": "Optimize stack implementations", "challenge_type": "fix_and_optimize" },
+	
+	# Level 8: Queues
+	21: { "main_level": 8, "sub_index": 0, "type": "lesson", "title": "8A: Lesson - Queues", "topic_id": "ds_queues", "difficulty": "medium", "description": "Learn queue operations (FIFO)", "challenge_type": "fill_blank" },
+	22: { "main_level": 8, "sub_index": 1, "type": "practice", "title": "8B: Practice - Queues", "topic_id": "ds_queues", "difficulty": "medium", "description": "Practice queue algorithms", "challenge_type": "fix_syntax" },
+	23: { "main_level": 8, "sub_index": 2, "type": "challenge", "title": "8C: Challenge - Queues", "topic_id": "ds_queues", "difficulty": "medium", "description": "Optimize queue implementations", "challenge_type": "fix_and_optimize" },
+	
+	# Level 9: Linked Lists
+	24: { "main_level": 9, "sub_index": 0, "type": "lesson", "title": "9A: Lesson - Linked Lists", "topic_id": "ds_linked_lists", "difficulty": "hard", "description": "Learn linked list structure", "challenge_type": "fill_blank" },
+	25: { "main_level": 9, "sub_index": 1, "type": "practice", "title": "9B: Practice - Linked Lists", "topic_id": "ds_linked_lists", "difficulty": "hard", "description": "Practice linked list operations", "challenge_type": "fix_syntax" },
+	26: { "main_level": 9, "sub_index": 2, "type": "challenge", "title": "9C: Challenge - Linked Lists", "topic_id": "ds_linked_lists", "difficulty": "hard", "description": "Optimize linked list algorithms", "challenge_type": "fix_and_optimize" },
+	
+	# Level 10: Bubble Sort
+	27: { "main_level": 10, "sub_index": 0, "type": "lesson", "title": "10A: Lesson - Bubble Sort", "topic_id": "sort_bubble", "difficulty": "medium", "description": "Learn bubble sort algorithm", "challenge_type": "fill_blank" },
+	28: { "main_level": 10, "sub_index": 1, "type": "practice", "title": "10B: Practice - Bubble Sort", "topic_id": "sort_bubble", "difficulty": "medium", "description": "Practice bubble sort implementation", "challenge_type": "fix_syntax" },
+	29: { "main_level": 10, "sub_index": 2, "type": "challenge", "title": "10C: Challenge - Bubble Sort", "topic_id": "sort_bubble", "difficulty": "medium", "description": "Optimize bubble sort", "challenge_type": "fix_and_optimize" },
+	
+	# Level 11: Selection Sort
+	30: { "main_level": 11, "sub_index": 0, "type": "lesson", "title": "11A: Lesson - Selection Sort", "topic_id": "sort_selection", "difficulty": "medium", "description": "Learn selection sort algorithm", "challenge_type": "fill_blank" },
+	31: { "main_level": 11, "sub_index": 1, "type": "practice", "title": "11B: Practice - Selection Sort", "topic_id": "sort_selection", "difficulty": "medium", "description": "Practice selection sort", "challenge_type": "fix_syntax" },
+	32: { "main_level": 11, "sub_index": 2, "type": "challenge", "title": "11C: Challenge - Selection Sort", "topic_id": "sort_selection", "difficulty": "medium", "description": "Optimize selection sort", "challenge_type": "fix_and_optimize" },
+	
+	# Level 12: Insertion Sort
+	33: { "main_level": 12, "sub_index": 0, "type": "lesson", "title": "12A: Lesson - Insertion Sort", "topic_id": "sort_insertion", "difficulty": "medium", "description": "Learn insertion sort algorithm", "challenge_type": "fill_blank" },
+	34: { "main_level": 12, "sub_index": 1, "type": "practice", "title": "12B: Practice - Insertion Sort", "topic_id": "sort_insertion", "difficulty": "medium", "description": "Practice insertion sort", "challenge_type": "fix_syntax" },
+	35: { "main_level": 12, "sub_index": 2, "type": "challenge", "title": "12C: Challenge - Insertion Sort", "topic_id": "sort_insertion", "difficulty": "medium", "description": "Optimize insertion sort", "challenge_type": "fix_and_optimize" },
+	
+	# Level 13: Quick Sort
+	36: { "main_level": 13, "sub_index": 0, "type": "lesson", "title": "13A: Lesson - Quick Sort", "topic_id": "sort_quick", "difficulty": "hard", "description": "Learn quick sort algorithm", "challenge_type": "fill_blank" },
+	37: { "main_level": 13, "sub_index": 1, "type": "practice", "title": "13B: Practice - Quick Sort", "topic_id": "sort_quick", "difficulty": "hard", "description": "Practice quick sort", "challenge_type": "fix_syntax" },
+	38: { "main_level": 13, "sub_index": 2, "type": "challenge", "title": "13C: Challenge - Quick Sort", "topic_id": "sort_quick", "difficulty": "hard", "description": "Optimize quick sort", "challenge_type": "fix_and_optimize" },
+}
+
+# Visual zig-zag coordinates for main level groups on the 2100px wide canvas
+const MAIN_LEVEL_POSITIONS = {
 	1: Vector2(100, 180),
 	2: Vector2(250, 90),
 	3: Vector2(400, 240),
@@ -40,6 +115,13 @@ const LEVEL_POSITIONS = {
 	12: Vector2(1750, 90),
 	13: Vector2(1900, 180),
 }
+
+# Sub-level offsets within each main level group
+const SUB_LEVEL_OFFSETS = [
+	Vector2(-68, 0),   # A - left
+	Vector2(0, 0),     # B - center
+	Vector2(68, 0),    # C - right
+]
 
 var tooltip_panel: PanelContainer = null
 var active_nodes: Array = []
@@ -83,12 +165,14 @@ func _input(event: InputEvent) -> void:
 # ─── AUTO SCROLL TO CURRENT PROGRESS ───────────────────
 func _auto_scroll_to_current() -> void:
 	var highest_unlocked := 1
-	for info in LEVEL_INFO:
-		var lvl = info["number"]
-		if ProgressManager.is_level_unlocked(lvl):
-			highest_unlocked = lvl
+	for sub_id in range(TOTAL_SUB_LEVELS):
+		if ProgressManager.is_sub_level_unlocked(sub_id):
+			var config = SUB_LEVEL_CONFIGS[sub_id]
+			var main_level = config.get("main_level", 1)
+			if main_level > highest_unlocked:
+				highest_unlocked = main_level
 			
-	var target_pos = LEVEL_POSITIONS[highest_unlocked]
+	var target_pos = MAIN_LEVEL_POSITIONS[highest_unlocked]
 	# Center the scrollbar around target pos
 	var center_offset = target_pos.x - (size.x / 2.0)
 	center_offset = clamp(center_offset, 0.0, map_canvas.custom_minimum_size.x - size.x)
@@ -188,18 +272,50 @@ func _build_level_nodes() -> void:
 	
 	var unlocked_count := 0
 	
-	for info in LEVEL_INFO:
-		var level_num = info["number"]
-		var is_unlocked = ProgressManager.is_level_unlocked(level_num)
-		var is_completed = ProgressManager.campaign_progress.get("waves_completed", 0) >= level_num
+	# Build main level group nodes with sub-levels
+	for main_level in range(1, TOTAL_MAIN_LEVELS + 1):
+		var is_unlocked = ProgressManager.is_level_unlocked(main_level)
+		var is_completed = ProgressManager.campaign_progress.get("waves_completed", 0) >= main_level
 		
 		if is_unlocked:
 			unlocked_count += 1
+		
+		var main_pos = MAIN_LEVEL_POSITIONS[main_level]
+		
+		# Create main level group container
+		var group_container = Control.new()
+		group_container.name = "LevelGroup_" + str(main_level)
+		map_canvas.add_child(group_container)
+		
+		# Create sub-level nodes (A, B, C)
+		for sub_idx in range(SUB_LEVELS_PER_LEVEL):
+			var sub_level_id = (main_level - 1) * SUB_LEVELS_PER_LEVEL + sub_idx
+			var config = SUB_LEVEL_CONFIGS[sub_level_id]
+			var sub_unlocked = ProgressManager.is_sub_level_unlocked(sub_level_id)
+			var sub_completed = ProgressManager.is_sub_level_completed(sub_level_id)
+			var sub_stars = ProgressManager.get_sub_level_stars(sub_level_id)
+			var sub_best_score = ProgressManager.get_sub_level_best_score(sub_level_id)
 			
-		var node_pos = LEVEL_POSITIONS[level_num]
-		var node_btn = _create_node_button(info, is_unlocked, is_completed, node_pos)
-		map_canvas.add_child(node_btn)
-		active_nodes.append(node_btn)
+			var sub_pos = main_pos + SUB_LEVEL_OFFSETS[sub_idx]
+			
+			# Create SubLevelNode
+			var sub_node_scene = preload("res://scenes/campaign/level_select/SubLevelNode.tscn")
+			var sub_node = sub_node_scene.instantiate()
+			sub_node.setup(sub_level_id, config)
+			sub_node.position = sub_pos - Vector2(70, 70)  # Center the node
+			sub_node.sub_level_selected.connect(_on_sub_level_selected.bind(sub_level_id))
+			group_container.add_child(sub_node)
+			active_nodes.append(sub_node)
+		
+		# Draw main level label
+		var label = Label.new()
+		label.text = "LEVEL " + str(main_level)
+		label.add_theme_font_size_override("font_size", 10)
+		label.add_theme_color_override("font_color", Color("#4A7FA5"))
+		label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+		label.position = main_pos + Vector2(-30, 50)
+		label.custom_minimum_size = Vector2(60, 20)
+		group_container.add_child(label)
 		
 	ram_label.text = str(unlocked_count) + " / 13 Unlocked"
 	locked_label.visible = unlocked_count < 13
@@ -285,8 +401,8 @@ func _on_map_canvas_draw() -> void:
 	
 	# 2. Level Trace connections as clean 45-degree copper lanes
 	for i in range(1, 13):
-		var pos_a = LEVEL_POSITIONS[i]
-		var pos_b = LEVEL_POSITIONS[i + 1]
+		var pos_a = MAIN_LEVEL_POSITIONS[i]
+		var pos_b = MAIN_LEVEL_POSITIONS[i + 1]
 		
 		var unlocked_b = ProgressManager.is_level_unlocked(i + 1)
 		var completed_b = ProgressManager.campaign_progress.get("waves_completed", 0) >= (i + 1)
@@ -307,8 +423,13 @@ func _on_map_canvas_draw() -> void:
 			
 	# 3. Rotating HUD corner bracket outlines around level nodes (High-Performance L-brackets)
 	for lvl in range(1, 14):
-		var node_pos = LEVEL_POSITIONS[lvl]
+		var node_pos = MAIN_LEVEL_POSITIONS[lvl]
 		_draw_node_hud_brackets(node_pos, lvl)
+		
+		# Draw horizontal hardware bus trace connecting the sub-levels
+		var sub_unlocked = ProgressManager.is_level_unlocked(lvl)
+		var bus_color = Color("#00D4FF", 0.25) if sub_unlocked else Color("#1A2D3D", 0.15)
+		map_canvas.draw_line(node_pos + Vector2(-68, 0), node_pos + Vector2(68, 0), bus_color, 2.0)
 
 # ─── 45-DEGREE PCB TRACE MATHEMATICS ──────────────────
 func _get_trace_points(from: Vector2, to: Vector2) -> Array:
@@ -420,7 +541,7 @@ func _draw_system_readouts() -> void:
 	# Draw hex addresses under each level node
 	var hex_addresses = ["0x0F", "0x1A", "0x2C", "0x3F", "0x4B", "0x5A", "0x63", "0x7E", "0x8D", "0x9F", "0xA6", "0xB0", "0xCD"]
 	for lvl in range(1, 14):
-		var pos = LEVEL_POSITIONS[lvl]
+		var pos = MAIN_LEVEL_POSITIONS[lvl]
 		var hex_addr = "[" + hex_addresses[lvl - 1] + "]"
 		map_canvas.draw_string(font, pos + Vector2(-18, 52), hex_addr, HORIZONTAL_ALIGNMENT_LEFT, -1, 9, color * 0.8)
 
@@ -504,6 +625,13 @@ func _draw_bg_hex_gateway() -> void:
 func _on_level_selected(level_number: int) -> void:
 	SoundManager.play_click()
 	GameManager.current_level = level_number
+	GameManager.go_to("tower_select")
+
+func _on_sub_level_selected(sub_level_id: int) -> void:
+	SoundManager.play_click()
+	var config = SUB_LEVEL_CONFIGS[sub_level_id]
+	GameManager.current_level = config.get("main_level", 1)
+	GameManager.set_current_sub_level_id(sub_level_id)
 	GameManager.go_to("tower_select")
 
 # ─── SIGNAL HANDLERS ───────────────────────────────────

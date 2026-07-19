@@ -136,9 +136,7 @@ func _on_register_completed(success: bool, message: String) -> void:
 	_show_loading(false)
 	if success:
 		_show_status(message, true)
-		# Navigate after register since no progress to load
-		await get_tree().create_timer(0.8).timeout
-		GameManager.go_to("main_menu")
+		# Navigation is now handled by SupabaseManager after loading progress from cloud
 	else:
 		_show_status(message, false)
 

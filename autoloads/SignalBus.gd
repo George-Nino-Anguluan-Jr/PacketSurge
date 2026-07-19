@@ -17,6 +17,9 @@ signal enemy_reached_end(enemy_id: String)
 signal enemy_defeated(enemy_id: String)
 signal tower_placed(tower_id: String, grid_position: Vector2i)
 signal tower_sold(tower_id: String)
+signal tower_upgraded(tower_id: String, new_level: int)
+signal low_ram(current_ram: int, max_ram: int)
+signal level_complete(level_number: int, score: int, stars: int)
 
 # ─── MICRO CODING SIGNALS ──────────────────────────────
 signal micro_coding_triggered(challenge_id: String)
@@ -34,3 +37,10 @@ signal hud_message_requested(message: String, duration: float)
 signal tower_unlocked(tower_id: String)
 signal campaign_level_unlocked(level_number: int)
 signal lesson_unlocked(lesson_id: String)
+
+# ─── CHALLENGE / SUB-LEVEL SIGNALS ──────────────────────
+signal sub_level_unlocked(sub_level_id: int)
+signal sub_level_completed(sub_level_id: int, score: int, stars: int)
+signal challenge_started(challenge_id: String, sub_level_id: int)
+signal challenge_completed(challenge_id: String, passed: bool, score: int)
+signal main_level_completed(main_level: int)

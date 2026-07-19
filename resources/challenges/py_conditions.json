@@ -1,0 +1,70 @@
+{
+  "challenge_id": "py_conditions",
+  "topic": "py_conditions",
+  "difficulty": "easy",
+  "types": ["fill_blank", "fix_syntax", "fix_and_optimize"],
+  "challenges": {
+    "fill_blank": [
+      {
+        "id": "py_conditions_fill_1",
+        "prompt": "Complete the if statement to check if x is greater than 10.",
+        "template": "if x ___ 10:\n    print(\"Big\")",
+        "answer": ">",
+        "explanation": "> checks if left value is greater than right.",
+        "hints": ["Greater than symbol", "Points to smaller value"]
+      },
+      {
+        "id": "py_conditions_fill_2",
+        "prompt": "Add else clause to handle when condition is false.",
+        "template": "if score >= 60:\n    print(\"Pass\")\n___:\n    print(\"Fail\")",
+        "answer": "else",
+        "explanation": "else runs when if condition is false.",
+        "hints": ["Keyword for alternative", "No condition needed"]
+      },
+      {
+        "id": "py_conditions_fill_3",
+        "prompt": "Check if name equals \"Alice\" OR \"Bob\".",
+        "template": "if name == \"Alice\" ___ name == \"Bob\":\n    print(\"Welcome\")",
+        "answer": "or",
+        "explanation": "or combines conditions - true if either is true.",
+        "hints": ["Logical OR operator", "Either condition true"]
+      }
+    ],
+    "fix_syntax": [
+      {
+        "id": "py_conditions_fix_1",
+        "prompt": "Fix the syntax - missing colon and indentation:",
+        "code": "if x > 5\nprint(\"Greater\")",
+        "answer": "if x > 5:\n    print(\"Greater\")",
+        "explanation": "If statements need colon and indented body.",
+        "hints": ["Add colon after condition", "Indent the body"]
+      },
+      {
+        "id": "py_conditions_fix_2",
+        "prompt": "Fix the comparison - use == not =:",
+        "code": "if password = \"secret\":\n    print(\"Access granted\")",
+        "answer": "if password == \"secret\":\n    print(\"Access granted\")",
+        "explanation": "== compares, = assigns. Use == in conditions.",
+        "hints": ["Single = assigns", "Double == compares"]
+      }
+    ],
+    "fix_and_optimize": [
+      {
+        "id": "py_conditions_opt_1",
+        "prompt": "Optimize - check if value in range:",
+        "code": "if x >= 0 and x <= 100:\n    print(\"Valid\")",
+        "answer": "if 0 <= x <= 100:\n    print(\"Valid\")",
+        "explanation": "Python supports chained comparisons.",
+        "hints": ["Chain comparisons", "Cleaner and faster"]
+      },
+      {
+        "id": "py_conditions_opt_2",
+        "prompt": "Optimize - check multiple values:",
+        "code": "if color == \"red\" or color == \"blue\" or color == \"green\":\n    print(\"Primary\")",
+        "answer": "if color in [\"red\", \"blue\", \"green\"]:\n    print(\"Primary\")",
+        "explanation": "Use 'in' with list for multiple value checks.",
+        "hints": ["in operator checks membership", "Cleaner than many or's"]
+      }
+    ]
+  }
+}

@@ -13,7 +13,6 @@ extends Node2D
 @onready var wave_label: Label               = $HUD/HUDControl/TopHUD/TopLayout/WaveLabel
 @onready var base_health_label: Label        = $HUD/HUDControl/TopHUD/TopLayout/BaseHealthLabel
 @onready var score_label: Label              = $HUD/HUDControl/TopHUD/TopLayout/ScoreLabel
-@onready var tower_buttons: VBoxContainer    = $HUD/HUDControl/TowerSelector/SelectorLayout/TowerButtons
 @onready var game_over_panel: PanelContainer = $HUD/HUDControl/GameOverPanel
 
 @onready var pause_btn: Button               = $HUD/HUDControl/TopHUD/TopLayout/PauseBtn
@@ -37,6 +36,10 @@ var selected_tower_data: TowerData = null
 var grid_system: Node2D            = null
 var level_start_time: float        = 0.0
 var is_level_ended: bool           = false
+
+# Challenge system integration
+var challenge_manager: ChallengeManager = null
+var current_sub_level_id: int = 0
 
 const INTER_WAVE_DURATION: float  = 15.0
 var wave_countdown: float          = INTER_WAVE_DURATION
@@ -225,10 +228,67 @@ func _ready() -> void:
 	_setup_buttons()
 	_connect_signals()
 	_apply_hud_styles()
+	_setup_challenge_manager()
 	
 	# Dynamically handle auto-centering of the grid system on any viewport screen size
 	get_viewport().size_changed.connect(_on_viewport_size_changed)
 	_on_viewport_size_changed()
+	_create_overlay_menu()
+
+func _setup_challenge_manager() -> void:
+	"""Initialize ChallengeManager for this level"""
+	challenge_manager = ChallengeManager.new()
+	add_child(challenge_manager)
+	
+	# Get current sub-level from GameManager or ProgressManager
+	var sub_level_id = 0
+	if GameManager.has_method("get_current_sub_level_id"):
+		sub_level_id = GameManager.get_current_sub_level_id()
+	current_sub_level_id = sub_level_id
+	
+	# Initialize challenge manager for this level
+	challenge_manager.initialize_for_level(level_number, current_sub_level_id)
+	
+	# Connect challenge signals
+	challenge_manager.challenge_triggered.connect(_on_challenge_triggered)
+	# challenge_completed is handled via SignalBus
+
+func _on_challenge_triggered(challenge: Dictionary) -> void:
+	"""Show the code challenge UI"""
+	print("[Level] Challenge triggered: ", challenge.get("id", "unknown"))
+	
+	# Pause the game
+	get_tree().paused = true
+	
+	# Load the CodeChallenge scene
+	var challenge_scene = preload("res://scenes/placement_quiz/CodeChallenge.tscn")
+	var challenge_ui = challenge_scene.instantiate()
+	challenge_ui.process_mode = Node.PROCESS_MODE_ALWAYS
+	$HUD/HUDControl.add_child(challenge_ui)
+	
+	# Set the challenge data
+	challenge_ui.set_challenge(challenge, current_sub_level_id)
+	
+	# Connect to challenge completion
+	challenge_ui.challenge_completed.connect(_on_code_challenge_completed)
+
+func _on_code_challenge_completed(passed: bool, score: int) -> void:
+	"""Handle code challenge completion"""
+	get_tree().paused = false
+	
+	if passed:
+		SignalBus.hud_message_requested.emit("✅ Challenge passed! +" + str(score) + " score", 3.0)
+		# Apply challenge reward
+		_apply_challenge_reward(score)
+	else:
+		SignalBus.hud_message_requested.emit("❌ Challenge failed. Try again!", 3.0)
+
+func _apply_challenge_reward(score: int) -> void:
+	"""Apply rewards for passing a challenge"""
+	ram_manager.earn(20)
+	score += 50
+	score_label.text = "Score: " + str(score)
+
 
 # ─── SETUP ─────────────────────────────────────────────
 func _setup_grid() -> void:
@@ -248,6 +308,7 @@ func _setup_grid() -> void:
 
 	grid_system.initialize(waypoints, spots)
 	grid_system.cell_clicked.connect(_on_cell_clicked)
+	grid_system.first_tower_placed.connect(_on_first_tower_placed)
 
 func _setup_level() -> void:
 	var config = _get_level_config()
@@ -305,70 +366,15 @@ func _setup_wave_timeline() -> void:
 
 func _on_viewport_size_changed() -> void:
 	var vp_width = get_viewport().get_visible_rect().size.x
-	var panel_width = 160.0
-	var visible_center = panel_width + (vp_width - panel_width) / 2.0
+	# Map/Grid is centered: GRID_COLS * CELL_SIZE = 18 * 64 = 1152 width. Centered X is 576.0.
+	# Viewport center is vp_width / 2.0. Shift the camera so the grid (centered at 576) aligns with the viewport center.
+	var visible_center = vp_width / 2.0
 	var shift = (vp_width / 2.0) - visible_center
 	$GameCamera.position.x = 576.0 + shift
+	$GameCamera.position.y = 320.0 # 10 * 64 / 2 = 320.0
 
 func _build_tower_selector() -> void:
-	for child in tower_buttons.get_children():
-		child.queue_free()
-
-	var selected = GameManager.selected_towers
-	if selected.is_empty():
-		selected = _get_level_config().get("towers", [])
-
-	for tower_id in selected:
-		if not TOWER_DEFINITIONS.has(tower_id):
-			continue
-		var def  = TOWER_DEFINITIONS[tower_id]
-		
-		var btn  := Button.new()
-		btn.custom_minimum_size = Vector2(150, 72)
-		btn.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-		btn.pressed.connect(_on_tower_selected.bind(tower_id))
-		
-		var hbox := HBoxContainer.new()
-		hbox.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
-		hbox.add_theme_constant_override("separation", 10)
-		hbox.mouse_filter = Control.MOUSE_FILTER_PASS
-		
-		# Left side: Model of the tower
-		var model_lbl := Label.new()
-		model_lbl.text = def["icon_text"]
-		model_lbl.custom_minimum_size = Vector2(32, 32)
-		model_lbl.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
-		model_lbl.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
-		model_lbl.add_theme_font_size_override("font_size", 16)
-		model_lbl.add_theme_color_override("font_color", Color(def["color"]))
-		model_lbl.mouse_filter = Control.MOUSE_FILTER_PASS
-		hbox.add_child(model_lbl)
-		
-		# Right side: Name and RAM cost
-		var vbox := VBoxContainer.new()
-		vbox.alignment = BoxContainer.ALIGNMENT_CENTER
-		vbox.mouse_filter = Control.MOUSE_FILTER_PASS
-		vbox.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-		
-		var name_lbl := Label.new()
-		name_lbl.text = def["tower_name"]
-		name_lbl.add_theme_font_size_override("font_size", 12)
-		name_lbl.add_theme_color_override("font_color", Color("#E8F4FD"))
-		name_lbl.mouse_filter = Control.MOUSE_FILTER_PASS
-		vbox.add_child(name_lbl)
-		
-		var ram_lbl := Label.new()
-		ram_lbl.text = str(def["ram_cost"]) + " RAM"
-		ram_lbl.add_theme_font_size_override("font_size", 10)
-		ram_lbl.add_theme_color_override("font_color", Color(def["color"]))
-		ram_lbl.mouse_filter = Control.MOUSE_FILTER_PASS
-		vbox.add_child(ram_lbl)
-		
-		hbox.add_child(vbox)
-		btn.add_child(hbox)
-		
-		_style_tower_btn(btn, Color(def["color"]))
-		tower_buttons.add_child(btn)
+	pass
 
 func _setup_buttons() -> void:
 	back_btn.pressed.connect(_on_back_pressed)
@@ -387,25 +393,183 @@ func _connect_signals() -> void:
 	SignalBus.enemy_reached_end.connect(_on_enemy_reached_end)
 	SignalBus.enemy_defeated.connect(_on_enemy_defeated)
 
+# ─── OVERLAY MENU FOR PLACEMENT (CIRCULAR MODE - SHOWS EQUIPPED TOWER MODELS) ───────
+var overlay_menu: Control = null
+var current_clicked_cell: Vector2i = Vector2i(-1, -1)
+
+func _create_overlay_menu() -> void:
+	# Use Control instead of PanelContainer for custom radial layout
+	overlay_menu = Control.new()
+	overlay_menu.visible = false
+	$HUD/HUDControl.add_child(overlay_menu)
+
+func _on_overlay_tower_selected(tower_id: String) -> void:
+	overlay_menu.visible = false
+	var def = TOWER_DEFINITIONS[tower_id]
+	if not ram_manager.can_afford(def["ram_cost"]):
+		SignalBus.hud_message_requested.emit(
+			"Not enough RAM! Need " + str(def["ram_cost"]) + " RAM.", 2.0
+		)
+		return
+		
+	selected_tower_data              = TowerData.new()
+	selected_tower_data.tower_id     = def["tower_id"]
+	selected_tower_data.tower_name   = def["tower_name"]
+	selected_tower_data.ram_cost     = def["ram_cost"]
+	selected_tower_data.damage       = def["damage"]
+	selected_tower_data.attack_speed = def["attack_speed"]
+	selected_tower_data.attack_range = def["attack_range"]
+	selected_tower_data.color        = def["color"]
+	selected_tower_data.icon_text    = def["icon_text"]
+	
+	_place_tower(current_clicked_cell)
+
 # ─── GRID INTERACTION ──────────────────────────────────
 func _on_cell_clicked(cell: Vector2i) -> void:
-	if selected_tower_data == null:
-		SignalBus.hud_message_requested.emit(
-			"Select a tower from the bottom bar first.", 2.0
-		)
-		return
 	if not grid_system.can_place_tower(cell):
-		SignalBus.hud_message_requested.emit(
-			"Can't place tower here.", 2.0
-		)
+		overlay_menu.visible = false
 		return
-	if not ram_manager.can_afford(selected_tower_data.ram_cost):
-		SignalBus.hud_message_requested.emit(
-			"Not enough RAM! Need " + \
-			str(selected_tower_data.ram_cost) + " RAM.", 2.0
-		)
-		return
-	_place_tower(cell)
+		
+	current_clicked_cell = cell
+	var cell_center = grid_system.get_cell_center(cell)
+	
+	# Convert grid world position to screen canvas position
+	var canvas_pos = get_canvas_transform() * cell_center
+	overlay_menu.position = canvas_pos
+	
+	# Remove old selector children
+	for child in overlay_menu.get_children():
+		child.queue_free()
+		
+	# Determine equipped towers (bring/equip from tower select)
+	var equipped = GameManager.selected_towers
+	if equipped.is_empty():
+		equipped = _get_level_config().get("towers", [])
+	if equipped.is_empty():
+		# Fail-safe backup
+		equipped = ["tower_array", "tower_stack", "tower_queue", "tower_linked_list", "tower_bubble"]
+		
+	# Build radial selection
+	var num_options = equipped.size()
+	var radius = 72.0
+	var btn_size = 54.0
+	
+	for i in range(num_options):
+		var tower_id = equipped[i]
+		if not TOWER_DEFINITIONS.has(tower_id):
+			continue
+		var def = TOWER_DEFINITIONS[tower_id]
+		
+		# Compute angle position
+		var angle = -PI/2 + (i * 2.0 * PI / num_options)
+		var offset_pos = Vector2(cos(angle), sin(angle)) * radius
+		
+		# Generous touch target button (Works beautifully on mobile)
+		var btn := TextureButton.new()
+		btn.custom_minimum_size = Vector2(btn_size, btn_size)
+		btn.size = Vector2(btn_size, btn_size)
+		btn.position = offset_pos - Vector2(btn_size/2.0, btn_size/2.0)
+		btn.ignore_texture_size = true
+		btn.stretch_mode = TextureButton.STRETCH_SCALE
+		
+		# Style circular icon container
+		var normal_style := StyleBoxFlat.new()
+		normal_style.bg_color = Color("#070F1E", 0.9)
+		normal_style.border_color = Color(def["color"])
+		normal_style.border_width_left = 2
+		normal_style.border_width_right = 2
+		normal_style.border_width_top = 2
+		normal_style.border_width_bottom = 2
+		normal_style.corner_radius_top_left = int(btn_size / 2.0)
+		normal_style.corner_radius_top_right = int(btn_size / 2.0)
+		normal_style.corner_radius_bottom_left = int(btn_size / 2.0)
+		normal_style.corner_radius_bottom_right = int(btn_size / 2.0)
+		
+		# Display StyleBox as backdrop on the button using a Panel
+		var bg_panel := Panel.new()
+		bg_panel.mouse_filter = Control.MOUSE_FILTER_IGNORE
+		bg_panel.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
+		bg_panel.add_theme_stylebox_override("panel", normal_style)
+		btn.add_child(bg_panel)
+		
+		# Create a sub-viewport or small instanced tower that displays the actual model directly!
+		# Since Godot 4 allows us to put Node2D inside Control using a Node2D container or directly,
+		# let's instantiate the actual tower scene directly inside the button as a lightweight visual node.
+		var tower_scene = load("res://scenes/campaign/towers/Tower.tscn")
+		var visual_tower = tower_scene.instantiate()
+		
+		# Initialize visual tower node
+		var dummy_data = TowerData.new()
+		dummy_data.tower_id = def["tower_id"]
+		dummy_data.tower_name = def["tower_name"]
+		dummy_data.ram_cost = def["ram_cost"]
+		dummy_data.damage = def["damage"]
+		dummy_data.attack_speed = def["attack_speed"]
+		dummy_data.attack_range = def["attack_range"]
+		dummy_data.color = def["color"]
+		dummy_data.icon_text = def["icon_text"]
+		
+		visual_tower.initialize(dummy_data, Vector2i(-1, -1), null)
+		visual_tower.position = Vector2(btn_size / 2.0, btn_size / 2.0)
+		
+		# Scale down model nicely so it fits perfect in the circular button
+		visual_tower.scale = Vector2(0.5, 0.5)
+		
+		# Strip game behaviors from visual preview model
+		visual_tower.set_process(false)
+		visual_tower.set_physics_process(false)
+		visual_tower.set_process_input(false)
+		
+		btn.add_child(visual_tower)
+		
+		# Price Tag (small overlay at the bottom of the node)
+		var price_lbl := Label.new()
+		price_lbl.text = str(def["ram_cost"])
+		price_lbl.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+		price_lbl.add_theme_font_size_override("font_size", 8)
+		price_lbl.add_theme_color_override("font_color", Color("#00D4FF"))
+		price_lbl.position = Vector2(0, btn_size - 8)
+		price_lbl.custom_minimum_size = Vector2(btn_size, 10)
+		price_lbl.size = Vector2(btn_size, 10)
+		price_lbl.mouse_filter = Control.MOUSE_FILTER_IGNORE
+		btn.add_child(price_lbl)
+		
+		# Connect trigger action
+		btn.pressed.connect(_on_overlay_tower_selected.bind(tower_id))
+		overlay_menu.add_child(btn)
+		
+	# Small Central "Close" Button
+	var center_close := Button.new()
+	center_close.text = "X"
+	center_close.custom_minimum_size = Vector2(24, 24)
+	center_close.size = Vector2(24, 24)
+	center_close.position = Vector2(-12, -12)
+	center_close.add_theme_color_override("font_color", Color("#FF3366"))
+	center_close.add_theme_font_size_override("font_size", 9)
+	
+	var close_style := StyleBoxFlat.new()
+	close_style.bg_color = Color("#12050E")
+	close_style.border_color = Color("#FF3366")
+	close_style.border_width_left = 1
+	close_style.border_width_right = 1
+	close_style.border_width_top = 1
+	close_style.border_width_bottom = 1
+	close_style.corner_radius_top_left = 12
+	close_style.corner_radius_top_right = 12
+	close_style.corner_radius_bottom_left = 12
+	close_style.corner_radius_bottom_right = 12
+	center_close.add_theme_stylebox_override("normal", close_style)
+	
+	center_close.pressed.connect(func(): overlay_menu.visible = false)
+	overlay_menu.add_child(center_close)
+	
+	# Clamp positions of buttons inside screen borders for mobile viewports
+	var screen_size = get_viewport_rect().size
+	var menu_offset_x = clamp(overlay_menu.position.x, 90.0, screen_size.x - 90.0) - overlay_menu.position.x
+	var menu_offset_y = clamp(overlay_menu.position.y, 90.0, screen_size.y - 90.0) - overlay_menu.position.y
+	overlay_menu.position += Vector2(menu_offset_x, menu_offset_y)
+	
+	overlay_menu.visible = true
 
 func _place_tower(cell: Vector2i) -> void:
 	ram_manager.spend(selected_tower_data.ram_cost)
@@ -421,6 +585,13 @@ func _place_tower(cell: Vector2i) -> void:
 
 	SignalBus.tower_placed.emit(selected_tower_data.tower_id, cell)
 	print("[Level] Tower placed at: ", cell)
+	
+	# Emit first tower placed signal for challenge system
+	grid_system.first_tower_placed.emit(selected_tower_data.tower_id)
+
+func _on_first_tower_placed(tower_id: String) -> void:
+	"""Handle first tower placement for challenge system"""
+	pass
 
 # ─── TOWER SELECTION ───────────────────────────────────
 func _on_tower_selected(tower_id: String) -> void:
@@ -566,6 +737,12 @@ func _on_enemy_defeated(_enemy_id: String) -> void:
 	score_label.text  = "Score: " + str(score)
 
 # ─── BASE HEALTH ───────────────────────────────────────
+func heal_base(amount: int) -> void:
+	"""Heal the base by the given amount"""
+	base_health = min(base_health + amount, 10)
+	_update_base_health_label()
+	SignalBus.hud_message_requested.emit("💚 Base healed! HP: " + str(base_health) + "/10", 2.0)
+
 func _update_base_health_label() -> void:
 	base_health_label.text = "❤️ " + str(base_health)
 	var tween = create_tween()
@@ -715,13 +892,7 @@ func _apply_hud_styles() -> void:
 	var top_style := StyleBoxEmpty.new()
 	$HUD/HUDControl/TopHUD.add_theme_stylebox_override("panel", top_style)
 
-	var sel_style := StyleBoxFlat.new()
-	sel_style.bg_color           = Color("#0A1628")
-	sel_style.border_color       = Color("#00D4FF")
-	sel_style.border_width_right = 1
-	$HUD/HUDControl/TowerSelector.add_theme_stylebox_override(
-		"panel", sel_style
-	)
+	# Left panel styling removed
 
 	var go_style := StyleBoxFlat.new()
 	go_style.bg_color                    = Color("#050D1A")

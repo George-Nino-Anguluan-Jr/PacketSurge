@@ -45,6 +45,11 @@ const ALL_LESSONS = [
 	"search_linear", "search_binary",
 ]
 
+# ─── SUB-LEVEL PROGRESSION ─────────────────────────────
+const SUB_LEVELS_PER_LEVEL = 3
+const TOTAL_MAIN_LEVELS = 13
+const TOTAL_SUB_LEVELS = TOTAL_MAIN_LEVELS * SUB_LEVELS_PER_LEVEL  # 39
+
 # ─── PROGRESS DATA ─────────────────────────────────────
 var topic_states: Dictionary      = {}
 var coding_accuracy: Dictionary   = {}
@@ -56,6 +61,130 @@ var campaign_progress: Dictionary  = {
 	"waves_completed":    0,
 	"placement_quiz_done": false,
 }
+
+# Sub-level progress (39 sub-levels) - synced with LevelProgression
+var sub_level_progress: Dictionary = {}
+
+# ─── SUB-LEVEL PROGRESS API ────────────────────────────
+func get_sub_level_progress(sub_level_id: int) -> Dictionary:
+	"""Get progress data for a specific sub-level"""
+	return sub_level_progress.get(str(sub_level_id), {
+		"unlocked": sub_level_id == 0,
+		"completed": false,
+		"best_score": 0,
+		"stars": 0,
+	})
+
+func is_sub_level_unlocked(sub_level_id: int) -> bool:
+	"""Check if a sub-level is unlocked"""
+	var prog = get_sub_level_progress(sub_level_id)
+	return prog.get("unlocked", sub_level_id == 0)
+
+func is_sub_level_completed(sub_level_id: int) -> bool:
+	"""Check if a sub-level is completed"""
+	var prog = get_sub_level_progress(sub_level_id)
+	return prog.get("completed", false)
+
+func get_sub_level_stars(sub_level_id: int) -> int:
+	"""Get stars earned for a sub-level"""
+	var prog = get_sub_level_progress(sub_level_id)
+	return prog.get("stars", 0)
+
+func get_sub_level_best_score(sub_level_id: int) -> int:
+	"""Get best score for a sub-level"""
+	var prog = get_sub_level_progress(sub_level_id)
+	return prog.get("best_score", 0)
+
+func complete_sub_level(sub_level_id: int, score: int, stars: int) -> void:
+	"""Mark a sub-level as completed with score and stars"""
+	var key = str(sub_level_id)
+	if not sub_level_progress.has(key):
+		sub_level_progress[key] = {}
+	
+	sub_level_progress[key].unlocked = true
+	sub_level_progress[key].completed = true
+	sub_level_progress[key].best_score = max(sub_level_progress[key].get("best_score", 0), score)
+	sub_level_progress[key].stars = max(sub_level_progress[key].get("stars", 0), stars)
+	
+	# Unlock next sub-level
+	var next_id = sub_level_id + 1
+	if next_id < TOTAL_SUB_LEVELS:
+		var next_key = str(next_id)
+		if not sub_level_progress.has(next_key):
+			sub_level_progress[next_key] = {}
+		sub_level_progress[next_key].unlocked = true
+	
+	# Also update LevelProgression
+	var level_progression = LevelProgression.get_instance()
+	level_progression.complete_sub_level(sub_level_id, score)
+	
+	save_progress()
+
+func get_main_level_progress(main_level: int) -> Dictionary:
+	"""Get progress for a main level (all 3 sub-levels)"""
+	var completed = 0
+	var total = 0
+	var stars = 0
+	var max_stars = 0
+	
+	for sub_idx in range(SUB_LEVELS_PER_LEVEL):
+		var sub_id = (main_level - 1) * SUB_LEVELS_PER_LEVEL + sub_idx
+		var prog = get_sub_level_progress(sub_id)
+		total += 1
+		max_stars += 3
+		if prog.get("completed", false):
+			completed += 1
+			stars += prog.get("stars", 0)
+	
+	return {
+		"main_level": main_level,
+		"completed": completed,
+		"total": total,
+		"progress": float(completed) / float(total) if total > 0 else 0.0,
+		"stars": stars,
+		"max_stars": max_stars,
+		"is_complete": completed == total,
+	}
+
+func get_overall_sub_level_progress() -> Dictionary:
+	"""Get overall progress across all 39 sub-levels"""
+	var total_completed = 0
+	var total_stars = 0
+	var max_stars = TOTAL_SUB_LEVELS * 3
+	
+	for sub_id in range(TOTAL_SUB_LEVELS):
+		var prog = get_sub_level_progress(sub_id)
+		if prog.get("completed", false):
+			total_completed += 1
+			total_stars += prog.get("stars", 0)
+	
+	return {
+		"completed": total_completed,
+		"total": TOTAL_SUB_LEVELS,
+		"progress": float(total_completed) / float(TOTAL_SUB_LEVELS),
+		"stars": total_stars,
+		"max_stars": max_stars,
+	}
+
+func sync_with_level_progression() -> void:
+	"""Sync sub_level_progress with LevelProgression data"""
+	var level_progression = LevelProgression.get_instance()
+	var save_data = level_progression.get_save_data()
+	
+	for key in save_data:
+		var sub_id = key.to_int()
+		var sd = save_data[key]
+		var prog_key = str(sub_id)
+		
+		if not sub_level_progress.has(prog_key):
+			sub_level_progress[prog_key] = {}
+		
+		sub_level_progress[prog_key].unlocked = sd.get("unlocked", sub_id == 0)
+		sub_level_progress[prog_key].completed = sd.get("completed", false)
+		sub_level_progress[prog_key].best_score = sd.get("best_score", 0)
+		sub_level_progress[prog_key].stars = sd.get("stars", 0)
+	
+	save_progress()
 
 # ─── STARTUP ───────────────────────────────────────────
 func _ready() -> void:

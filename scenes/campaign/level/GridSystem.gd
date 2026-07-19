@@ -3,6 +3,7 @@ class_name GridSystem
 extends Node2D
 
 signal cell_clicked(cell: Vector2i)
+signal first_tower_placed(tower_id: String)
 
 # ─── GRID SETTINGS ─────────────────────────────────────
 const CELL_SIZE: int = 64
@@ -283,6 +284,13 @@ func remove_tower(cell: Vector2i) -> void:
 # ─── INPUT ─────────────────────────────────────────────
 func _input(event: InputEvent) -> void:
 	if not is_placing_tower:
+		# If we are not placing a tower, we should still allow cell clicking!
+		if event is InputEventMouseButton and event.button_index == MOUSE_BUTTON_LEFT and event.pressed:
+			var cell = world_to_cell(
+				get_global_mouse_position() - global_position
+			)
+			if can_place_tower(cell):
+				cell_clicked.emit(cell)
 		return
 	if event is InputEventMouseMotion:
 		var cell = world_to_cell(

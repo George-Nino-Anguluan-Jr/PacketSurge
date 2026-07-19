@@ -151,6 +151,8 @@ func _on_profile_saved(
 	if code == 201:
 		_create_initial_progress()
 		_create_leaderboard_entry()
+		# Reset local progress for new user, then load fresh progress from cloud
+		load_progress_from_cloud()
 
 # ─── LOGIN ─────────────────────────────────────────────
 func login_student(p_email: String, p_password: String) -> void:

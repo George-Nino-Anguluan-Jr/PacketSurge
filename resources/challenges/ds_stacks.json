@@ -1,0 +1,54 @@
+{
+  "challenge_id": "ds_stacks",
+  "topic": "ds_stacks",
+  "difficulty": "medium",
+  "types": ["fill_blank", "fix_syntax", "fix_and_optimize"],
+  "challenges": {
+    "fill_blank": [
+      {
+        "id": "ds_stacks_fill_1",
+        "prompt": "Add element to top of stack 'stk'.",
+        "template": "stk.___(5)",
+        "answer": "append",
+        "explanation": "Stack push = append() to end of list.",
+        "hints": ["Push adds to top", "Top = end of list"]
+      },
+      {
+        "id": "ds_stacks_fill_2",
+        "prompt": "Remove and return top element from stack.",
+        "template": "top = stk.___()",
+        "answer": "pop",
+        "explanation": "pop() removes and returns last element (LIFO).",
+        "hints": ["Pop removes from end", "Returns the removed value"]
+      },
+      {
+        "id": "ds_stacks_fill_3",
+        "prompt": "Check if stack is empty without removing.",
+        "template": "if not stk:\n    print(\"Empty\")",
+        "answer": "",
+        "explanation": "Empty list is falsy in Python. 'if not stk' checks emptiness.",
+        "hints": ["Empty list = False", "Non-empty = True"]
+      }
+    ],
+    "fix_syntax": [
+      {
+        "id": "ds_stacks_fix_1",
+        "prompt": "Fix - popping from empty stack:",
+        "code": "stk = []\nval = stk.pop()",
+        "answer": "stk = []\nif stk:\n    val = stk.pop()\nelse:\n    val = None",
+        "explanation": "pop() on empty list raises IndexError. Check first.",
+        "hints": ["Check if not empty", "Before calling pop()"]
+      }
+    ],
+    "fix_and_optimize": [
+      {
+        "id": "ds_stacks_opt_1",
+        "prompt": "Optimize - reverse string using stack:",
+        "code": "def reverse(s):\n    stk = []\n    for c in s:\n        stk.append(c)\n    result = \"\"\n    while stk:\n        result += stk.pop()\n    return result",
+        "answer": "def reverse(s):\n    return s[::-1]",
+        "explanation": "String slicing is faster. Stack approach is O(n) but with overhead.",
+        "hints": ["Slice notation", "Most Pythonic way"]
+      }
+    ]
+  }
+}
