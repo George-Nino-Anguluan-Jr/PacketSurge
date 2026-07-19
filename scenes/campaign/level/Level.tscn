@@ -128,19 +128,6 @@ custom_minimum_size = Vector2(44, 0)
 layout_mode = 2
 text = "⏸"
 
-[node name="TowerSelector" type="PanelContainer" parent="HUD/HUDControl" unique_id=1383279771]
-custom_minimum_size = Vector2(160, 0)
-layout_mode = 1
-anchors_preset = 9
-anchor_bottom = 1.0
-grow_vertical = 2
-
-[node name="SelectorLayout" type="VBoxContainer" parent="HUD/HUDControl/TowerSelector" unique_id=40105491]
-layout_mode = 2
-
-[node name="TowerButtons" type="VBoxContainer" parent="HUD/HUDControl/TowerSelector/SelectorLayout" unique_id=929104316]
-layout_mode = 2
-theme_override_constants/separation = 8
 
 [node name="PauseMenu" type="PanelContainer" parent="HUD/HUDControl" unique_id=98716382]
 process_mode = 3

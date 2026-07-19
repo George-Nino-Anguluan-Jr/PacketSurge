@@ -20,6 +20,10 @@ var _shoot_flash: float        = 0.0
 var _entry_order: Array[Node]  = []  # Tracks enemies in order they entered range (for Stack/Queue)
 var _flash_targets: Array[Vector2] = []  # Multiple flash lines for AoE/chain attacks
 
+# Upgrade state
+var current_level: int         = 1
+var max_level: int             = 3
+
 # ─── ANIMATION STATE ───────────────────────────────────
 var _turret_angle: float       = -PI / 2
 var _recoil: float             = 0.0
@@ -42,13 +46,88 @@ func initialize(data: TowerData, cell: Vector2i, e_layer: Node2D) -> void:
 	icon_text     = data.icon_text
 	grid_cell     = cell
 	enemy_layer   = e_layer
+	current_level = 1
 	_setup_sprite()
 	_animate_placement()
 	queue_redraw()
 
+func upgrade() -> int:
+	"""Upgrade the tower to the next level. Returns the new level."""
+	if current_level >= max_level:
+		return current_level
+	
+	current_level += 1
+	
+	# Apply upgrade bonuses based on tower type
+	match tower_id:
+		"tower_array":
+			damage *= 1.3
+			attack_speed *= 1.15
+			attack_range *= 1.1
+		"tower_stack":
+			damage *= 1.4
+			attack_range *= 1.15
+		"tower_queue":
+			damage *= 1.25
+			attack_speed *= 1.2
+			attack_range *= 1.1
+		"tower_linked_list":
+			damage *= 1.3
+			attack_range *= 1.2
+		"tower_bubble":
+			damage *= 1.25
+			attack_range *= 1.2
+		"tower_selection":
+			damage *= 1.35
+			attack_range *= 1.15
+		"tower_insertion":
+			damage *= 1.3
+			attack_speed *= 1.15
+		"tower_quick":
+			damage *= 1.25
+			attack_speed *= 1.2
+		"tower_merge":
+			damage *= 1.3
+			attack_range *= 1.15
+		"tower_counting":
+			damage *= 1.2
+			attack_speed *= 1.25
+		"tower_radix":
+			damage *= 1.2
+			attack_speed *= 1.3
+		"tower_linear":
+			damage *= 1.25
+			attack_range *= 1.2
+		"tower_binary":
+			damage *= 1.4
+			attack_range *= 1.1
+	
+	# Emit upgrade signal
+	SignalBus.tower_upgraded.emit(tower_id, current_level)
+	
+	# Visual feedback
+	_animate_upgrade()
+	
+	return current_level
+
+func _animate_upgrade() -> void:
+	"""Visual feedback for upgrade"""
+	var tween = create_tween()
+	tween.set_ease(Tween.EASE_OUT)
+	tween.set_trans(Tween.TRANS_BACK)
+	tween.tween_property(self, "scale", Vector2(1.5, 1.5), 0.15)
+	tween.tween_property(self, "scale", Vector2(1.35, 1.35), 0.25)
+	
+	# Flash effect
+	_shoot_flash = 1.5
+	queue_redraw()
+
 func _setup_sprite() -> void:
 	# Hide default flat texture so our high-quality procedural 2D models draw cleanly
-	sprite.visible = false
+	if sprite:
+		sprite.visible = false
+	elif has_node("TowerSprite"):
+		get_node("TowerSprite").visible = false
 
 func _animate_placement() -> void:
 	# Keep placement animation by tweening a simple scaling effect drawn in _draw

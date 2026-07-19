@@ -1,0 +1,54 @@
+{
+  "challenge_id": "sort_counting",
+  "topic": "sort_counting",
+  "difficulty": "hard",
+  "types": ["fill_blank", "fix_syntax", "fix_and_optimize"],
+  "challenges": {
+    "fill_blank": [
+      {
+        "id": "sort_counting_fill_1",
+        "prompt": "Create count array for values 0 to k.",
+        "template": "count = [0] * (k + ___)",
+        "answer": "1",
+        "explanation": "Need k+1 slots for values 0 through k inclusive.",
+        "hints": ["Inclusive range", "0 to k = k+1 values"]
+      },
+      {
+        "id": "sort_counting_fill_2",
+        "prompt": "Count occurrences of each value.",
+        "template": "for num in arr:\n    count[num] ___= 1",
+        "answer": "+",
+        "explanation": "Increment count for each value seen.",
+        "hints": ["Increment operator", "Count frequency"]
+      },
+      {
+        "id": "sort_counting_fill_3",
+        "prompt": "Reconstruct sorted array from counts.",
+        "template": "for i in range(len(count)):\n    while count[i] > 0:\n        output.append(___)\n        count[i] -= 1",
+        "answer": "i",
+        "explanation": "Append value i, count[i] times.",
+        "hints": ["Value = index", "Repeat by count"]
+      }
+    ],
+    "fix_syntax": [
+      {
+        "id": "sort_counting_fix_1",
+        "prompt": "Fix - assumes values start at 0:",
+        "code": "def counting_sort(arr):\n    k = max(arr)\n    count = [0] * (k + 1)\n    for num in arr:\n        count[num] += 1",
+        "answer": "def counting_sort(arr):\n    if not arr:\n        return []\n    min_val, max_val = min(arr), max(arr)\n    count = [0] * (max_val - min_val + 1)\n    for num in arr:\n        count[num - min_val] += 1",
+        "explanation": "Handle negative numbers by offsetting with min_val.",
+        "hints": ["Find min and max", "Offset by min_val"]
+      }
+    ],
+    "fix_and_optimize": [
+      {
+        "id": "sort_counting_opt_1",
+        "prompt": "Optimize - use prefix sums for stable sort:",
+        "code": "def counting_sort(arr):\n    k = max(arr)\n    count = [0] * (k + 1)\n    for num in arr:\n        count[num] += 1\n    output = []\n    for i in range(k + 1):\n        output.extend([i] * count[i])\n    return output",
+        "answer": "def counting_sort(arr):\n    if not arr:\n        return []\n    min_val, max_val = min(arr), max(arr)\n    count = [0] * (max_val - min_val + 1)\n    for num in arr:\n        count[num - min_val] += 1\n    # Prefix sums for stable positions\n    for i in range(1, len(count)):\n        count[i] += count[i - 1]\n    output = [0] * len(arr)\n    for num in reversed(arr):\n        idx = num - min_val\n        count[idx] -= 1\n        output[count[idx]] = num\n    return output",
+        "explanation": "Prefix sums give final positions. Iterate backwards for stability.",
+        "hints": ["Prefix sum = positions", "Reverse iteration = stable"]
+      }
+    ]
+  }
+}

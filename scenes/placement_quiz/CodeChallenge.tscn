@@ -1,0 +1,418 @@
+[gd_scene load_steps=8 format=3 uid="uid://bkq8v7j3k9m2n"]
+
+[ext_resource type="Script" path="res://scenes/placement_quiz/CodeChallenge.gd" id="1"]
+
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_run_normal"]
+bg_color = Color(0.2, 0.6, 0.3, 1)
+border_width_left = 2
+border_width_top = 2
+border_width_right = 2
+border_width_bottom = 2
+border_color = Color(0.3, 0.8, 0.4, 1)
+corner_radius_top_left = 8
+corner_radius_top_right = 8
+corner_radius_bottom_right = 8
+corner_radius_bottom_left = 8
+
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_run_hover"]
+bg_color = Color(0.3, 0.7, 0.4, 1)
+border_width_left = 2
+border_width_top = 2
+border_width_right = 2
+border_width_bottom = 2
+border_color = Color(0.4, 0.9, 0.5, 1)
+corner_radius_top_left = 8
+corner_radius_top_right = 8
+corner_radius_bottom_right = 8
+corner_radius_bottom_left = 8
+
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_run_pressed"]
+bg_color = Color(0.15, 0.5, 0.25, 1)
+border_width_left = 2
+border_width_top = 2
+border_width_right = 2
+border_width_bottom = 2
+border_color = Color(0.2, 0.7, 0.3, 1)
+corner_radius_top_left = 8
+corner_radius_top_right = 8
+corner_radius_bottom_right = 8
+corner_radius_bottom_left = 8
+
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_submit_normal"]
+bg_color = Color(0.2, 0.4, 0.7, 1)
+border_width_left = 2
+border_width_top = 2
+border_width_right = 2
+border_width_bottom = 2
+border_color = Color(0.3, 0.5, 0.9, 1)
+corner_radius_top_left = 8
+corner_radius_top_right = 8
+corner_radius_bottom_right = 8
+corner_radius_bottom_left = 8
+
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_submit_hover"]
+bg_color = Color(0.3, 0.5, 0.8, 1)
+border_width_left = 2
+border_width_top = 2
+border_width_right = 2
+border_width_bottom = 2
+border_color = Color(0.4, 0.6, 1.0, 1)
+corner_radius_top_left = 8
+corner_radius_top_right = 8
+corner_radius_bottom_right = 8
+corner_radius_bottom_left = 8
+
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_submit_pressed"]
+bg_color = Color(0.15, 0.3, 0.6, 1)
+border_width_left = 2
+border_width_top = 2
+border_width_right = 2
+border_width_bottom = 2
+border_color = Color(0.2, 0.4, 0.8, 1)
+corner_radius_top_left = 8
+corner_radius_top_right = 8
+corner_radius_bottom_right = 8
+corner_radius_bottom_left = 8
+
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_hint_normal"]
+bg_color = Color(0.6, 0.4, 0.1, 1)
+border_width_left = 2
+border_width_top = 2
+border_width_right = 2
+border_width_bottom = 2
+border_color = Color(0.8, 0.6, 0.2, 1)
+corner_radius_top_left = 8
+corner_radius_top_right = 8
+corner_radius_bottom_right = 8
+corner_radius_bottom_left = 8
+
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_hint_hover"]
+bg_color = Color(0.7, 0.5, 0.2, 1)
+border_width_left = 2
+border_width_top = 2
+border_width_right = 2
+border_width_bottom = 2
+border_color = Color(0.9, 0.7, 0.3, 1)
+corner_radius_top_left = 8
+corner_radius_top_right = 8
+corner_radius_bottom_right = 8
+corner_radius_bottom_left = 8
+
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_hint_pressed"]
+bg_color = Color(0.5, 0.3, 0.05, 1)
+border_width_left = 2
+border_width_top = 2
+border_width_right = 2
+border_width_bottom = 2
+border_color = Color(0.7, 0.5, 0.15, 1)
+corner_radius_top_left = 8
+corner_radius_top_right = 8
+corner_radius_bottom_right = 8
+corner_radius_bottom_left = 8
+
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_skip_normal"]
+bg_color = Color(0.3, 0.3, 0.35, 1)
+border_width_left = 2
+border_width_top = 2
+border_width_right = 2
+border_width_bottom = 2
+border_color = Color(0.5, 0.5, 0.55, 1)
+corner_radius_top_left = 8
+corner_radius_top_right = 8
+corner_radius_bottom_right = 8
+corner_radius_bottom_left = 8
+
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_skip_hover"]
+bg_color = Color(0.4, 0.4, 0.45, 1)
+border_width_left = 2
+border_width_top = 2
+border_width_right = 2
+border_width_bottom = 2
+border_color = Color(0.6, 0.6, 0.65, 1)
+corner_radius_top_left = 8
+corner_radius_top_right = 8
+corner_radius_bottom_right = 8
+corner_radius_bottom_left = 8
+
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_skip_pressed"]
+bg_color = Color(0.25, 0.25, 0.3, 1)
+border_width_left = 2
+border_width_top = 2
+border_width_right = 2
+border_width_bottom = 2
+border_color = Color(0.45, 0.45, 0.5, 1)
+corner_radius_top_left = 8
+corner_radius_top_right = 8
+corner_radius_bottom_right = 8
+corner_radius_bottom_left = 8
+
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_continue"]
+bg_color = Color(0.2, 0.5, 0.7, 1)
+border_width_left = 2
+border_width_top = 2
+border_width_right = 2
+border_width_bottom = 2
+border_color = Color(0.3, 0.6, 0.9, 1)
+corner_radius_top_left = 8
+corner_radius_top_right = 8
+corner_radius_bottom_right = 8
+corner_radius_bottom_left = 8
+
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_retry"]
+bg_color = Color(0.6, 0.3, 0.2, 1)
+border_width_left = 2
+border_width_top = 2
+border_width_right = 2
+border_width_bottom = 2
+border_color = Color(0.8, 0.4, 0.3, 1)
+corner_radius_top_left = 8
+corner_radius_top_right = 8
+corner_radius_bottom_right = 8
+corner_radius_bottom_left = 8
+
+[node name="CodeChallenge" type="Control"]
+layout_mode = 3
+anchors_preset = 11
+anchor_left = 0.55
+anchor_right = 1.0
+anchor_bottom = 1.0
+offset_left = 0.0
+offset_top = 0.0
+offset_right = 0.0
+offset_bottom = 0.0
+grow_horizontal = 0
+grow_vertical = 2
+script = ExtResource("1")
+
+[node name="Background" type="ColorRect" parent="."]
+layout_mode = 3
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+color = Color(0.03, 0.03, 0.06, 0.95)
+
+[node name="MainContainer" type="VBoxContainer" parent="."]
+layout_mode = 3
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+offset_left = 25.0
+offset_top = 25.0
+offset_right = -25.0
+offset_bottom = -25.0
+
+[node name="Header" type="HBoxContainer" parent="MainContainer"]
+theme_override_constants/separation = 10
+
+[node name="Title" type="Label" parent="MainContainer/Header"]
+unique_name_in_owner = true
+text = "Code Challenge"
+horizontal_alignment = 1
+theme_override_font_sizes/font_size = 22
+theme_override_colors/font_color = Color(0.9, 0.9, 1.0, 1)
+
+[node name="SubLevelInfo" type="Label" parent="MainContainer/Header"]
+unique_name_in_owner = true
+text = "Level 1: Lesson - Variables"
+horizontal_alignment = 1
+theme_override_font_sizes/font_size = 13
+theme_override_colors/font_color = Color(0.7, 0.8, 1.0, 1)
+
+[node name="ProgressBar" type="ProgressBar" parent="MainContainer"]
+unique_name_in_owner = true
+min_value = 0.0
+max_value = 1.0
+value = 0.0
+size_flags_horizontal = 3
+
+[node name="ChallengeArea" type="VBoxContainer" parent="MainContainer"]
+theme_override_constants/separation = 15
+size_flags_vertical = 3
+
+[node name="Prompt" type="RichTextLabel" parent="MainContainer/ChallengeArea"]
+unique_name_in_owner = true
+size_flags_horizontal = 3
+size_flags_vertical = 3
+custom_minimum_size = Vector2(0, 120)
+theme_override_font_sizes/normal_font_size = 16
+theme_override_colors/font_color = Color(0.9, 0.9, 0.9, 1)
+bbcode_enabled = true
+
+[node name="CodeEditor" type="TextEdit" parent="MainContainer/ChallengeArea"]
+unique_name_in_owner = true
+size_flags_horizontal = 3
+size_flags_vertical = 3
+custom_minimum_size = Vector2(0, 300)
+theme_override_font_sizes/font_size = 14
+theme_override_colors/font_color = Color(0.9, 0.9, 0.9, 1)
+theme_override_colors/background_color = Color(0.1, 0.1, 0.15, 1)
+theme_override_colors/caret_color = Color(1.0, 1.0, 1.0, 1)
+theme_override_colors/selection_color = Color(0.3, 0.5, 0.8, 0.5)
+theme_override_colors/line_number_color = Color(0.5, 0.5, 0.6, 1)
+theme_override_colors/completion_background_color = Color(0.15, 0.15, 0.2, 1)
+theme_override_colors/completion_font_color = Color(0.9, 0.9, 0.9, 1)
+theme_override_colors/completion_existing_color = Color(0.6, 0.8, 1.0, 1)
+theme_override_colors/completion_scroll_bg = Color(0.1, 0.1, 0.15, 1)
+theme_override_colors/brace_mismatch_color = Color(1.0, 0.3, 0.3, 1)
+syntax_highlighter = "python"
+show_line_numbers = true
+highlight_all_occurrences = true
+draw_spaces = 1
+draw_tabs = true
+smooth_scroll = true
+completion_enabled = true
+completion_auto = true
+completion_case_sensitive = false
+
+[node name="HintsArea" type="VBoxContainer" parent="MainContainer/ChallengeArea"]
+unique_name_in_owner = true
+theme_override_constants/separation = 5
+visible = false
+
+[node name="HintsLabel" type="Label" parent="MainContainer/ChallengeArea/HintsArea"]
+text = "Hints:"
+theme_override_font_sizes/font_size = 14
+theme_override_colors/font_color = Color(0.8, 0.9, 1.0, 1)
+
+[node name="HintsList" type="Label" parent="MainContainer/ChallengeArea/HintsArea"]
+unique_name_in_owner = true
+text = ""
+theme_override_font_sizes/font_size = 13
+theme_override_colors/font_color = Color(0.6, 0.8, 0.9, 1)
+autowrap_mode = 2
+
+[node name="ButtonBar" type="GridContainer" parent="MainContainer"]
+theme_override_constants/horizontal_separation = 10
+theme_override_constants/vertical_separation = 10
+columns = 2
+
+[node name="RunButton" type="Button" parent="MainContainer/ButtonBar"]
+unique_name_in_owner = true
+text = "Run Code (F5)"
+theme_override_font_sizes/font_size = 14
+custom_minimum_size = Vector2(0, 40)
+size_flags_horizontal = 3
+theme_override_colors/font_color = Color(1.0, 1.0, 1.0, 1)
+theme_override_colors/font_hover_color = Color(1.0, 1.0, 1.0, 1)
+theme_override_colors/font_pressed_color = Color(0.9, 0.9, 0.9, 1)
+theme_override_styles/normal = SubResource("StyleBoxFlat_run_normal")
+theme_override_styles/hover = SubResource("StyleBoxFlat_run_hover")
+theme_override_styles/pressed = SubResource("StyleBoxFlat_run_pressed")
+
+[node name="SubmitButton" type="Button" parent="MainContainer/ButtonBar"]
+unique_name_in_owner = true
+text = "Submit Solution"
+theme_override_font_sizes/font_size = 14
+custom_minimum_size = Vector2(0, 40)
+size_flags_horizontal = 3
+theme_override_colors/font_color = Color(1.0, 1.0, 1.0, 1)
+theme_override_colors/font_hover_color = Color(1.0, 1.0, 1.0, 1)
+theme_override_colors/font_pressed_color = Color(0.9, 0.9, 0.9, 1)
+theme_override_styles/normal = SubResource("StyleBoxFlat_submit_normal")
+theme_override_styles/hover = SubResource("StyleBoxFlat_submit_hover")
+theme_override_styles/pressed = SubResource("StyleBoxFlat_submit_pressed")
+
+[node name="HintButton" type="Button" parent="MainContainer/ButtonBar"]
+unique_name_in_owner = true
+text = "Show Hint"
+theme_override_font_sizes/font_size = 14
+custom_minimum_size = Vector2(0, 40)
+size_flags_horizontal = 3
+theme_override_colors/font_color = Color(1.0, 1.0, 1.0, 1)
+theme_override_colors/font_hover_color = Color(1.0, 1.0, 1.0, 1)
+theme_override_colors/font_pressed_color = Color(0.9, 0.9, 0.9, 1)
+theme_override_styles/normal = SubResource("StyleBoxFlat_hint_normal")
+theme_override_styles/hover = SubResource("StyleBoxFlat_hint_hover")
+theme_override_styles/pressed = SubResource("StyleBoxFlat_hint_pressed")
+
+[node name="SkipButton" type="Button" parent="MainContainer/ButtonBar"]
+unique_name_in_owner = true
+text = "Skip"
+theme_override_font_sizes/font_size = 14
+custom_minimum_size = Vector2(0, 40)
+size_flags_horizontal = 3
+theme_override_colors/font_color = Color(0.8, 0.8, 0.8, 1)
+theme_override_colors/font_hover_color = Color(0.9, 0.9, 0.9, 1)
+theme_override_colors/font_pressed_color = Color(0.7, 0.7, 0.7, 1)
+theme_override_styles/normal = SubResource("StyleBoxFlat_skip_normal")
+theme_override_styles/hover = SubResource("StyleBoxFlat_skip_hover")
+theme_override_styles/pressed = SubResource("StyleBoxFlat_skip_pressed")
+
+[node name="ResultPanel" type="VBoxContainer" parent="MainContainer"]
+unique_name_in_owner = true
+theme_override_constants/separation = 10
+visible = false
+size_flags_horizontal = 3
+
+[node name="ResultTitle" type="Label" parent="MainContainer/ResultPanel"]
+unique_name_in_owner = true
+text = "Result"
+horizontal_alignment = 1
+theme_override_font_sizes/font_size = 24
+theme_override_colors/font_color = Color(1.0, 1.0, 1.0, 1)
+
+[node name="ResultMessage" type="RichTextLabel" parent="MainContainer/ResultPanel"]
+unique_name_in_owner = true
+size_flags_horizontal = 3
+theme_override_font_sizes/normal_font_size = 14
+theme_override_colors/font_color = Color(0.9, 0.9, 0.9, 1)
+bbcode_enabled = true
+
+[node name="ResultStars" type="HBoxContainer" parent="MainContainer/ResultPanel"]
+alignment = 1
+theme_override_constants/separation = 5
+
+[node name="Star1" type="Label" parent="MainContainer/ResultPanel/ResultStars"]
+unique_name_in_owner = true
+custom_minimum_size = Vector2(40, 40)
+horizontal_alignment = 1
+vertical_alignment = 1
+theme_override_font_sizes/font_size = 32
+
+[node name="Star2" type="Label" parent="MainContainer/ResultPanel/ResultStars"]
+unique_name_in_owner = true
+custom_minimum_size = Vector2(40, 40)
+horizontal_alignment = 1
+vertical_alignment = 1
+theme_override_font_sizes/font_size = 32
+
+[node name="Star3" type="Label" parent="MainContainer/ResultPanel/ResultStars"]
+unique_name_in_owner = true
+custom_minimum_size = Vector2(40, 40)
+horizontal_alignment = 1
+vertical_alignment = 1
+theme_override_font_sizes/font_size = 32
+
+[node name="ContinueButton" type="Button" parent="MainContainer/ResultPanel"]
+unique_name_in_owner = true
+text = "Continue"
+theme_override_font_sizes/font_size = 16
+custom_minimum_size = Vector2(150, 45)
+theme_override_colors/font_color = Color(1.0, 1.0, 1.0, 1)
+theme_override_styles/normal = SubResource("StyleBoxFlat_continue")
+
+[node name="RetryButton" type="Button" parent="MainContainer/ResultPanel"]
+unique_name_in_owner = true
+text = "Try Again"
+theme_override_font_sizes/font_size = 16
+custom_minimum_size = Vector2(150, 45)
+theme_override_colors/font_color = Color(1.0, 1.0, 1.0, 1)
+theme_override_styles/normal = SubResource("StyleBoxFlat_retry")
+
+[node name="TimerLabel" type="Label" parent="MainContainer"]
+unique_name_in_owner = true
+text = "Time: 00:00"
+horizontal_alignment = 2
+theme_override_font_sizes/font_size = 14
+theme_override_colors/font_color = Color(0.6, 0.7, 0.8, 1)
+
+[node name="ErrorPopup" type="AcceptDialog" parent="."]
+unique_name_in_owner = true
+title = "Error"
+dialog_text = ""
+
+[node name="SuccessPopup" type="AcceptDialog" parent="."]
+unique_name_in_owner = true
+title = "Success"
+dialog_text = ""
+

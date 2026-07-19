@@ -1,0 +1,62 @@
+{
+  "challenge_id": "py_variables",
+  "topic": "py_variables",
+  "difficulty": "easy",
+  "types": ["fill_blank", "fix_syntax", "fix_and_optimize"],
+  "challenges": {
+    "fill_blank": [
+      {
+        "id": "py_variables_fill_1",
+        "prompt": "Create a variable named 'score' and assign it the value 100.",
+        "template": "score = ___",
+        "answer": "100",
+        "explanation": "Variables are created by assigning a value with = operator.",
+        "hints": ["Use the assignment operator =", "Numbers don't need quotes"]
+      },
+      {
+        "id": "py_variables_fill_2",
+        "prompt": "Create a variable 'player_name' with your name as a string.",
+        "template": "player_name = ___",
+        "answer": "\"Alex\"",
+        "explanation": "Strings must be wrapped in quotes (single or double).",
+        "hints": ["Strings need quotes", "Both 'Alex' and \"Alex\" work"]
+      },
+      {
+        "id": "py_variables_fill_3",
+        "prompt": "Create a boolean variable 'is_active' set to True.",
+        "template": "is_active = ___",
+        "answer": "True",
+        "explanation": "Boolean values are True or False (capitalized).",
+        "hints": ["Boolean values are capitalized", "True or False"]
+      }
+    ],
+    "fix_syntax": [
+      {
+        "id": "py_variables_fix_1",
+        "prompt": "Fix the syntax error in this code:",
+        "code": "score = 100\nplayer name = \"Alex\"\nprint(score + player_name)",
+        "answer": "score = 100\nplayer_name = \"Alex\"\nprint(score, player_name)",
+        "explanation": "Variable names cannot have spaces. Use underscore. Also, can't concatenate int + str directly.",
+        "hints": ["Variable names: no spaces allowed", "Use underscore for multi-word names", "print() can take multiple arguments separated by comma"]
+      },
+      {
+        "id": "py_variables_fix_2",
+        "prompt": "Fix the errors:",
+        "code": "health = 100\nis_alive = true\nprint(\"Health: \" + health)",
+        "answer": "health = 100\nis_alive = True\nprint(\"Health: \" + str(health))",
+        "explanation": "Boolean True must be capitalized. Convert int to string with str() for concatenation.",
+        "hints": ["True/False are capitalized in Python", "str() converts numbers to strings"]
+      }
+    ],
+    "fix_and_optimize": [
+      {
+        "id": "py_variables_opt_1",
+        "prompt": "Optimize this code - remove redundancy:",
+        "code": "x = 10\ny = 10\nz = 10\ntotal = x + y + z",
+        "answer": "x = y = z = 10\ntotal = x * 3",
+        "explanation": "Chain assignment for same value. Use multiplication for repeated addition.",
+        "hints": ["Can assign same value to multiple vars", "Multiplication is faster than repeated addition"]
+      }
+    ]
+  }
+}

@@ -1,0 +1,54 @@
+{
+  "challenge_id": "ds_linked_lists",
+  "topic": "ds_linked_lists",
+  "difficulty": "hard",
+  "types": ["fill_blank", "fix_syntax", "fix_and_optimize"],
+  "challenges": {
+    "fill_blank": [
+      {
+        "id": "ds_linked_lists_fill_1",
+        "prompt": "Create a Node class with data and next pointer.",
+        "template": "class Node:\n    def __init__(self, data):\n        self.data = data\n        self.next = ___",
+        "answer": "None",
+        "explanation": "Next pointer starts as None (end of list).",
+        "hints": ["None = null pointer", "End of list marker"]
+      },
+      {
+        "id": "ds_linked_lists_fill_2",
+        "prompt": "Link node1 to node2.",
+        "template": "node1.next = ___",
+        "answer": "node2",
+        "explanation": "Set next pointer to the next node.",
+        "hints": ["Point to next node", "Creates the chain"]
+      },
+      {
+        "id": "ds_linked_lists_fill_3",
+        "prompt": "Traverse linked list starting at head.",
+        "template": "current = head\nwhile current:\n    print(current.data)\n    current = ___",
+        "answer": "current.next",
+        "explanation": "Move to next node each iteration.",
+        "hints": ["Follow next pointers", "Until current is None"]
+      }
+    ],
+    "fix_syntax": [
+      {
+        "id": "ds_linked_lists_fix_1",
+        "prompt": "Fix - infinite loop (forgot to advance):",
+        "code": "current = head\nwhile current:\n    print(current.data)",
+        "answer": "current = head\nwhile current:\n    print(current.data)\n    current = current.next",
+        "explanation": "Must advance current or loop forever.",
+        "hints": ["Update current each iteration", "current = current.next"]
+      }
+    ],
+    "fix_and_optimize": [
+      {
+        "id": "ds_linked_lists_opt_1",
+        "prompt": "Optimize - find middle node (two pointers):",
+        "code": "def find_middle(head):\n    nodes = []\n    current = head\n    while current:\n        nodes.append(current)\n        current = current.next\n    return nodes[len(nodes)//2]",
+        "answer": "def find_middle(head):\n    slow = fast = head\n    while fast and fast.next:\n        slow = slow.next\n        fast = fast.next.next\n    return slow",
+        "explanation": "Fast/slow pointer finds middle in one pass, O(1) space.",
+        "hints": ["Two pointers", "Fast moves 2x speed"]
+      }
+    ]
+  }
+}

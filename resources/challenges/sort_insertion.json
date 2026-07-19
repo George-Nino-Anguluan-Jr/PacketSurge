@@ -1,0 +1,46 @@
+{
+  "challenge_id": "sort_insertion",
+  "topic": "sort_insertion",
+  "difficulty": "medium",
+  "types": ["fill_blank", "fix_syntax", "fix_and_optimize"],
+  "challenges": {
+    "fill_blank": [
+      {
+        "id": "sort_insertion_fill_1",
+        "prompt": "Store current element to insert into sorted portion.",
+        "template": "key = arr[i]\nj = i - 1\nwhile j >= 0 and arr[j] > key:\n    arr[j + 1] = arr[j]\n    j -= 1\narr[j + 1] = ___",
+        "answer": "key",
+        "explanation": "Place key in its correct position after shifting.",
+        "hints": ["Insert the stored key", "At position j+1"]
+      },
+      {
+        "id": "sort_insertion_fill_2",
+        "prompt": "Shift elements greater than key to the right.",
+        "template": "while j >= 0 and arr[j] > key:\n    arr[j + 1] = ___\n    j -= 1",
+        "answer": "arr[j]",
+        "explanation": "Move larger elements one position right.",
+        "hints": ["Copy element to next position", "Shift right to make space"]
+      }
+    ],
+    "fix_syntax": [
+      {
+        "id": "sort_insertion_fix_1",
+        "prompt": "Fix - missing condition in while loop:",
+        "code": "def insertion_sort(arr):\n    for i in range(1, len(arr)):\n        key = arr[i]\n        j = i - 1\n        while j >= 0:\n            arr[j + 1] = arr[j]\n            j -= 1\n        arr[j + 1] = key",
+        "answer": "def insertion_sort(arr):\n    for i in range(1, len(arr)):\n        key = arr[i]\n        j = i - 1\n        while j >= 0 and arr[j] > key:\n            arr[j + 1] = arr[j]\n            j -= 1\n        arr[j + 1] = key",
+        "explanation": "Must check arr[j] > key to stop at correct position.",
+        "hints": ["Add comparison condition", "Stop when element <= key"]
+      }
+    ],
+    "fix_and_optimize": [
+      {
+        "id": "sort_insertion_opt_1",
+        "prompt": "Optimize - use binary search for insertion point:",
+        "code": "def insertion_sort(arr):\n    for i in range(1, len(arr)):\n        key = arr[i]\n        j = i - 1\n        while j >= 0 and arr[j] > key:\n            arr[j + 1] = arr[j]\n            j -= 1\n        arr[j + 1] = key",
+        "answer": "def insertion_sort(arr):\n    for i in range(1, len(arr)):\n        key = arr[i]\n        # Binary search for insertion point\n        left, right = 0, i\n        while left < right:\n            mid = (left + right) // 2\n            if arr[mid] > key:\n                right = mid\n            else:\n                left = mid + 1\n        # Shift elements\n        for j in range(i, left, -1):\n            arr[j] = arr[j - 1]\n        arr[left] = key",
+        "explanation": "Binary insertion sort reduces comparisons from O(n) to O(log n) per element.",
+        "hints": ["Binary search for position", "Then shift elements"]
+      }
+    ]
+  }
+}

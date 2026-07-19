@@ -1,0 +1,46 @@
+{
+  "challenge_id": "sort_selection",
+  "topic": "sort_selection",
+  "difficulty": "medium",
+  "types": ["fill_blank", "fix_syntax", "fix_and_optimize"],
+  "challenges": {
+    "fill_blank": [
+      {
+        "id": "sort_selection_fill_1",
+        "prompt": "Find index of minimum element in unsorted portion.",
+        "template": "min_idx = i\nfor j in range(i+1, n):\n    if arr[j] < arr[min_idx]:\n        min_idx = ___",
+        "answer": "j",
+        "explanation": "Update min_idx when smaller element found.",
+        "hints": ["Track index of minimum", "Update when smaller found"]
+      },
+      {
+        "id": "sort_selection_fill_2",
+        "prompt": "Swap minimum element with first unsorted position.",
+        "template": "arr[i], arr[min_idx] = ___",
+        "answer": "arr[min_idx], arr[i]",
+        "explanation": "Swap puts minimum at position i.",
+        "hints": ["Python swap syntax", "Place min at current position"]
+      }
+    ],
+    "fix_syntax": [
+      {
+        "id": "sort_selection_fix_1",
+        "prompt": "Fix - wrong swap order:",
+        "code": "def selection_sort(arr):\n    n = len(arr)\n    for i in range(n):\n        min_idx = i\n        for j in range(i+1, n):\n            if arr[j] < arr[min_idx]:\n                min_idx = j\n        arr[min_idx], arr[i] = arr[i], arr[min_idx]",
+        "answer": "def selection_sort(arr):\n    n = len(arr)\n    for i in range(n):\n        min_idx = i\n        for j in range(i+1, n):\n            if arr[j] < arr[min_idx]:\n                min_idx = j\n        arr[i], arr[min_idx] = arr[min_idx], arr[i]",
+        "explanation": "Swap order doesn't matter in Python tuple unpacking, but conventionally put target first.",
+        "hints": ["Swap works either way", "Convention: target first"]
+      }
+    ],
+    "fix_and_optimize": [
+      {
+        "id": "sort_selection_opt_1",
+        "prompt": "Optimize - use built-in min with key:",
+        "code": "def selection_sort(arr):\n    n = len(arr)\n    for i in range(n):\n        min_idx = i\n        for j in range(i+1, n):\n            if arr[j] < arr[min_idx]:\n                min_idx = j\n        arr[i], arr[min_idx] = arr[min_idx], arr[i]",
+        "answer": "def selection_sort(arr):\n    for i in range(len(arr)):\n        min_idx = min(range(i, len(arr)), key=arr.__getitem__)\n        arr[i], arr[min_idx] = arr[min_idx], arr[i]",
+        "explanation": "min() with key finds minimum index in one line.",
+        "hints": ["min() with key parameter", "arr.__getitem__ as key"]
+      }
+    ]
+  }
+}
