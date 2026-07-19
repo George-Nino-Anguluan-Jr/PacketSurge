@@ -47,13 +47,13 @@ var countdown_active: bool         = true
 
 # ─── TOWER DEFINITIONS ─────────────────────────────────
 const TOWER_DEFINITIONS = {
-	"tower_array": {
+		"tower_array": {
 		"tower_id":       "tower_array",
 		"tower_name":     "Array Tower",
 		"description":    "Fast attack. O(1) access speed.",
 		"data_structure": "Array",
 		"ram_cost":       40,
-		"damage":         500.0,
+		"damage":         18.0,
 		"attack_speed":   2.0,
 		"attack_range":   140.0,
 		"time_complexity":"O(1)",
@@ -281,7 +281,8 @@ func _setup_level() -> void:
 		enemy_scene,
 		enemy_layer,
 		waypoints,
-		AdaptiveAI.get_wave_modifier()
+		AdaptiveAI.get_wave_modifier(),
+		config.get("enemy_types", ["basic_packet"])
 	)
 
 func _setup_hud() -> void:

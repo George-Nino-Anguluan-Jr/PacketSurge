@@ -16,18 +16,21 @@ var enemy_scene: PackedScene        = null
 var enemy_layer: Node2D             = null
 var path_waypoints: Array[Vector2]  = []
 var difficulty_modifier: float      = 1.0
+var enemy_pool: Array          = []
 
 func initialize(
 		waves: int,
 		e_scene: PackedScene,
 		e_layer: Node2D,
 		waypoints: Array[Vector2],
-		modifier: float) -> void:
+		modifier: float,
+		pool: Array = []) -> void:
 	total_waves         = waves
 	enemy_scene         = e_scene
 	enemy_layer         = e_layer
 	path_waypoints      = waypoints
 	difficulty_modifier = modifier
+	enemy_pool          = pool
 	current_wave        = 0
 
 func start_next_wave() -> void:
@@ -52,17 +55,49 @@ func _spawn_wave(wave_num: int) -> void:
 		_spawn_enemy(wave_num, i)
 
 func _get_enemy_type(wave_num: int, index: int) -> String:
-	if wave_num >= 7 and index == 0:
-		return "boss_packet"
-	if wave_num >= 5 and index % 5 == 0:
-		return "stealth_packet"
-	if wave_num >= 4 and index % 4 == 0:
-		return "encrypted_packet"
-	if wave_num >= 3 and index % 3 == 0:
-		return "heavy_packet"
-	if wave_num >= 2 and index % 2 == 0:
-		return "fast_packet"
-	return "basic_packet"
+	if enemy_pool.size() == 0:
+		return "basic_packet"
+
+	# First wave is always basic
+	if wave_num == 1:
+		return "basic_packet"
+
+	# Last wave special — pivot_splitter boss type
+	var boss_type = "pivot_splitter"
+	if wave_num == total_waves and boss_type in enemy_pool:
+		if index == 0:
+			return boss_type
+
+	# Weighted selection from pool
+	var weights: Array[float] = []
+	var last_idx = enemy_pool.size() - 1
+
+	for j in range(enemy_pool.size()):
+		var etype = enemy_pool[j]
+		if etype == "basic_packet":
+			# Basic becomes less common in later waves
+			weights.append(max(0.0, 0.6 - wave_num * 0.06))
+		elif j == last_idx:
+			# New concept enemy appears more in later waves
+			weights.append(0.05 + wave_num * 0.04)
+		else:
+			# Mid enemies stay consistent
+			weights.append(0.2)
+
+	var total = 0.0
+	for w in weights:
+		total += w
+	if total <= 0.0:
+		return enemy_pool[0]
+
+	var roll = randf() * total
+	var cumulative = 0.0
+	for j in range(enemy_pool.size()):
+		cumulative += weights[j]
+		if roll < cumulative:
+			return enemy_pool[j]
+
+	return enemy_pool[0]
 
 func _spawn_enemy(wave_num: int, index: int) -> void:
 	if enemy_scene == null or enemy_layer == null:
@@ -81,6 +116,48 @@ func _spawn_enemy(wave_num: int, index: int) -> void:
 	enemy.connect("enemy_reached_end", _on_enemy_reached_end)
 	enemies_alive += 1
 	enemy_spawned.emit(enemy)
+
+	# Handle paired enemy types
+	if enemy_type == "linked_drain":
+		_spawn_linked_partner(enemy, wave_num)
+	elif enemy_type == "merge_twin":
+		_spawn_merge_twin(enemy, wave_num)
+
+func _spawn_linked_partner(enemy: Node, wave_num: int) -> void:
+	var partner = enemy_scene.instantiate()
+	enemy_layer.add_child(partner)
+
+	var health = 100.0 * difficulty_modifier * (1.0 + wave_num * 0.3)
+	var speed  = 80.0 * difficulty_modifier
+	var part_data = {"partner": enemy}
+	partner.initialize(path_waypoints, health * 0.8, speed, "linked_drain", part_data)
+	enemy.type_data["partner"] = partner
+
+	partner.current_waypoint = enemy.current_waypoint
+	partner.position = enemy.position + Vector2(30, 0)
+
+	partner.connect("enemy_defeated", _on_enemy_defeated)
+	partner.connect("enemy_reached_end", _on_enemy_reached_end)
+	enemies_alive += 1
+	enemy_spawned.emit(partner)
+
+func _spawn_merge_twin(enemy: Node, wave_num: int) -> void:
+	var partner = enemy_scene.instantiate()
+	enemy_layer.add_child(partner)
+
+	var health = 100.0 * difficulty_modifier * (1.0 + wave_num * 0.3)
+	var speed  = 80.0 * difficulty_modifier
+	var part_data = {"partner": enemy}
+	partner.initialize(path_waypoints, health, speed, "merge_twin", part_data)
+	enemy.type_data["partner"] = partner
+
+	partner.current_waypoint = enemy.current_waypoint
+	partner.position = enemy.position + Vector2(-30, 0)
+
+	partner.connect("enemy_defeated", _on_enemy_defeated)
+	partner.connect("enemy_reached_end", _on_enemy_reached_end)
+	enemies_alive += 1
+	enemy_spawned.emit(partner)
 
 func _on_enemy_defeated(_enemy: Node) -> void:
 	enemies_alive -= 1
