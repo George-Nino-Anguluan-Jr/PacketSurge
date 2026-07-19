@@ -17,7 +17,6 @@ func can_afford(cost: int) -> bool:
 
 func spend(cost: int) -> bool:
 	if not can_afford(cost):
-		SignalBus.ram_insufficient.emit(cost)
 		return false
 	current_ram -= cost
 	ram_changed.emit(current_ram, max_ram)

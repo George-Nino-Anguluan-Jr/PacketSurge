@@ -318,10 +318,6 @@ func _input(event: InputEvent) -> void:
 
 # ─── DRAW ──────────────────────────────────────────────
 func _draw() -> void:
-	_draw_background()
-	_draw_circuit_board_decorations()
-	_draw_path()
-	_draw_tower_spots()
 	_draw_binary_particles()
 	_draw_hover()
 
