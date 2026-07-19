@@ -11,6 +11,7 @@ const SCENES = {
 	"main_menu":    "res://scenes/main_menu/MainMenu.tscn",
 	"academy":      "res://scenes/academy/Academy.tscn",
 	"campaign":     "res://scenes/campaign/level_select/LevelSelect.tscn",
+	"placement_quiz": "res://scenes/placement_quiz/PlacementQuiz.tscn",
 	"tower_select": "res://scenes/campaign/tower_select/TowerSelect.tscn",
 	"level":        "res://scenes/campaign/level/Level.tscn",
 	"index":        "res://scenes/index/Index.tscn",
@@ -18,7 +19,7 @@ const SCENES = {
 	"leaderboard":  "res://scenes/leaderboard/Leaderboard.tscn",
 	"analytics":    "res://scenes/analytics/Analytics.tscn",
 	"settings":     "res://scenes/settings/Settings.tscn",
-	"placement_quiz": "res://scenes/placement_quiz/PlacementQuiz.tscn",
+
 }
 
 const LEVEL_CONFIGS = {
@@ -378,93 +379,6 @@ const LEVEL_CONFIGS = {
 	},
 }
 
-# ─── SUB-LEVEL CONFIGS (39 total: 13 main × 3 sub) ────────────────
-# Sub-level types: 0 = lesson, 1 = practice, 2 = challenge
-const SUB_LEVEL_CONFIGS = {
-	# Level 1: Variables
-	0: {  # Lesson
-		"main_level": 1, "sub_index": 0, "type": "lesson",
-		"title": "Level 1: Lesson - Variables",
-		"topic_id": "py_variables", "difficulty": "easy",
-		"description": "Learn to create and use variables in Python",
-		"challenge_type": "fill_blank",
-	},
-	1: {  # Practice
-		"main_level": 1, "sub_index": 1, "type": "practice",
-		"title": "Level 1: Practice - Variables",
-		"topic_id": "py_variables", "difficulty": "easy",
-		"description": "Practice creating variables and basic operations",
-		"challenge_type": "fix_syntax",
-	},
-	2: {  # Challenge
-		"main_level": 1, "sub_index": 2, "type": "challenge",
-		"title": "Level 1: Challenge - Variables",
-		"topic_id": "py_variables", "difficulty": "easy",
-		"description": "Optimize variable usage and fix bugs",
-		"challenge_type": "fix_and_optimize",
-	},
-	
-	# Level 2: Lists
-	3: { "main_level": 2, "sub_index": 0, "type": "lesson", "title": "Level 2: Lesson - Lists", "topic_id": "py_lists", "difficulty": "easy", "description": "Learn to create and manipulate lists", "challenge_type": "fill_blank" },
-	4: { "main_level": 2, "sub_index": 1, "type": "practice", "title": "Level 2: Practice - Lists", "topic_id": "py_lists", "difficulty": "easy", "description": "Practice list operations", "challenge_type": "fix_syntax" },
-	5: { "main_level": 2, "sub_index": 2, "type": "challenge", "title": "Level 2: Challenge - Lists", "topic_id": "py_lists", "difficulty": "easy", "description": "Optimize list operations", "challenge_type": "fix_and_optimize" },
-	
-	# Level 3: Loops
-	6: { "main_level": 3, "sub_index": 0, "type": "lesson", "title": "Level 3: Lesson - Loops", "topic_id": "py_loops", "difficulty": "easy", "description": "Learn for and while loops", "challenge_type": "fill_blank" },
-	7: { "main_level": 3, "sub_index": 1, "type": "practice", "title": "Level 3: Practice - Loops", "topic_id": "py_loops", "difficulty": "easy", "description": "Practice loop patterns", "challenge_type": "fix_syntax" },
-	8: { "main_level": 3, "sub_index": 2, "type": "challenge", "title": "Level 3: Challenge - Loops", "topic_id": "py_loops", "difficulty": "easy", "description": "Optimize loop performance", "challenge_type": "fix_and_optimize" },
-	
-	# Level 4: Conditions
-	9: { "main_level": 4, "sub_index": 0, "type": "lesson", "title": "Level 4: Lesson - Conditions", "topic_id": "py_conditions", "difficulty": "easy", "description": "Learn if/elif/else statements", "challenge_type": "fill_blank" },
-	10: { "main_level": 4, "sub_index": 1, "type": "practice", "title": "Level 4: Practice - Conditions", "topic_id": "py_conditions", "difficulty": "easy", "description": "Practice conditional logic", "challenge_type": "fix_syntax" },
-	11: { "main_level": 4, "sub_index": 2, "type": "challenge", "title": "Level 4: Challenge - Conditions", "topic_id": "py_conditions", "difficulty": "easy", "description": "Optimize conditional expressions", "challenge_type": "fix_and_optimize" },
-	
-	# Level 5: Functions
-	12: { "main_level": 5, "sub_index": 0, "type": "lesson", "title": "Level 5: Lesson - Functions", "topic_id": "py_functions", "difficulty": "medium", "description": "Learn to define and call functions", "challenge_type": "fill_blank" },
-	13: { "main_level": 5, "sub_index": 1, "type": "practice", "title": "Level 5: Practice - Functions", "topic_id": "py_functions", "difficulty": "medium", "description": "Practice function definitions", "challenge_type": "fix_syntax" },
-	14: { "main_level": 5, "sub_index": 2, "type": "challenge", "title": "Level 5: Challenge - Functions", "topic_id": "py_functions", "difficulty": "medium", "description": "Optimize function implementations", "challenge_type": "fix_and_optimize" },
-	
-	# Level 6: Arrays
-	15: { "main_level": 6, "sub_index": 0, "type": "lesson", "title": "Level 6: Lesson - Arrays", "topic_id": "ds_arrays", "difficulty": "medium", "description": "Learn array operations and algorithms", "challenge_type": "fill_blank" },
-	16: { "main_level": 6, "sub_index": 1, "type": "practice", "title": "Level 6: Practice - Arrays", "topic_id": "ds_arrays", "difficulty": "medium", "description": "Practice array manipulation", "challenge_type": "fix_syntax" },
-	17: { "main_level": 6, "sub_index": 2, "type": "challenge", "title": "Level 6: Challenge - Arrays", "topic_id": "ds_arrays", "difficulty": "medium", "description": "Optimize array algorithms", "challenge_type": "fix_and_optimize" },
-	
-	# Level 7: Stacks
-	18: { "main_level": 7, "sub_index": 0, "type": "lesson", "title": "Level 7: Lesson - Stacks", "topic_id": "ds_stacks", "difficulty": "medium", "description": "Learn stack operations (LIFO)", "challenge_type": "fill_blank" },
-	19: { "main_level": 7, "sub_index": 1, "type": "practice", "title": "Level 7: Practice - Stacks", "topic_id": "ds_stacks", "difficulty": "medium", "description": "Practice stack algorithms", "challenge_type": "fix_syntax" },
-	20: { "main_level": 7, "sub_index": 2, "type": "challenge", "title": "Level 7: Challenge - Stacks", "topic_id": "ds_stacks", "difficulty": "medium", "description": "Optimize stack implementations", "challenge_type": "fix_and_optimize" },
-	
-	# Level 8: Queues
-	21: { "main_level": 8, "sub_index": 0, "type": "lesson", "title": "Level 8: Lesson - Queues", "topic_id": "ds_queues", "difficulty": "medium", "description": "Learn queue operations (FIFO)", "challenge_type": "fill_blank" },
-	22: { "main_level": 8, "sub_index": 1, "type": "practice", "title": "Level 8: Practice - Queues", "topic_id": "ds_queues", "difficulty": "medium", "description": "Practice queue algorithms", "challenge_type": "fix_syntax" },
-	23: { "main_level": 8, "sub_index": 2, "type": "challenge", "title": "Level 8: Challenge - Queues", "topic_id": "ds_queues", "difficulty": "medium", "description": "Optimize queue implementations", "challenge_type": "fix_and_optimize" },
-	
-	# Level 9: Linked Lists
-	24: { "main_level": 9, "sub_index": 0, "type": "lesson", "title": "Level 9: Lesson - Linked Lists", "topic_id": "ds_linked_lists", "difficulty": "hard", "description": "Learn linked list structure", "challenge_type": "fill_blank" },
-	25: { "main_level": 9, "sub_index": 1, "type": "practice", "title": "Level 9: Practice - Linked Lists", "topic_id": "ds_linked_lists", "difficulty": "hard", "description": "Practice linked list operations", "challenge_type": "fix_syntax" },
-	26: { "main_level": 9, "sub_index": 2, "type": "challenge", "title": "Level 9: Challenge - Linked Lists", "topic_id": "ds_linked_lists", "difficulty": "hard", "description": "Optimize linked list algorithms", "challenge_type": "fix_and_optimize" },
-	
-	# Level 10: Bubble Sort
-	27: { "main_level": 10, "sub_index": 0, "type": "lesson", "title": "Level 10: Lesson - Bubble Sort", "topic_id": "sort_bubble", "difficulty": "medium", "description": "Learn bubble sort algorithm", "challenge_type": "fill_blank" },
-	28: { "main_level": 10, "sub_index": 1, "type": "practice", "title": "Level 10: Practice - Bubble Sort", "topic_id": "sort_bubble", "difficulty": "medium", "description": "Practice bubble sort implementation", "challenge_type": "fix_syntax" },
-	29: { "main_level": 10, "sub_index": 2, "type": "challenge", "title": "Level 10: Challenge - Bubble Sort", "topic_id": "sort_bubble", "difficulty": "medium", "description": "Optimize bubble sort", "challenge_type": "fix_and_optimize" },
-	
-	# Level 11: Selection Sort
-	30: { "main_level": 11, "sub_index": 0, "type": "lesson", "title": "Level 11: Lesson - Selection Sort", "topic_id": "sort_selection", "difficulty": "medium", "description": "Learn selection sort algorithm", "challenge_type": "fill_blank" },
-	31: { "main_level": 11, "sub_index": 1, "type": "practice", "title": "Level 11: Practice - Selection Sort", "topic_id": "sort_selection", "difficulty": "medium", "description": "Practice selection sort", "challenge_type": "fix_syntax" },
-	32: { "main_level": 11, "sub_index": 2, "type": "challenge", "title": "Level 11: Challenge - Selection Sort", "topic_id": "sort_selection", "difficulty": "medium", "description": "Optimize selection sort", "challenge_type": "fix_and_optimize" },
-	
-	# Level 12: Insertion Sort
-	33: { "main_level": 12, "sub_index": 0, "type": "lesson", "title": "Level 12: Lesson - Insertion Sort", "topic_id": "sort_insertion", "difficulty": "medium", "description": "Learn insertion sort algorithm", "challenge_type": "fill_blank" },
-	34: { "main_level": 12, "sub_index": 1, "type": "practice", "title": "Level 12: Practice - Insertion Sort", "topic_id": "sort_insertion", "difficulty": "medium", "description": "Practice insertion sort", "challenge_type": "fix_syntax" },
-	35: { "main_level": 12, "sub_index": 2, "type": "challenge", "title": "Level 12: Challenge - Insertion Sort", "topic_id": "sort_insertion", "difficulty": "medium", "description": "Optimize insertion sort", "challenge_type": "fix_and_optimize" },
-	
-	# Level 13: Quick Sort
-	36: { "main_level": 13, "sub_index": 0, "type": "lesson", "title": "Level 13: Lesson - Quick Sort", "topic_id": "sort_quick", "difficulty": "hard", "description": "Learn quick sort algorithm", "challenge_type": "fill_blank" },
-	37: { "main_level": 13, "sub_index": 1, "type": "practice", "title": "Level 13: Practice - Quick Sort", "topic_id": "sort_quick", "difficulty": "hard", "description": "Practice quick sort", "challenge_type": "fix_syntax" },
-	38: { "main_level": 13, "sub_index": 2, "type": "challenge", "title": "Level 13: Challenge - Quick Sort", "topic_id": "sort_quick", "difficulty": "hard", "description": "Optimize quick sort", "challenge_type": "fix_and_optimize" },
-}
-
 const TOWER_DEFINITIONS = {
 	"tower_array": {
 		"tower_id":    "tower_array",
@@ -563,14 +477,6 @@ const TOWER_DEFINITIONS = {
 var current_level: int = 1
 var current_scene_key: String = ""
 var current_sandbox_structure: String = ""
-var current_sub_level_id: int = 0
-
-func get_current_sub_level_id() -> int:
-	return current_sub_level_id
-
-func set_current_sub_level_id(sub_level_id: int) -> void:
-	current_sub_level_id = sub_level_id
-
 
 func _ready() -> void:
 	SignalBus.scene_change_requested.connect(_on_scene_change_requested)

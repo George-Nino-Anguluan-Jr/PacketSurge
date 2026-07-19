@@ -37,10 +37,6 @@ var grid_system: Node2D            = null
 var level_start_time: float        = 0.0
 var is_level_ended: bool           = false
 
-# Challenge system integration
-var challenge_manager: ChallengeManager = null
-var current_sub_level_id: int = 0
-
 const INTER_WAVE_DURATION: float  = 15.0
 var wave_countdown: float          = INTER_WAVE_DURATION
 var countdown_active: bool         = true
@@ -228,67 +224,13 @@ func _ready() -> void:
 	_setup_buttons()
 	_connect_signals()
 	_apply_hud_styles()
-	_setup_challenge_manager()
 	
 	# Dynamically handle auto-centering of the grid system on any viewport screen size
 	get_viewport().size_changed.connect(_on_viewport_size_changed)
 	_on_viewport_size_changed()
 	_create_overlay_menu()
-
-func _setup_challenge_manager() -> void:
-	"""Initialize ChallengeManager for this level"""
-	challenge_manager = ChallengeManager.new()
-	add_child(challenge_manager)
-	
-	# Get current sub-level from GameManager or ProgressManager
-	var sub_level_id = 0
-	if GameManager.has_method("get_current_sub_level_id"):
-		sub_level_id = GameManager.get_current_sub_level_id()
-	current_sub_level_id = sub_level_id
-	
-	# Initialize challenge manager for this level
-	challenge_manager.initialize_for_level(level_number, current_sub_level_id)
-	
-	# Connect challenge signals
-	challenge_manager.challenge_triggered.connect(_on_challenge_triggered)
-	# challenge_completed is handled via SignalBus
-
-func _on_challenge_triggered(challenge: Dictionary) -> void:
-	"""Show the code challenge UI"""
-	print("[Level] Challenge triggered: ", challenge.get("id", "unknown"))
-	
-	# Pause the game
-	get_tree().paused = true
-	
-	# Load the CodeChallenge scene
-	var challenge_scene = preload("res://scenes/placement_quiz/CodeChallenge.tscn")
-	var challenge_ui = challenge_scene.instantiate()
-	challenge_ui.process_mode = Node.PROCESS_MODE_ALWAYS
-	$HUD/HUDControl.add_child(challenge_ui)
-	
-	# Set the challenge data
-	challenge_ui.set_challenge(challenge, current_sub_level_id)
-	
-	# Connect to challenge completion
-	challenge_ui.challenge_completed.connect(_on_code_challenge_completed)
-
-func _on_code_challenge_completed(passed: bool, score: int) -> void:
-	"""Handle code challenge completion"""
-	get_tree().paused = false
-	
-	if passed:
-		SignalBus.hud_message_requested.emit("✅ Challenge passed! +" + str(score) + " score", 3.0)
-		# Apply challenge reward
-		_apply_challenge_reward(score)
-	else:
-		SignalBus.hud_message_requested.emit("❌ Challenge failed. Try again!", 3.0)
-
-func _apply_challenge_reward(score: int) -> void:
-	"""Apply rewards for passing a challenge"""
-	ram_manager.earn(20)
-	score += 50
-	score_label.text = "Score: " + str(score)
-
+	if level_number == 1:
+		_show_tutorial()
 
 # ─── SETUP ─────────────────────────────────────────────
 func _setup_grid() -> void:
@@ -308,7 +250,6 @@ func _setup_grid() -> void:
 
 	grid_system.initialize(waypoints, spots)
 	grid_system.cell_clicked.connect(_on_cell_clicked)
-	grid_system.first_tower_placed.connect(_on_first_tower_placed)
 
 func _setup_level() -> void:
 	var config = _get_level_config()
@@ -338,6 +279,7 @@ func _setup_hud() -> void:
 	score_label.text       = "Score: 0"
 	back_btn.visible       = false
 	level_label.visible    = false
+	skip_wave_btn.text = "⏩ Skip (20⚡)"
 	_update_ram_label()
 	_build_tower_selector()
 	_setup_wave_timeline()
@@ -397,6 +339,115 @@ func _connect_signals() -> void:
 var overlay_menu: Control = null
 var current_clicked_cell: Vector2i = Vector2i(-1, -1)
 
+var _tutorial_step: int = 0
+var _tutorial_overlay: Control = null
+
+func _show_tutorial() -> void:
+	_tutorial_overlay = Control.new()
+	_tutorial_overlay.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
+	_tutorial_overlay.mouse_filter = Control.MOUSE_FILTER_STOP
+	$HUD/HUDControl.add_child(_tutorial_overlay)
+
+	var bg := ColorRect.new()
+	bg.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
+	bg.color = Color(0, 0, 0, 0.7)
+	_tutorial_overlay.add_child(bg)
+
+	_tutorial_step = 0
+	_show_tutorial_step()
+
+func _show_tutorial_step() -> void:
+	for child in _tutorial_overlay.get_children():
+		if child is ColorRect: continue
+		child.queue_free()
+
+	var card := PanelContainer.new()
+	card.custom_minimum_size = Vector2(300, 220)
+	card.set_anchors_preset(Control.PRESET_CENTER)
+	var st := StyleBoxFlat.new()
+	st.bg_color = Color("#0A1628")
+	st.border_color = Color("#00D4FF")
+	st.border_width_left = 2
+	st.border_width_right = 2
+	st.border_width_top = 2
+	st.border_width_bottom = 2
+	st.corner_radius_top_left = 12
+	st.corner_radius_top_right = 12
+	st.corner_radius_bottom_left = 12
+	st.corner_radius_bottom_right = 12
+	card.add_theme_stylebox_override("panel", st)
+	_tutorial_overlay.add_child(card)
+
+	var layout := VBoxContainer.new()
+	layout.add_theme_constant_override("separation", 12)
+	layout.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	layout.size_flags_vertical = Control.SIZE_EXPAND_FILL
+	layout.add_theme_constant_override("margin_left", 20)
+	layout.add_theme_constant_override("margin_right", 20)
+	layout.add_theme_constant_override("margin_top", 20)
+	layout.add_theme_constant_override("margin_bottom", 20)
+	card.add_child(layout)
+
+	var title := Label.new()
+	title.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	title.add_theme_color_override("font_color", Color("#00D4FF"))
+	title.add_theme_font_size_override("font_size", 16)
+	layout.add_child(title)
+
+	var body := Label.new()
+	body.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	body.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+	body.add_theme_color_override("font_color", Color("#E8F4FD"))
+	body.add_theme_font_size_override("font_size", 13)
+	body.size_flags_vertical = Control.SIZE_EXPAND_FILL
+	layout.add_child(body)
+
+	var steps_lbl := Label.new()
+	steps_lbl.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	steps_lbl.add_theme_color_override("font_color", Color("#4A7FA5"))
+	steps_lbl.add_theme_font_size_override("font_size", 10)
+	layout.add_child(steps_lbl)
+
+	var btn := Button.new()
+	btn.custom_minimum_size = Vector2(160, 40)
+	btn.size_flags_horizontal = Control.SIZE_SHRINK_CENTER
+	btn.add_theme_font_size_override("font_size", 13)
+	layout.add_child(btn)
+
+	var tutorial_data = [
+		{
+			"title": "Welcome, Operator!",
+			"body": "This is your first mission.\nPackets will flow along the path from left to right.\nYour job: place towers to destroy them before they reach the end."
+		},
+		{
+			"title": "Placing Towers",
+			"body": "Click on any highlighted grid cell to open the tower selector.\nChoose a tower to place it.\nEach tower costs RAM (shown on the button)."
+		},
+		{
+			"title": "RAM & Waves",
+			"body": "You earn RAM by destroying enemies and completing waves.\nUse RAM to place and upgrade towers.\nSurvive all waves with high base HP for a better grade!"
+		},
+		{
+			"title": "Upgrading Towers",
+			"body": "Click an existing tower to open its menu.\nUpgrade it to increase damage and range.\nUpgrades cost RAM — manage your budget wisely!"
+		},
+	]
+
+	if _tutorial_step < tutorial_data.size():
+		var d = tutorial_data[_tutorial_step]
+		title.text = d["title"]
+		body.text = d["body"]
+		steps_lbl.text = "Step " + str(_tutorial_step + 1) + " of " + str(tutorial_data.size())
+		btn.text = "Next →" if _tutorial_step < tutorial_data.size() - 1 else "Let's Go!"
+		btn.pressed.connect(_on_tutorial_next)
+	else:
+		_tutorial_overlay.queue_free()
+		_tutorial_overlay = null
+
+func _on_tutorial_next() -> void:
+	_tutorial_step += 1
+	_show_tutorial_step()
+
 func _create_overlay_menu() -> void:
 	# Use Control instead of PanelContainer for custom radial layout
 	overlay_menu = Control.new()
@@ -426,21 +477,116 @@ func _on_overlay_tower_selected(tower_id: String) -> void:
 
 # ─── GRID INTERACTION ──────────────────────────────────
 func _on_cell_clicked(cell: Vector2i) -> void:
-	if not grid_system.can_place_tower(cell):
-		overlay_menu.visible = false
-		return
-		
-	current_clicked_cell = cell
-	var cell_center = grid_system.get_cell_center(cell)
-	
-	# Convert grid world position to screen canvas position
-	var canvas_pos = get_canvas_transform() * cell_center
-	overlay_menu.position = canvas_pos
-	
-	# Remove old selector children
+	overlay_menu.visible = false
 	for child in overlay_menu.get_children():
 		child.queue_free()
-		
+
+	var existing = grid_system.get_tower_at(cell)
+	if existing:
+		_show_tower_menu(cell, existing)
+		return
+
+	if not grid_system.can_place_tower(cell):
+		return
+
+	current_clicked_cell = cell
+	var cell_center = grid_system.get_cell_center(cell)
+	var canvas_pos = get_canvas_transform() * cell_center
+	overlay_menu.position = canvas_pos
+
+	_show_placement_radial(cell)
+
+func _show_tower_menu(cell: Vector2i, tower: Node) -> void:
+	var cell_center = grid_system.get_cell_center(cell)
+	var canvas_pos = get_canvas_transform() * cell_center
+	overlay_menu.position = canvas_pos
+
+	var bg := Panel.new()
+	bg.custom_minimum_size = Vector2(160, 110)
+	bg.size = Vector2(160, 110)
+	bg.position = Vector2(-80, -55)
+	var bg_style := StyleBoxFlat.new()
+	bg_style.bg_color = Color("#070F1E", 0.95)
+	bg_style.border_color = Color("#00D4FF")
+	bg_style.border_width_left = 1
+	bg_style.border_width_right = 1
+	bg_style.border_width_top = 1
+	bg_style.border_width_bottom = 1
+	bg_style.corner_radius_top_left = 8
+	bg_style.corner_radius_top_right = 8
+	bg_style.corner_radius_bottom_left = 8
+	bg_style.corner_radius_bottom_right = 8
+	bg.add_theme_stylebox_override("panel", bg_style)
+	overlay_menu.add_child(bg)
+
+	var layout := VBoxContainer.new()
+	layout.position = Vector2(-70, -30)
+	layout.size = Vector2(140, 60)
+	layout.add_theme_constant_override("separation", 6)
+	bg.add_child(layout)
+
+	var lvl_lbl := Label.new()
+	lvl_lbl.text = tower.tower_name + " Lv." + str(tower.current_level)
+	lvl_lbl.add_theme_color_override("font_color", Color("#00D4FF"))
+	lvl_lbl.add_theme_font_size_override("font_size", 12)
+	lvl_lbl.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	layout.add_child(lvl_lbl)
+
+	if tower.current_level < tower.max_level:
+		var cost = tower.ram_cost * tower.current_level
+		var upg_btn := Button.new()
+		upg_btn.text = "⬆ Upgrade (" + str(cost) + "⚡)"
+		upg_btn.custom_minimum_size = Vector2(120, 28)
+		upg_btn.add_theme_font_size_override("font_size", 10)
+		if ram_manager.can_afford(cost):
+			upg_btn.add_theme_color_override("font_color", Color("#00FF88"))
+		else:
+			upg_btn.add_theme_color_override("font_color", Color("#FF3366"))
+		upg_btn.pressed.connect(_on_upgrade_tower.bind(tower, cost))
+		layout.add_child(upg_btn)
+
+	var abil_cost = tower.get_ability_cost()
+	var abil_btn := Button.new()
+	abil_btn.text = "⚡ " + tower.get_ability_name() + " (" + str(abil_cost) + "⚡)"
+	abil_btn.custom_minimum_size = Vector2(120, 24)
+	abil_btn.add_theme_font_size_override("font_size", 9)
+	if tower.is_ability_ready() and ram_manager.can_afford(abil_cost):
+		abil_btn.add_theme_color_override("font_color", Color("#FFB800"))
+	else:
+		abil_btn.add_theme_color_override("font_color", Color("#4A3A1A"))
+	abil_btn.pressed.connect(_on_ability_used.bind(tower, abil_cost))
+	layout.add_child(abil_btn)
+
+	var close_btn := Button.new()
+	close_btn.text = "✕ Close"
+	close_btn.custom_minimum_size = Vector2(120, 24)
+	close_btn.add_theme_font_size_override("font_size", 9)
+	close_btn.add_theme_color_override("font_color", Color("#4A7FA5"))
+	close_btn.pressed.connect(func(): overlay_menu.visible = false)
+	layout.add_child(close_btn)
+
+	overlay_menu.visible = true
+
+func _on_upgrade_tower(tower: Node, cost: int) -> void:
+	if not ram_manager.spend(cost):
+		SignalBus.hud_message_requested.emit("Not enough RAM!", 2.0)
+		return
+	var new_lvl = tower.upgrade()
+	overlay_menu.visible = false
+	SignalBus.hud_message_requested.emit(tower.tower_name + " upgraded to Lv." + str(new_lvl) + "!", 2.0)
+
+func _on_ability_used(tower: Node, cost: int) -> void:
+	if not tower.is_ability_ready():
+		SignalBus.hud_message_requested.emit("Ability on cooldown!", 2.0)
+		return
+	if not ram_manager.spend(cost):
+		SignalBus.hud_message_requested.emit("Not enough RAM!", 2.0)
+		return
+	tower.activate_ability()
+	overlay_menu.visible = false
+	SignalBus.hud_message_requested.emit(tower.tower_name + " used " + tower.get_ability_name() + "!", 2.0)
+
+func _show_placement_radial(cell: Vector2i) -> void:
 	# Determine equipped towers (bring/equip from tower select)
 	var equipped = GameManager.selected_towers
 	if equipped.is_empty():
@@ -586,12 +732,7 @@ func _place_tower(cell: Vector2i) -> void:
 	SignalBus.tower_placed.emit(selected_tower_data.tower_id, cell)
 	print("[Level] Tower placed at: ", cell)
 	
-	# Emit first tower placed signal for challenge system
 	grid_system.first_tower_placed.emit(selected_tower_data.tower_id)
-
-func _on_first_tower_placed(tower_id: String) -> void:
-	"""Handle first tower placement for challenge system"""
-	pass
 
 # ─── TOWER SELECTION ───────────────────────────────────
 func _on_tower_selected(tower_id: String) -> void:
@@ -685,10 +826,14 @@ func _on_main_menu_pressed() -> void:
 	GameManager.go_to("main_menu")
 
 func _on_skip_wave_pressed() -> void:
-	if not wave_manager.wave_in_progress and not is_level_ended:
+	if wave_manager.wave_in_progress or is_level_ended:
+		return
+	if ram_manager.spend(20):
 		wave_countdown = 0.0
 		countdown_active = false
 		_trigger_wave_start()
+	else:
+		SignalBus.hud_message_requested.emit("Not enough RAM to skip! (costs 20)", 2.0)
 
 # ─── SIGNAL HANDLERS ───────────────────────────────────
 func _on_ram_changed(_current: int, _max_ram: int) -> void:
@@ -712,11 +857,20 @@ func _on_wave_completed(wave_num: int) -> void:
 		"✅ Wave " + str(wave_num) + " complete! +50 RAM", 3.0
 	)
 
+func _get_stars() -> int:
+	if base_health >= 9:
+		return 3
+	elif base_health >= 6:
+		return 2
+	return 1
+
 func _on_all_waves_completed() -> void:
 	if is_level_ended:
 		return
 	is_level_ended = true
 	var elapsed = (Time.get_ticks_msec() / 1000.0) - level_start_time
+	var stars = _get_stars()
+	ProgressManager.set_level_stars(level_number, stars)
 	ProgressManager.on_level_completed(level_number)
 	SupabaseManager.submit_campaign_score(level_number, elapsed, score)
 	_show_result_panel(true)
@@ -791,6 +945,18 @@ func _show_result_panel(victory: bool) -> void:
 	grade_lbl.add_theme_font_size_override("font_size", 48)
 	grade_lbl.add_theme_color_override("font_color", grade["color"])
 	layout.add_child(grade_lbl)
+
+	if victory:
+		var stars = _get_stars()
+		var star_str = ""
+		for s in range(3):
+			star_str += "⭐" if s < stars else "☆"
+		var star_lbl := Label.new()
+		star_lbl.text = star_str
+		star_lbl.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+		star_lbl.add_theme_font_size_override("font_size", 28)
+		layout.add_child(star_lbl)
+		SignalBus.level_complete.emit(level_number, score, stars)
 
 	if victory:
 		var unlock_lbl := Label.new()

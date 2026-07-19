@@ -149,6 +149,7 @@ func _on_profile_saved(
 		http: HTTPRequest) -> void:
 	http.queue_free()
 	if code == 201:
+		ProgressManager.reset_all_progress()
 		_create_initial_progress()
 		_create_leaderboard_entry()
 		# Reset local progress for new user, then load fresh progress from cloud
@@ -259,8 +260,6 @@ func save_progress_to_cloud() -> void:
 		"/rest/v1/progress?student_id=eq." + student_id
 	var body = JSON.stringify({
 		"topic_states":       ProgressManager.topic_states,
-		"coding_accuracy":    ProgressManager.coding_accuracy,
-		"retry_counts":       ProgressManager.retry_counts,
 		"time_spent":         ProgressManager.time_spent,
 		"unlocked_towers":    ProgressManager.unlocked_towers,
 		"campaign_progress":  ProgressManager.campaign_progress,
@@ -304,14 +303,6 @@ func _on_progress_loaded(
 			ProgressManager.topic_states = {}
 			for key in cloud_states:
 				ProgressManager.topic_states[str(key)] = str(cloud_states[key])
-
-		var cloud_accuracy = data.get("coding_accuracy", {})
-		if cloud_accuracy.size() > 0:
-			ProgressManager.coding_accuracy = cloud_accuracy
-
-		var cloud_retries = data.get("retry_counts", {})
-		if cloud_retries.size() > 0:
-			ProgressManager.retry_counts = cloud_retries
 
 		var cloud_time = data.get("time_spent", {})
 		if cloud_time.size() > 0:
@@ -373,22 +364,10 @@ func update_leaderboard() -> void:
 
 	var score = (mastered * 100) + (levels * 150)
 
-	# ── Bonus points ────────────────────────────
+	# ── Mastery bonus ──────────────────────────
 	for topic_id in ProgressManager.topic_states:
-		if ProgressManager.topic_states[topic_id] != "mastered":
-			continue
-		var retries  = ProgressManager.retry_counts.get(topic_id, 0)
-		var accuracy = ProgressManager.coding_accuracy.get(topic_id, 0.0)
-
-		# First try bonus
-		if retries == 0:
+		if ProgressManager.topic_states[topic_id] == "mastered":
 			score += 50
-		elif retries < 2:
-			score += 20
-
-		# Accuracy bonus
-		if accuracy >= 0.8:
-			score += 30
 
 	# ── Total time ──────────────────────────────
 	var total_time: float = 0.0

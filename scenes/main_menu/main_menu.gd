@@ -19,6 +19,7 @@ extends Control
 
 var _core_buttons: Array[Button]  = []
 var _all_buttons: Array[Button]   = []
+var _continue_btn: Button = null
 var _time: float = 0.0
 
 var _final_title: String = "PACKET SURGE"
@@ -61,7 +62,75 @@ func _ready() -> void:
 	_apply_responsive_layout()
 	get_tree().root.size_changed.connect(_apply_responsive_layout)
 	_check_placement_quiz()
+	_build_continue_button()
 	_connect_button_sounds(self)
+
+func _build_continue_button() -> void:
+	var section = $CenterContainer/MainLayout/ButtonSection
+	_continue_btn = Button.new()
+	_continue_btn.custom_minimum_size = Vector2(260, 52)
+	_continue_btn.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	var action = _get_next_action()
+	_continue_btn.text = action["text"]
+	_continue_btn.add_theme_font_size_override("font_size", 16)
+	var st := StyleBoxFlat.new()
+	st.bg_color = Color("#00D4FF", 0.15)
+	st.border_color = Color("#00D4FF")
+	st.border_width_left = 2
+	st.border_width_right = 2
+	st.border_width_top = 2
+	st.border_width_bottom = 2
+	st.corner_radius_top_left = 6
+	st.corner_radius_top_right = 6
+	st.corner_radius_bottom_left = 6
+	st.corner_radius_bottom_right = 6
+	_continue_btn.add_theme_stylebox_override("normal", st)
+	_continue_btn.add_theme_color_override("font_color", Color("#00D4FF"))
+	_continue_btn.pressed.connect(action["callback"])
+	section.add_child(_continue_btn)
+	section.move_child(_continue_btn, 0)
+	_all_buttons.append(_continue_btn)
+
+func _get_next_action() -> Dictionary:
+	# 1. Placement quiz not done
+	if not ProgressManager.campaign_progress.get("placement_quiz_done", false):
+		return {
+			"text": "▶ Start Placement Quiz",
+			"callback": func(): GameManager.go_to("placement_quiz")
+		}
+	# 2. Find first unlocked, not-mastered lesson
+	for lesson_id in ProgressManager.ALL_LESSONS:
+		var state = ProgressManager.get_topic_state(lesson_id)
+		if state == "unlocked":
+			var name = lesson_id
+			return {
+				"text": "📘 Continue: " + name,
+				"callback": func(): GameManager.go_to("academy")
+			}
+	# 3. Find next uncompleted unlocked campaign level
+	for lvl in range(1, 14):
+		if ProgressManager.is_level_unlocked(lvl):
+			var completed = ProgressManager.campaign_progress.get("waves_completed", 0) >= lvl
+			if not completed:
+				return {
+					"text": "⚔️ Play Level " + str(lvl),
+					"callback": func():
+						GameManager.current_level = lvl
+						GameManager.go_to("campaign")
+				}
+	# 4. Fallback — all done
+	return {
+		"text": "🏆 All Complete! Explore",
+		"callback": func(): GameManager.go_to("academy")
+	}
+
+func _check_placement_quiz() -> void:
+	var quiz_done = ProgressManager.campaign_progress.get(
+		"placement_quiz_done", false
+	)
+	if not quiz_done:
+		await get_tree().create_timer(0.5).timeout
+		GameManager.go_to("placement_quiz")
 
 func _connect_button_sounds(node: Node) -> void:
 	var sfx = get_node_or_null("/root/SoundManager")
@@ -74,15 +143,6 @@ func _connect_button_sounds(node: Node) -> void:
 	for child in node.get_children():
 		_connect_button_sounds(child)
 	
-func _check_placement_quiz() -> void:
-	var quiz_done = ProgressManager.campaign_progress.get(
-		"placement_quiz_done", false
-	)
-	if not quiz_done:
-		# First time — show placement quiz
-		await get_tree().create_timer(0.5).timeout
-		GameManager.go_to("placement_quiz")
-
 # ─── BUTTON SETUP ──────────────────────────────────────
 func _setup_buttons() -> void:
 	academy_button.pressed.connect(func(): GameManager.go_to("academy"))

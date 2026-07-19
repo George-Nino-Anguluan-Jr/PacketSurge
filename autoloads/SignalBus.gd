@@ -8,7 +8,6 @@ signal lesson_step_changed(step_index: int)
 signal lesson_completed(lesson_id: String)
 signal topic_mastered(topic_id: String)
 signal topic_unlocked(topic_id: String)
-signal code_challenge_submitted(challenge_id: String, passed: bool)
 
 # ─── CAMPAIGN SIGNALS ──────────────────────────────────
 signal wave_started(wave_number: int)
@@ -20,10 +19,6 @@ signal tower_sold(tower_id: String)
 signal tower_upgraded(tower_id: String, new_level: int)
 signal low_ram(current_ram: int, max_ram: int)
 signal level_complete(level_number: int, score: int, stars: int)
-
-# ─── MICRO CODING SIGNALS ──────────────────────────────
-signal micro_coding_triggered(challenge_id: String)
-signal micro_coding_completed(passed: bool)
 
 # ─── ADAPTIVE AI SIGNALS ───────────────────────────────
 signal difficulty_adjusted(new_level: String)
@@ -37,10 +32,4 @@ signal hud_message_requested(message: String, duration: float)
 signal tower_unlocked(tower_id: String)
 signal campaign_level_unlocked(level_number: int)
 signal lesson_unlocked(lesson_id: String)
-
-# ─── CHALLENGE / SUB-LEVEL SIGNALS ──────────────────────
-signal sub_level_unlocked(sub_level_id: int)
-signal sub_level_completed(sub_level_id: int, score: int, stars: int)
-signal challenge_started(challenge_id: String, sub_level_id: int)
-signal challenge_completed(challenge_id: String, passed: bool, score: int)
 signal main_level_completed(main_level: int)
