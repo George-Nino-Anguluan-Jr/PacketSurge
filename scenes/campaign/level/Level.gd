@@ -28,6 +28,10 @@ extends Node2D
 @onready var wave_splash: Control            = $HUD/HUDControl/WaveSplash
 @onready var wave_splash_label: Label        = $HUD/HUDControl/WaveSplash/WaveSplashLabel
 
+var _sound_ok: AudioStreamPlayer2D
+var _sound_fail: AudioStreamPlayer2D
+var _prev_ram: int = -1
+
 # ─── LEVEL STATE ───────────────────────────────────────
 var level_number: int              = 1
 var score: int                     = 0
@@ -229,6 +233,7 @@ func _ready() -> void:
 	get_viewport().size_changed.connect(_on_viewport_size_changed)
 	_on_viewport_size_changed()
 	_create_overlay_menu()
+	_setup_sounds()
 	if level_number == 1:
 		_show_tutorial()
 
@@ -250,6 +255,15 @@ func _setup_grid() -> void:
 
 	grid_system.initialize(waypoints, spots)
 	grid_system.cell_clicked.connect(_on_cell_clicked)
+
+	# Build tilemap visual (z_index -1 so it renders below GridSystem)
+	var tilemap = preload("res://scenes/campaign/level/GridTilemap.gd").new()
+	tilemap.name = "GridTilemap"
+	tilemap.z_index = -1
+	grid_visual.add_child(tilemap)
+	var last_wp = waypoints[-1] if waypoints.size() > 0 else Vector2.ZERO
+	var base_cell = Vector2i(int(last_wp.x / 64), int(last_wp.y / 64))
+	tilemap.build_from_grid(grid_system, base_cell)
 
 func _setup_level() -> void:
 	var config = _get_level_config()
@@ -274,15 +288,17 @@ func _setup_hud() -> void:
 	var config             = _get_level_config()
 	level_label.text       = "Level " + str(level_number) + \
 		" — " + config["name"]
-	wave_label.text        = "Wave: 0/" + str(config["waves"])
-	base_health_label.text = "❤️ " + str(base_health)
-	score_label.text       = "Score: 0"
+	wave_label.text        = "0/" + str(config["waves"])
+	base_health_label.text = str(base_health)
+	score_label.text       = "0"
 	back_btn.visible       = false
+	back_btn.text = "Exit"
 	level_label.visible    = false
-	skip_wave_btn.text = "⏩ Skip (20⚡)"
+	skip_wave_btn.text = "Skip (20⚡)"
 	_update_ram_label()
 	_build_tower_selector()
 	_setup_wave_timeline()
+	_setup_hud_icons()
 
 func _setup_wave_timeline() -> void:
 	for child in timeline_flags.get_children():
@@ -298,13 +314,16 @@ func _setup_wave_timeline() -> void:
 		var fraction = float(i) / float(total_waves)
 		var x_pos = fraction * timeline_width
 
-		var flag := Label.new()
-		flag.text = "🚩"
-		flag.add_theme_font_size_override("font_size", 10)
-		flag.add_theme_color_override("font_color", Color("#FF3366"))
-		flag.custom_minimum_size = Vector2(16, 16)
-		flag.position = Vector2(x_pos - 8, -4)
+		var flag := ColorRect.new()
+		flag.color = Color("#00D4FF")
+		flag.custom_minimum_size = Vector2(8, 10)
+		flag.size = Vector2(8, 10)
+		flag.position = Vector2(x_pos - 4, -5)
 		timeline_flags.add_child(flag)
+		# Pulse animation on wave flags
+		var t = create_tween().set_loops()
+		t.tween_property(flag, "modulate", Color(1, 1, 1, 0.3), 0.8 + i * 0.1)
+		t.tween_property(flag, "modulate", Color(1, 1, 1, 1), 0.8 + i * 0.1)
 
 func _on_viewport_size_changed() -> void:
 	var vp_width = get_viewport().get_visible_rect().size.x
@@ -334,6 +353,63 @@ func _connect_signals() -> void:
 	wave_manager.all_waves_completed.connect(_on_all_waves_completed)
 	SignalBus.enemy_reached_end.connect(_on_enemy_reached_end)
 	SignalBus.enemy_defeated.connect(_on_enemy_defeated)
+
+# ─── FEEDBACK HELPERS ──────────────────────────────────
+func _setup_sounds() -> void:
+	_sound_ok = AudioStreamPlayer2D.new()
+	_sound_ok.stream = _generate_beep(520.0, 0.08)
+	_sound_ok.volume_db = -6.0
+	add_child(_sound_ok)
+	_sound_fail = AudioStreamPlayer2D.new()
+	_sound_fail.stream = _generate_beep(260.0, 0.12)
+	_sound_fail.volume_db = -8.0
+	add_child(_sound_fail)
+
+func _generate_beep(freq: float, dur: float) -> AudioStreamWAV:
+	var sr = 44100
+	var frames = int(sr * dur)
+	var data = PackedByteArray()
+	data.resize(frames * 2)
+	for i in range(frames):
+		var t = float(i) / sr
+		var amp = 1.0 - float(i) / frames
+		var val = int(sin(t * freq * TAU) * amp * 8000)
+		data.encode_s16(i * 2, clampi(val, -32768, 32767))
+	var wav = AudioStreamWAV.new()
+	wav.data = data
+	wav.mix_rate = sr
+	wav.format = AudioStreamWAV.FORMAT_16_BITS
+	wav.stereo = false
+	return wav
+
+func _spawn_floating_text(text: String, global_pos: Vector2, color: Color, size := 13) -> void:
+	var lbl = Label.new()
+	lbl.text = text
+	lbl.add_theme_color_override("font_color", color)
+	lbl.add_theme_font_size_override("font_size", size)
+	lbl.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	$HUD/HUDControl.add_child(lbl)
+	lbl.reset_size()
+	lbl.position = global_pos - Vector2(lbl.size.x / 2, 0)
+	var tween = create_tween().set_parallel()
+	tween.tween_property(lbl, "position", lbl.position + Vector2(0, -36), 0.8).set_ease(Tween.EASE_OUT)
+	tween.tween_property(lbl, "modulate:a", 0.0, 0.8)
+	tween.tween_callback(lbl.queue_free)
+
+func _flash_ram_label(green: bool) -> void:
+	var tween = create_tween()
+	var c = Color("#00FF88") if green else Color("#FF3366")
+	tween.tween_property(ram_label, "modulate", c, 0.08)
+	tween.tween_property(ram_label, "modulate", Color("#FFFFFF"), 0.25)
+	if not green:
+		var orig = ram_label.offset_left
+		var sh = create_tween().set_parallel()
+		sh.tween_property(ram_label, "offset_left", orig - 4, 0.04)
+		sh.tween_property(ram_label, "offset_left", orig + 4, 0.04)
+		sh.tween_property(ram_label, "offset_left", orig, 0.04)
+
+func _play_feedback(ok: bool) -> void:
+	(_sound_ok if ok else _sound_fail).play()
 
 # ─── OVERLAY MENU FOR PLACEMENT (CIRCULAR MODE - SHOWS EQUIPPED TOWER MODELS) ───────
 var overlay_menu: Control = null
@@ -459,9 +535,8 @@ func _on_overlay_tower_selected(tower_id: String) -> void:
 	overlay_menu.visible = false
 	var def = TOWER_DEFINITIONS[tower_id]
 	if not ram_manager.can_afford(def["ram_cost"]):
-		SignalBus.hud_message_requested.emit(
-			"Not enough RAM! Need " + str(def["ram_cost"]) + " RAM.", 2.0
-		)
+		_flash_ram_label(false)
+		_play_feedback(false)
 		return
 		
 	selected_tower_data              = TowerData.new()
@@ -600,26 +675,32 @@ func _on_sell_tower(cell: Vector2i, tower: Node, value: int) -> void:
 	grid_system.remove_tower(cell)
 	tower.queue_free()
 	overlay_menu.visible = false
-	SignalBus.hud_message_requested.emit("Sold! +" + str(value) + " RAM", 2.0)
+	_spawn_floating_text("+" + str(value) + "⚡ Sold!", tower.global_position, Color("#FF8844"), 14)
+	_play_feedback(true)
 
 func _on_upgrade_tower(tower: Node, cost: int) -> void:
 	if not ram_manager.spend(cost):
-		SignalBus.hud_message_requested.emit("Not enough RAM!", 2.0)
+		_flash_ram_label(false)
+		_play_feedback(false)
 		return
 	var new_lvl = tower.upgrade()
 	overlay_menu.visible = false
-	SignalBus.hud_message_requested.emit(tower.tower_name + " upgraded to Lv." + str(new_lvl) + "!", 2.0)
+	_spawn_floating_text("⬆ Lv." + str(new_lvl), tower.global_position, Color("#00FF88"), 14)
+	_play_feedback(true)
 
 func _on_ability_used(tower: Node, cost: int) -> void:
 	if not tower.is_ability_ready():
-		SignalBus.hud_message_requested.emit("Ability on cooldown!", 2.0)
+		_spawn_floating_text("⏳ Cooldown!", tower.global_position, Color("#4A3A1A"), 12)
+		_play_feedback(false)
 		return
 	if not ram_manager.spend(cost):
-		SignalBus.hud_message_requested.emit("Not enough RAM!", 2.0)
+		_flash_ram_label(false)
+		_play_feedback(false)
 		return
 	tower.activate_ability()
 	overlay_menu.visible = false
-	SignalBus.hud_message_requested.emit(tower.tower_name + " used " + tower.get_ability_name() + "!", 2.0)
+	_spawn_floating_text(tower.get_ability_name() + "!", tower.global_position, Color("#FFB800"), 14)
+	_play_feedback(true)
 
 func _show_placement_radial(cell: Vector2i) -> void:
 	# Determine equipped towers (bring/equip from tower select)
@@ -768,6 +849,7 @@ func _place_tower(cell: Vector2i) -> void:
 	print("[Level] Tower placed at: ", cell)
 	
 	grid_system.first_tower_placed.emit(selected_tower_data.tower_id)
+	_play_feedback(true)
 
 # ─── TOWER SELECTION ───────────────────────────────────
 func _on_tower_selected(tower_id: String) -> void:
@@ -782,10 +864,8 @@ func _on_tower_selected(tower_id: String) -> void:
 	selected_tower_data.color        = def["color"]
 	selected_tower_data.icon_text    = def["icon_text"]
 	grid_system.is_placing_tower     = true
-	SignalBus.hud_message_requested.emit(
-		"Click a spot to place " + def["tower_name"] + \
-		" (" + str(def["ram_cost"]) + " RAM)", 2.0
-	)
+	_spawn_floating_text("Click to place " + def["tower_name"] + " (" + str(def["ram_cost"]) + "⚡)",
+		Vector2(get_viewport_rect().size.x / 2, 36), Color("#00D4FF"), 11)
 
 # ─── PROCESS ───────────────────────────────────────────
 func _process(delta: float) -> void:
@@ -867,30 +947,35 @@ func _on_skip_wave_pressed() -> void:
 		wave_countdown = 0.0
 		countdown_active = false
 		_trigger_wave_start()
+		_play_feedback(true)
 	else:
-		SignalBus.hud_message_requested.emit("Not enough RAM to skip! (costs 20)", 2.0)
+		_flash_ram_label(false)
+		_play_feedback(false)
 
 # ─── SIGNAL HANDLERS ───────────────────────────────────
-func _on_ram_changed(_current: int, _max_ram: int) -> void:
+func _on_ram_changed(current: int, _max_ram: int) -> void:
 	_update_ram_label()
+	if _prev_ram >= 0:
+		if current > _prev_ram:
+			_flash_ram_label(true)
+		elif current < _prev_ram:
+			_flash_ram_label(false)
+	_prev_ram = current
 
 func _on_wave_started(wave_num: int, total: int) -> void:
-	wave_label.text = "Wave: " + str(wave_num) + "/" + str(total)
+	wave_label.text = str(wave_num) + "/" + str(total)
 	countdown_active = false
 	_show_wave_splash_animation(wave_num)
-	SignalBus.hud_message_requested.emit(
-		"⚔️ Wave " + str(wave_num) + " incoming!", 2.0
-	)
 
 func _on_wave_completed(wave_num: int) -> void:
 	score            += 100 * wave_num
-	score_label.text  = "Score: " + str(score)
+	score_label.text  = str(score)
 	ram_manager.earn(50)
 	wave_countdown = INTER_WAVE_DURATION
 	countdown_active = true
-	SignalBus.hud_message_requested.emit(
-		"✅ Wave " + str(wave_num) + " complete! +50 RAM", 3.0
-	)
+	_spawn_floating_text("Wave " + str(wave_num) + " done! +50⚡",
+		Vector2(get_viewport_rect().size.x / 2, 60), Color("#00FF88"), 13)
+	_play_feedback(true)
 
 func _get_stars() -> int:
 	if base_health >= 9:
@@ -923,17 +1008,18 @@ func _on_enemy_reached_end(_enemy_id: String) -> void:
 func _on_enemy_defeated(_enemy_id: String) -> void:
 	ram_manager.earn(10)
 	score            += 10
-	score_label.text  = "Score: " + str(score)
+	score_label.text  = str(score)
 
 # ─── BASE HEALTH ───────────────────────────────────────
 func heal_base(amount: int) -> void:
 	"""Heal the base by the given amount"""
 	base_health = min(base_health + amount, 10)
 	_update_base_health_label()
-	SignalBus.hud_message_requested.emit("💚 Base healed! HP: " + str(base_health) + "/10", 2.0)
+	_spawn_floating_text("💚 +" + str(amount) + " HP", base_health_label.global_position - Vector2(0, 16), Color("#00FF88"), 13)
+	_play_feedback(true)
 
 func _update_base_health_label() -> void:
-	base_health_label.text = "❤️ " + str(base_health)
+	base_health_label.text = str(base_health)
 	var tween = create_tween()
 	tween.tween_property(
 		base_health_label, "modulate", Color("#FF0000"), 0.1
@@ -942,9 +1028,8 @@ func _update_base_health_label() -> void:
 		base_health_label, "modulate", Color("#FFFFFF"), 0.3
 	)
 	if base_health <= 3:
-		SignalBus.hud_message_requested.emit(
-			"⚠️ Base critical! " + str(base_health) + " HP left!", 2.0
-		)
+		_spawn_floating_text("Base Critical!", base_health_label.global_position - Vector2(0, 36), Color("#FF3366"), 14)
+		_play_feedback(false)
 
 # ─── RESULT PANEL ──────────────────────────────────────
 func _show_result_panel(victory: bool) -> void:
@@ -1081,19 +1166,154 @@ func _on_back_pressed() -> void:
 
 # ─── HUD HELPERS ───────────────────────────────────────
 func _update_ram_label() -> void:
-	ram_label.text = "💾 " + str(ram_manager.get_current()) + " RAM"
+	ram_label.text = str(ram_manager.get_current()) + " RAM"
 
 func _get_level_config() -> Dictionary:
 	if GameManager.LEVEL_CONFIGS.has(level_number):
 		return GameManager.LEVEL_CONFIGS[level_number]
 	return GameManager.LEVEL_CONFIGS[1]
 
+# ─── HUD ICONS ─────────────────────────────────────────
+func _make_icon(draw_fn: Callable) -> ImageTexture:
+	var img = Image.create(24, 24, false, Image.FORMAT_RGBA8)
+	img.fill(Color.TRANSPARENT)
+	draw_fn.call(img)
+	return ImageTexture.create_from_image(img)
+
+func _icon_chip() -> ImageTexture:
+	return _make_icon(func(img):
+		for x in range(4, 20):
+			for y in range(6, 18):
+				img.set_pixel(x, y, Color(0.0, 0.6, 1.0, 0.3))
+		for i in range(4):
+			for x in range(4 + i*4, 7 + i*4):
+				for y in range(2, 6):
+					img.set_pixel(x, y, Color(0.0, 0.8, 1.0, 0.6))
+				for y in range(18, 22):
+					img.set_pixel(x, y, Color(0.0, 0.8, 1.0, 0.6))
+		for r in range(3):
+			for dx in range(-r, r+1):
+				for dy in range(-r, r+1):
+					img.set_pixel(12 + dx, 12 + dy, Color(0.0, 1.0, 0.5, 0.5 - r * 0.15))
+	)
+
+func _icon_shield() -> ImageTexture:
+	return _make_icon(func(img):
+		for y in range(3, 20):
+			var hw = int(10.0 * (1.0 - float(y - 3) / 17.0 * 0.4))
+			for x in range(12 - hw, 12 + hw):
+				img.set_pixel(x, y, Color(0.0, 1.0, 0.5, 0.5))
+			if y >= 5 and y <= 18:
+				var ihw = int(8.0 * (1.0 - float(y - 5) / 13.0 * 0.4))
+				for x in range(12 - ihw, 12 + ihw):
+					img.set_pixel(x, y, Color(0.0, 0.4, 0.2, 0.3))
+		for x in range(9, 16):
+			for y in range(8, 17):
+				img.set_pixel(x, y, Color(0.0, 0.8, 1.0, 0.4))
+	)
+
+func _icon_star() -> ImageTexture:
+	return _make_icon(func(img):
+		for i in range(5):
+			var a = -PI/2 + i * 2*PI/5
+			var px = int(12 + cos(a) * 9.0)
+			var py = int(12 + sin(a) * 9.0)
+			for dy in range(-1, 2):
+				for dx in range(-1, 2):
+					var d = Vector2(px + dx - 12, py + dy - 12).length() / 9.0
+					img.set_pixel(px + dx, py + dy, Color(1.0, 0.7, 0.0, 0.5 - d * 0.3))
+		for dx in range(-2, 3):
+			for dy in range(-2, 3):
+				var d = Vector2(dx, dy).length() / 3.0
+				img.set_pixel(12 + dx, 12 + dy, Color(1.0, 0.9, 0.4, 0.6 - d * 0.2))
+	)
+
+func _icon_signal() -> ImageTexture:
+	return _make_icon(func(img):
+		var bars = [4, 7, 10, 13]
+		var heights = [4, 8, 12, 16]
+		var cols = [Color(0.0, 0.4, 0.6, 0.4), Color(0.0, 0.6, 0.8, 0.5), Color(0.0, 0.8, 1.0, 0.6), Color(0.0, 1.0, 0.8, 0.7)]
+		for i in range(4):
+			var bx = bars[i]
+			for y in range(21 - heights[i], 20):
+				for x in range(bx, bx + 3):
+					img.set_pixel(x, y, cols[i])
+	)
+
+func _icon_pause() -> ImageTexture:
+	return _make_icon(func(img):
+		for bar_x in [7, 14]:
+			for x in range(bar_x, bar_x + 3):
+				for y in range(4, 20):
+					img.set_pixel(x, y, Color(0.0, 0.8, 1.0, 0.7))
+	)
+
+func _icon_skip() -> ImageTexture:
+	return _make_icon(func(img):
+		for y in range(4, 20):
+			var hw = int((y - 3) * 7.0 / 16.0)
+			for x in range(12 - hw, 12):
+				img.set_pixel(x, y, Color(0.0, 1.0, 0.5, 0.6))
+			for x in range(17 - hw, 17):
+				var c = img.get_pixel(x, y)
+				c = c.blend(Color(0.0, 1.0, 0.5, 0.6))
+				img.set_pixel(x, y, c)
+		for x in range(21, 23):
+			for y in range(4, 20):
+				var c = img.get_pixel(x, y)
+				c = c.blend(Color(0.0, 0.8, 1.0, 0.5))
+				img.set_pixel(x, y, c)
+	)
+
+func _icon_power() -> ImageTexture:
+	return _make_icon(func(img):
+		for a in range(360):
+			var rad = a * PI / 180.0
+			if a > 45 and a < 135:
+				continue
+			for r in range(7, 10):
+				var px = int(12 + cos(rad) * r)
+				var py = int(12 + sin(rad) * r)
+				if px >= 0 and px < 24 and py >= 0 and py < 24:
+					img.set_pixel(px, py, Color(0.0, 0.8, 1.0, 0.3 + (r - 7) * 0.15))
+		for y in range(3, 14):
+			for x in range(11, 14):
+				img.set_pixel(x, y, Color(0.0, 0.8, 1.0, 0.6))
+	)
+
+func _setup_hud_icons() -> void:
+	var top = $HUD/HUDControl/TopHUD/TopLayout
+	var icon_size = Vector2(18, 18)
+	
+	_add_icon_before_label(top, _icon_chip(), ram_label, icon_size)
+	_add_icon_before_label(top, _icon_shield(), base_health_label, icon_size)
+	_add_icon_before_label(top, _icon_star(), score_label, icon_size)
+	_add_icon_before_label(top, _icon_signal(), wave_label, icon_size)
+	
+	pause_btn.icon = _icon_pause()
+	pause_btn.expand_icon = true
+	pause_btn.text = ""
+	skip_wave_btn.icon = _icon_skip()
+	skip_wave_btn.expand_icon = true
+	back_btn.icon = _icon_power()
+	back_btn.expand_icon = true
+
+func _add_icon_before_label(parent: Node, icon_tex: ImageTexture, label: Label, icon_size: Vector2) -> void:
+	var icon_rect = TextureRect.new()
+	icon_rect.texture = icon_tex
+	icon_rect.expand_mode = TextureRect.EXPAND_KEEP_SIZE
+	icon_rect.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_CENTERED
+	icon_rect.custom_minimum_size = icon_size
+	icon_rect.size = icon_size
+	parent.add_child(icon_rect)
+	var idx = label.get_index()
+	parent.move_child(icon_rect, idx)
+	label.add_theme_constant_override("margin_left", 4)
+
 # ─── HUD STYLES ────────────────────────────────────────
 func _apply_hud_styles() -> void:
 	var top_style := StyleBoxEmpty.new()
 	$HUD/HUDControl/TopHUD.add_theme_stylebox_override("panel", top_style)
-
-	# Left panel styling removed
 
 	var go_style := StyleBoxFlat.new()
 	go_style.bg_color                    = Color("#050D1A")
@@ -1123,28 +1343,15 @@ func _apply_hud_styles() -> void:
 	pause_menu_style.corner_radius_bottom_right  = 8
 	pause_menu.add_theme_stylebox_override("panel", pause_menu_style)
 
-	var pause_btn_style := StyleBoxFlat.new()
-	pause_btn_style.bg_color                   = Color("#0A1628")
-	pause_btn_style.border_color               = Color("#00D4FF")
-	pause_btn_style.border_width_left          = 1
-	pause_btn_style.border_width_right         = 1
-	pause_btn_style.border_width_top           = 1
-	pause_btn_style.border_width_bottom        = 1
-	pause_btn_style.corner_radius_top_left     = 4
-	pause_btn_style.corner_radius_top_right    = 4
-	pause_btn_style.corner_radius_bottom_left  = 4
-	pause_btn_style.corner_radius_bottom_right = 4
-	pause_btn.add_theme_stylebox_override("normal", pause_btn_style)
-	pause_btn.add_theme_color_override("font_color", Color("#00D4FF"))
+	_style_neon_btn(pause_btn, Color("#00D4FF"))
+	_style_neon_btn(skip_wave_btn, Color("#FFB800"))
+	_style_neon_btn(back_btn, Color("#FF3366"))
 
-	var skip_btn_style := StyleBoxFlat.new()
-	skip_btn_style.bg_color                   = Color("#FFB800")
-	skip_btn_style.corner_radius_top_left     = 4
-	skip_btn_style.corner_radius_top_right    = 4
-	skip_btn_style.corner_radius_bottom_left  = 4
-	skip_btn_style.corner_radius_bottom_right = 4
-	skip_wave_btn.add_theme_stylebox_override("normal", skip_btn_style)
-	skip_wave_btn.add_theme_color_override("font_color", Color("#050D1A"))
+	# Style pause menu buttons
+	_style_neon_btn(resume_btn, Color("#00FF88"))
+	_style_neon_btn(retry_btn, Color("#00D4FF"))
+	_style_neon_btn(select_level_btn, Color("#FFB800"))
+	_style_neon_btn(main_menu_btn, Color("#FF3366"))
 
 	var bg_bar_style := StyleBoxFlat.new()
 	bg_bar_style.bg_color = Color("#050D1A")
@@ -1161,6 +1368,37 @@ func _apply_hud_styles() -> void:
 	fill_bar_style.corner_radius_bottom_left = 4
 	fill_bar_style.corner_radius_bottom_right = 4
 	wave_progress_bar.add_theme_stylebox_override("fill", fill_bar_style)
+
+func _style_neon_btn(btn: Button, color: Color) -> void:
+	var normal := StyleBoxFlat.new()
+	normal.bg_color = Color("#0A1628")
+	normal.border_color = color
+	normal.border_width_left = 1
+	normal.border_width_right = 1
+	normal.border_width_top = 1
+	normal.border_width_bottom = 1
+	normal.corner_radius_top_left = 4
+	normal.corner_radius_top_right = 4
+	normal.corner_radius_bottom_left = 4
+	normal.corner_radius_bottom_right = 4
+	btn.add_theme_stylebox_override("normal", normal)
+	btn.add_theme_color_override("font_color", color)
+	btn.add_theme_font_size_override("font_size", 11)
+
+	var hover := StyleBoxFlat.new()
+	hover.bg_color = color
+	hover.bg_color.a = 0.15
+	hover.border_color = color
+	hover.border_width_left = 1
+	hover.border_width_right = 1
+	hover.border_width_top = 1
+	hover.border_width_bottom = 1
+	hover.corner_radius_top_left = 4
+	hover.corner_radius_top_right = 4
+	hover.corner_radius_bottom_left = 4
+	hover.corner_radius_bottom_right = 4
+	btn.add_theme_stylebox_override("hover", hover)
+	btn.add_theme_color_override("font_hover_color", color.lightened(0.4))
 
 func _style_tower_btn(btn: Button, color: Color) -> void:
 	var style := StyleBoxFlat.new()
