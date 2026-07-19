@@ -39,8 +39,6 @@ var _explosions: Array[Dictionary]  = []
 
 @onready var sprite: Sprite2D = $TowerSprite
 
-const TowerSpriteGen = preload("res://scenes/campaign/towers/TowerSpriteGen.gd")
-
 func initialize(data: TowerData, cell: Vector2i, e_layer: Node2D) -> void:
 	tower_id      = data.tower_id
 	tower_name    = data.tower_name
@@ -125,7 +123,6 @@ func upgrade() -> int:
 		return current_level
 	
 	current_level += 1
-	update_level_label()
 	
 	# Apply upgrade bonuses based on tower type
 	match tower_id:
@@ -189,30 +186,13 @@ func _animate_upgrade() -> void:
 	
 	# Flash effect
 	_shoot_flash = 1.5
+	queue_redraw()
 
 func _setup_sprite() -> void:
 	if sprite:
-		var tex = TowerSpriteGen.generate(tower_id, tower_color)
-		sprite.texture = tex
-		sprite.scale = Vector2(0.5, 0.5)
-		sprite.visible = true
-	update_level_label()
-
-func update_level_label() -> void:
-	if not sprite:
-		return
-	var existing = sprite.get_node_or_null("LevelLabel")
-	if existing:
-		existing.queue_free()
-	if current_level <= 1:
-		return
-	var lbl = Label.new()
-	lbl.name = "LevelLabel"
-	lbl.text = "Lv" + str(current_level)
-	lbl.add_theme_color_override("font_color", Color("#FFB800"))
-	lbl.add_theme_font_size_override("font_size", 10)
-	lbl.position = Vector2(-8, -36)
-	sprite.add_child(lbl)
+		sprite.visible = false
+	elif has_node("TowerSprite"):
+		get_node("TowerSprite").visible = false
 
 func _animate_placement() -> void:
 	# Keep placement animation by tweening a simple scaling effect drawn in _draw
@@ -220,7 +200,7 @@ func _animate_placement() -> void:
 	var tween = create_tween()
 	tween.set_ease(Tween.EASE_OUT)
 	tween.set_trans(Tween.TRANS_BACK)
-	tween.tween_property(self, "scale", Vector2(1.35, 1.35), 0.35) # Scale up the tower visually by 35% globally!
+	tween.tween_property(self, "scale", Vector2(1.35, 1.35), 0.35)
 
 func _process(delta: float) -> void:
 	_anim_time += delta
@@ -242,15 +222,13 @@ func _process(delta: float) -> void:
 		var desired_angle = (target_to_track.position - position).angle()
 		_turret_angle = lerp_angle(_turret_angle, desired_angle, delta * 8.0)
 	else:
-		# Slow passive scanning idle animation
-		_turret_angle = lerp_angle(_turret_angle, -PI/2 + sin(_anim_time * 1.5) * 0.25, delta * 2.0)
+		_turret_angle = lerp_angle(_turret_angle, -PI/2, delta * 2.0)
 
 	if _shoot_flash > 0:
 		_shoot_flash -= delta * 4.0
 
-	# Rotate sprite to track target
-	if sprite:
-		sprite.rotation = _turret_angle + PI / 2
+	# Continuously request frame redraw to keep procedural 2D animations fluid and tracking alive
+	queue_redraw()
 
 	# ─── UPDATE ACTIVE FLYING PROJECTILES ──────────────────
 	var remaining_projectiles: Array[Dictionary] = []
@@ -298,7 +276,7 @@ func _process(delta: float) -> void:
 	_explosions = remaining_explosions
 
 	# ─── FIRE WHEN TIMER ELAPSES ──────────────────────────
-	if attack_timer >= 1.0 / attack_speed:
+	if attack_timer >= 1.0 / attack_speed and (_get_closest_enemy() or not _entry_order.is_empty()):
 		attack_timer = 0.0
 		_attack()
 
@@ -322,8 +300,10 @@ func _update_entry_order() -> void:
 
 # ─── MAIN ATTACK ROUTER ────────────────────────────────
 func _attack() -> void:
+	if not _get_closest_enemy() and _entry_order.is_empty():
+		return
 	_flash_targets.clear()
-	_recoil = 1.0 # Trigger physical recoil barrel blowback on every tower type!
+	_recoil = 1.0
 	match tower_id:
 		"tower_array":        _attack_array()
 		"tower_stack":        _attack_stack()
@@ -616,8 +596,23 @@ func _get_lowest_hp_enemy() -> Node:
 const SQUASH: float = 0.65  # Perspective squashing ratio to simulate an angled 3D camera lookup
 
 func _draw() -> void:
-	# Sprite-based rendering via TowerSpriteGen
-	pass
+	# 3D Depth Bases are drawn at ground level
+	_draw_3d_base_plates(tower_color)
+	
+	# Rotating Turrets are offset upwards to look like they float/mount in 3D volume space
+	_draw_turret_assembly(tower_color)
+	
+	_draw_overlays(tower_color)
+	
+	# Draw level indicator
+	if current_level > 1:
+		draw_string(
+			ThemeDB.fallback_font,
+			Vector2(10, -36),
+			"Lv" + str(current_level),
+			HORIZONTAL_ALIGNMENT_LEFT, -1, 9,
+			Color("#FFB800")
+		)
 
 # ─── VOLUMETRIC 3D PRIMITIVE DRAWING HELPERS ───────────────────────
 func _draw_3d_cylinder(center: Vector2, radius: float, height: float, color: Color, outline_color: Color = Color.WHITE, line_width: float = 1.5) -> void:
@@ -737,7 +732,7 @@ func _draw_3d_base_plates(color: Color) -> void:
 	_draw_base_extrusion_geometry(color, base_height)
 
 func _draw_base_extrusion_geometry(color: Color, height: float) -> void:
-	var b_offset = Vector2(0, 0) # Base ground level anchor
+	var b_offset = Vector2(0, 0)
 	match tower_id:
 		"tower_array":
 			_draw_3d_box(b_offset, Vector2(17, 17), height, Color("#101721"), color, 1.8)
@@ -746,7 +741,6 @@ func _draw_base_extrusion_geometry(color: Color, height: float) -> void:
 		"tower_queue":
 			_draw_3d_box(b_offset, Vector2(23, 13), height, Color("#101721"), color, 1.8)
 		"tower_linked_list":
-			# Triangular base prism
 			var top_pts = PackedVector2Array()
 			for i in range(3):
 				var angle = -PI/2 + i * (TAU / 3.0)
@@ -784,192 +778,149 @@ func _draw_base_extrusion_geometry(color: Color, height: float) -> void:
 			_draw_3d_box(b_offset, Vector2(25, 17), height, Color("#101721"), color, 1.8)
 
 func _draw_turret_assembly(color: Color) -> void:
-	# Set a -14px height float offset for the turret pivot, so it hovers above the base in 3D perspective
 	var t_pivot = Vector2(0, -14)
-	
-	# Apply global turret tracking rotation transform relative to our floating pivot
 	draw_set_transform(t_pivot, _turret_angle, Vector2.ONE)
-	
-	# Unique highly-polished pseudo-3D volumetric gun configurations
+
 	match tower_id:
 		"tower_array":
-			# Array Tower — Volumetric dual blaster pod
-			var recoil_offset = -_recoil * 6.0
-			_draw_3d_box(Vector2.ZERO, Vector2(7, 7), 8.0, Color("#15202E"), color, 1.5)
-			# Cylindrical side-cannons with hollow black muzzle caps
-			_draw_3d_cylinder(Vector2(recoil_offset, -10), 3.0, 14.0, Color("#1C2C3D"), color, 1.0)
-			draw_circle(Vector2(recoil_offset + 14.0, -10 * SQUASH), 1.5, Color.BLACK)
-			_draw_3d_cylinder(Vector2(recoil_offset, 10), 3.0, 14.0, Color("#1C2C3D"), color, 1.0)
-			draw_circle(Vector2(recoil_offset + 14.0, 10 * SQUASH), 1.5, Color.BLACK)
-			
-		"tower_stack":
-			# Stack Tower — Sequentially compressing 3D canister stack (LIFO)
-			var recoil_offset = -_recoil * 8.0
-			var spacing = 5.0 - _recoil * 3.5
-			# Draw 3 physical shaded canisters stacking on top of each other!
-			for i in range(3):
-				_draw_3d_cylinder(Vector2(-i * spacing, 0), 8.5 - i * 1.2, 5.0, Color("#15202E"), color, 1.2)
-			# Heavy mortar firing pipe on top
-			_draw_3d_cylinder(Vector2(2 + recoil_offset, 0), 5.0, 12.0, Color("#223344"), color, 1.5)
-			draw_circle(Vector2(14 + recoil_offset, 0), 3.0, Color.BLACK) # Mortar muzzle shadow
-			
-		"tower_queue":
-			# Queue Tower — Shaded 3D linear accelerator box channel
-			var recoil_offset = -_recoil * 9.0
-			_draw_3d_box(Vector2(-4, 0), Vector2(10, 5), 7.0, Color("#15202E"), color, 1.5)
-			# Extruded linear gun rail
-			_draw_3d_box(Vector2(8 + recoil_offset, 0), Vector2(12, 3), 4.0, Color("#203040"), color, 1.0)
-			# Glowing core inside the rail
-			draw_line(Vector2(recoil_offset, 0), Vector2(20 + recoil_offset, 0), Color.WHITE, 1.5)
-			
-		"tower_linked_list":
-			# Linked List Tower — Shaded 3D central emitter globe with orbiting satellite spheres
-			var spin_angle = _anim_time * 3.0
-			_draw_3d_sphere(Vector2.ZERO, 6.5, color)
-			
-			# Draw orbiting 3D micro-satellites (Pointers) connected by geometric pointer lines
-			var n1 = Vector2(cos(spin_angle), sin(spin_angle) * SQUASH) * 14.0
-			var n2 = Vector2(cos(spin_angle + 2.0 * PI / 3.0), sin(spin_angle + 2.0 * PI / 3.0) * SQUASH) * 14.0
-			var n3 = Vector2(cos(spin_angle + 4.0 * PI / 3.0), sin(spin_angle + 4.0 * PI / 3.0) * SQUASH) * 14.0
-			
-			# Pointer rays
-			draw_line(n1, n2, color, 1.5)
-			draw_line(n2, n3, color, 1.5)
-			draw_line(n3, n1, color, 1.5)
-			
-			# Mini globes
-			_draw_3d_sphere(n1, 4.0, color)
-			_draw_3d_sphere(n2, 4.0, color)
-			_draw_3d_sphere(n3, 4.0, color)
-			
-		"tower_bubble":
-			# Bubble Tower — A majestic glowing 3D core surrounded by curved orbital sweeps
-			var pulse = 1.0 + sin(_anim_time * 7.0) * 0.15
-			_draw_3d_sphere(Vector2.ZERO, 7.5 * pulse, color)
-			
-			# 3D thick orbital shield rims
-			var spin_speed = _anim_time * 4.0
-			draw_set_transform(Vector2.ZERO, spin_speed, Vector2(1.0, SQUASH))
-			draw_arc(Vector2.ZERO, 15.0, 0, PI * 0.5, 16, color, 2.5)
-			draw_arc(Vector2.ZERO, 15.0, PI, PI + PI * 0.5, 16, color, 2.5)
-			draw_set_transform(Vector2.ZERO, _turret_angle, Vector2.ONE) # Restore turret rotational space
-			
-		"tower_selection":
-			# Selection Seeker — Volumetric triangular wedge + tracking lens
-			var recoil_offset = -_recoil * 5.0
-			# Draw 3D triangular wedge housing
-			var t_top = Vector2(10, 0)
-			var t_bl = Vector2(-8, -8 * SQUASH)
-			var t_br = Vector2(-8, 8 * SQUASH)
-			var b_top = t_top + Vector2(0, 8.0)
-			var b_bl = t_bl + Vector2(0, 8.0)
-			var b_br = t_br + Vector2(0, 8.0)
-			draw_colored_polygon(PackedVector2Array([t_top, t_bl, t_br]), Color("#15202E"))
-			draw_colored_polygon(PackedVector2Array([t_br, t_bl, b_bl, b_br]), Color(color, 0.15))
-			draw_polyline(PackedVector2Array([t_top, t_bl, t_br, t_top]), color, 1.5)
-			draw_line(t_br, b_br, color, 1.5)
-			draw_line(t_bl, b_bl, color, 1.5)
-			draw_line(b_bl, b_br, color, 1.5)
-			
-			# Volumetric targeting lens
-			_draw_3d_cylinder(Vector2(6 + recoil_offset, 0), 3.0, 8.0, Color("#203040"), color, 1.0)
-			draw_circle(Vector2(6 + recoil_offset + 8.0, 0), 1.5, Color.BLACK)
-			
-		"tower_insertion":
-			# Insertion Tower — Heavy piston box chamber + slider block
-			var recoil_offset = -_recoil * 10.0
-			_draw_3d_box(Vector2(-2, 0), Vector2(10, 7), 8.0, Color("#15202E"), color, 1.5)
-			# Slider unit sliding smoothly along the 3D track
-			_draw_3d_box(Vector2(-12 + recoil_offset, 0), Vector2(5, 5), 6.0, Color("#203040"), color, 1.0)
-			# Solid forward launch tube
-			_draw_3d_cylinder(Vector2(8, 0), 3.5, 6.0, color, Color.WHITE, 1.0)
-			
-		"tower_quick":
-			# Quick Tower — Robust 3D mechanical yoke holding dual swiveling blasters
-			var recoil_offset = -_recoil * 7.0
-			# Solid connector bracket
-			_draw_3d_box(Vector2(-6, 0), Vector2(4, 3), 6.0, Color("#15202E"), color, 1.5)
-			# Twin heavy gun barrels
-			_draw_3d_cylinder(Vector2(2 + recoil_offset, -9), 3.0, 11.0, Color("#1C2C3D"), color, 1.0)
-			draw_circle(Vector2(2 + recoil_offset + 11.0, -9 * SQUASH), 1.5, Color.BLACK)
-			_draw_3d_cylinder(Vector2(2 + recoil_offset, 9), 3.0, 11.0, Color("#1C2C3D"), color, 1.0)
-			draw_circle(Vector2(2 + recoil_offset + 11.0, 9 * SQUASH), 1.5, Color.BLACK)
-			
-		"tower_merge":
-			# Merge Tower — 3D Levitating diamond prism with focus stabilizers
-			var hover = sin(_anim_time * 6.0) * 2.0
-			# Side collector support structures
-			_draw_3d_cylinder(Vector2(-8, -11), 2.5, 8.0, Color("#15202E"), color, 1.0)
-			_draw_3d_cylinder(Vector2(-8, 11), 2.5, 8.0, Color("#15202E"), color, 1.0)
-			
-			# Shaded 3D glass Diamond Prism suspended in the middle
-			var p1 = Vector2(4, hover)
-			var p2 = Vector2(-2, -6 * SQUASH + hover)
-			var p3 = Vector2(-8, hover)
-			var p4 = Vector2(-2, 6 * SQUASH + hover)
-			var dp1 = p1 + Vector2(0, 7.0)
-			var dp2 = p2 + Vector2(0, 7.0)
-			var dp3 = p3 + Vector2(0, 7.0)
-			var dp4 = p4 + Vector2(0, 7.0)
-			
-			# Shading prism panels
-			draw_colored_polygon(PackedVector2Array([p1, p4, dp4, dp1]), Color(color, 0.25))
-			draw_colored_polygon(PackedVector2Array([p4, p3, dp3, dp4]), Color(color, 0.1))
-			draw_colored_polygon(PackedVector2Array([p1, p2, p3, p4]), Color(color, 0.35)) # Top cap face
-			draw_polyline(PackedVector2Array([p1, p2, p3, p4, p1]), color, 1.5)
-			draw_polyline(PackedVector2Array([dp1, dp4, dp3]), Color(color, 0.4), 1.0)
-			draw_line(p1, dp1, color, 1.0)
-			draw_line(p3, dp3, color, 1.0)
-			draw_line(p4, dp4, color, 1.0)
-			
-		"tower_counting":
-			# Count Tower — High-gain transmitter post with stacked status ring caps
-			_draw_3d_cylinder(Vector2.ZERO, 6.0, 14.0, Color("#15202E"), color, 1.5)
-			# Gauge meters pulsing on side channels
-			var pulse1 = 3.0 + sin(_anim_time * 8.0) * 3.0
-			var pulse2 = 3.0 + cos(_anim_time * 6.0) * 3.0
-			_draw_3d_box(Vector2(-6, -9), Vector2(2, 2), pulse1, color, Color.WHITE, 1.0)
-			_draw_3d_box(Vector2(-6, 9), Vector2(2, 2), pulse2, color, Color.WHITE, 1.0)
-			
-		"tower_radix":
-			# Radix Tower — Core gyro sphere inside dual-axis 3D offset rings
-			var scale_1 = 1.0 + sin(_anim_time * 9.0) * 0.1
-			var scale_2 = 1.0 + cos(_anim_time * 9.0) * 0.1
-			_draw_3d_sphere(Vector2.ZERO, 5.5, color)
-			
-			# Dual rotating eccentric perspective loops
-			var rot = _anim_time * 5.0
-			draw_set_transform(Vector2.ZERO, rot, Vector2(1.0, SQUASH))
-			draw_arc(Vector2.ZERO, 11.0 * scale_1, 0, PI * 1.3, 24, color, 2.0)
-			draw_set_transform(Vector2.ZERO, -rot, Vector2(1.0, SQUASH))
-			draw_arc(Vector2.ZERO, 15.0 * scale_2, 0, PI * 1.3, 24, Color(color, 0.6), 1.2)
-			draw_set_transform(Vector2.ZERO, _turret_angle, Vector2.ONE)
-			
-		"tower_linear":
-			# Linear Scanner — Rotating column holding wide-angle 3D parabolic scanner dish
-			_draw_3d_cylinder(Vector2.ZERO, 6.0, 10.0, Color("#15202E"), color, 1.5)
-			# 3D parabolic reflector dish
-			var dish_back = Vector2(5, 0)
-			_draw_3d_cylinder(dish_back, 4.5, 6.0, Color("#203040"), color, 1.2)
-			# Wide receiving arc
-			draw_arc(dish_back, 11.0, -PI/3, PI/3, 16, color, 2.5)
-			draw_line(dish_back, dish_back + Vector2(11, 0), color, 1.5)
-			
-		"tower_binary", _:
-			# Binary Sniper — Giant heavy-duty sniper launcher with charging 3D solenoid rings
-			var recoil_offset = -_recoil * 12.0
-			# Heavy 3D capacitor battery receiver
-			_draw_3d_box(Vector2(-5, 0), Vector2(9, 8), 10.0, Color("#15202E"), color, 1.8)
-			# Massive long sniper barrel
-			_draw_3d_cylinder(Vector2(4 + recoil_offset, 0), 4.5, 20.0, Color("#203040"), color, 1.2)
-			# Dark muzzle hole
-			draw_circle(Vector2(4 + recoil_offset + 20.0, 0), 2.5, Color.BLACK)
-			
-			# 2 thick magnetic solenoid coils wrapped around the barrel
-			_draw_3d_cylinder(Vector2(9 + recoil_offset, 0), 6.5, 3.5, Color("#101721"), color, 1.5)
-			_draw_3d_cylinder(Vector2(16 + recoil_offset, 0), 6.5, 3.5, Color("#101721"), color, 1.5)
+			var recoil = -_recoil * 6.0
+			_draw_3d_box(Vector2(0, 0), Vector2(22, 5), 7.0, Color("#15202E"), color, 1.5)
+			for i in range(5):
+				var bx = -9 + i * 4.5
+				_draw_3d_cylinder(Vector2(bx + recoil, -2), 1.8, 8.0, Color("#1C2C3D"), color, 1.0)
+				draw_circle(Vector2(bx + recoil + 8.0, -2 * SQUASH), 1.2, Color.BLACK)
+			for i in range(5):
+				draw_circle(Vector2(-9 + i * 4.5, 5), 1.0, Color(color, 0.5))
 
-	# Reset coordinate transformation back to unrotated system
+		"tower_stack":
+			var recoil = -_recoil * 8.0
+			for i in range(4):
+				var sy = 5 - i * 3.5
+				_draw_3d_cylinder(Vector2(0, sy), 4.5 - i * 0.4, 2.5, Color("#15202E"), Color(color, 0.3 + i * 0.12), 1.0)
+			_draw_3d_cylinder(Vector2(recoil, -7), 4.0, 9.0, Color("#223344"), color, 1.5)
+			draw_circle(Vector2(recoil + 9.0, -7 * SQUASH), 2.5, Color.BLACK)
+
+		"tower_queue":
+			var recoil = -_recoil * 9.0
+			_draw_3d_box(Vector2(0, 0), Vector2(20, 3), 4.0, Color("#15202E"), color, 1.2)
+			for i in range(4):
+				var qx = -8 + i * 4.5
+				_draw_3d_box(Vector2(qx, -2), Vector2(3, 2), 4.0, Color("#203040"), Color(color, 0.25 + i * 0.12), 1.0)
+			_draw_3d_box(Vector2(9 + recoil, 0), Vector2(3, 6), 6.0, Color("#223344"), color, 1.2)
+			draw_circle(Vector2(12 + recoil, 0), 2.0, Color.BLACK)
+			draw_line(Vector2(-12, 4), Vector2(-14, 1), Color(color, 0.4), 1.0)
+			draw_line(Vector2(-12, 4), Vector2(-14, 7), Color(color, 0.4), 1.0)
+
+		"tower_linked_list":
+			var recoil = -_recoil * 5.0
+			_draw_3d_sphere(Vector2.ZERO, 4.0, color)
+			var nodes = [
+				Vector2(8.0, 0.0),
+				Vector2(-4.0, -6.0 * SQUASH),
+				Vector2(-4.0, 6.0 * SQUASH)
+			]
+			for i in range(3):
+				var j = (i + 1) % 3
+				draw_line(nodes[i], nodes[j], color, 1.5)
+			for i in range(3):
+				var n = nodes[i]
+				_draw_3d_sphere(n, 3.0, Color(color, 0.4 + i * 0.2))
+				_draw_3d_cylinder(Vector2(n.x + 3 + recoil, n.y), 1.5, 5.0, Color("#203040"), color, 1.0)
+				draw_circle(Vector2(n.x + 8 + recoil, n.y * SQUASH), 1.0, Color.BLACK)
+
+		"tower_bubble":
+			var recoil = -_recoil * 6.0
+			_draw_3d_sphere(Vector2.ZERO, 5.5, color)
+			draw_set_transform(Vector2.ZERO, 0.0, Vector2(1.0, SQUASH))
+			draw_arc(Vector2.ZERO, 11.0, 0, PI * 1.6, 14, Color(color, 0.35), 2.0)
+			draw_arc(Vector2.ZERO, 14.0, PI * 0.3, PI * 1.3, 14, Color(color, 0.2), 1.5)
+			draw_set_transform(t_pivot, _turret_angle, Vector2.ONE)
+			_draw_3d_cylinder(Vector2(6 + recoil, 0), 2.0, 6.0, Color("#203040"), color, 1.0)
+			draw_circle(Vector2(12 + recoil, 0), 1.5, Color.BLACK)
+
+		"tower_selection":
+			var recoil = -_recoil * 5.0
+			_draw_3d_hexagon(Vector2.ZERO, 6.0, 5.0, Color("#15202E"), color, 1.2)
+			draw_set_transform(Vector2.ZERO, 0.0, Vector2(1.0, SQUASH))
+			draw_arc(Vector2.ZERO, 12.0, -PI/4, PI/4, 14, color, 2.5)
+			draw_set_transform(t_pivot, _turret_angle, Vector2.ONE)
+			_draw_3d_cylinder(Vector2(6 + recoil, 0), 2.5, 7.0, Color("#203040"), color, 1.0)
+			draw_circle(Vector2(13 + recoil, 0), 1.5, Color.BLACK)
+			draw_circle(Vector2(6, 0), 1.5, Color.WHITE)
+
+		"tower_insertion":
+			var recoil = -_recoil * 10.0
+			_draw_3d_box(Vector2(3, 0), Vector2(10, 6), 7.0, Color("#15202E"), color, 1.5)
+			_draw_3d_box(Vector2(-9 + recoil, 0), Vector2(5, 4), 5.0, Color("#203040"), Color(color, 0.6), 1.0)
+			_draw_3d_cylinder(Vector2(10, 0), 3.0, 6.0, Color("#223344"), color, 1.2)
+			draw_circle(Vector2(16, 0), 2.0, Color.BLACK)
+			draw_line(Vector2(-12, -4), Vector2(8, -4), Color(color, 0.2), 1.0)
+			draw_line(Vector2(-12, 4), Vector2(8, 4), Color(color, 0.2), 1.0)
+
+		"tower_quick":
+			var recoil = -_recoil * 7.0
+			_draw_3d_sphere(Vector2.ZERO, 4.5, color)
+			_draw_3d_cylinder(Vector2(4 + recoil, 0), 3.0, 10.0, Color("#223344"), color, 1.2)
+			draw_circle(Vector2(14 + recoil, 0), 2.0, Color.BLACK)
+			_draw_3d_cylinder(Vector2(-3, -9), 2.0, 4.0, Color("#1C2C3D"), color, 1.0)
+			draw_circle(Vector2(1, -9 * SQUASH), 1.2, Color.BLACK)
+			_draw_3d_cylinder(Vector2(-3, 9), 2.0, 4.0, Color("#1C2C3D"), color, 1.0)
+			draw_circle(Vector2(1, 9 * SQUASH), 1.2, Color.BLACK)
+			draw_line(Vector2(-5, -13), Vector2(-5, 13), Color(color, 0.3), 1.5)
+
+		"tower_merge":
+			var recoil = -_recoil * 7.0
+			_draw_3d_cylinder(Vector2(-6, -7), 2.5, 5.0, Color("#15202E"), color, 1.0)
+			_draw_3d_cylinder(Vector2(-6, 7), 2.5, 5.0, Color("#15202E"), color, 1.0)
+			draw_line(Vector2(-4, -5), Vector2(0, 0), color, 1.5)
+			draw_line(Vector2(-4, 5), Vector2(0, 0), color, 1.5)
+			_draw_3d_sphere(Vector2.ZERO, 4.5, Color(color, 0.6))
+			_draw_3d_cylinder(Vector2(5 + recoil, 0), 3.5, 9.0, Color("#223344"), color, 1.5)
+			draw_circle(Vector2(14 + recoil, 0), 2.5, Color.BLACK)
+
+		"tower_counting":
+			var recoil = -_recoil * 4.0
+			_draw_3d_box(Vector2(0, 0), Vector2(24, 3), 4.0, Color("#15202E"), color, 1.2)
+			for i in range(6):
+				var bx = -11 + i * 4.5
+				var bh = 3.0 + i * 2.0
+				_draw_3d_cylinder(Vector2(bx + recoil, -bh/2 - 1), 1.8, bh, Color("#1C2C3D"), Color(color, 0.3 + i * 0.1), 1.0)
+				draw_circle(Vector2(bx + recoil + bh, (-bh/2 - 1) * SQUASH), 1.0, Color.BLACK)
+			_draw_3d_box(Vector2(0, -10), Vector2(14, 2), 2.0, Color("#203040"), Color(color, 0.5), 1.0)
+
+		"tower_radix":
+			var recoil = -_recoil * 6.0
+			_draw_3d_sphere(Vector2.ZERO, 4.5, color)
+			for i in range(3):
+				draw_set_transform(Vector2.ZERO, i * 0.4, Vector2(1.0, SQUASH))
+				draw_arc(Vector2.ZERO, 9.0 + i * 2.5, 0, PI * 1.7, 14, Color(color, 0.25 + i * 0.15), 2.0 - i * 0.3)
+				draw_set_transform(t_pivot, _turret_angle, Vector2.ONE)
+			_draw_3d_cylinder(Vector2(6 + recoil, 0), 2.5, 7.0, Color("#203040"), color, 1.0)
+			draw_circle(Vector2(13 + recoil, 0), 1.8, Color.BLACK)
+			for i in range(8):
+				var da = i * TAU / 8.0
+				draw_circle(Vector2(cos(da) * 7.5, sin(da) * 7.5 * SQUASH), 0.8, Color(color, 0.6))
+
+		"tower_linear":
+			var recoil = -_recoil * 9.0
+			_draw_3d_box(Vector2(0, 0), Vector2(24, 2), 2.0, Color("#101721"), Color(color, 0.25), 1.0)
+			_draw_3d_box(Vector2(recoil, -2), Vector2(5, 3), 3.0, Color("#15202E"), color, 1.2)
+			_draw_3d_cylinder(Vector2(4 + recoil, -2), 2.5, 8.0, Color("#203040"), color, 1.0)
+			draw_circle(Vector2(12 + recoil, -2 * SQUASH), 1.5, Color.BLACK)
+			for i in range(7):
+				draw_circle(Vector2(-12 + i * 4, 3), 0.6, Color(color, 0.3))
+
+		"tower_binary", _:
+			var recoil = -_recoil * 12.0
+			_draw_3d_box(Vector2(-4, 0), Vector2(10, 8), 9.0, Color("#15202E"), color, 1.8)
+			_draw_3d_cylinder(Vector2(6 + recoil, 0), 3.5, 18.0, Color("#203040"), color, 1.2)
+			draw_circle(Vector2(24 + recoil, 0), 2.5, Color.BLACK)
+			_draw_3d_cylinder(Vector2(4 + recoil, 0), 6.0, 3.0, Color("#101721"), color, 1.2)
+			_draw_3d_cylinder(Vector2(16 + recoil, 0), 5.0, 3.0, Color("#101721"), color, 1.2)
+			var ch = 3.5
+			draw_line(Vector2(4 + recoil, -ch), Vector2(4 + recoil, ch), Color(color, 0.8), 1.5)
+			draw_line(Vector2(4 + recoil - ch, 0), Vector2(4 + recoil + ch, 0), Color(color, 0.8), 1.5)
+
 	draw_set_transform(Vector2.ZERO, 0.0, Vector2.ONE)
 
 func _draw_shaded_capsule(center: Vector2, radius: float, base_color: Color, highlight_color: Color) -> void:
