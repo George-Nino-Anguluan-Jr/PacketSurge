@@ -296,16 +296,16 @@ func _build_tower_cards() -> void:
 	var required = level_config.get("required_towers", [])
 	var new_towers = ProgressManager.get_new_unlocked_towers()
 
+	# Start with nothing selected — players pick freely.
 	selected_towers = []
-	for t in required:
-		if available_towers.has(t):
-			selected_towers.append(t)
 
 	var card_scene = preload("res://scenes/campaign/tower_select/TowerCard.tscn")
 
 	for i in range(available_towers.size()):
 		var tower_id = available_towers[i]
 		var def = TOWER_DEFINITIONS[tower_id]
+		# "Required" stays as informational only — the card shows the
+		# marker but is no longer locked or pre-selected.
 		var is_req = tower_id in required
 
 		var card = card_scene.instantiate()
@@ -320,26 +320,16 @@ func _build_tower_cards() -> void:
 
 		var anchor = available_grid.get_child(i)
 		card.home_position = anchor.global_position
-
-		if is_req:
-			var slot_idx = selected_towers.find(tower_id)
-			if slot_idx != -1 and slot_idx < max_slots:
-				card.current_slot_idx = slot_idx
-				card.set_selected(true)
-				card.global_position = selected_row.get_child(slot_idx).global_position
-			else:
-				card.global_position = card.home_position
-		else:
-			card.global_position = card.home_position
+		card.global_position = card.home_position
 
 		active_cards.append(card)
 
 # ─── SELECTION LOGIC ───────────────────────────────────
 func _on_card_clicked(tower_id: String) -> void:
 	var card = _get_card_by_id(tower_id)
-	if not card or card.is_required:
+	if not card:
 		return
-		
+
 	if card.is_selected:
 		# Deselect: return home
 		selected_towers.erase(tower_id)
@@ -354,14 +344,14 @@ func _on_card_clicked(tower_id: String) -> void:
 				"Only " + str(max_slots) + " tower slots allowed!", 2.0
 			)
 			return
-			
+
 		selected_towers.append(tower_id)
 		card.current_slot_idx = open_idx
 		card.set_selected(true)
-		
+
 		var target_pos = selected_row.get_child(open_idx).global_position
 		card.animate_to(target_pos)
-		
+
 	_refresh_slots()
 	_refresh_start_btn()
 
@@ -456,25 +446,12 @@ func _refresh_slots() -> void:
 		str(selected_towers.size()) + "/" + str(max_slots) + ")"
 
 func _refresh_start_btn() -> void:
-	var required         = level_config.get("required_towers", [])
-	var has_all_required = true
-
-	for t in required:
-		if not selected_towers.has(t):
-			has_all_required = false
-			break
-
-	start_btn.disabled = not has_all_required
-
-	if has_all_required:
-		start_btn.text = "▶ START LEVEL"
-	else:
-		var missing = []
-		for t in required:
-			if not selected_towers.has(t):
-				if TOWER_DEFINITIONS.has(t):
-					missing.append(TOWER_DEFINITIONS[t]["tower_name"])
-		start_btn.text = "⚠️ Add: " + ", ".join(missing)
+	# Free-pick: the start button is enabled whenever at least one
+	# tower is selected. "Required" towers (defined per level) remain
+	# available as informational hints but are no longer enforced.
+	var has_any = selected_towers.size() > 0
+	start_btn.disabled = not has_any
+	start_btn.text = "▶ START LEVEL"
 
 # ─── BUTTONS ───────────────────────────────────────────
 func _setup_buttons() -> void:

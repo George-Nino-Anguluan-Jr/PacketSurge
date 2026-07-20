@@ -89,9 +89,7 @@ func setup(p_tower_id: String, def: Dictionary, req: bool) -> void:
 	
 	name_label.text = tower_name.replace(" Tower", "")
 	cost_label.text = str(ram_cost) + " RAM"
-	if is_required:
-		cost_label.text = "🔒 REQUIRED"
-	
+
 	_apply_styles()
 	_instantiate_tower_model(def)
 	_refresh_badges()
@@ -136,13 +134,10 @@ func _apply_styles() -> void:
 	style.content_margin_right = 8
 	style.content_margin_top = 8
 	style.content_margin_bottom = 8
-	
-	if is_required:
-		style.bg_color = Color(tower_color, 0.2)
-		style.border_color = tower_color
-		name_label.add_theme_color_override("font_color", tower_color)
-		cost_label.add_theme_color_override("font_color", tower_color)
-	elif is_selected:
+
+	# Required is no longer treated specially — all cards share the
+	# same selected / unselected look.
+	if is_selected:
 		style.bg_color = Color(tower_color, 0.15)
 		style.border_color = tower_color
 		name_label.add_theme_color_override("font_color", tower_color)
@@ -152,7 +147,7 @@ func _apply_styles() -> void:
 		style.border_color = Color("#1A3A5A")
 		name_label.add_theme_color_override("font_color", Color("#A0C0E0"))
 		cost_label.add_theme_color_override("font_color", Color("#4A7FA5"))
-		
+
 	add_theme_stylebox_override("panel", style)
 
 func set_new(val: bool) -> void:
@@ -163,19 +158,18 @@ func _refresh_badges() -> void:
 	if _new_badge:
 		_new_badge.visible = _is_new
 	if _info_btn:
-		_info_btn.visible = not is_required
+		# Info button always visible now — required towers can be inspected too.
+		_info_btn.visible = true
 
 func set_selected(sel: bool) -> void:
 	is_selected = sel
 	_apply_styles()
 
 func _on_mouse_entered() -> void:
-	if is_required:
-		return
 	_is_hovered = true
 	var tween = create_tween().set_parallel(true)
 	tween.tween_property(self, "scale", Vector2(1.08, 1.08), 0.15).set_trans(Tween.TRANS_QUAD).set_ease(Tween.EASE_OUT)
-	
+
 	# Slight glow border shift if not selected
 	if not is_selected:
 		var style = get_theme_stylebox("panel").duplicate()
@@ -189,9 +183,6 @@ func _on_mouse_exited() -> void:
 	_apply_styles()
 
 func _gui_input(event: InputEvent) -> void:
-	if is_required:
-		return
-
 	if event is InputEventMouseButton:
 		if event.button_index == MOUSE_BUTTON_LEFT:
 			if event.pressed:
