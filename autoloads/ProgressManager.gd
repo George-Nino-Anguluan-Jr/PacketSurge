@@ -246,14 +246,15 @@ func is_level_unlocked(level_number: int) -> bool:
 
 func set_level_stars(level_number: int, stars: int) -> void:
 	var star_map = campaign_progress.get("level_stars", {})
-	if star_map.get(level_number, 0) < stars:
-		star_map[level_number] = stars
+	var existing = int(star_map.get(str(level_number), star_map.get(level_number, 0)))
+	if existing < stars:
+		star_map[str(level_number)] = stars
 		campaign_progress["level_stars"] = star_map
 		save_progress()
 
 func get_level_stars(level_number: int) -> int:
 	var star_map = campaign_progress.get("level_stars", {})
-	return star_map.get(level_number, 0)
+	return int(star_map.get(str(level_number), star_map.get(level_number, 0)))
 
 # ─── SAVE & LOAD ───────────────────────────────────────
 func save_progress() -> void:
