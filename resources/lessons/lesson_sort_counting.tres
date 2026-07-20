@@ -1,9 +1,11 @@
 [gd_resource type="Resource" script_class="LessonData" format=3 uid="uid://c83nfhavopace"]
 
 [ext_resource type="Script" uid="uid://ciet8k3fqk8tr" path="res://scripts/data/LessonData.gd" id="1_0x24s"]
+[ext_resource type="PackedScene" uid="uid://dw9f2h6n4t1r" path="res://scenes/academy/visualizations/VizCountingSort.tscn" id="2_ct84h"]
 
 [resource]
 script = ExtResource("1_0x24s")
+visualization_scene = ExtResource("2_ct84h")
 lesson_id = "sort_counting"
 title = "Counting Sort"
 category = "data_structures"
@@ -48,6 +50,9 @@ recap_text = "Counting Sort counts occurrences of each value then rebuilds the s
 challenge_instruction = "Arrange the code blocks to implement Counting Sort:"
 challenge_blocks = Array[String](["def counting_sort(arr):", "max_val = max(arr)", "count = [0] * (max_val + 1)", "for num in arr:", "count[num] += 1", "result = []", "for i, c in enumerate(count):", "result.extend([i] * c)"])
 correct_sequence = Array[String](["def counting_sort(arr):", "max_val = max(arr)", "count = [0] * (max_val + 1)", "for num in arr:", "count[num] += 1", "result = []", "for i, c in enumerate(count):", "result.extend([i] * c)"])
+code_template = "arr = [___, 1, 2]\nprint(arr[0])"
+challenge_code = "arr = [3, 1, 2]\nprint(arr[0])"
+expected_output = "3"
 challenge_hint = "Define function, find max value, create count array, count each number, build result from counts."
 practice_question = "What is the time complexity of Counting Sort?"
 practice_options = Array[String](["O(n log n)", "O(n²)", "O(n + k)", "O(k)"])

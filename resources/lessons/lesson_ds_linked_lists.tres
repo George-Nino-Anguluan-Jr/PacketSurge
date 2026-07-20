@@ -71,6 +71,9 @@ recap_text = "- Linked Lists store nodes dynamically without a fixed size in mem
 challenge_instruction = "Arrange the blocks to set up a Doubly Linked List node, then set up two nodes connected bi-directionally."
 challenge_blocks = Array[String](["class Node:    def __init__(self, value):        self.value = value        self.next = None        self.prev = None", "a = Node(1)", "b = Node(2)", "a.next = b", "b.prev = a", "a.value = b", "b.value = a"])
 correct_sequence = Array[String](["class Node:    def __init__(self, value):        self.value = value        self.next = None        self.prev = None", "a = Node(1)", "b = Node(2)", "a.next = b", "b.prev = a"])
+code_template = "node1 = ___\nnode2 = 2\nprint(node1)\nprint(node2)"
+challenge_code = "node1 = 1\nnode2 = 2\nprint(node1)\nprint(node2)"
+expected_output = "1\n2"
 challenge_hint = "Define the Node class with both next and prev attributes. Instantiate nodes a and b, then link a.next to b, and b.prev back to a."
 practice_question = "Which type of linked list allows traversing backwards and forwards, but uses the most memory per node?"
 practice_options = Array[String](["Singly Linked List", "Doubly Linked List", "Circular Singly Linked List", "Array List"])

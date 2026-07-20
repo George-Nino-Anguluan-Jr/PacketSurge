@@ -1,6 +1,6 @@
 [gd_scene format=3 uid="uid://b4jun8j02220n"]
 
-[ext_resource type="Script" uid="uid://b1q6y27rgempt" path="res://scenes/academy/visualizations/VizVariables.gd" id="1_0ju17"]
+[ext_resource type="Script" uid="uid://bff4ygtkr7p76" path="res://scenes/academy/visualizations/VizLinkedLists.gd" id="1_0ju17"]
 
 [node name="DrawSurface" type="Control" unique_id=1365553616]
 layout_mode = 3

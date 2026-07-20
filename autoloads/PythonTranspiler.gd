@@ -1,26 +1,17 @@
 ﻿extends Node
 
-func transpile(source: String) -> Dictionary:
+func run_code(source: String) -> Dictionary:
 	var lines = source.split("\n", false)
-	var declared = {}
-	var out = []
-	out.append("var _output_buffer = \"\"")
-	out.append("func _gs_add_output(val):")
-	out.append("    _output_buffer += str(val) + \"\\n\"")
-	out.append("")
-	out.append("func run():")
-	var body = _build(lines, 0, 0, declared)
-	for line in body:
-		out.append("    " + line)
-	out.append("    return _output_buffer")
-	return { "success": true, "gdscript": "\n".join(out), "error": "" }
+	var env = {}
+	var state = { "ok": true, "err": "", "output": "" }
+	_exec_block(lines, 0, 0, env, state)
+	if not state.ok:
+		return { "success": false, "output": "", "error": state.err }
+	return { "success": true, "output": state.output.strip_edges(false, true), "error": "" }
 
-# Process lines starting at idx at given depth (0 = root level inside func run).
-# Returns lines with "    ".repeat(depth) prefix already applied.
-func _build(lines, idx, depth, declared):
-	var result = []
+func _exec_block(lines, idx, depth, env, state):
 	var i = idx
-	while i < lines.size():
+	while i < lines.size() and state.ok:
 		var raw = lines[i]
 		var stripped = raw.strip_edges()
 		i += 1
@@ -31,17 +22,112 @@ func _build(lines, idx, depth, declared):
 		if lead < expect:
 			i -= 1
 			break
-		var indent = "    ".repeat(depth)
-		var gds = _convert_line(stripped, declared)
-		result.append(indent + gds)
-		if stripped.ends_with(":"):
-			var body = _build(lines, i, depth + 1, declared)
-			for line in body:
-				result.append(line)
-			i = _advance(lines, i, depth + 1)
+		_exec_stmt(stripped, env, state)
+		if not state.ok:
+			return
+		if not stripped.ends_with(":"):
+			continue
+		if stripped.begins_with("def ") and stripped.ends_with(":"):
+			var parts = stripped.split("(")
+			if parts.size() < 2:
+				state.ok = false
+				state.err = "Invalid function definition."
+				return
+			var fname = parts[0].substr(4).strip_edges()
+			var params_str = parts[1].substr(0, parts[1].length() - 1).strip_edges()
+			var params = []
+			if params_str != "":
+				for p in params_str.split(","):
+					params.append(p.strip_edges())
+			var body = _collect_block(lines, i, depth + 1)
+			env[fname] = { "params": params, "body": body }
+			i = _skip_block(lines, i, depth + 1)
+		elif stripped.begins_with("if "):
+			var cond = stripped.substr(3, stripped.length() - 4).strip_edges()
+			var cond_val = _eval_expr(cond, env, state)
+			if not state.ok:
+				return
+			i = _exec_if_chain(lines, i, depth + 1, env, state, cond_val)
+		elif stripped.begins_with("elif ") or stripped.begins_with("else:"):
+			i = _skip_block(lines, i, depth + 1)
+		elif stripped.begins_with("for ") and " in " in stripped:
+			var parsed = _parse_for(stripped)
+			if parsed.size() != 3:
+				state.ok = false
+				state.err = "Invalid for loop syntax."
+				return
+			var iterable = _eval_expr(parsed[2], env, state)
+			if not state.ok:
+				return
+			if typeof(iterable) != TYPE_ARRAY:
+				state.ok = false
+				state.err = "Can only iterate over arrays."
+				return
+			for element in iterable:
+				env[parsed[0]] = element
+				_exec_block(lines, i, depth + 1, env, state)
+				if not state.ok:
+					return
+			i = _advance_to(lines, i, depth + 1)
+		elif stripped.begins_with("while "):
+			var loop_cond = stripped.substr(6, stripped.length() - 7).strip_edges()
+			var max_iter = 10000
+			var iter_count = 0
+			while _eval_expr(loop_cond, env, state):
+				if not state.ok:
+					return
+				iter_count += 1
+				if iter_count > max_iter:
+					state.ok = false
+					state.err = "Loop exceeded maximum iterations (10000)."
+					return
+				_exec_block(lines, i, depth + 1, env, state)
+				if not state.ok:
+					return
+			i = _advance_to(lines, i, depth + 1)
+
+func _exec_if_chain(lines, idx, depth, env, state, cond_val):
+	var i = idx
+	if cond_val:
+		_exec_block(lines, i, depth, env, state)
+		if not state.ok:
+			return lines.size()
+		return _skip_chain(lines, i, depth)
+	var after = _skip_block(lines, i, depth)
+	if after >= lines.size():
+		return after
+	var raw = lines[after]
+	var stripped = raw.strip_edges()
+	var lead = _count_ws(raw)
+	if lead < depth * 4:
+		if stripped.begins_with("elif "):
+			var cond = stripped.substr(5, stripped.length() - 6).strip_edges()
+			var val = _eval_expr(cond, env, state)
+			if not state.ok:
+				return lines.size()
+			return _exec_if_chain(lines, after + 1, depth, env, state, val)
+		if stripped == "else:" or stripped.begins_with("else:"):
+			_exec_block(lines, after + 1, depth, env, state)
+			if not state.ok:
+				return lines.size()
+			return _skip_block(lines, after + 1, depth)
+	return after
+
+func _collect_block(lines, start, depth):
+	var result = []
+	var i = start
+	while i < lines.size():
+		var raw = lines[i]
+		if raw.strip_edges() == "":
+			i += 1
+			continue
+		if _count_ws(raw) < depth * 4:
+			break
+		result.append(raw)
+		i += 1
 	return result
 
-func _advance(lines, start, depth):
+func _skip_block(lines, start, depth):
 	var i = start
 	while i < lines.size():
 		var raw = lines[i]
@@ -53,31 +139,312 @@ func _advance(lines, start, depth):
 		i += 1
 	return i
 
-func _convert_line(line, declared):
-	if line.begins_with("print("):
-		return line.replace("print(", "_gs_add_output(")
-	if line.begins_with("def "):
-		return line.replace("def ", "func ")
-	if line == "else:" or line.begins_with("else:"):
-		return "else:"
-	if line.begins_with("elif "):
-		return line
-	if line.begins_with("for ") and " in " in line:
-		return line
-	if line.begins_with("while "):
-		return line
-	if line.begins_with("return "):
-		return line
-	if "=" in line and not "==" in line:
-		var parts = line.split("=", true, 1)
-		if parts.size() == 2:
-			var vname = parts[0].strip_edges()
-			if vname.is_valid_identifier() and not declared.has(vname):
-				declared[vname] = true
-				line = "var " + line
-	return line.replace("True", "true").replace("False", "false").replace("None", "null")
+func _skip_chain(lines, start, depth):
+	var i = _skip_block(lines, start, depth)
+	while i < lines.size():
+		var raw = lines[i]
+		var stripped = raw.strip_edges()
+		if stripped == "":
+			i += 1
+			continue
+		var lead = _count_ws(raw)
+		if lead >= depth * 4:
+			break
+		if stripped.begins_with("elif ") or stripped == "else:" or stripped.begins_with("else:"):
+			i = _skip_block(lines, i + 1, depth)
+			continue
+		break
+	return i
 
-func _count_ws(s: String) -> int:
+func _advance_to(lines, start, depth):
+	var i = start
+	while i < lines.size():
+		var raw = lines[i]
+		if raw.strip_edges() == "":
+			i += 1
+			continue
+		if _count_ws(raw) < depth * 4:
+			return i
+		i += 1
+	return i
+
+func _exec_stmt(stripped, env, state):
+	if stripped.begins_with("print("):
+		var inner = stripped.substr(6, stripped.length() - 7).strip_edges()
+		var val = _eval_expr(inner, env, state)
+		if state.ok:
+			state.output += str(val) + "\n"
+		return
+	if "=" in stripped and not "==" in stripped:
+		var parts = stripped.split("=", true, 1)
+		if parts.size() == 2:
+			var lhs = parts[0].strip_edges()
+			var rhs = parts[1].strip_edges()
+			var lb = lhs.find("[")
+			if lb != -1 and lhs.ends_with("]"):
+				var vname = lhs.substr(0, lb).strip_edges()
+				var idx_str = lhs.substr(lb + 1, lhs.length() - lb - 2).strip_edges()
+				var idx = _eval_expr(idx_str, env, state)
+				if state.ok and env.has(vname) and typeof(env[vname]) == TYPE_ARRAY and typeof(idx) == TYPE_INT:
+					var val = _eval_expr(rhs, env, state)
+					if state.ok:
+						env[vname][idx] = val
+					return
+			if lhs.is_valid_identifier():
+				var val = _eval_expr(rhs, env, state)
+				if state.ok:
+					env[lhs] = val
+				return
+			else:
+				state.ok = false
+				state.err = "Invalid assignment: '" + lhs + "' is not a valid variable name or array index."
+				return
+	if stripped.begins_with("def ") or stripped.begins_with("if ") or stripped.begins_with("elif ") or stripped.begins_with("else:") or stripped.begins_with("for ") or stripped.begins_with("while ") or stripped.begins_with("return "):
+		return
+	state.ok = false
+	state.err = "Unknown statement: " + stripped
+
+func _eval_expr(expr, env, state):
+	var s = expr.strip_edges()
+	if s == "":
+		state.ok = false
+		state.err = "Empty expression."
+		return null
+	if (s.begins_with("\"") and s.ends_with("\"")) or (s.begins_with("'") and s.ends_with("'")):
+		return s.substr(1, s.length() - 2)
+	if s.is_valid_int():
+		return int(s)
+	if s.is_valid_float():
+		return float(s)
+	if s == "true" or s == "True":
+		return true
+	if s == "false" or s == "False":
+		return false
+	if s == "null" or s == "None":
+		return null
+	if s.begins_with("[") and s.ends_with("]"):
+		var inner = s.substr(1, s.length() - 2).strip_edges()
+		var arr = []
+		if inner != "":
+			for item in _split_comma(inner):
+				var v = _eval_expr(item.strip_edges(), env, state)
+				if not state.ok:
+					return null
+				arr.append(v)
+		return arr
+	var ops_compare = ["==", "!=", "<=", ">=", "<", ">"]
+	for op in ops_compare:
+		var idx = _find_op(s, op)
+		if idx != -1:
+			var left = _eval_expr(s.substr(0, idx).strip_edges(), env, state)
+			if not state.ok:
+				return null
+			var right = _eval_expr(s.substr(idx + op.length()).strip_edges(), env, state)
+			if not state.ok:
+				return null
+			match op:
+				"==": return left == right
+				"!=": return left != right
+				"<=": return left <= right
+				">=": return left >= right
+				"<": return left < right
+				">": return left > right
+	var mult_idx = _find_op(s, "*")
+	if mult_idx != -1:
+		var left = _eval_expr(s.substr(0, mult_idx).strip_edges(), env, state)
+		if not state.ok:
+			return null
+		var right = _eval_expr(s.substr(mult_idx + 1).strip_edges(), env, state)
+		if not state.ok:
+			return null
+		return left * right
+	var div_idx = _find_op(s, "/")
+	if div_idx != -1:
+		var left = _eval_expr(s.substr(0, div_idx).strip_edges(), env, state)
+		if not state.ok:
+			return null
+		var right = _eval_expr(s.substr(div_idx + 1).strip_edges(), env, state)
+		if not state.ok:
+			return null
+		if right == 0:
+			state.ok = false
+			state.err = "Division by zero."
+			return null
+		return left / right
+	var plus_idx = _find_op(s, "+")
+	if plus_idx != -1:
+		var left = _eval_expr(s.substr(0, plus_idx).strip_edges(), env, state)
+		if not state.ok:
+			return null
+		var right = _eval_expr(s.substr(plus_idx + 1).strip_edges(), env, state)
+		if not state.ok:
+			return null
+		if typeof(left) == TYPE_STRING or typeof(right) == TYPE_STRING:
+			return str(left) + str(right)
+		if typeof(left) == TYPE_FLOAT or typeof(right) == TYPE_FLOAT:
+			return float(left) + float(right)
+		return left + right
+	var minus_idx = _find_op(s, "-")
+	if minus_idx != -1:
+		var left = _eval_expr(s.substr(0, minus_idx).strip_edges(), env, state)
+		if not state.ok:
+			return null
+		var right = _eval_expr(s.substr(minus_idx + 1).strip_edges(), env, state)
+		if not state.ok:
+			return null
+		return left - right
+	var idx_dot = _find_op(s, ".")
+	if idx_dot != -1:
+		var obj_name = s.substr(0, idx_dot).strip_edges()
+		var rest = s.substr(idx_dot + 1).strip_edges()
+		if env.has(obj_name):
+			var obj = env[obj_name]
+			if rest == "pop()":
+				if typeof(obj) == TYPE_ARRAY and obj.size() > 0:
+					return obj.pop_back()
+			elif rest.begins_with("pop("):
+				var arg = _eval_expr(rest.substr(4, rest.length() - 5).strip_edges(), env, state)
+				if state.ok and typeof(obj) == TYPE_ARRAY and typeof(arg) == TYPE_INT:
+					return obj.pop_at(arg)
+			elif rest.begins_with("remove("):
+				var arg = _eval_expr(rest.substr(7, rest.length() - 8).strip_edges(), env, state)
+				if state.ok and typeof(obj) == TYPE_ARRAY and typeof(arg) == TYPE_INT:
+					obj.remove_at(arg)
+					return obj
+			elif rest.begins_with("append("):
+				var arg = _eval_expr(rest.substr(7, rest.length() - 8).strip_edges(), env, state)
+				if state.ok and typeof(obj) == TYPE_ARRAY:
+					obj.append(arg)
+					return obj
+	var paren_idx = s.find("(")
+	if paren_idx != -1 and s.ends_with(")"):
+		var fname = s.substr(0, paren_idx).strip_edges()
+		var args_str = s.substr(paren_idx + 1, s.length() - paren_idx - 2).strip_edges()
+		var arg_vals = []
+		if args_str != "":
+			for a in _split_comma(args_str):
+				var v = _eval_expr(a.strip_edges(), env, state)
+				if not state.ok:
+					return null
+				arg_vals.append(v)
+		match fname:
+			"len": return arg_vals[0].size() if arg_vals.size() == 1 else null
+			"str": return str(arg_vals[0]) if arg_vals.size() == 1 else null
+			"int": return int(arg_vals[0]) if arg_vals.size() == 1 else null
+			"float": return float(arg_vals[0]) if arg_vals.size() == 1 else null
+			"range":
+				var start = 0
+				var stop = 0
+				if arg_vals.size() == 1:
+					stop = arg_vals[0]
+				elif arg_vals.size() == 2:
+					start = arg_vals[0]
+					stop = arg_vals[1]
+				var r = []
+				var i = start
+				while i < stop:
+					r.append(i)
+					i += 1
+				return r
+		if env.has(fname):
+			return _call_func(fname, arg_vals, env, state)
+	var idx_br = _find_op(s, "[")
+	if idx_br != -1 and s.ends_with("]"):
+		var var_name = s.substr(0, idx_br).strip_edges()
+		var index_str = s.substr(idx_br + 1, s.length() - idx_br - 2).strip_edges()
+		var index = _eval_expr(index_str, env, state)
+		if state.ok and env.has(var_name):
+			var target = env[var_name]
+			if typeof(target) == TYPE_ARRAY and typeof(index) == TYPE_INT:
+				if index >= 0 and index < target.size():
+					return target[index]
+				state.ok = false
+				state.err = "Index " + str(index) + " out of range for array of size " + str(target.size()) + "."
+				return null
+	if env.has(s):
+		return env[s]
+	state.ok = false
+	state.err = "Unknown variable or expression: " + s
+	return null
+
+func _call_func(fname, args, env, state):
+	if not env.has(fname) or typeof(env[fname]) != TYPE_DICTIONARY:
+		state.ok = false
+		state.err = "Function not defined: " + fname
+		return null
+	var func_data = env[fname]
+	var params = func_data.get("params", [])
+	var body = func_data.get("body", [])
+	if args.size() != params.size():
+		state.ok = false
+		state.err = "Function " + fname + " expects " + str(params.size()) + " arguments, got " + str(args.size())
+		return null
+	var local_env = env.duplicate()
+	for i in range(params.size()):
+		local_env[params[i]] = args[i]
+	var func_state = { "ok": true, "err": "", "output": "" }
+	for line in body:
+		var s = line.strip_edges()
+		if s.begins_with("return "):
+			var r = s.substr(7).strip_edges()
+			return _eval_expr(r, local_env, func_state)
+		_exec_stmt(s, local_env, func_state)
+		if not func_state.ok:
+			state.ok = false
+			state.err = func_state.err
+			return null
+	return null
+
+func _parse_for(stripped):
+	var rest = stripped.substr(4).strip_edges()
+	var in_idx = rest.find(" in ")
+	if in_idx == -1:
+		return []
+	var var_name = rest.substr(0, in_idx).strip_edges()
+	var rest2 = rest.substr(in_idx + 4).strip_edges()
+	var list_expr = rest2.substr(0, rest2.length() - 1).strip_edges() if rest2.ends_with(":") else rest2
+	return [var_name, "in", list_expr]
+
+func _split_comma(s):
+	var result = []
+	var depth = 0
+	var current = ""
+	for i in range(s.length()):
+		var c = s[i]
+		if c == "(" or c == "[":
+			depth += 1
+			current += c
+		elif c == ")" or c == "]":
+			depth -= 1
+			current += c
+		elif c == "," and depth == 0:
+			result.append(current.strip_edges())
+			current = ""
+		else:
+			current += c
+	if current.strip_edges() != "":
+		result.append(current.strip_edges())
+	return result
+
+func _find_op(s, op):
+	if op == ".":
+		var idx = s.find(".")
+		if idx > 0 and idx < s.length() - 1:
+			return idx
+		return -1
+	var depth = 0
+	for i in range(s.length()):
+		var c = s[i]
+		if depth == 0:
+			if s.substr(i, op.length()) == op:
+				return i
+		if c == '(' or c == '[':
+			depth += 1
+		elif c == ')' or c == ']':
+			depth -= 1
+	return -1
+
+func _count_ws(s):
 	var n = 0
 	for i in range(s.length()):
 		var c = s[i]
@@ -88,21 +455,3 @@ func _count_ws(s: String) -> int:
 		else:
 			break
 	return n
-
-func run_code(source: String) -> Dictionary:
-	var result = transpile(source)
-	if not result.success:
-		return { "success": false, "output": "", "error": "Transpile error: " + result.error }
-	var gd = GDScript.new()
-	gd.source_code = result.gdscript
-	var err = gd.reload()
-	if err != OK:
-		return { "success": false, "output": "", "error": "Compile error: script failed to compile." }
-	var instance = gd.new()
-	if instance == null:
-		return { "success": false, "output": "", "error": "Failed to instantiate compiled script." }
-	if instance.has_method(&"run"):
-		var val = instance.run()
-		var output = str(val) if val != null else ""
-		return { "success": true, "output": output.strip_edges(false, true), "error": "" }
-	return { "success": false, "output": "", "error": "No run() method generated." }

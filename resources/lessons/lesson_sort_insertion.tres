@@ -90,6 +90,9 @@ recap_text = "- Insertion Sort builds sorted array one element at a time
 challenge_instruction = "Arrange the blocks to perform one step ofInsertion Sort — insert the second elementinto its correct position."
 challenge_blocks = Array[String](["arr = [12, 11, 13, 5]", "key = arr[1]", "j = 0", "while j >= 0 and arr[j] > key:", "arr[j + 1] = arr[j]", "j -= 1", "arr[j + 1] = key", "print(arr)", "key = arr[0]", "j = 1"])
 correct_sequence = Array[String](["arr = [12, 11, 13, 5]", "key = arr[1]", "j = 0", "while j >= 0 and arr[j] > key:", "arr[j + 1] = arr[j]", "j -= 1", "arr[j + 1] = key", "print(arr)"])
+code_template = "arr = [12, 11, 13, 5]\nkey = arr[1]\nj = 0\nwhile j >= 0 and arr[j] > key:\n    arr[j + 1] = arr[j]\n    j -= 1\narr[j + 1] = ___\nprint(arr)"
+challenge_code = "arr = [12, 11, 13, 5]\nkey = arr[1]\nj = 0\nwhile j >= 0 and arr[j] > key:\n    arr[j + 1] = arr[j]\n    j -= 1\narr[j + 1] = key\nprint(arr)"
+expected_output = "[11, 12, 13, 5]"
 challenge_hint = "key holds the element being inserted.j starts one position before key.Shift elements right while they are greater than key.Place key at j + 1 after the while loop ends."
 practice_question = "Which scenario gives Insertion Sort its best case O(n) performance?"
 practice_options = Array[String](["Array is in reverse sorted order", "Array has all duplicate elements", "Array is already sorted", "Array has random elements"])

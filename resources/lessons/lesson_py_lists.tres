@@ -64,6 +64,9 @@ recap_text = "- A list stores multiple values in order
 challenge_instruction = "Arrange the blocks to create a list of student namesand print the first one."
 challenge_blocks = Array[String](["students = [\"Ana\", \"Ben\", \"Carl\"]", "print(students[0])", "students = \"Ana\", \"Ben\", \"Carl\"", "print(students[1])", "[students] = [\"Ana\", \"Ben\", \"Carl\"]"])
 correct_sequence = Array[String](["students = [\"Ana\", \"Ben\", \"Carl\"]", "print(students[0])"])
+code_template = "students = [\"___\", \"Ben\", \"Carl\"]\nprint(students[0])"
+challenge_code = "students = [\"Ana\", \"Ben\", \"Carl\"]\nprint(students[0])"
+expected_output = "Ana"
 challenge_hint = "Lists use square brackets [].Index 0 is always the first item."
 practice_question = "What is the output of this code?    colors = [\"red\", \"green\", \"blue\"]    print(colors[2])"
 practice_options = Array[String](["red", "green", "blue", "colors[2]"])

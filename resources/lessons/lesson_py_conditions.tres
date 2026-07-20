@@ -72,8 +72,15 @@ recap_text = "- if checks a condition and runs code if true
 - Logical operators: and, or, not
 - Conditions always evaluate to True or False
 - Python checks top to bottom — first match wins"
-challenge_instruction = "Write Python code that creates a health variable with value 20,then uses an if/else to check if it's below 30. Print a warning if low."
+challenge_instruction = "Arrange the blocks to check if health is low and print a warning."
+challenge_blocks = Array[String](["health = 20", "if health < 30:", "    print(\"Warning: Low health!\")", "else:", "    print(\"Health is fine.\")", "health > 30:", "if print(\"Warning: Low health!\")"])
+correct_sequence = Array[String](["health = 20", "if health < 30:", "    print(\"Warning: Low health!\")", "else:", "    print(\"Health is fine.\")"])
 challenge_hint = "Use if condition: then indent the body with 4 spaces.Use else: for the alternative. Print inside each block."
+code_template = "health = 20
+if health < 30:
+    print(\"___\")
+else:
+    print(\"Health is fine.\")"
 challenge_code = "health = 20
 if health < 30:
     print(\"Warning: Low health!\")

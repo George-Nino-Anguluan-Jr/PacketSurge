@@ -1,188 +1,99 @@
-# VizStacks.gd
 extends Control
 
-const COL_LABEL  := Color("#FF6B35")
-const COL_VALUE  := Color("#00FF88")
-const COL_TEXT   := Color("#E8F4FD")
-const COL_MUTED  := Color("#4A7FA5")
-const COL_WARN   := Color("#FFB800")
+var diag: Control; var anim: Control; var code_label: Label
+var play_btn: Button; var step_btn: Button; var reset_btn: Button
+var paused := false; var step_idx := 0; var progress := 0.0; var tween: Tween
 
-var diagram_area: Control
-var anim_area: Control
-var code_label: Label
-var play_btn: Button
-var step_btn: Button
-var reset_btn: Button
-
-var current_anim_step: int = 0
-var is_playing: bool       = false
-var play_timer: float      = 0.0
-const PLAY_INTERVAL: float = 1.2
-
-var stack_items: Array = []
-
-var anim_steps = [
-	{"code": "stack = []  → empty stack",     "action": "none",  "value": ""},
-	{"code": "stack.append(1)  → push 1",     "action": "push",  "value": "1"},
-	{"code": "stack.append(2)  → push 2",     "action": "push",  "value": "2"},
-	{"code": "stack.append(3)  → push 3",     "action": "push",  "value": "3"},
-	{"code": "stack.pop() → removes 3 (LIFO)","action": "pop",   "value": ""},
-	{"code": "stack.pop() → removes 2",       "action": "pop",   "value": ""},
-	{"code": "stack = [1] ✅",                "action": "none",  "value": ""},
+var items = [10, 20, 30, 40, 50]; var pop_idx := 0
+var steps = [
+	{"code": "stack = [] (empty)", "action": "init", "val": -1},
+	{"code": "push(10) ? stack: [10]", "action": "push", "val": 10},
+	{"code": "push(20) ? stack: [10, 20]", "action": "push", "val": 20},
+	{"code": "push(30) ? stack: [10, 20, 30]", "action": "push", "val": 30},
+	{"code": "pop() ? returns 30", "action": "pop", "val": 30},
+	{"code": "pop() ? returns 20", "action": "pop", "val": 20},
+	{"code": "push(40) ? stack: [10, 40]", "action": "push", "val": 40},
 ]
 
-func _ready() -> void:
-	_build_ui()
+func _set_progress(v): progress = v; queue_redraw()
 
-func _build_ui() -> void:
-	var layout := VBoxContainer.new()
-	layout.add_theme_constant_override("separation", 12)
-	layout.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
-	add_child(layout)
+func _ready():
+	var ui = VizUtil.standard_ui(self, " Stack — LIFO (Last In, First Out)", 100, 400)
+	diag = ui.diagram; anim = ui.anim; code_label = ui.code; var ctrl = ui.controls
+	diag.draw.connect(_draw_diag); anim.draw.connect(_draw_anim)
+	play_btn = VizUtil.make_btn("? Play", VizUtil.C_LABEL); step_btn = VizUtil.make_btn("? Step", VizUtil.C_LABEL)
+	reset_btn = VizUtil.make_btn("? Reset", Color("#FF3366"))
+	ctrl.add_child(play_btn); ctrl.add_child(step_btn); ctrl.add_child(reset_btn)
+	play_btn.pressed.connect(_on_play); step_btn.pressed.connect(_on_step); reset_btn.pressed.connect(_on_reset)
 
-	var diag_title := Label.new()
-	diag_title.text = "📊 Stack — Last In First Out (LIFO)"
-	diag_title.add_theme_color_override("font_color", COL_LABEL)
-	diag_title.add_theme_font_size_override("font_size", 15)
-	layout.add_child(diag_title)
+func _on_play():
+	if step_idx >= steps.size(): _on_reset(); return
+	paused = not paused; play_btn.text = "? Pause" if not paused else "? Play"
+	if not paused: _start_tween()
 
-	diagram_area = Control.new()
-	diagram_area.custom_minimum_size   = Vector2(0, 110)
-	diagram_area.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-	diagram_area.draw.connect(_draw_diagram)
-	layout.add_child(diagram_area)
+func _on_step():
+	paused = true; play_btn.text = "? Play"
+	if tween and tween.is_running(): tween.kill(); _do_step()
 
-	layout.add_child(HSeparator.new())
+func _on_reset():
+	paused = true; play_btn.text = "? Play"
+	if tween and tween.is_running(): tween.kill()
+	step_idx = 0; progress = 0.0; code_label.text = "Press ? Play or ? Step to begin"; queue_redraw()
 
-	var anim_title := Label.new()
-	anim_title.text = "🎬 Step-by-Step Animation"
-	anim_title.add_theme_color_override("font_color", COL_LABEL)
-	anim_title.add_theme_font_size_override("font_size", 15)
-	layout.add_child(anim_title)
+func _start_tween():
+	if paused or step_idx >= steps.size(): return
+	if tween and tween.is_running(): tween.kill()
+	tween = create_tween(); tween.tween_method(_set_progress, 0.0, 1.0, 0.7).set_ease(Tween.EASE_IN_OUT)
+	tween.finished.connect(_on_tween_done, CONNECT_ONE_SHOT)
 
-	code_label = Label.new()
-	code_label.text = "Press Play or Step to begin"
-	code_label.add_theme_color_override("font_color", COL_WARN)
-	code_label.add_theme_font_size_override("font_size", 14)
-	code_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
-	layout.add_child(code_label)
+func _on_tween_done():
+	if step_idx >= steps.size(): return
+	step_idx += 1; progress = 0.0
+	if step_idx >= steps.size(): paused = true; play_btn.text = "? Play"; code_label.text = "Stack demo complete!"; queue_redraw(); return
+	code_label.text = "?  " + steps[step_idx].code; queue_redraw()
+	if not paused: _start_tween()
 
-	anim_area = Control.new()
-	anim_area.custom_minimum_size   = Vector2(0, 140)
-	anim_area.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-	anim_area.draw.connect(_draw_animation)
-	layout.add_child(anim_area)
+func _do_step():
+	if step_idx >= steps.size(): paused = true; play_btn.text = "? Play"; code_label.text = "Stack demo complete!"; return
+	code_label.text = "?  " + steps[step_idx].code; progress = 1.0; step_idx += 1; queue_redraw()
 
-	var controls := HBoxContainer.new()
-	controls.add_theme_constant_override("separation", 8)
-	controls.alignment = BoxContainer.ALIGNMENT_CENTER
-	layout.add_child(controls)
+func _draw_diag():
+	var f = ThemeDB.fallback_font
+	diag.draw_string(f, Vector2(16, 20), "stack = []", HORIZONTAL_ALIGNMENT_LEFT, -1, 13, VizUtil.C_LABEL)
+	diag.draw_string(f, Vector2(16, 40), "stack.append(val)  # push", HORIZONTAL_ALIGNMENT_LEFT, -1, 13, VizUtil.C_TEXT)
+	diag.draw_string(f, Vector2(16, 60), "val = stack.pop()  # pop", HORIZONTAL_ALIGNMENT_LEFT, -1, 13, VizUtil.C_SWAP)
+	diag.draw_string(f, Vector2(16, 80), "LIFO: Last In, First Out", HORIZONTAL_ALIGNMENT_LEFT, -1, 13, VizUtil.C_VAL)
 
-	play_btn  = _make_btn("▶ Play",  COL_LABEL)
-	step_btn  = _make_btn("⏭ Step",  COL_LABEL)
-	reset_btn = _make_btn("↺ Reset", Color("#FF3366"))
-	controls.add_child(play_btn)
-	controls.add_child(step_btn)
-	controls.add_child(reset_btn)
-	play_btn.pressed.connect(_on_play)
-	step_btn.pressed.connect(_on_step)
-	reset_btn.pressed.connect(_on_reset)
+func _draw_anim():
+	var f = ThemeDB.fallback_font; var w = anim.size.x; var p = progress
+	if step_idx == 0 and p == 0.0: _draw_stack([]); return
+	var idx = min(step_idx, steps.size() - 1); var s = steps[idx]
+	var stack = []
+	for j in range(1, idx + 1):
+		var sj = steps[j]
+		if sj.action == "push": stack.append(sj.val)
+		elif sj.action == "pop": stack.pop_back()
+	_draw_stack(stack)
+	if s.action == "push":
+		anim.draw_string(f, Vector2(20, 20), "push(" + str(s.val) + ") ?", HORIZONTAL_ALIGNMENT_LEFT, -1, 14, VizUtil.C_VAL)
+	elif s.action == "pop":
+		anim.draw_string(f, Vector2(20, 20), "pop() ? " + str(s.val) + " ?", HORIZONTAL_ALIGNMENT_LEFT, -1, 14, VizUtil.C_SWAP)
 
-func _make_btn(text: String, color: Color) -> Button:
-	var btn := Button.new()
-	btn.text = text
-	btn.custom_minimum_size = Vector2(90, 36)
-	var s := StyleBoxFlat.new()
-	s.bg_color = Color("#0A1628"); s.border_color = color
-	s.border_width_left = 1; s.border_width_right = 1
-	s.border_width_top  = 1; s.border_width_bottom = 1
-	s.corner_radius_top_left = 4; s.corner_radius_top_right = 4
-	s.corner_radius_bottom_left = 4; s.corner_radius_bottom_right = 4
-	btn.add_theme_stylebox_override("normal", s)
-	btn.add_theme_color_override("font_color", color)
-	btn.add_theme_font_size_override("font_size", 13)
-	return btn
+func _draw_stack(stack):
+	var f = ThemeDB.fallback_font; var w = anim.size.x; var h = 400.0
+	var bw = 100.0; var bh = 40.0; var sx = w * 0.5 - bw * 0.5
+	for i in range(stack.size()):
+		var by = h - 60 - (i + 1) * (bh + 6)
+		var col = VizUtil.C_LABEL
+		if i == stack.size() - 1: col = VizUtil.lerp_color(VizUtil.C_LABEL, VizUtil.C_HIGHLIGHT, progress)
+		anim.draw_rect(Rect2(sx, by, bw, bh), Color(col, 0.2))
+		anim.draw_rect(Rect2(sx, by, bw, bh), col, false, 2.0)
+		anim.draw_string(f, Vector2(sx + bw * 0.5 - 12, by + bh * 0.5 + 6), str(stack[i]), HORIZONTAL_ALIGNMENT_LEFT, -1, 14, VizUtil.C_TEXT)
+	anim.draw_string(f, Vector2(sx - 30, h - 60 - (stack.size() + 1) * (bh + 6) - 10), "TOP ?", HORIZONTAL_ALIGNMENT_LEFT, -1, 11, VizUtil.C_HIGHLIGHT)
+	anim.draw_line(Vector2(sx - 20, h - 28), Vector2(sx + bw + 20, h - 28), VizUtil.C_MUTED, 2.0)
+	anim.draw_string(f, Vector2(sx + bw * 0.5 - 16, h - 16), "BOTTOM", HORIZONTAL_ALIGNMENT_LEFT, -1, 10, VizUtil.C_MUTED)
 
-func _process(delta: float) -> void:
-	if not is_playing: return
-	play_timer += delta
-	if play_timer >= PLAY_INTERVAL:
-		play_timer = 0.0
-		_advance_step()
-
-func _on_play() -> void:
-	is_playing = not is_playing
-	play_btn.text = "⏸ Pause" if is_playing else "▶ Play"
-
-func _on_step() -> void:
-	is_playing = false
-	play_btn.text = "▶ Play"
-	_advance_step()
-
-func _on_reset() -> void:
-	is_playing = false
-	play_btn.text = "▶ Play"
-	current_anim_step = 0
-	stack_items = []
-	code_label.text = "Press Play or Step to begin"
-	anim_area.queue_redraw()
-
-func _advance_step() -> void:
-	if current_anim_step >= anim_steps.size():
-		is_playing = false
-		play_btn.text = "▶ Play"
-		code_label.text = "✅ Stack operations complete!"
-		return
-	var step = anim_steps[current_anim_step]
-	code_label.text = "▶  " + step["code"]
-	if step["action"] == "push":
-		stack_items.append(step["value"])
-	elif step["action"] == "pop" and stack_items.size() > 0:
-		stack_items.pop_back()
-	current_anim_step += 1
-	anim_area.queue_redraw()
-
-func _draw_diagram() -> void:
-	var font = ThemeDB.fallback_font
-	var lines = [
-		["stack = []",              COL_LABEL],
-		["stack.append(x) → push", COL_VALUE],
-		["stack.pop()     → pop",  Color("#FF3366")],
-		["Last In, First Out (LIFO)", COL_MUTED],
-	]
-	var y = 16.0
-	for line in lines:
-		diagram_area.draw_string(ThemeDB.fallback_font, Vector2(16, y), line[0], HORIZONTAL_ALIGNMENT_LEFT, -1, 13, line[1])
-		y += 22.0
-
-func _draw_animation() -> void:
-	var w    = anim_area.size.x
-	var h    = anim_area.size.y
-	var font = ThemeDB.fallback_font
-	var bw   = 100.0; var bh = 32.0
-	var sx   = w / 2.0 - bw / 2.0
-
-	# Draw stack from bottom up
-	for i in range(stack_items.size()):
-		var by  = h - 20 - (i + 1) * (bh + 4)
-		var col = COL_WARN if i == stack_items.size() - 1 else COL_LABEL
-		anim_area.draw_rect(Rect2(sx, by, bw, bh), Color(col, 0.2))
-		anim_area.draw_rect(Rect2(sx, by, bw, bh), col, false, 1.5)
-		anim_area.draw_string(font, Vector2(sx + bw/2 - 6, by + 22), stack_items[i], HORIZONTAL_ALIGNMENT_LEFT, -1, 14, COL_TEXT)
-
-	# Top label
-	if stack_items.size() > 0:
-		var top_y = h - 20 - stack_items.size() * (bh + 4) - 18
-		anim_area.draw_string(font, Vector2(sx + bw + 6, h - 20 - stack_items.size() * (bh + 4) + 10), "← TOP", HORIZONTAL_ALIGNMENT_LEFT, -1, 11, COL_WARN)
-
-	# Base
-	anim_area.draw_line(Vector2(sx - 10, h - 20), Vector2(sx + bw + 10, h - 20), COL_MUTED, 2.0)
-	anim_area.draw_string(font, Vector2(sx + bw/2 - 20, h - 8), "BOTTOM", HORIZONTAL_ALIGNMENT_LEFT, -1, 10, COL_MUTED)
-
-	if stack_items.is_empty():
-		anim_area.draw_string(font, Vector2(sx + 20, h - 40), "empty", HORIZONTAL_ALIGNMENT_LEFT, -1, 13, COL_MUTED)
-
-func _notification(what: int) -> void:
+func _notification(what):
 	if what == NOTIFICATION_RESIZED:
-		if diagram_area: diagram_area.queue_redraw()
-		if anim_area:    anim_area.queue_redraw()
+		if diag: diag.queue_redraw()
+		if anim: anim.queue_redraw()

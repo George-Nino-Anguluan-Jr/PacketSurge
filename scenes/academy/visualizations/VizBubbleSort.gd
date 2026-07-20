@@ -1,185 +1,124 @@
-# VizBubbleSort.gd
 extends Control
 
-const COL_LABEL  := Color("#FFB800")
-const COL_VALUE  := Color("#00FF88")
-const COL_TEXT   := Color("#E8F4FD")
-const COL_MUTED  := Color("#4A7FA5")
-const COL_SWAP   := Color("#FF3366")
+var diag: Control; var anim: Control; var code_label: Label
+var play_btn: Button; var step_btn: Button; var reset_btn: Button
+var paused := false; var step_idx := 0; var progress := 0.0; var tween: Tween
 
-var diagram_area: Control
-var anim_area: Control
-var code_label: Label
-var play_btn: Button
-var step_btn: Button
-var reset_btn: Button
-
-var current_anim_step: int = 0
-var is_playing: bool       = false
-var play_timer: float      = 0.0
-const PLAY_INTERVAL: float = 1.0
-
-var arr_states = [
-	[5, 3, 8, 1, 2],
-	[3, 5, 8, 1, 2],
-	[3, 5, 8, 1, 2],
-	[3, 5, 1, 8, 2],
-	[3, 5, 1, 2, 8],
-	[3, 1, 5, 2, 8],
-	[3, 1, 2, 5, 8],
-	[1, 3, 2, 5, 8],
-	[1, 2, 3, 5, 8],
+var steps = [
+	{"code": "arr = [5,3,8,1,2]", "arr": [5,3,8,1,2], "cmp": [-1,-1], "swp": false},
+	{"code": "Compare 5 and 3 â†’ 5>3 â†’ SWAP", "arr": [3,5,8,1,2], "cmp": [0,1], "swp": true},
+	{"code": "Compare 5 and 8 â†’ 5<8 â†’ no swap", "arr": [3,5,8,1,2], "cmp": [1,2], "swp": false},
+	{"code": "Compare 8 and 1 â†’ 8>1 â†’ SWAP", "arr": [3,5,1,8,2], "cmp": [2,3], "swp": true},
+	{"code": "Compare 8 and 2 â†’ 8>2 â†’ SWAP", "arr": [3,5,1,2,8], "cmp": [3,4], "swp": true},
+	{"code": "Pass 2: Compare 5 and 1 â†’ SWAP", "arr": [3,1,5,2,8], "cmp": [1,2], "swp": true},
+	{"code": "Pass 2: Compare 5 and 2 â†’ SWAP", "arr": [3,1,2,5,8], "cmp": [2,3], "swp": true},
+	{"code": "Pass 3: Compare 3 and 1 â†’ SWAP", "arr": [1,3,2,5,8], "cmp": [0,1], "swp": true},
+	{"code": "Pass 3: Compare 3 and 2 â†’ SWAP", "arr": [1,2,3,5,8], "cmp": [1,2], "swp": true},
 ]
 
-var step_codes = [
-	"arr = [5, 3, 8, 1, 2]  → start",
-	"Compare 5,3 → 5>3 → SWAP → [3,5,8,1,2]",
-	"Compare 5,8 → 5<8 → no swap",
-	"Compare 8,1 → 8>1 → SWAP → [3,5,1,8,2]",
-	"Compare 8,2 → 8>2 → SWAP → [3,5,1,2,8]",
-	"Pass 2: Compare 5,1 → SWAP → [3,1,5,2,8]",
-	"Pass 2: Compare 5,2 → SWAP → [3,1,2,5,8]",
-	"Pass 3: Compare 3,1 → SWAP → [1,3,2,5,8]",
-	"Pass 3: Compare 3,2 → SWAP → [1,2,3,5,8] ✅",
-]
+func _set_progress(v): progress = v; queue_redraw()
 
-var highlight_pairs = [[-1,-1],[0,1],[1,2],[2,3],[3,4],[1,2],[2,3],[0,1],[1,2]]
+func _ready():
+	var ui = VizUtil.standard_ui(self, " Bubble Sort â€” Compare & Swap Adjacent", 100, 400)
+	diag = ui.diagram; anim = ui.anim; code_label = ui.code; var ctrl = ui.controls
+	diag.draw.connect(_draw_diag); anim.draw.connect(_draw_anim)
+	play_btn = VizUtil.make_btn("â–¶ Play", VizUtil.C_LABEL); step_btn = VizUtil.make_btn("â­ Step", VizUtil.C_LABEL)
+	reset_btn = VizUtil.make_btn("â†º Reset", Color("#FF3366"))
+	ctrl.add_child(play_btn); ctrl.add_child(step_btn); ctrl.add_child(reset_btn)
+	play_btn.pressed.connect(_on_play); step_btn.pressed.connect(_on_step); reset_btn.pressed.connect(_on_reset)
 
-func _ready() -> void:
-	_build_ui()
+func _on_play():
+	if step_idx >= steps.size(): _on_reset(); return
+	paused = not paused; play_btn.text = "â¸ Pause" if not paused else "â–¶ Play"
+	if not paused: _start_tween()
 
-func _build_ui() -> void:
-	var layout := VBoxContainer.new()
-	layout.add_theme_constant_override("separation", 12)
-	layout.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
-	add_child(layout)
+func _on_step():
+	paused = true; play_btn.text = "â–¶ Play"
+	if tween and tween.is_running(): tween.kill(); _do_step()
 
-	var diag_title := Label.new()
-	diag_title.text = "📊 Bubble Sort — Compare Adjacent Elements"
-	diag_title.add_theme_color_override("font_color", COL_LABEL)
-	diag_title.add_theme_font_size_override("font_size", 15)
-	layout.add_child(diag_title)
+func _on_reset():
+	paused = true; play_btn.text = "â–¶ Play"
+	if tween and tween.is_running(): tween.kill()
+	step_idx = 0; progress = 0.0; code_label.text = "Press â–¶ Play or â­ Step to begin"; queue_redraw()
 
-	diagram_area = Control.new()
-	diagram_area.custom_minimum_size   = Vector2(0, 100)
-	diagram_area.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-	diagram_area.draw.connect(_draw_diagram)
-	layout.add_child(diagram_area)
+func _start_tween():
+	if paused or step_idx >= steps.size(): return
+	if tween and tween.is_running(): tween.kill()
+	tween = create_tween(); tween.tween_method(_set_progress, 0.0, 1.0, 1.0).set_ease(Tween.EASE_IN_OUT)
+	tween.finished.connect(_on_tween_done, CONNECT_ONE_SHOT)
 
-	layout.add_child(HSeparator.new())
+func _on_tween_done():
+	if step_idx >= steps.size(): return
+	step_idx += 1; progress = 0.0
+	if step_idx >= steps.size(): paused = true; play_btn.text = "â–¶ Play"; code_label.text = "âœ… Sorted: [1, 2, 3, 5, 8]"; queue_redraw(); return
+	code_label.text = "â–¶  " + steps[step_idx].code; queue_redraw()
+	if not paused: _start_tween()
 
-	var anim_title := Label.new()
-	anim_title.text = "🎬 Step-by-Step Animation"
-	anim_title.add_theme_color_override("font_color", COL_LABEL)
-	anim_title.add_theme_font_size_override("font_size", 15)
-	layout.add_child(anim_title)
+func _do_step():
+	if step_idx >= steps.size(): paused = true; play_btn.text = "â–¶ Play"; code_label.text = "âœ… Sorted: [1, 2, 3, 5, 8]"; return
+	code_label.text = "â–¶  " + steps[step_idx].code; progress = 1.0; step_idx += 1; queue_redraw()
 
-	code_label = Label.new()
-	code_label.text = "Press Play or Step to begin"
-	code_label.add_theme_color_override("font_color", COL_LABEL)
-	code_label.add_theme_font_size_override("font_size", 13)
-	code_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
-	code_label.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
-	layout.add_child(code_label)
+func _draw_diag():
+	var f = ThemeDB.fallback_font
+	diag.draw_string(f, Vector2(16, 20), "def bubble_sort(arr):", HORIZONTAL_ALIGNMENT_LEFT, -1, 13, VizUtil.C_LABEL)
+	diag.draw_string(f, Vector2(16, 40), "    for i in range(len(arr)-1):", HORIZONTAL_ALIGNMENT_LEFT, -1, 13, VizUtil.C_TEXT)
+	diag.draw_string(f, Vector2(16, 60), "        for j in range(len(arr)-i-1):", HORIZONTAL_ALIGNMENT_LEFT, -1, 13, VizUtil.C_TEXT)
+	diag.draw_string(f, Vector2(16, 80), "            if arr[j] > arr[j+1]: swap", HORIZONTAL_ALIGNMENT_LEFT, -1, 13, VizUtil.C_SWAP)
 
-	anim_area = Control.new()
-	anim_area.custom_minimum_size   = Vector2(0, 90)
-	anim_area.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-	anim_area.draw.connect(_draw_animation)
-	layout.add_child(anim_area)
-
-	var controls := HBoxContainer.new()
-	controls.add_theme_constant_override("separation", 8)
-	controls.alignment = BoxContainer.ALIGNMENT_CENTER
-	layout.add_child(controls)
-
-	play_btn  = _make_btn("▶ Play",  COL_LABEL)
-	step_btn  = _make_btn("⏭ Step",  COL_LABEL)
-	reset_btn = _make_btn("↺ Reset", Color("#FF3366"))
-	controls.add_child(play_btn)
-	controls.add_child(step_btn)
-	controls.add_child(reset_btn)
-	play_btn.pressed.connect(_on_play)
-	step_btn.pressed.connect(_on_step)
-	reset_btn.pressed.connect(_on_reset)
-
-func _make_btn(text: String, color: Color) -> Button:
-	var btn := Button.new()
-	btn.text = text
-	btn.custom_minimum_size = Vector2(90, 36)
-	var s := StyleBoxFlat.new()
-	s.bg_color = Color("#0A1628"); s.border_color = color
-	s.border_width_left = 1; s.border_width_right = 1
-	s.border_width_top  = 1; s.border_width_bottom = 1
-	s.corner_radius_top_left = 4; s.corner_radius_top_right = 4
-	s.corner_radius_bottom_left = 4; s.corner_radius_bottom_right = 4
-	btn.add_theme_stylebox_override("normal", s)
-	btn.add_theme_color_override("font_color", color)
-	btn.add_theme_font_size_override("font_size", 13)
-	return btn
-
-func _process(delta: float) -> void:
-	if not is_playing: return
-	play_timer += delta
-	if play_timer >= PLAY_INTERVAL:
-		play_timer = 0.0
-		_advance_step()
-
-func _on_play() -> void:
-	is_playing = not is_playing
-	play_btn.text = "⏸ Pause" if is_playing else "▶ Play"
-
-func _on_step() -> void:
-	is_playing = false
-	play_btn.text = "▶ Play"
-	_advance_step()
-
-func _on_reset() -> void:
-	is_playing = false
-	play_btn.text = "▶ Play"
-	current_anim_step = 0
-	code_label.text = "Press Play or Step to begin"
-	anim_area.queue_redraw()
-
-func _advance_step() -> void:
-	if current_anim_step >= arr_states.size():
-		is_playing = false
-		play_btn.text = "▶ Play"
-		code_label.text = "✅ Sorted: [1, 2, 3, 5, 8]"
-		return
-	code_label.text = "▶  " + step_codes[current_anim_step]
-	current_anim_step += 1
-	anim_area.queue_redraw()
-
-func _draw_diagram() -> void:
-	var w    = diagram_area.size.x
-	var font = ThemeDB.fallback_font
-	diagram_area.draw_string(font, Vector2(16, 20), "def bubble_sort(arr):", HORIZONTAL_ALIGNMENT_LEFT, -1, 13, COL_LABEL)
-	diagram_area.draw_string(font, Vector2(16, 40), "    for i in range(len(arr)):", HORIZONTAL_ALIGNMENT_LEFT, -1, 13, COL_TEXT)
-	diagram_area.draw_string(font, Vector2(16, 60), "        for j in range(len(arr)-i-1):", HORIZONTAL_ALIGNMENT_LEFT, -1, 13, COL_TEXT)
-	diagram_area.draw_string(font, Vector2(16, 80), "            if arr[j] > arr[j+1]: swap", HORIZONTAL_ALIGNMENT_LEFT, -1, 13, COL_SWAP)
-
-func _draw_animation() -> void:
-	var w    = anim_area.size.x
-	var font = ThemeDB.fallback_font
-	var idx  = min(current_anim_step, arr_states.size() - 1)
-	var arr  = arr_states[idx]
-	var hi   = highlight_pairs[idx]
-	var bw   = 48.0; var bh = 48.0
-	var total = arr.size() * (bw + 6) - 6
-	var sx    = (w - total) / 2.0
-	var y     = 16.0
-
+func _draw_anim():
+	var f = ThemeDB.fallback_font; var w = anim.size.x; var p = progress
+	if step_idx == 0 and p == 0.0: _draw_bars(steps[0].arr, -1, -1, false, Color("#0D2040")); return
+	var idx = min(step_idx, steps.size() - 1); var s = steps[idx]; var arr = s.arr; var is_last = (idx == steps.size() - 1)
+	var colors = []
 	for i in range(arr.size()):
-		var x   = sx + i * (bw + 6)
-		var col = COL_SWAP if (i == hi[0] or i == hi[1]) else COL_LABEL
-		var is_sorted = (idx == arr_states.size() - 1)
-		if is_sorted: col = COL_VALUE
-		anim_area.draw_rect(Rect2(x, y, bw, bh), Color(col, 0.2))
-		anim_area.draw_rect(Rect2(x, y, bw, bh), col, false, 1.5)
-		anim_area.draw_string(font, Vector2(x + 14, y + 30), str(arr[i]), HORIZONTAL_ALIGNMENT_LEFT, -1, 16, COL_TEXT)
+		var col = VizUtil.C_LABEL
+		if i == s.cmp[0] or i == s.cmp[1]:
+			if s.swp: col = VizUtil.lerp_color(VizUtil.C_LABEL, VizUtil.C_SWAP, min(p * 2, 1.0))
+			else: col = VizUtil.lerp_color(VizUtil.C_LABEL, VizUtil.C_HIGHLIGHT, p)
+		elif is_last: col = VizUtil.lerp_color(VizUtil.C_LABEL, VizUtil.C_VAL, p)
+		colors.append(col)
+	_draw_bars(arr, s.cmp[0], s.cmp[1], s.swp, Color("#0D2040"), colors)
+	if s.cmp[0] >= 0:
+		var bw = VizUtil.BAR_W; var gap = VizUtil.BAR_GAP; var n = arr.size()
+		var total = n * (bw + gap) - gap; var sx = (w - total) * 0.5; var y = 20.0
+		var ax = sx + s.cmp[0] * (bw + gap) + bw * 0.5
+		var bx = sx + s.cmp[1] * (bw + gap) + bw * 0.5
+		var max_val = 0; for v in arr: if typeof(v) == TYPE_INT: max_val = max(max_val, abs(v))
+		if max_val == 0: max_val = 1
+		var bar_h0 = VizUtil.MIN_BAR_H + (VizUtil.MAX_BAR_H - VizUtil.MIN_BAR_H) * (float(abs(arr[s.cmp[0]])) / float(max_val))
+		var bar_h1 = VizUtil.MIN_BAR_H + (VizUtil.MAX_BAR_H - VizUtil.MIN_BAR_H) * (float(abs(arr[s.cmp[1]])) / float(max_val))
+		var top_y0 = y + VizUtil.MAX_BAR_H - bar_h0; var top_y1 = y + VizUtil.MAX_BAR_H - bar_h1
+		var ay = top_y0 - 12; var by = top_y1 - 12
+		if s.swp:
+			VizUtil.draw_arrow(anim, Vector2(ax, ay), Vector2(bx, by), VizUtil.C_SWAP)
+			if p < 0.7: anim.draw_string(f, Vector2((ax+bx)*0.5-18, ay-14), "SWAP!", HORIZONTAL_ALIGNMENT_LEFT, -1, 12, Color(VizUtil.C_SWAP.r, VizUtil.C_SWAP.g, VizUtil.C_SWAP.b, p/0.7))
+		else:
+			VizUtil.draw_arrow(anim, Vector2(ax, ay), Vector2(bx, by), VizUtil.C_HIGHLIGHT)
+			anim.draw_string(f, Vector2((ax+bx)*0.5-24, ay-14), "No swap", HORIZONTAL_ALIGNMENT_LEFT, -1, 10, Color(VizUtil.C_HIGHLIGHT.r, VizUtil.C_HIGHLIGHT.g, VizUtil.C_HIGHLIGHT.b, p))
 
-func _notification(what: int) -> void:
+func _draw_bars(arr, c0, c1, swp, bg_col, colors = []):
+	var f = ThemeDB.fallback_font; var w = anim.size.x
+	var bw = VizUtil.BAR_W; var gap = VizUtil.BAR_GAP; var n = arr.size()
+	var total = n * (bw + gap) - gap; var sx = (w - total) * 0.5; var y = 20.0
+	var max_val = 0; for v in arr: if typeof(v) == TYPE_INT: max_val = max(max_val, abs(v))
+	if max_val == 0: max_val = 1
+	for i in range(n):
+		var val = arr[i]
+		var bar_h = VizUtil.MIN_BAR_H + (VizUtil.MAX_BAR_H - VizUtil.MIN_BAR_H) * (float(abs(val)) / float(max_val))
+		var x = sx + i * (bw + gap)
+		var by = y + VizUtil.MAX_BAR_H - bar_h
+		var col = colors[i] if colors.size() > i else VizUtil.C_LABEL
+		var dx = x
+		if swp and progress > 0.0 and progress < 1.0:
+			if i == c0: dx += (bw + gap) * progress * 0.5
+			elif i == c1: dx -= (bw + gap) * progress * 0.5
+		anim.draw_rect(Rect2(dx, by, bw, bar_h), Color(col, 0.18))
+		anim.draw_rect(Rect2(dx, by, bw, bar_h), col, false, 2.0)
+		anim.draw_string(f, Vector2(dx + 4, by - 6), "[" + str(i) + "]", HORIZONTAL_ALIGNMENT_LEFT, -1, 10, VizUtil.C_MUTED)
+		var label = str(val); var lw = label.length() * 8
+		anim.draw_string(f, Vector2(dx + bw * 0.5 - lw * 0.5, by + bar_h * 0.5 + 6), label, HORIZONTAL_ALIGNMENT_LEFT, -1, 14, VizUtil.C_TEXT)
+
+func _notification(what):
 	if what == NOTIFICATION_RESIZED:
-		if diagram_area: diagram_area.queue_redraw()
-		if anim_area:    anim_area.queue_redraw()
+		if diag: diag.queue_redraw()
+		if anim: anim.queue_redraw()

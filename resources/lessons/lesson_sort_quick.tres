@@ -1,9 +1,11 @@
 [gd_resource type="Resource" script_class="LessonData" format=3 uid="uid://ccjgr1oo6glkq"]
 
 [ext_resource type="Script" uid="uid://ciet8k3fqk8tr" path="res://scripts/data/LessonData.gd" id="1_xgqti"]
+[ext_resource type="PackedScene" uid="uid://cd6tn5r3q7g8" path="res://scenes/academy/visualizations/VizQuickSort.tscn" id="2_ql84h"]
 
 [resource]
 script = ExtResource("1_xgqti")
+visualization_scene = ExtResource("2_ql84h")
 lesson_id = "sort_quick"
 title = "Quick Sort"
 category = "data_structures"
@@ -39,6 +41,9 @@ recap_text = "Quick Sort picks a pivot, splits into smaller/larger halves, sorts
 challenge_instruction = "Arrange the code blocks to implement Quick Sort:"
 challenge_blocks = Array[String](["def quick_sort(arr):", "if len(arr) <= 1:", "return arr", "pivot = arr[len(arr) // 2]", "left = [x for x in arr if x < pivot]", "mid = [x for x in arr if x == pivot]", "right = [x for x in arr if x > pivot]", "return quick_sort(left) + mid + quick_sort(right)"])
 correct_sequence = Array[String](["def quick_sort(arr):", "if len(arr) <= 1:", "return arr", "pivot = arr[len(arr) // 2]", "left = [x for x in arr if x < pivot]", "mid = [x for x in arr if x == pivot]", "right = [x for x in arr if x > pivot]", "return quick_sort(left) + mid + quick_sort(right)"])
+code_template = "arr = [3, 1, 2]\nprint(arr[___])"
+challenge_code = "arr = [3, 1, 2]\nprint(arr[0])"
+expected_output = "3"
 challenge_hint = "Start with the function definition, then base case, then pivot, then partition into left/mid/right, then return combined result."
 practice_question = "What is the average time complexity of Quick Sort?"
 practice_options = Array[String](["O(n²)", "O(n log n)", "O(log n)", "O(n)"])

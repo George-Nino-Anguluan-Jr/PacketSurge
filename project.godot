@@ -27,6 +27,7 @@ AdaptiveAI="*uid://8rjpmb4rwoxe"
 SupabaseManager="*uid://d4c6t1sdehokl"
 SoundManager="*res://autoloads/SoundManager.gd"
 PythonTranspiler="*res://autoloads/PythonTranspiler.gd"
+VizUtil="*res://autoloads/VizUtil.gd"
 
 [display]
 

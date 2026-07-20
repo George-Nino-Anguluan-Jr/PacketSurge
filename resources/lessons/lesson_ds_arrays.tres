@@ -71,8 +71,13 @@ recap_text = "- Arrays store items in fixed sequential positions
 - Inserting or deleting requires shifting — O(n)
 - Arrays are the base of stacks, queues, and more
 - Best used when: you know the size, need fast access by position"
-challenge_instruction = "Write Python code that creates an array of five zeros,sets index 2 to value 42, then prints that element."
+challenge_instruction = "Arrange the blocks to create an array, set a valueat index 2, and print it."
+challenge_blocks = Array[String](["data = [0, 0, 0, 0, 0]", "data[2] = 42", "print(data[2])", "data = [0, 0, 0, 0, 0", "print(data[3])", "data[2] == 42"])
+correct_sequence = Array[String](["data = [0, 0, 0, 0, 0]", "data[2] = 42", "print(data[2])"])
 challenge_hint = "Create: data = [0, 0, 0, 0, 0]Assign: data[2] = 42Print: print(data[2])"
+code_template = "data = [0, 0, 0, 0, 0]
+data[___] = 42
+print(data[2])"
 challenge_code = "data = [0, 0, 0, 0, 0]
 data[2] = 42
 print(data[2])"

@@ -1,9 +1,11 @@
 [gd_resource type="Resource" script_class="LessonData" format=3 uid="uid://djadipn5esgie"]
 
 [ext_resource type="Script" uid="uid://ciet8k3fqk8tr" path="res://scripts/data/LessonData.gd" id="1_xk5ya"]
+[ext_resource type="PackedScene" uid="uid://bv8s2d5f7h0g" path="res://scenes/academy/visualizations/VizBinarySearch.tscn" id="2_bn84h"]
 
 [resource]
 script = ExtResource("1_xk5ya")
+visualization_scene = ExtResource("2_bn84h")
 lesson_id = "search_binary"
 title = "Binary Search"
 category = "data_structures"
@@ -45,6 +47,9 @@ recap_text = "Binary Search works on sorted arrays by repeatedly halving the sea
 challenge_instruction = "Arrange the code blocks to implement Binary Search:"
 challenge_blocks = Array[String](["def binary_search(arr, target):", "left = 0", "right = len(arr) - 1", "while left <= right:", "mid = (left + right) // 2", "return mid", "left = mid + 1", "right = mid - 1", "return -1"])
 correct_sequence = Array[String](["def binary_search(arr, target):", "left = 0", "right = len(arr) - 1", "while left <= right:", "mid = (left + right) // 2", "return mid", "left = mid + 1", "right = mid - 1", "return -1"])
+code_template = "arr = [1, 3, 5, 7, 9]\ntarget = ___\nleft = 0\nright = len(arr) - 1\nwhile left <= right:\n    mid = (left + right) // 2\n    if arr[mid] == target:\n        print(mid)\n        left = right + 1\n    elif arr[mid] < target:\n        left = mid + 1\n    else:\n        right = mid - 1"
+challenge_code = "arr = [1, 3, 5, 7, 9]\ntarget = 7\nleft = 0\nright = len(arr) - 1\nwhile left <= right:\n    mid = (left + right) // 2\n    if arr[mid] == target:\n        print(mid)\n        left = right + 1\n    elif arr[mid] < target:\n        left = mid + 1\n    else:\n        right = mid - 1"
+expected_output = "3"
 challenge_hint = "Set left and right pointers, loop while not crossed, calculate mid, return if found, adjust left or right based on comparison, return -1 if loop ends."
 practice_question = "What is the key requirement for Binary Search to work?"
 practice_options = Array[String](["Array must have even number of elements", "Array must be sorted", "Array must contain only integers", "Array must have no duplicates"])

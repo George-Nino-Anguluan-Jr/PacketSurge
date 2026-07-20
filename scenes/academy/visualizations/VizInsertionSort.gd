@@ -1,185 +1,111 @@
-# VizInsertionSort.gd
 extends Control
 
-const COL_LABEL  := Color("#1ABC9C")
-const COL_VALUE  := Color("#00FF88")
-const COL_TEXT   := Color("#E8F4FD")
-const COL_MUTED  := Color("#4A7FA5")
-const COL_KEY    := Color("#FFB800")
+var diag: Control; var anim: Control; var code_label: Label
+var play_btn: Button; var step_btn: Button; var reset_btn: Button
+var paused := false; var step_idx := 0; var progress := 0.0; var tween: Tween
 
-var diagram_area: Control
-var anim_area: Control
-var code_label: Label
-var play_btn: Button
-var step_btn: Button
-var reset_btn: Button
-
-var current_anim_step: int = 0
-var is_playing: bool       = false
-var play_timer: float      = 0.0
-const PLAY_INTERVAL: float = 1.1
-
-var arr_states = [
-	[5, 3, 8, 1, 2],
-	[3, 5, 8, 1, 2],
-	[3, 5, 8, 1, 2],
-	[1, 3, 5, 8, 2],
-	[1, 2, 3, 5, 8],
+var steps = [
+	{"code": "arr = [6, 4, 2, 8, 1]", "arr": [6,4,2,8,1], "key": -1, "cmp": -1, "ins": -1},
+	{"code": "key = arr[1] = 4; compare 6>4 ? shift 6 right", "arr": [6,6,2,8,1], "key": 4, "cmp": 0, "ins": -1},
+	{"code": "insert key=4 at position 0", "arr": [4,6,2,8,1], "key": -1, "cmp": -1, "ins": 0},
+	{"code": "key = arr[2] = 2; compare 6>2 ? shift", "arr": [4,6,6,8,1], "key": 2, "cmp": 1, "ins": -1},
+	{"code": "compare 4>2 ? shift 4 right", "arr": [4,4,6,8,1], "key": 2, "cmp": 0, "ins": -1},
+	{"code": "insert key=2 at position 0", "arr": [2,4,6,8,1], "key": -1, "cmp": -1, "ins": 0},
+	{"code": "key = arr[3] = 8; 6<8 ? no shift", "arr": [2,4,6,8,1], "key": 8, "cmp": 2, "ins": -1},
+	{"code": "insert key=8 at position 3", "arr": [2,4,6,8,1], "key": -1, "cmp": -1, "ins": 3},
+	{"code": "key = arr[4] = 1; compare 8>1 ? shift", "arr": [2,4,6,8,8], "key": 1, "cmp": 3, "ins": -1},
+	{"code": "compare 6>1 ? shift", "arr": [2,4,6,6,8], "key": 1, "cmp": 2, "ins": -1},
+	{"code": "compare 4>1 ? shift", "arr": [2,4,4,6,8], "key": 1, "cmp": 1, "ins": -1},
+	{"code": "compare 2>1 ? shift", "arr": [2,2,4,6,8], "key": 1, "cmp": 0, "ins": -1},
+	{"code": "insert key=1 at position 0", "arr": [1,2,4,6,8], "key": -1, "cmp": -1, "ins": 0},
 ]
 
-var step_codes = [
-	"arr = [5,3,8,1,2] → key=3, insert before 5",
-	"[3,5,8,1,2] → key=8, already in place",
-	"[3,5,8,1,2] → key=1, insert at start",
-	"[1,3,5,8,2] → key=2, insert after 1",
-	"[1,2,3,5,8] ✅ Sorted!",
-]
+func _set_progress(v): progress = v; queue_redraw()
 
-var key_indices = [1, 2, 3, 4, -1]
+func _ready():
+	var ui = VizUtil.standard_ui(self, " Insertion Sort — Slide into Place", 100, 400)
+	diag = ui.diagram; anim = ui.anim; code_label = ui.code; var ctrl = ui.controls
+	diag.draw.connect(_draw_diag); anim.draw.connect(_draw_anim)
+	play_btn = VizUtil.make_btn("? Play", VizUtil.C_LABEL); step_btn = VizUtil.make_btn("? Step", VizUtil.C_LABEL)
+	reset_btn = VizUtil.make_btn("? Reset", Color("#FF3366"))
+	ctrl.add_child(play_btn); ctrl.add_child(step_btn); ctrl.add_child(reset_btn)
+	play_btn.pressed.connect(_on_play); step_btn.pressed.connect(_on_step); reset_btn.pressed.connect(_on_reset)
 
-func _ready() -> void:
-	_build_ui()
+func _on_play():
+	if step_idx >= steps.size(): _on_reset(); return
+	paused = not paused; play_btn.text = "? Pause" if not paused else "? Play"
+	if not paused: _start_tween()
 
-func _build_ui() -> void:
-	var layout := VBoxContainer.new()
-	layout.add_theme_constant_override("separation", 12)
-	layout.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
-	add_child(layout)
+func _on_step():
+	paused = true; play_btn.text = "? Play"
+	if tween and tween.is_running(): tween.kill(); _do_step()
 
-	var diag_title := Label.new()
-	diag_title.text = "📊 Insertion Sort — Insert Each Element"
-	diag_title.add_theme_color_override("font_color", COL_LABEL)
-	diag_title.add_theme_font_size_override("font_size", 15)
-	layout.add_child(diag_title)
+func _on_reset():
+	paused = true; play_btn.text = "? Play"
+	if tween and tween.is_running(): tween.kill()
+	step_idx = 0; progress = 0.0; code_label.text = "Press ? Play or ? Step to begin"; queue_redraw()
 
-	diagram_area = Control.new()
-	diagram_area.custom_minimum_size   = Vector2(0, 100)
-	diagram_area.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-	diagram_area.draw.connect(_draw_diagram)
-	layout.add_child(diagram_area)
+func _start_tween():
+	if paused or step_idx >= steps.size(): return
+	if tween and tween.is_running(): tween.kill()
+	tween = create_tween(); tween.tween_method(_set_progress, 0.0, 1.0, 1.0).set_ease(Tween.EASE_IN_OUT)
+	tween.finished.connect(_on_tween_done, CONNECT_ONE_SHOT)
 
-	layout.add_child(HSeparator.new())
+func _on_tween_done():
+	if step_idx >= steps.size(): return
+	step_idx += 1; progress = 0.0
+	if step_idx >= steps.size(): paused = true; play_btn.text = "? Play"; code_label.text = "? Sorted: [1, 2, 4, 6, 8]"; queue_redraw(); return
+	code_label.text = "?  " + steps[step_idx].code; queue_redraw()
+	if not paused: _start_tween()
 
-	var anim_title := Label.new()
-	anim_title.text = "🎬 Step-by-Step Animation"
-	anim_title.add_theme_color_override("font_color", COL_LABEL)
-	anim_title.add_theme_font_size_override("font_size", 15)
-	layout.add_child(anim_title)
+func _do_step():
+	if step_idx >= steps.size(): paused = true; play_btn.text = "? Play"; code_label.text = "? Sorted: [1, 2, 4, 6, 8]"; return
+	code_label.text = "?  " + steps[step_idx].code; progress = 1.0; step_idx += 1; queue_redraw()
 
-	code_label = Label.new()
-	code_label.text = "Press Play or Step to begin"
-	code_label.add_theme_color_override("font_color", COL_KEY)
-	code_label.add_theme_font_size_override("font_size", 13)
-	code_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
-	code_label.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
-	layout.add_child(code_label)
+func _draw_diag():
+	var f = ThemeDB.fallback_font
+	diag.draw_string(f, Vector2(16, 20), "def insertion_sort(arr):", HORIZONTAL_ALIGNMENT_LEFT, -1, 13, VizUtil.C_LABEL)
+	diag.draw_string(f, Vector2(16, 40), "    for i in range(1, len(arr)):", HORIZONTAL_ALIGNMENT_LEFT, -1, 13, VizUtil.C_TEXT)
+	diag.draw_string(f, Vector2(16, 60), "        key = arr[i]; j = i-1", HORIZONTAL_ALIGNMENT_LEFT, -1, 13, VizUtil.C_TEXT)
+	diag.draw_string(f, Vector2(16, 80), "        while j>=0 and arr[j] > key:", HORIZONTAL_ALIGNMENT_LEFT, -1, 13, VizUtil.C_SWAP)
+	diag.draw_string(f, Vector2(16, 98), "            arr[j+1] = arr[j]; j -= 1", HORIZONTAL_ALIGNMENT_LEFT, -1, 11, VizUtil.C_TEXT)
 
-	anim_area = Control.new()
-	anim_area.custom_minimum_size   = Vector2(0, 90)
-	anim_area.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-	anim_area.draw.connect(_draw_animation)
-	layout.add_child(anim_area)
-
-	var controls := HBoxContainer.new()
-	controls.add_theme_constant_override("separation", 8)
-	controls.alignment = BoxContainer.ALIGNMENT_CENTER
-	layout.add_child(controls)
-
-	play_btn  = _make_btn("▶ Play",  COL_LABEL)
-	step_btn  = _make_btn("⏭ Step",  COL_LABEL)
-	reset_btn = _make_btn("↺ Reset", Color("#FF3366"))
-	controls.add_child(play_btn)
-	controls.add_child(step_btn)
-	controls.add_child(reset_btn)
-	play_btn.pressed.connect(_on_play)
-	step_btn.pressed.connect(_on_step)
-	reset_btn.pressed.connect(_on_reset)
-
-func _make_btn(text: String, color: Color) -> Button:
-	var btn := Button.new()
-	btn.text = text
-	btn.custom_minimum_size = Vector2(90, 36)
-	var s := StyleBoxFlat.new()
-	s.bg_color = Color("#0A1628"); s.border_color = color
-	s.border_width_left = 1; s.border_width_right = 1
-	s.border_width_top  = 1; s.border_width_bottom = 1
-	s.corner_radius_top_left = 4; s.corner_radius_top_right = 4
-	s.corner_radius_bottom_left = 4; s.corner_radius_bottom_right = 4
-	btn.add_theme_stylebox_override("normal", s)
-	btn.add_theme_color_override("font_color", color)
-	btn.add_theme_font_size_override("font_size", 13)
-	return btn
-
-func _process(delta: float) -> void:
-	if not is_playing: return
-	play_timer += delta
-	if play_timer >= PLAY_INTERVAL:
-		play_timer = 0.0
-		_advance_step()
-
-func _on_play() -> void:
-	is_playing = not is_playing
-	play_btn.text = "⏸ Pause" if is_playing else "▶ Play"
-
-func _on_step() -> void:
-	is_playing = false
-	play_btn.text = "▶ Play"
-	_advance_step()
-
-func _on_reset() -> void:
-	is_playing = false
-	play_btn.text = "▶ Play"
-	current_anim_step = 0
-	code_label.text = "Press Play or Step to begin"
-	anim_area.queue_redraw()
-
-func _advance_step() -> void:
-	if current_anim_step >= arr_states.size():
-		is_playing = false
-		play_btn.text = "▶ Play"
-		code_label.text = "✅ Sorted: [1, 2, 3, 5, 8]"
-		return
-	code_label.text = "▶  " + step_codes[current_anim_step]
-	current_anim_step += 1
-	anim_area.queue_redraw()
-
-func _draw_diagram() -> void:
-	var font = ThemeDB.fallback_font
-	diagram_area.draw_string(font, Vector2(16, 20), "def insertion_sort(arr):", HORIZONTAL_ALIGNMENT_LEFT, -1, 13, COL_LABEL)
-	diagram_area.draw_string(font, Vector2(16, 40), "    for i in range(1, len(arr)):", HORIZONTAL_ALIGNMENT_LEFT, -1, 13, COL_TEXT)
-	diagram_area.draw_string(font, Vector2(16, 60), "        key = arr[i]", HORIZONTAL_ALIGNMENT_LEFT, -1, 13, COL_KEY)
-	diagram_area.draw_string(font, Vector2(16, 80), "        insert key into correct position", HORIZONTAL_ALIGNMENT_LEFT, -1, 13, Color("#FF3366"))
-
-func _draw_animation() -> void:
-	var w    = anim_area.size.x
-	var font = ThemeDB.fallback_font
-	var idx  = min(current_anim_step, arr_states.size() - 1)
-	var arr  = arr_states[idx]
-	var ki   = key_indices[idx] if idx < key_indices.size() else -1
-	var bw   = 48.0; var bh = 48.0
-	var total = arr.size() * (bw + 6) - 6
-	var sx    = (w - total) / 2.0
-	var y     = 16.0
-	var is_done = (idx == arr_states.size() - 1)
-
+func _draw_anim():
+	var f = ThemeDB.fallback_font; var w = anim.size.x; var p = progress
+	if step_idx == 0 and p == 0.0: _draw_bars(steps[0].arr, false, -1, -1); return
+	var idx = min(step_idx, steps.size() - 1); var s = steps[idx]; var arr = s.arr; var is_last = (idx == steps.size() - 1)
+	var colors = []
 	for i in range(arr.size()):
-		var x   = sx + i * (bw + 6)
-		var col: Color
-		if is_done:
-			col = COL_VALUE
-		elif i == ki:
-			col = COL_KEY
-		elif i < ki:
-			col = COL_VALUE
-		else:
-			col = COL_LABEL
-		anim_area.draw_rect(Rect2(x, y, bw, bh), Color(col, 0.2))
-		anim_area.draw_rect(Rect2(x, y, bw, bh), col, false, 1.5)
-		anim_area.draw_string(font, Vector2(x + 14, y + 30), str(arr[i]), HORIZONTAL_ALIGNMENT_LEFT, -1, 16, COL_TEXT)
-		if i == ki and not is_done:
-			anim_area.draw_string(font, Vector2(x + 8, y + bh + 10), "KEY", HORIZONTAL_ALIGNMENT_LEFT, -1, 10, COL_KEY)
+		var col = VizUtil.C_LABEL
+		if i == s.cmp: col = VizUtil.lerp_color(VizUtil.C_LABEL, VizUtil.C_HIGHLIGHT, p)
+		elif i == s.ins: col = VizUtil.lerp_color(VizUtil.C_LABEL, VizUtil.C_VAL, p)
+		elif s.key >= 0 and i == s.ins and s.cmp < 0: col = VizUtil.lerp_color(VizUtil.C_LABEL, VizUtil.C_VAL, p)
+		if s.cmp >= 0 and i == s.cmp + 1: col = VizUtil.lerp_color(VizUtil.C_LABEL, VizUtil.C_SWAP, p)
+		if is_last: col = VizUtil.lerp_color(col, VizUtil.C_VAL, p)
+		colors.append(col)
+	_draw_bars(arr, s.key >= 0, s.cmp, s.ins, colors)
+	if s.key >= 0 and s.cmp < 0 and s.ins < 0:
+		var bw = VizUtil.BAR_W; var gap = VizUtil.BAR_GAP; var n = arr.size()
+		var total = n * (bw + gap) - gap; var sx = (w - total) * 0.5
+		anim.draw_string(f, Vector2(sx, 20 + VizUtil.MAX_BAR_H + 24), "key = " + str(s.key), HORIZONTAL_ALIGNMENT_LEFT, -1, 14, VizUtil.C_SWAP)
 
-func _notification(what: int) -> void:
+func _draw_bars(arr, has_key, cmp, ins, colors = []):
+	var f = ThemeDB.fallback_font; var w = anim.size.x
+	var bw = VizUtil.BAR_W; var gap = VizUtil.BAR_GAP; var n = arr.size()
+	var total = n * (bw + gap) - gap; var sx = (w - total) * 0.5; var y = 20.0
+	var max_val = 0; for v in arr: if typeof(v) == TYPE_INT: max_val = max(max_val, abs(v))
+	if max_val == 0: max_val = 1
+	for i in range(n):
+		var val = arr[i]; var bar_h = VizUtil.MIN_BAR_H + (VizUtil.MAX_BAR_H - VizUtil.MIN_BAR_H) * (float(abs(val)) / float(max_val))
+		var x = sx + i * (bw + gap); var by = y + VizUtil.MAX_BAR_H - bar_h
+		var col = colors[i] if colors.size() > i else VizUtil.C_LABEL
+		anim.draw_rect(Rect2(x, by, bw, bar_h), Color(col, 0.18))
+		anim.draw_rect(Rect2(x, by, bw, bar_h), col, false, 2.0)
+		anim.draw_string(f, Vector2(x + 4, by - 6), "[" + str(i) + "]", HORIZONTAL_ALIGNMENT_LEFT, -1, 10, VizUtil.C_MUTED)
+		var label = str(val); var lw = label.length() * 8
+		anim.draw_string(f, Vector2(x + bw * 0.5 - lw * 0.5, by + bar_h * 0.5 + 6), label, HORIZONTAL_ALIGNMENT_LEFT, -1, 14, VizUtil.C_TEXT)
+
+func _notification(what):
 	if what == NOTIFICATION_RESIZED:
-		if diagram_area: diagram_area.queue_redraw()
-		if anim_area:    anim_area.queue_redraw()
+		if diag: diag.queue_redraw()
+		if anim: anim.queue_redraw()

@@ -1,9 +1,11 @@
 [gd_resource type="Resource" script_class="LessonData" format=3 uid="uid://bs1g4gull5nu0"]
 
 [ext_resource type="Script" uid="uid://ciet8k3fqk8tr" path="res://scripts/data/LessonData.gd" id="1_l7yaq"]
+[ext_resource type="PackedScene" uid="uid://bt3r6k9m1n4w" path="res://scenes/academy/visualizations/VizLinearSearch.tscn" id="2_ln84h"]
 
 [resource]
 script = ExtResource("1_l7yaq")
+visualization_scene = ExtResource("2_ln84h")
 lesson_id = "search_linear"
 title = "Binary Search"
 category = "data_structures"
@@ -45,7 +47,10 @@ recap_text = "Binary Search works on sorted arrays by repeatedly halving the sea
 challenge_instruction = "Arrange the code blocks to implement Binary Search:"
 challenge_blocks = Array[String](["def binary_search(arr, target):", "left = 0", "right = len(arr) - 1", "while left <= right:", "mid = (left + right) // 2", "return mid", "left = mid + 1", "right = mid - 1", "return -1"])
 correct_sequence = Array[String](["def binary_search(arr, target):", "left = 0", "right = len(arr) - 1", "while left <= right:", "mid = (left + right) // 2", "return mid", "left = mid + 1", "right = mid - 1", "return -1"])
-challenge_hint = "Set left and right pointers, loop while not crossed, calculate mid, return if found, adjust left or right based on comparison, return -1 if loop ends."
+code_template = "arr = [5, 3, 8, 1]\ntarget = ___\nfor i in range(len(arr)):\n    if arr[i] == target:\n        print(i)"
+challenge_code = "arr = [5, 3, 8, 1]\ntarget = 8\nfor i in range(len(arr)):\n    if arr[i] == target:\n        print(i)"
+expected_output = "2"
+challenge_hint = "Loop through each index with range(len(arr)).Check if arr[i] equals the target. Print the index when found."
 practice_question = "What is the key requirement for Binary Search to work?"
 practice_options = Array[String](["Array must have even number of elements", "Array must be sorted", "Array must contain only integers", "Array must have no duplicates"])
 practice_correct_index = 1

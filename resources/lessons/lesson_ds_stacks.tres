@@ -83,6 +83,9 @@ recap_text = "- Stacks follow LIFO — Last In First Out
 challenge_instruction = "Arrange the blocks to push two items onto a stackand pop the last one."
 challenge_blocks = Array[String](["stack = []", "stack.append(\"first\")", "stack.append(\"second\")", "print(stack.pop())", "stack.push(\"first\")", "print(stack[0])", "stack = {}"])
 correct_sequence = Array[String](["stack = []", "stack.append(\"first\")", "stack.append(\"second\")", "print(stack.pop())"])
+code_template = "stack = []\nstack.append(\"___\")\nstack.append(\"second\")\nprint(stack.pop())"
+challenge_code = "stack = []\nstack.append(\"first\")\nstack.append(\"second\")\nprint(stack.pop())"
+expected_output = "second"
 challenge_hint = "In Python, stacks use a regular list.append() is push — adds to the end (top).pop() removes and returns the last item (top)."
 practice_question = "What does LIFO stand for and which structure uses it?"
 practice_options = Array[String](["Last In First Out — Queue", "Last In First Out — Stack", "Last Item Found Online — Stack", "Linear Index For Output — Array"])
