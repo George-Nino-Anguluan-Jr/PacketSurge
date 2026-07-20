@@ -122,6 +122,9 @@ const TOWER_DEFINITIONS = {
 	},
 }
 
+# ─── PRELOADS ──────────────────────────────────────────
+const ENEMY_SCENE = preload("res://scenes/campaign/enemies/Enemy.tscn")
+
 # ─── READY ─────────────────────────────────────────────
 func _ready() -> void:
 	level_number    = GameManager.current_level
@@ -182,6 +185,12 @@ func _build_left_panel() -> void:
 	tip_desc.add_theme_font_size_override("font_size", 12)
 	tip_desc.add_theme_color_override("font_color", Color("#E8F4FD"))
 	enemy_tip_content.add_child(tip_desc)
+
+	# 3D enemy previews — one live, paused model per enemy type
+	# that spawns in this level.
+	var enemy_types: Array = level_config.get("enemy_types", [])
+	if not enemy_types.is_empty():
+		enemy_tip_content.add_child(_make_enemy_preview_row(enemy_types))
 
 	# Stats
 	for child in stats_content.get_children():
@@ -563,3 +572,81 @@ func _apply_styles() -> void:
 	start_btn.add_theme_stylebox_override("normal", start_style)
 	start_btn.add_theme_color_override("font_color", Color("#050D1A"))
 	start_btn.add_theme_font_size_override("font_size", 16)
+
+# ─── ENEMY 3D PREVIEW ROW ──────────────────────────────
+# Builds an HBoxContainer that hosts a live, frozen 3D model of
+# each enemy that spawns on this level. Each model is the real
+# Enemy.tscn set to preview_mode (no pathing, no DoT).
+func _make_enemy_preview_row(enemy_types: Array) -> Control:
+	var row := HBoxContainer.new()
+	row.add_theme_constant_override("separation", 8)
+	row.alignment = BoxContainer.ALIGNMENT_CENTER
+
+	for enemy_id in enemy_types:
+		var intro = EnemyIntroData.get_intro(enemy_id)
+		var tint: Color = intro.get("color", Color("#FF3366"))
+		row.add_child(_make_enemy_preview_cell(enemy_id, tint, intro))
+
+	return row
+
+func _make_enemy_preview_cell(enemy_id: String, tint: Color, intro: Dictionary) -> Control:
+	var cell := VBoxContainer.new()
+	cell.add_theme_constant_override("separation", 4)
+	cell.custom_minimum_size = Vector2(72, 0)
+
+	# Frame around the SubViewport
+	var frame := PanelContainer.new()
+	frame.custom_minimum_size = Vector2(72, 72)
+	var fs := StyleBoxFlat.new()
+	fs.bg_color = Color("#080F1E")
+	fs.border_color = Color(tint, 0.4)
+	fs.border_width_left   = 1
+	fs.border_width_right  = 1
+	fs.border_width_top    = 1
+	fs.border_width_bottom = 1
+	fs.corner_radius_top_left     = 6
+	fs.corner_radius_top_right    = 6
+	fs.corner_radius_bottom_left  = 6
+	fs.corner_radius_bottom_right = 6
+	frame.add_theme_stylebox_override("panel", fs)
+
+	var sub_vp := SubViewport.new()
+	sub_vp.size = Vector2i(72, 72)
+	sub_vp.transparent_bg = true
+	sub_vp.render_target_update_mode = SubViewport.UPDATE_ALWAYS
+	sub_vp.handle_input_locally = false
+	sub_vp.disable_3d = false
+
+	var container := SubViewportContainer.new()
+	container.custom_minimum_size = Vector2(72, 72)
+	container.stretch = true
+	container.add_child(sub_vp)
+	frame.add_child(container)
+
+	# Live, frozen 3D enemy
+	var e = ENEMY_SCENE.instantiate()
+	e.enemy_type    = enemy_id
+	e.preview_mode  = true
+	e.max_health    = 1.0
+	e.current_health = 1.0
+	e.move_speed    = 0.0
+	e.damage_to_base = 0
+	e.ram_reward    = 0
+	e.waypoints     = [] as Array[Vector2]
+	e._setup_type()
+	e.enemy_color = tint
+	e.position = Vector2(sub_vp.size) * 0.5 + Vector2(0, 8)
+	sub_vp.add_child(e)
+
+	cell.add_child(frame)
+
+	# Name label below
+	var lbl := Label.new()
+	lbl.text = intro.get("title", enemy_id).replace(" Packet", "").replace(" Tower", "")
+	lbl.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	lbl.add_theme_font_size_override("font_size", 9)
+	lbl.add_theme_color_override("font_color", tint)
+	lbl.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+	cell.add_child(lbl)
+
+	return cell
