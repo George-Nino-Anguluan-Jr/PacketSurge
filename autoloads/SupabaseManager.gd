@@ -310,6 +310,16 @@ func _on_progress_loaded(
 
 		var cloud_campaign = data.get("campaign_progress", {})
 		if cloud_campaign.size() > 0:
+			# Merge local fields that cloud doesn't have (avoid losing stars/levels)
+			for key in ProgressManager.campaign_progress:
+				if not cloud_campaign.has(key):
+					var val = ProgressManager.campaign_progress[key]
+					if typeof(val) == TYPE_DICTIONARY and val.size() > 0:
+						cloud_campaign[key] = val
+					elif typeof(val) == TYPE_INT and val > 0:
+						cloud_campaign[key] = val
+					elif typeof(val) == TYPE_BOOL and val:
+						cloud_campaign[key] = val
 			ProgressManager.campaign_progress = cloud_campaign
 
 		var towers = data.get("unlocked_towers", [])
@@ -334,12 +344,15 @@ func _navigate_after_login() -> void:
 func _create_leaderboard_entry() -> void:
 	var url  = SUPABASE_URL + "/rest/v1/leaderboard"
 	var body = JSON.stringify({
-		"student_id": student_id,
-		"full_name":  full_name,
-		"username":   username,
-		"section":    section,
-		"year_level": year_level,
-		"score":      0,
+		"student_id":     student_id,
+		"full_name":      full_name,
+		"username":       username,
+		"section":        section,
+		"year_level":     year_level,
+		"score":          0,
+		"total_stars":    0,
+		"topics_mastered": 0,
+		"campaign_levels_completed": 0,
 	})
 	var http := HTTPRequest.new()
 	add_child(http)
@@ -389,7 +402,6 @@ func update_leaderboard() -> void:
 		func(_r, _c, _h, _b): http.queue_free()
 	)
 	http.request(url, _get_headers(), HTTPClient.METHOD_PATCH, body)
-	print("[Supabase] Leaderboard updated. Score: ", score)
 
 # ─── CAMPAIGN SCORE ────────────────────────────────────
 func submit_campaign_score(
