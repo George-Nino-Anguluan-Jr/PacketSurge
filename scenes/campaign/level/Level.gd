@@ -25,12 +25,16 @@ extends Node2D
 @onready var wave_progress_bar: ProgressBar = $HUD/HUDControl/TopHUD/TopLayout/WaveProgressTimeline/ProgressBar
 @onready var timeline_flags: Control        = $HUD/HUDControl/TopHUD/TopLayout/WaveProgressTimeline/FlagsContainer
 @onready var skip_wave_btn: Button           = $HUD/HUDControl/TopHUD/TopLayout/SkipWaveBtn
+@onready var challenge_btn: Button           = $HUD/HUDControl/TopHUD/TopLayout/ChallengeBtn
+@onready var micro_panel: PanelContainer     = $HUD/HUDControl/MicroCodingPanel
 @onready var wave_splash: Control            = $HUD/HUDControl/WaveSplash
 @onready var wave_splash_label: Label        = $HUD/HUDControl/WaveSplash/WaveSplashLabel
 
 var _sound_ok: AudioStreamPlayer2D
 var _sound_fail: AudioStreamPlayer2D
 var _prev_ram: int = -1
+var _challenge_index: int  = 0
+var _challenge_progress: int = 0
 
 # ─── LEVEL STATE ───────────────────────────────────────
 var level_number: int              = 1
@@ -44,6 +48,75 @@ var is_level_ended: bool           = false
 const INTER_WAVE_DURATION: float  = 15.0
 var wave_countdown: float          = INTER_WAVE_DURATION
 var countdown_active: bool         = true
+
+# ─── CODING CHALLENGES ──────────────────────────────────
+const CHALLENGES = {
+	1: [  # Arrays
+		{ "title": "Array Sum", "desc": "Sum all elements of [4, 8, 15, 16, 23, 42] using a loop and print the total.", "code_template": "arr = [4, 8, 15, 16, 23, 42]\ntotal = 0\n___\nprint(total)", "expected_output": "108\n", "bonus_ram": 20 },
+		{ "title": "Find Maximum", "desc": "Find and print the largest value in [3, 17, 8, 42, 9].", "code_template": "arr = [3, 17, 8, 42, 9]\nmax_val = arr[0]\n___\nprint(max_val)", "expected_output": "42\n", "bonus_ram": 20 },
+		{ "title": "Count Occurrences", "desc": "Count how many times 7 appears in [7, 3, 7, 1, 7, 9] and print the count.", "code_template": "arr = [7, 3, 7, 1, 7, 9]\ntarget = 7\ncount = 0\n___\nprint(count)", "expected_output": "3\n", "bonus_ram": 20 },
+	],
+	2: [  # Stacks
+		{ "title": "Stack Push & Pop", "desc": "Push 10, 20, 30 onto a stack, then pop and print each value.", "code_template": "stack = []\nstack.append(10)\nstack.append(20)\n___\nprint(stack.pop())\nprint(stack.pop())\nprint(stack.pop())", "expected_output": "30\n20\n10\n", "bonus_ram": 20 },
+		{ "title": "Stack Reversal", "desc": "Push A, B, C then pop all to reverse the order. Print each popped value.", "code_template": "stack = []\nstack.append('A')\n___\nstack.append('C')\nprint(stack.pop())\nprint(stack.pop())\nprint(stack.pop())", "expected_output": "C\nB\nA\n", "bonus_ram": 20 },
+		{ "title": "Stack Peek", "desc": "Push 5, 15, 25. Pop once and print it, then print the new top without removing it (use stack[-1]).", "code_template": "stack = []\nstack.append(5)\nstack.append(15)\nstack.append(25)\npopped = stack.pop()\nprint(popped)\n___\nprint(top)", "expected_output": "25\n15\n", "bonus_ram": 20 },
+	],
+	3: [  # Queues
+		{ "title": "Queue Dequeue All", "desc": "Enqueue 7, 14, 21 then dequeue and print each using pop(0).", "code_template": "queue = []\nqueue.append(7)\nqueue.append(14)\n___\nprint(queue.pop(0))\nprint(queue.pop(0))\nprint(queue.pop(0))", "expected_output": "7\n14\n21\n", "bonus_ram": 20 },
+		{ "title": "Queue Round Robin", "desc": "Enqueue 1, 2, 3. Dequeue front, enqueue it back, then dequeue all. Print each dequeued value.", "code_template": "queue = [1, 2, 3]\nfront = queue.pop(0)\nqueue.append(front)\nprint(queue.pop(0))\n___\nprint(queue.pop(0))", "expected_output": "2\n3\n1\n", "bonus_ram": 20 },
+		{ "title": "Queue Size", "desc": "Enqueue 10, 20, 30, 40. Dequeue twice. Print the remaining queue size.", "code_template": "queue = []\nqueue.append(10)\nqueue.append(20)\nqueue.append(30)\nqueue.append(40)\nqueue.pop(0)\nqueue.pop(0)\nprint(___)", "expected_output": "2\n", "bonus_ram": 20 },
+	],
+	4: [  # Linked Lists
+		{ "title": "Traverse List", "desc": "Traverse the linked chain starting at node and print each val.", "code_template": "node = {'val': 1, 'next': {'val': 2, 'next': {'val': 3, 'next': None}}}\nwhile node:\n    print(node['val'])\n    ___", "expected_output": "1\n2\n3\n", "bonus_ram": 25 },
+		{ "title": "Count Nodes", "desc": "Count how many nodes are in the linked chain and print the count.", "code_template": "node = {'val': 5, 'next': {'val': 10, 'next': {'val': 15, 'next': None}}}\ncount = 0\n___\nprint(count)", "expected_output": "3\n", "bonus_ram": 25 },
+		{ "title": "Find Value", "desc": "Find if value 10 exists in the linked chain. Print 'yes' or 'no'.", "code_template": "node = {'val': 5, 'next': {'val': 10, 'next': {'val': 15, 'next': None}}}\ntarget = 10\nfound = 'no'\nwhile node:\n    if node['val'] == target:\n        found = 'yes'\n        ___\n    node = node['next']\nprint(found)", "expected_output": "yes\n", "bonus_ram": 25 },
+	],
+	5: [  # Bubble Sort
+		{ "title": "One Pass", "desc": "Perform ONE pass of bubble sort on [5,3,8,1] and print the array.", "code_template": "arr = [5, 3, 8, 1]\nfor i in range(len(arr) - 1):\n    if arr[i] > arr[i+1]:\n        ___\nprint(arr)", "expected_output": "[3, 5, 1, 8]\n", "bonus_ram": 25 },
+		{ "title": "Two Passes", "desc": "Perform TWO passes of bubble sort on [5,3,8,1] and print the array.", "code_template": "arr = [5, 3, 8, 1]\nfor _ in range(2):\n    for i in range(len(arr) - 1):\n        if arr[i] > arr[i+1]:\n            arr[i], arr[i+1] = arr[i+1], arr[i]\nprint(arr)", "expected_output": "[1, 3, 5, 8]\n", "bonus_ram": 25 },
+		{ "title": "Count Swaps", "desc": "Count how many swaps happen during one bubble sort pass on [4,2,7,1] and print the count.", "code_template": "arr = [4, 2, 7, 1]\nswaps = 0\nfor i in range(len(arr) - 1):\n    if arr[i] > arr[i+1]:\n        arr[i], arr[i+1] = arr[i+1], arr[i]\n        ___\nprint(swaps)", "expected_output": "2\n", "bonus_ram": 25 },
+	],
+	6: [  # Selection Sort
+		{ "title": "Find Min & Swap", "desc": "Find the minimum in [9,2,7,4] and swap it with the first element. Print the array.", "code_template": "arr = [9, 2, 7, 4]\nmin_idx = 0\nfor i in range(1, len(arr)):\n    if arr[i] < arr[min_idx]:\n        ___\narr[0], arr[min_idx] = arr[min_idx], arr[0]\nprint(arr)", "expected_output": "[2, 9, 7, 4]\n", "bonus_ram": 25 },
+		{ "title": "Second Smallest", "desc": "Find the second smallest element in [9,2,7,4] and print it.", "code_template": "arr = [9, 2, 7, 4]\narr.sort()\nprint(___)", "expected_output": "4\n", "bonus_ram": 20 },
+		{ "title": "Full Selection Sort", "desc": "Complete selection sort on [6,3,8,1] and print the sorted array.", "code_template": "arr = [6, 3, 8, 1]\nfor i in range(len(arr)):\n    min_idx = i\n    for j in range(i+1, len(arr)):\n        if arr[j] < arr[min_idx]:\n            min_idx = j\n    arr[i], arr[min_idx] = arr[min_idx], arr[i]\nprint(arr)", "expected_output": "[1, 3, 6, 8]\n", "bonus_ram": 25 },
+	],
+	7: [  # Insertion Sort
+		{ "title": "Insert Third Element", "desc": "In [3,7,2,9], insert the third element (2) into the sorted portion. Print the array.", "code_template": "arr = [3, 7, 2, 9]\nkey = arr[2]\nj = 1\nwhile j >= 0 and arr[j] > key:\n    arr[j+1] = arr[j]\n    ___\narr[j+1] = key\nprint(arr)", "expected_output": "[2, 3, 7, 9]\n", "bonus_ram": 25 },
+		{ "title": "Full Insertion Sort", "desc": "Complete insertion sort on [5,2,9,1,6] and print the sorted array.", "code_template": "arr = [5, 2, 9, 1, 6]\nfor i in range(1, len(arr)):\n    key = arr[i]\n    j = i - 1\n    while j >= 0 and arr[j] > key:\n        arr[j+1] = arr[j]\n        j -= 1\n    arr[j+1] = key\nprint(arr)", "expected_output": "[1, 2, 5, 6, 9]\n", "bonus_ram": 28 },
+		{ "title": "Shifts Count", "desc": "Count how many shifts happen when inserting the last element of [2,5,7,3] and print the count.", "code_template": "arr = [2, 5, 7, 3]\nkey = arr[3]\nj = 2\nshifts = 0\nwhile j >= 0 and arr[j] > key:\n    arr[j+1] = arr[j]\n    j -= 1\n    ___\nprint(shifts)", "expected_output": "2\n", "bonus_ram": 25 },
+	],
+	8: [  # Quick Sort
+		{ "title": "Partition by Pivot", "desc": "Partition [7,3,9,2,6] using last element (6) as pivot. Print partitioned array.", "code_template": "arr = [7, 3, 9, 2, 6]\npivot = arr[-1]\ni = 0\nfor j in range(len(arr) - 1):\n    if arr[j] < pivot:\n        arr[i], arr[j] = arr[j], arr[i]\n        ___\narr[i], arr[-1] = arr[-1], arr[i]\nprint(arr)", "expected_output": "[3, 2, 6, 7, 9]\n", "bonus_ram": 30 },
+		{ "title": "Count Smaller", "desc": "Count how many elements are smaller than pivot 6 in [7,3,9,2,6] and print the count.", "code_template": "arr = [7, 3, 9, 2, 6]\npivot = 6\ncount = 0\nfor v in arr:\n    if v < pivot:\n        ___\nprint(count)", "expected_output": "2\n", "bonus_ram": 25 },
+		{ "title": "Pivot Position", "desc": "After partitioning with last element as pivot, print the final index of the pivot.", "code_template": "arr = [7, 3, 9, 2, 6]\npivot = arr[-1]\ni = 0\nfor j in range(len(arr) - 1):\n    if arr[j] < pivot:\n        arr[i], arr[j] = arr[j], arr[i]\n        i += 1\narr[i], arr[-1] = arr[-1], arr[i]\nprint(___)", "expected_output": "2\n", "bonus_ram": 25 },
+	],
+	9: [  # Merge Sort
+		{ "title": "Merge Two Halves", "desc": "Merge sorted arrays left=[1,4] and right=[2,3] into one sorted array and print.", "code_template": "left = [1, 4]\nright = [2, 3]\nmerged = []\ni = j = 0\nwhile i < len(left) and j < len(right):\n    if left[i] < right[j]:\n        merged.append(left[i]); i += 1\n    else:\n        ___\nmerged.extend(left[i:])\nmerged.extend(right[j:])\nprint(merged)", "expected_output": "[1, 2, 3, 4]\n", "bonus_ram": 30 },
+		{ "title": "Merge Leftovers", "desc": "Merge left=[1,2,3] and right=[4,5,6]. After one list is exhausted, extend with the rest. Print merged.", "code_template": "left = [1, 2, 3]\nright = [4, 5, 6]\nmerged = []\ni = j = 0\nwhile i < len(left) and j < len(right):\n    if left[i] < right[j]:\n        merged.append(left[i]); i += 1\n    else:\n        merged.append(right[j]); j += 1\n___\nprint(merged)", "expected_output": "[1, 2, 3, 4, 5, 6]\n", "bonus_ram": 25 },
+		{ "title": "Count Merge Ops", "desc": "Count how many comparisons when merging [1,4] and [2,3]. Print the count.", "code_template": "left = [1, 4]\nright = [2, 3]\ni = j = 0\ncompares = 0\nwhile i < len(left) and j < len(right):\n    if left[i] < right[j]:\n        i += 1\n    else:\n        j += 1\n    ___\nprint(compares)", "expected_output": "3\n", "bonus_ram": 25 },
+	],
+	10: [  # Counting Sort
+		{ "title": "Count Frequencies", "desc": "Count how many times 0,1,2 appear in [2,0,2,1,1,0]. Print [count0, count1, count2].", "code_template": "arr = [2, 0, 2, 1, 1, 0]\ncounts = [0, 0, 0]\nfor v in arr:\n    ___\nprint(counts)", "expected_output": "[2, 2, 2]\n", "bonus_ram": 25 },
+		{ "title": "Build Output", "desc": "Using counts=[2,2,2], build the sorted output array by repeating each index by its count. Print result.", "code_template": "counts = [2, 2, 2]\noutput = []\nfor val in range(len(counts)):\n    for _ in range(counts[val]):\n        ___\nprint(output)", "expected_output": "[0, 0, 1, 1, 2, 2]\n", "bonus_ram": 28 },
+		{ "title": "Cumulative Counts", "desc": "Given counts=[2,2,2], compute cumulative counts [2,4,6] where each is sum of previous. Print cum.", "code_template": "counts = [2, 2, 2]\ncum = []\ntotal = 0\nfor c in counts:\n    total += c\n    ___\nprint(cum)", "expected_output": "[2, 4, 6]\n", "bonus_ram": 25 },
+	],
+	11: [  # Radix Sort
+		{ "title": "Ones Digit", "desc": "Extract the ones-place digit from each number in [43,218,7,95] using num % 10. Print as a list.", "code_template": "arr = [43, 218, 7, 95]\ndigits = []\nfor num in arr:\n    digits.append(___)\nprint(digits)", "expected_output": "[3, 8, 7, 5]\n", "bonus_ram": 25 },
+		{ "title": "Tens Digit", "desc": "Extract the tens-place digit from each number in [43,218,7,95] using (num // 10) % 10. Print as a list.", "code_template": "arr = [43, 218, 7, 95]\ndigits = []\nfor num in arr:\n    digits.append(___)\nprint(digits)", "expected_output": "[4, 1, 0, 9]\n", "bonus_ram": 25 },
+		{ "title": "Max Digits", "desc": "Find how many digits the largest number in [43,218,7,95] has. Print the count.", "code_template": "arr = [43, 218, 7, 95]\nmax_val = max(arr)\ncount = 0\nwhile max_val > 0:\n    count += 1\n    ___\nprint(count)", "expected_output": "3\n", "bonus_ram": 25 },
+	],
+	12: [  # Linear Search
+		{ "title": "Find Index", "desc": "Find the index of value 99 in [11,42,7,99,23] and print it (-1 if not found).", "code_template": "arr = [11, 42, 7, 99, 23]\ntarget = 99\nfound_idx = -1\nfor i in range(len(arr)):\n    if arr[i] == target:\n        found_idx = i\n        ___\nprint(found_idx)", "expected_output": "3\n", "bonus_ram": 20 },
+		{ "title": "First Occurrence", "desc": "Find the first index where 7 appears in [7,3,7,1,7,9]. Print it.", "code_template": "arr = [7, 3, 7, 1, 7, 9]\ntarget = 7\nfor i in range(len(arr)):\n    if arr[i] == target:\n        print(i)\n        ___", "expected_output": "0\n", "bonus_ram": 20 },
+		{ "title": "Count Occurrences", "desc": "Count how many times 7 appears in [7,3,7,1,7,9] and print the count.", "code_template": "arr = [7, 3, 7, 1, 7, 9]\ntarget = 7\ncount = 0\n___\nprint(count)", "expected_output": "3\n", "bonus_ram": 20 },
+	],
+	13: [  # Binary Search
+		{ "title": "Find Target", "desc": "Binary search for 51 in [5,12,27,38,51,64,79]. Print its index.", "code_template": "arr = [5, 12, 27, 38, 51, 64, 79]\ntarget = 51\nlo, hi = 0, len(arr) - 1\nwhile lo <= hi:\n    mid = (lo + hi) // 2\n    if arr[mid] == target:\n        print(mid)\n        ___\n    elif arr[mid] < target:\n        lo = mid + 1\n    else:\n        hi = mid - 1", "expected_output": "4\n", "bonus_ram": 30 },
+		{ "title": "Search Left Half", "desc": "Binary search for 5 (first element) in [5,12,27,38,51,64,79]. Print index.", "code_template": "arr = [5, 12, 27, 38, 51, 64, 79]\ntarget = 5\nlo, hi = 0, len(arr) - 1\nwhile lo <= hi:\n    mid = (lo + hi) // 2\n    if arr[mid] == target:\n        print(mid)\n        ___\n    elif arr[mid] < target:\n        lo = mid + 1\n    else:\n        hi = mid - 1", "expected_output": "0\n", "bonus_ram": 28 },
+		{ "title": "Not Found", "desc": "Binary search for 99 (not present) in [5,12,27,38,51,64,79]. Print the index or -1.", "code_template": "arr = [5, 12, 27, 38, 51, 64, 79]\ntarget = 99\nlo, hi = 0, len(arr) - 1\nfound = -1\nwhile lo <= hi:\n    mid = (lo + hi) // 2\n    if arr[mid] == target:\n        found = mid\n        ___\n    elif arr[mid] < target:\n        lo = mid + 1\n    else:\n        hi = mid - 1\nprint(found)", "expected_output": "-1\n", "bonus_ram": 28 },
+	],
+}
 
 # ─── TOWER DEFINITIONS ─────────────────────────────────
 const TOWER_DEFINITIONS = {
@@ -234,8 +307,10 @@ func _ready() -> void:
 	_on_viewport_size_changed()
 	_create_overlay_menu()
 	_setup_sounds()
+	_build_challenge_panel()
 	if level_number == 1:
 		_show_tutorial()
+	call_deferred("_show_challenge")
 
 # ─── SETUP ─────────────────────────────────────────────
 func _setup_grid() -> void:
@@ -346,6 +421,7 @@ func _setup_buttons() -> void:
 	select_level_btn.pressed.connect(_on_select_level_pressed)
 	main_menu_btn.pressed.connect(_on_main_menu_pressed)
 	skip_wave_btn.pressed.connect(_on_skip_wave_pressed)
+	challenge_btn.pressed.connect(_show_challenge)
 
 func _connect_signals() -> void:
 	ram_manager.ram_changed.connect(_on_ram_changed)
@@ -1420,3 +1496,205 @@ func _style_tower_btn(btn: Button, color: Color) -> void:
 	btn.add_theme_stylebox_override("normal", style)
 	btn.add_theme_color_override("font_color", color)
 	btn.add_theme_font_size_override("font_size", 11)
+
+# ─── CODING CHALLENGE PANEL ─────────────────────────────
+func _style_challenge_btn(btn: Button, color: Color) -> void:
+	var s := StyleBoxFlat.new()
+	s.bg_color = Color("#0A1628")
+	s.border_color = color
+	s.border_width_left = 1
+	s.border_width_right = 1
+	s.border_width_top = 1
+	s.border_width_bottom = 1
+	s.corner_radius_top_left = 4
+	s.corner_radius_top_right = 4
+	s.corner_radius_bottom_left = 4
+	s.corner_radius_bottom_right = 4
+	btn.add_theme_stylebox_override("normal", s)
+	btn.add_theme_color_override("font_color", color)
+	btn.add_theme_font_size_override("font_size", 11)
+	var hover := StyleBoxFlat.new()
+	hover.bg_color = color
+	hover.bg_color.a = 0.15
+	hover.border_color = color
+	hover.border_width_left = 1
+	hover.border_width_right = 1
+	hover.border_width_top = 1
+	hover.border_width_bottom = 1
+	hover.corner_radius_top_left = 4
+	hover.corner_radius_top_right = 4
+	hover.corner_radius_bottom_left = 4
+	hover.corner_radius_bottom_right = 4
+	btn.add_theme_stylebox_override("hover", hover)
+	btn.add_theme_color_override("font_hover_color", color.lightened(0.4))
+var _challenge_code_edit: TextEdit = null
+var _challenge_output: Label = null
+var _challenge_title: Label = null
+var _challenge_desc: Label = null
+var _challenge_result: Label = null
+
+func _build_challenge_panel() -> void:
+	var style := StyleBoxFlat.new()
+	style.bg_color = Color("#080F1E")
+	style.border_color = Color("#00D4FF")
+	style.border_width_left = 1
+	style.border_width_right = 1
+	style.border_width_top = 1
+	style.border_width_bottom = 1
+	style.corner_radius_top_left = 8
+	style.corner_radius_top_right = 8
+	style.corner_radius_bottom_left = 8
+	style.corner_radius_bottom_right = 8
+	micro_panel.add_theme_stylebox_override("panel", style)
+
+	var layout = VBoxContainer.new()
+	layout.set_anchors_preset(Control.PRESET_FULL_RECT)
+	layout.add_theme_constant_override("separation", 6)
+	micro_panel.add_child(layout)
+
+	var header = HBoxContainer.new()
+	_challenge_title = Label.new()
+	_challenge_title.add_theme_font_size_override("font_size", 14)
+	_challenge_title.add_theme_color_override("font_color", Color("#00D4FF"))
+	header.add_child(_challenge_title)
+	var hspacer = Control.new()
+	hspacer.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	header.add_child(hspacer)
+	layout.add_child(header)
+
+	_challenge_desc = Label.new()
+	_challenge_desc.add_theme_font_size_override("font_size", 10)
+	_challenge_desc.add_theme_color_override("font_color", Color("#A0B8D0"))
+	_challenge_desc.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+	layout.add_child(_challenge_desc)
+
+	_challenge_code_edit = TextEdit.new()
+	_challenge_code_edit.custom_minimum_size = Vector2(0, 120)
+	_challenge_code_edit.size_flags_vertical = Control.SIZE_EXPAND_FILL
+	_challenge_code_edit.add_theme_font_override("font", ThemeDB.fallback_font)
+	_challenge_code_edit.add_theme_font_size_override("font_size", 11)
+	_challenge_code_edit.add_theme_color_override("background_color", Color("#030812"))
+	_challenge_code_edit.add_theme_color_override("font_color", Color("#FFFFFF"))
+	_challenge_code_edit.add_theme_color_override("caret_color", Color("#00D4FF"))
+	_challenge_code_edit.add_theme_color_override("selection_color", Color("#00D4FF", 0.3))
+	_challenge_code_edit.syntax_highlighter = null
+	_challenge_code_edit.highlight_all_occurrences = false
+	layout.add_child(_challenge_code_edit)
+
+	var btn_row = HBoxContainer.new()
+	var run_btn = Button.new()
+	run_btn.text = "▶ Run Code"
+	run_btn.custom_minimum_size = Vector2(110, 28)
+	run_btn.pressed.connect(_on_challenge_run)
+	_style_challenge_btn(run_btn, Color("#00FF88"))
+	btn_row.add_child(run_btn)
+	var submit_btn = Button.new()
+	submit_btn.text = "✔ Submit"
+	submit_btn.custom_minimum_size = Vector2(110, 28)
+	submit_btn.pressed.connect(_on_challenge_submit)
+	_style_challenge_btn(submit_btn, Color("#00D4FF"))
+	btn_row.add_child(submit_btn)
+	var skip_btn = Button.new()
+	skip_btn.text = "⏭ Skip"
+	skip_btn.custom_minimum_size = Vector2(90, 28)
+	skip_btn.pressed.connect(_on_challenge_skip)
+	_style_challenge_btn(skip_btn, Color("#4A7FA5"))
+	btn_row.add_child(skip_btn)
+	btn_row.add_theme_constant_override("separation", 6)
+	layout.add_child(btn_row)
+
+	_challenge_output = Label.new()
+	_challenge_output.add_theme_font_size_override("font_size", 10)
+	_challenge_output.add_theme_color_override("font_color", Color("#4A7FA5"))
+	_challenge_output.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+	_challenge_output.custom_minimum_size = Vector2(0, 40)
+	layout.add_child(_challenge_output)
+
+	_challenge_result = Label.new()
+	_challenge_result.add_theme_font_size_override("font_size", 11)
+	_challenge_result.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	layout.add_child(_challenge_result)
+
+	micro_panel.visible = false
+
+func _show_challenge() -> void:
+	if _challenge_progress >= 3:
+		return
+	var level_num = level_number
+	var challenges = CHALLENGES.get(level_num)
+	if not challenges or challenges.is_empty():
+		return
+	_challenge_index = _challenge_progress
+	var c = challenges[_challenge_index]
+	_challenge_title.text = "⌨  " + c.title + "  (" + str(_challenge_index + 1) + "/3)"
+	_challenge_desc.text = c.desc
+	_challenge_code_edit.text = c.code_template
+	_challenge_output.text = ""
+	_challenge_result.text = ""
+	micro_panel.visible = true
+	micro_panel.process_mode = Node.PROCESS_MODE_WHEN_PAUSED
+	get_tree().paused = true
+
+func _hide_challenge() -> void:
+	micro_panel.visible = false
+	get_tree().paused = false
+
+func _on_challenge_run() -> void:
+	var code = _challenge_code_edit.text
+	_challenge_output.text = "Running..."
+	var result = PythonTranspiler.run_code(code)
+	if result.success:
+		_challenge_output.text = result.output if result.output != "" else "(no output)"
+		_challenge_output.add_theme_color_override("font_color", Color("#00FF88"))
+	else:
+		_challenge_output.text = "Error: " + result.error
+		_challenge_output.add_theme_color_override("font_color", Color("#FF3366"))
+
+func _on_challenge_submit() -> void:
+	if _challenge_progress > _challenge_index:
+		return
+	var challenges = CHALLENGES.get(level_number)
+	if not challenges or _challenge_index >= challenges.size():
+		return
+	var c = challenges[_challenge_index]
+	var code = _challenge_code_edit.text
+	var result = PythonTranspiler.run_code(code)
+	var expected = c.expected_output.strip_edges(false, true)
+	var reward = 0
+	if result.success and result.output == expected:
+		reward = c.bonus_ram
+		ram_manager.earn(reward)
+		_update_ram_label()
+		_sound_ok.play()
+		_challenge_result.text = "✔ Correct! +" + str(reward) + " RAM"
+		_challenge_result.add_theme_color_override("font_color", Color("#00FF88"))
+		_challenge_output.add_theme_color_override("font_color", Color("#00FF88"))
+	else:
+		_challenge_result.text = "✕ Wrong"
+		_challenge_result.add_theme_color_override("font_color", Color("#FF3366"))
+		_challenge_output.add_theme_color_override("font_color", Color("#FFB800"))
+	var user_out = result.output.replace("\n", "  ") if result.success else "Error: " + result.error
+	_challenge_output.text = "Your output:  " + user_out + "\nExpected:     " + expected.replace("\n", "  ")
+	_challenge_progress += 1
+	_advance_challenge.call_deferred()
+
+func _on_challenge_skip() -> void:
+	if _challenge_progress > _challenge_index:
+		return
+	_challenge_result.text = "⏭ Skipped"
+	_challenge_result.add_theme_color_override("font_color", Color("#4A7FA5"))
+	_challenge_output.text = ""
+	_challenge_progress += 1
+	_advance_challenge.call_deferred()
+
+func _advance_challenge() -> void:
+	if _challenge_progress >= 3:
+		_challenge_result.text = "All challenges complete!"
+		await get_tree().create_timer(1.0).timeout
+		if is_instance_valid(micro_panel):
+			_hide_challenge()
+		return
+	await get_tree().create_timer(1.2).timeout
+	if not is_instance_valid(micro_panel) or not micro_panel.visible:
+		return
+	_show_challenge()
