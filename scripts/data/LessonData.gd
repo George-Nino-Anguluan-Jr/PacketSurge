@@ -22,6 +22,10 @@ extends Resource
 @export var correct_sequence: Array[String] = []
 @export var challenge_hint: String = ""
 
+# Code editor mode — if set, shows a coding editor instead of block puzzle
+@export_multiline var challenge_code: String = ""
+@export_multiline var expected_output: String = ""
+
 @export var practice_question: String = ""
 @export var practice_options: Array[String] = []
 @export var practice_correct_index: int = 0
