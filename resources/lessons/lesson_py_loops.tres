@@ -72,8 +72,13 @@ recap_text = "- Loops repeat code automatically
 - range(start, stop, step) gives more control
 - Use loops to process lists without repeating code
 - Always make sure while loops have an exit condition"
-challenge_instruction = "Write Python code that creates a list of scores [10, 20, 30],then loops through them and prints each one."
+challenge_instruction = "Arrange the blocks to create a list of scoresand loop through and print each one."
+challenge_blocks = Array[String](["scores = [10, 20, 30]", "for score in scores:", "    print(score)", "for score in range(scores):", "    print score"])
+correct_sequence = Array[String](["scores = [10, 20, 30]", "for score in scores:", "    print(score)"])
 challenge_hint = "Create the list: scores = [10, 20, 30]Loop: for score in scores:    print(score)"
+code_template = "scores = [10, 20, 30]
+for score in scores:
+    print(___)"
 challenge_code = "scores = [10, 20, 30]
 for score in scores:
     print(score)"

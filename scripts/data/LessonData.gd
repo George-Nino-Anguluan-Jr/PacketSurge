@@ -24,6 +24,7 @@ extends Resource
 
 # Code editor mode — if set, shows a coding editor instead of block puzzle
 @export_multiline var challenge_code: String = ""
+@export_multiline var code_template: String = ""
 @export_multiline var expected_output: String = ""
 
 @export var practice_question: String = ""

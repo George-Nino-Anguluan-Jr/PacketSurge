@@ -87,6 +87,9 @@ recap_text = "- Bubble Sort compares adjacent pairs and swaps if needed
 challenge_instruction = "Arrange the blocks to implement one passof Bubble Sort on a list."
 challenge_blocks = Array[String](["arr = [64, 34, 25, 12]", "for j in range(len(arr) - 1):", "if arr[j] > arr[j + 1]:", "arr[j], arr[j + 1] = arr[j + 1], arr[j]", "print(arr)", "if arr[j] < arr[j + 1]:", "for j in range(len(arr)):", "arr[j] = arr[j + 1]"])
 correct_sequence = Array[String](["arr = [64, 34, 25, 12]", "for j in range(len(arr) - 1):", "if arr[j] > arr[j + 1]:", "arr[j], arr[j + 1] = arr[j + 1], arr[j]", "print(arr)"])
+code_template = "arr = [64, 34, 25, 12]\nfor j in range(len(arr) - 1):\n    if arr[j] > arr[j + 1]:\n        temp = arr[j]\n        arr[j] = arr[j + 1]\n        arr[j + 1] = ___\nprint(arr)"
+challenge_code = "arr = [64, 34, 25, 12]\nfor j in range(len(arr) - 1):\n    if arr[j] > arr[j + 1]:\n        temp = arr[j]\n        arr[j] = arr[j + 1]\n        arr[j + 1] = temp\nprint(arr)"
+expected_output = "[34, 25, 12, 64]"
 challenge_hint = "Bubble Sort compares arr[j] with arr[j+1].If the left is greater swap them.Use range(len(arr) - 1) to avoid going out of bounds.Python swap: a, b = b, a"
 practice_question = "What is the worst case time complexity of Bubble Sortand when does it occur?"
 practice_options = Array[String](["O(n) — when array is already sorted", "O(n log n) — when array is random", "O(n²) — when array is reverse sorted", "O(1) — when array has one element"])

@@ -92,6 +92,9 @@ recap_text = "- Selection Sort finds the minimum and places it correctly
 challenge_instruction = "Arrange the blocks to find the minimum elementin a list and swap it to the front."
 challenge_blocks = Array[String](["arr = [29, 10, 14, 37, 13]", "min_idx = 0", "for j in range(1, len(arr)):", "if arr[j] < arr[min_idx]:", "min_idx = j", "arr[0], arr[min_idx] = arr[min_idx], arr[0]", "print(arr)", "if arr[j] > arr[min_idx]:", "min_idx = len(arr)"])
 correct_sequence = Array[String](["arr = [29, 10, 14, 37, 13]", "min_idx = 0", "for j in range(1, len(arr)):", "if arr[j] < arr[min_idx]:", "min_idx = j", "arr[0], arr[min_idx] = arr[min_idx], arr[0]", "print(arr)"])
+code_template = "arr = [29, 10, 14, 37, 13]\nmin_idx = 0\nfor j in range(1, len(arr)):\n    if arr[j] < arr[min_idx]:\n        min_idx = ___\ntemp = arr[0]\narr[0] = arr[min_idx]\narr[min_idx] = temp\nprint(arr)"
+challenge_code = "arr = [29, 10, 14, 37, 13]\nmin_idx = 0\nfor j in range(1, len(arr)):\n    if arr[j] < arr[min_idx]:\n        min_idx = j\ntemp = arr[0]\narr[0] = arr[min_idx]\narr[min_idx] = temp\nprint(arr)"
+expected_output = "[10, 29, 14, 37, 13]"
 challenge_hint = "Start by assuming the first element is the minimum.Loop through the rest to find a smaller one.Update min_idx when you find something smaller.After the loop swap the minimum into position 0."
 practice_question = "How many swaps does Selection Sort makefor an array of 5 elements?"
 practice_options = Array[String](["Up to 10 swaps", "Exactly 5 swaps", "At most 4 swaps", "It depends on the data"])

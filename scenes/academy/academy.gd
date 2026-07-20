@@ -27,10 +27,10 @@ var current_step: int = 0
 var completed_steps: Array[int] = []
 var _sidebar_visible: bool = true
 
-const TOTAL_STEPS: int = 8
+var total_steps: int = 8
 const STEP_NAMES: Array[String] = [
 	"Concept", "Visualization", "Real World",
-	"Guided", "Try It", "Practice", "Recap", "Complete"
+	"Guided", "Try It", "Code Editor", "Practice", "Recap", "Complete"
 ]
 
 var topic_buttons: Dictionary = {}
@@ -255,6 +255,7 @@ func _on_topic_selected(topic_id: String) -> void:
 func _open_lesson(lesson: LessonData) -> void:
 	current_lesson = lesson
 	current_step   = 0
+	total_steps    = 8 if lesson.challenge_code.is_empty() else 9
 	completed_steps.clear()
 	_lesson_start_time = Time.get_ticks_msec() / 1000.0
 	lesson_title.text = lesson.title
@@ -280,7 +281,7 @@ func _open_lesson(lesson: LessonData) -> void:
 func _build_step_indicator() -> void:
 	for child in step_indicator.get_children():
 		child.queue_free()
-	for i in range(TOTAL_STEPS):
+	for i in range(total_steps):
 		var dot   := Panel.new()
 		dot.custom_minimum_size = Vector2(24, 6)
 		var style := StyleBoxFlat.new()
@@ -319,10 +320,11 @@ func _show_current_step() -> void:
 		1: _show_visualization_step()
 		2: _show_real_world_step()
 		3: _show_guided_step()
-		4: _show_try_it_step()
-		5: _show_practice_step()
-		6: _show_recap_step()
-		7: _show_complete_step()
+		4: _show_block_puzzle_step()
+		5: _show_code_editor_step()
+		6: _show_practice_step()
+		7: _show_recap_step()
+		8: _show_complete_step()
 	await get_tree().process_frame
 	scroll_area.scroll_vertical = 0
 
@@ -348,8 +350,9 @@ func _show_visualization_step() -> void:
 	layout.add_child(title)
 	if current_lesson.visualization_scene != null:
 		var viz = current_lesson.visualization_scene.instantiate()
-		viz.custom_minimum_size       = Vector2(0, 380)
 		viz.size_flags_horizontal     = Control.SIZE_EXPAND_FILL
+		viz.size_flags_vertical       = Control.SIZE_EXPAND_FILL
+		viz.custom_minimum_size       = Vector2(0, 620)
 		layout.add_child(viz)
 	else:
 		var fallback := Label.new()
@@ -382,7 +385,7 @@ func _show_guided_step() -> void:
 	layout.add_child(_make_step_label(current_lesson.guided_example))
 	scroll_content.add_child(layout)
 
-func _show_try_it_step() -> void:
+func _show_block_puzzle_step() -> void:
 	var layout := VBoxContainer.new()
 	layout.add_theme_constant_override("separation", 12)
 
@@ -393,12 +396,28 @@ func _show_try_it_step() -> void:
 	instruction.add_theme_font_size_override("font_size", 15)
 	layout.add_child(instruction)
 
-	# Check if this lesson uses code editor mode
-	if not current_lesson.challenge_code.is_empty():
-		_show_code_editor(layout)
-	else:
-		_show_block_puzzle(layout)
+	_show_block_puzzle(layout)
 
+	scroll_content.add_child(layout)
+
+func _show_code_editor_step() -> void:
+	var layout := VBoxContainer.new()
+	layout.add_theme_constant_override("separation", 12)
+	if current_lesson.challenge_code.is_empty():
+		var label := Label.new()
+		label.text = "No coding challenge for this lesson."
+		label.add_theme_color_override("font_color", Color("#4A7FA5"))
+		label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+		layout.add_child(label)
+		scroll_content.add_child(layout)
+		return
+	var instruction := Label.new()
+	instruction.text = "Type your code below. Fill in the blanks (___), then press Run to test."
+	instruction.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+	instruction.add_theme_color_override("font_color", Color("#E8F4FD"))
+	instruction.add_theme_font_size_override("font_size", 15)
+	layout.add_child(instruction)
+	_show_code_editor(layout)
 	scroll_content.add_child(layout)
 
 func _show_code_editor(layout: VBoxContainer) -> void:
@@ -410,7 +429,7 @@ func _show_code_editor(layout: VBoxContainer) -> void:
 	editor.add_theme_color_override("font_color", Color("#E8F4FD"))
 	editor.add_theme_color_override("caret_color", Color("#00D4FF"))
 	editor.add_theme_color_override("selection_color", Color("#003366"))
-	editor.text = ""
+	editor.text = current_lesson.code_template if not current_lesson.code_template.is_empty() else ""
 	editor.placeholder_text = "# Write your Python code here"
 	layout.add_child(editor)
 
@@ -466,10 +485,13 @@ func _show_code_editor(layout: VBoxContainer) -> void:
 	layout.add_child(result_label)
 
 func _on_run_code(editor: TextEdit) -> void:
+	if editor == null or editor.get_parent() == null:
+		return
 	var code = editor.text
 	var result = PythonTranspiler.run_code(code)
-	var output_label = editor.get_parent().get_node_or_null("OutputLabel") as Label
-	var result_label = editor.get_parent().get_node_or_null("CodeResultLabel") as Label
+	var parent = editor.get_parent()
+	var output_label = parent.get_node_or_null("OutputLabel") as Label
+	var result_label = parent.get_node_or_null("CodeResultLabel") as Label
 	if output_label:
 		if result.success:
 			output_label.text = "Output:\n" + result.output if result.output else "Output:\n(no output)"
@@ -481,10 +503,13 @@ func _on_run_code(editor: TextEdit) -> void:
 		result_label.text = ""
 
 func _on_check_code_answer(editor: TextEdit) -> void:
+	if editor == null or editor.get_parent() == null:
+		return
 	var code = editor.text
 	var result = PythonTranspiler.run_code(code)
-	var result_label = editor.get_parent().get_node_or_null("CodeResultLabel") as Label
-	var output_label = editor.get_parent().get_node_or_null("OutputLabel") as Label
+	var parent = editor.get_parent()
+	var result_label = parent.get_node_or_null("CodeResultLabel") as Label
+	var output_label = parent.get_node_or_null("OutputLabel") as Label
 	if not result.success:
 		if output_label:
 			output_label.text = "Error:\n" + result.error
@@ -783,7 +808,7 @@ func _on_back_step_pressed() -> void:
 func _on_next_step_pressed() -> void:
 	if current_lesson == null:
 		return
-	current_step = min(TOTAL_STEPS - 1, current_step + 1)
+	current_step = min(total_steps - 1, current_step + 1)
 	_show_current_step()
 
 func _on_hint_pressed() -> void:
@@ -797,12 +822,12 @@ func _on_hint_pressed() -> void:
 
 	# Add step-specific context to hint
 	match current_step:
-		4:
-			# Try It step — coding hint
+		4, 5:
+			# Block puzzle or Code Editor step — coding hint
 			SignalBus.hud_message_requested.emit(
 				"💡 Code Hint: " + current_lesson.challenge_hint, 5.0
 			)
-		5:
+		6:
 			# Practice step — thinking hint
 			SignalBus.hud_message_requested.emit(
 				"💡 Think: " + hint, 4.0
@@ -821,11 +846,11 @@ func _update_nav_buttons() -> void:
 		next_step_btn.disabled = true
 		return
 	back_step_btn.disabled = current_step == 0
-	if current_step == 4 or current_step == 5:
+	if current_step == 4 or current_step == 5 or current_step == 6:
 		next_step_btn.disabled = current_step not in completed_steps
 	else:
 		next_step_btn.disabled = false
-	next_step_btn.text = "Complete →" if current_step == TOTAL_STEPS - 1 else "Next →"
+	next_step_btn.text = "Complete →" if current_step == total_steps - 1 else "Next →"
 
 # ─── PROGRESS LABEL ────────────────────────────────────
 func _update_progress_label() -> void:
@@ -934,6 +959,36 @@ func _apply_styles() -> void:
 	hint_style.corner_radius_bottom_right = 4
 	hint_button.add_theme_stylebox_override("normal", hint_style)
 	hint_button.add_theme_color_override("font_color", Color("#FFB800"))
+	
+	# Style scrollbar in the lesson step area
+	var scroll_bar_style := StyleBoxFlat.new()
+	scroll_bar_style.bg_color = Color("#0A1628")
+	scroll_bar_style.border_color = Color("#1A2A3A")
+	scroll_bar_style.border_width_left = 1
+	scroll_bar_style.border_width_right = 1
+	scroll_bar_style.border_width_top = 1
+	scroll_bar_style.border_width_bottom = 1
+	scroll_bar_style.corner_radius_top_left = 3
+	scroll_bar_style.corner_radius_top_right = 3
+	scroll_bar_style.corner_radius_bottom_left = 3
+	scroll_bar_style.corner_radius_bottom_right = 3
+	var scroll_grabber_style := StyleBoxFlat.new()
+	scroll_grabber_style.bg_color = Color("#00D4FF")
+	scroll_grabber_style.corner_radius_top_left = 3
+	scroll_grabber_style.corner_radius_top_right = 3
+	scroll_grabber_style.corner_radius_bottom_left = 3
+	scroll_grabber_style.corner_radius_bottom_right = 3
+	scroll_area.add_theme_stylebox_override("bg", scroll_bar_style)
+	scroll_area.add_theme_stylebox_override("panel", scroll_bar_style)
+	var v_sb = scroll_area.get_v_scroll_bar()
+	if v_sb:
+		v_sb.add_theme_stylebox_override("scroll", scroll_bar_style)
+		v_sb.add_theme_stylebox_override("scroll_focus", scroll_bar_style)
+		v_sb.add_theme_stylebox_override("grabber", scroll_grabber_style)
+		v_sb.add_theme_stylebox_override("grabber_highlight", scroll_grabber_style)
+		v_sb.add_theme_stylebox_override("grabber_pressed", scroll_grabber_style)
+		v_sb.custom_minimum_size = Vector2(12, 0)
+		v_sb.size_flags_vertical = Control.SIZE_EXPAND_FILL
 	
 	# Style menu button
 	var menu_style := StyleBoxFlat.new()

@@ -83,6 +83,9 @@ recap_text = "- Queues follow FIFO — First In First Out
 challenge_instruction = "Arrange the blocks to create a queue, add two items,and remove the first one."
 challenge_blocks = Array[String](["from collections import deque", "queue = deque()", "queue.append(\"first\")", "queue.append(\"second\")", "print(queue.popleft())", "print(queue.pop())", "queue = []", "queue.appendleft(\"first\")"])
 correct_sequence = Array[String](["from collections import deque", "queue = deque()", "queue.append(\"first\")", "queue.append(\"second\")", "print(queue.popleft())"])
+code_template = "queue = [\"___\", \"second\"]\nprint(queue.pop(0))"
+challenge_code = "queue = [\"first\", \"second\"]\nprint(queue.pop(0))"
+expected_output = "first"
 challenge_hint = "Queues need deque from collections.append() adds to the back.popleft() removes from the front — this is what makes it FIFO."
 practice_question = "Which method removes the first item from a deque queue?"
 practice_options = Array[String](["pop()", "remove()", "popleft()", "dequeue()"])
