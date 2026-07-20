@@ -214,7 +214,10 @@ func _on_profile_loaded(
 
 # ─── LOGOUT ────────────────────────────────────────────
 func logout() -> void:
-	save_progress_to_cloud()
+	# Wait for the cloud save to complete before wiping local state.
+	# This guarantees the cloud has the latest progress, even on a
+	# slow network where the user closes the app quickly after logout.
+	_save_progress_sync()
 	update_leaderboard()
 	student_id   = ""
 	full_name    = ""
@@ -227,6 +230,41 @@ func logout() -> void:
 	logout_completed.emit()
 	GameManager.go_to("login")
 	print("[Supabase] Logged out.")
+
+# Synchronous version of save_progress_to_cloud used at logout.
+# Spins the message loop until the HTTP request completes (or times
+# out after 5 seconds) so the caller can be sure the cloud is up to
+# date before continuing.
+func _save_progress_sync() -> void:
+	if not is_logged_in:
+		return
+	var url  = SUPABASE_URL + "/rest/v1/progress"
+	var body = JSON.stringify({
+		"student_id":        student_id,
+		"topic_states":      ProgressManager.topic_states,
+		"time_spent":        ProgressManager.time_spent,
+		"unlocked_towers":   ProgressManager.unlocked_towers,
+		"campaign_progress": ProgressManager.campaign_progress,
+		"updated_at":        Time.get_datetime_string_from_system()
+	})
+	var headers = _get_headers()
+	headers.append("Prefer: resolution=merge-duplicates")
+	var http := HTTPRequest.new()
+	add_child(http)
+	var done := [false]
+	# Connect to the existing _on_progress_saved handler, then chain a
+	# signal that flips our `done` flag so the wait loop can exit.
+	http.request_completed.connect(_on_progress_saved.bind(http))
+	http.request_completed.connect(
+		func(_r, _c, _h, _b): done[0] = true
+	)
+	http.request(url, headers, HTTPClient.METHOD_POST, body)
+	# Pump the message loop until the request finishes or times out.
+	var elapsed := 0.0
+	var timeout  := 5.0
+	while not done[0] and elapsed < timeout:
+		await get_tree().process_frame
+		elapsed += 0.016
 
 # ─── LAST SEEN ─────────────────────────────────────────
 func _update_last_seen() -> void:
@@ -256,22 +294,36 @@ func _create_initial_progress() -> void:
 func save_progress_to_cloud() -> void:
 	if not is_logged_in:
 		return
-	var url  = SUPABASE_URL + \
-		"/rest/v1/progress?student_id=eq." + student_id
+	# Use POST + merge-duplicates so the row is created if it doesn't
+	# exist yet. PATCH on a non-existent row would silently update
+	# nothing, which is what was losing progress on logout/login.
+	var url  = SUPABASE_URL + "/rest/v1/progress"
 	var body = JSON.stringify({
-		"topic_states":       ProgressManager.topic_states,
-		"time_spent":         ProgressManager.time_spent,
-		"unlocked_towers":    ProgressManager.unlocked_towers,
-		"campaign_progress":  ProgressManager.campaign_progress,
-		"updated_at":         Time.get_datetime_string_from_system()
+		"student_id":        student_id,
+		"topic_states":      ProgressManager.topic_states,
+		"time_spent":        ProgressManager.time_spent,
+		"unlocked_towers":   ProgressManager.unlocked_towers,
+		"campaign_progress": ProgressManager.campaign_progress,
+		"updated_at":        Time.get_datetime_string_from_system()
 	})
+	var headers = _get_headers()
+	headers.append("Prefer: resolution=merge-duplicates")
 	var http := HTTPRequest.new()
 	add_child(http)
 	http.request_completed.connect(
-		func(_r, _c, _h, _b): http.queue_free()
+		_on_progress_saved.bind(http)
 	)
-	http.request(url, _get_headers(), HTTPClient.METHOD_PATCH, body)
-	print("[Supabase] Progress saved.")
+	http.request(url, headers, HTTPClient.METHOD_POST, body)
+
+func _on_progress_saved(
+		result: int, code: int,
+		headers: PackedStringArray, body: PackedByteArray,
+		http: HTTPRequest) -> void:
+	http.queue_free()
+	if code == 200 or code == 201:
+		print("[Supabase] Progress saved.")
+	else:
+		print("[Supabase] Progress save FAILED: ", code, " — ", body.get_string_from_utf8())
 
 func load_progress_from_cloud() -> void:
 	if not is_logged_in:
@@ -297,38 +349,58 @@ func _on_progress_loaded(
 	if parsed is Array and parsed.size() > 0:
 		var data = parsed[0]
 
-		# Only overwrite if cloud actually has data
-		var cloud_states = data.get("topic_states", {})
-		if cloud_states.size() > 0:
-			ProgressManager.topic_states = {}
-			for key in cloud_states:
-				ProgressManager.topic_states[str(key)] = str(cloud_states[key])
+		# Cloud is a backup, NOT the source of truth. Local was
+		# already loaded from save.json in ProgressManager._ready().
+		# We only apply cloud data when local is empty/reset (e.g.
+		# the user logged in on a different device, or local save
+		# was cleared by reset_all_progress). Otherwise we keep
+		# local to avoid clobbering progress that hasn't synced yet.
+		# A "freshly reset" local only has py_variables=unlocked and
+		# max_level_unlocked=0, so we treat that as empty.
+		var local_has_real_progress = false
+		for topic_id in ProgressManager.topic_states:
+			if ProgressManager.topic_states[topic_id] == "mastered":
+				local_has_real_progress = true
+				break
+		if not local_has_real_progress:
+			local_has_real_progress = (
+				ProgressManager.unlocked_towers.size() > 0
+				or ProgressManager.campaign_progress.get(
+					"max_level_unlocked", 0
+				) > 0
+				or ProgressManager.campaign_progress.get(
+					"waves_completed", 0
+				) > 0
+			)
 
-		var cloud_time = data.get("time_spent", {})
-		if cloud_time.size() > 0:
-			ProgressManager.time_spent = cloud_time
+		if not local_has_real_progress:
+			# No local progress — pull everything from cloud.
+			var cloud_states = data.get("topic_states", {})
+			if cloud_states is Dictionary and cloud_states.size() > 0:
+				ProgressManager.topic_states.clear()
+				for key in cloud_states:
+					ProgressManager.topic_states[str(key)] = str(cloud_states[key])
 
-		var cloud_campaign = data.get("campaign_progress", {})
-		if cloud_campaign.size() > 0:
-			# Merge local fields that cloud doesn't have (avoid losing stars/levels)
-			for key in ProgressManager.campaign_progress:
-				if not cloud_campaign.has(key):
-					var val = ProgressManager.campaign_progress[key]
-					if typeof(val) == TYPE_DICTIONARY and val.size() > 0:
-						cloud_campaign[key] = val
-					elif typeof(val) == TYPE_INT and val > 0:
-						cloud_campaign[key] = val
-					elif typeof(val) == TYPE_BOOL and val:
-						cloud_campaign[key] = val
-			ProgressManager.campaign_progress = cloud_campaign
+			var cloud_time = data.get("time_spent", {})
+			if cloud_time is Dictionary and cloud_time.size() > 0:
+				ProgressManager.time_spent = cloud_time
 
-		var towers = data.get("unlocked_towers", [])
-		if towers.size() > 0:
-			ProgressManager.unlocked_towers.clear()
-			for t in towers:
-				ProgressManager.unlocked_towers.append(str(t))
+			var cloud_campaign = data.get("campaign_progress", {})
+			if cloud_campaign is Dictionary and cloud_campaign.size() > 0:
+				ProgressManager.campaign_progress = cloud_campaign
 
-		print("[Supabase] Progress loaded from cloud.")
+			var towers = data.get("unlocked_towers", [])
+			if towers is Array and towers.size() > 0:
+				ProgressManager.unlocked_towers.clear()
+				for t in towers:
+					ProgressManager.unlocked_towers.append(str(t))
+
+			print("[Supabase] Progress loaded from cloud (local was empty).")
+		else:
+			# Local has progress — push it to cloud to make sure
+			# cloud is up to date, but don't overwrite local.
+			print("[Supabase] Local progress exists — keeping local, syncing to cloud.")
+			ProgressManager.save_progress()
 	else:
 		print("[Supabase] No cloud progress found — keeping local.")
 
