@@ -201,6 +201,9 @@ func _exec_stmt(stripped, env, state):
 				return
 	if stripped.begins_with("def ") or stripped.begins_with("if ") or stripped.begins_with("elif ") or stripped.begins_with("else:") or stripped.begins_with("for ") or stripped.begins_with("while ") or stripped.begins_with("return "):
 		return
+	if "(" in stripped and stripped.ends_with(")"):
+		_eval_expr(stripped, env, state)
+		return
 	state.ok = false
 	state.err = "Unknown statement: " + stripped
 
@@ -348,6 +351,33 @@ func _eval_expr(expr, env, state):
 				return r
 		if env.has(fname):
 			return _call_func(fname, arg_vals, env, state)
+		var dot_idx = fname.find(".")
+		if dot_idx != -1:
+			var obj_name = fname.substr(0, dot_idx)
+			var method = fname.substr(dot_idx + 1)
+			if env.has(obj_name):
+				var obj = env[obj_name]
+				if typeof(obj) == TYPE_ARRAY:
+					match method:
+						"append":
+							if arg_vals.size() == 1:
+								obj.append(arg_vals[0])
+							return null
+						"pop":
+							if arg_vals.size() == 0:
+								return obj.pop_back()
+							return obj.pop_at(arg_vals[0])
+						"extend":
+							if arg_vals.size() == 1:
+								obj.append_array(arg_vals[0])
+							return null
+						_:
+							state.ok = false
+							state.err = "Unsupported list method: " + method
+							return null
+				state.ok = false
+				state.err = "Can't call methods on " + obj_name + " (type " + str(typeof(obj)) + ")"
+				return null
 	var idx_br = _find_op(s, "[")
 	if idx_br != -1 and s.ends_with("]"):
 		var var_name = s.substr(0, idx_br).strip_edges()
