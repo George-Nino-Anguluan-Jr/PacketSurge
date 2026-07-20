@@ -57,10 +57,14 @@ recap_text = "- A variable stores a value under a name
 - Variable names should be descriptive
 - Values can be text (str), numbers (int/float), or true/false (bool)
 - Variables can be updated anytime by assigning a new value"
-challenge_instruction = "Build a Python variable assignment.Arrange the blocks in the correct order to storea player's username and score."
-challenge_blocks = Array[String](["username = \"PlayerOne\"", "score = 0", "print(username)", "print(score)", "= \"PlayerOne\" username", "0 = score"])
-correct_sequence = Array[String](["username = \"PlayerOne\"", "score = 0", "print(username)", "print(score)"])
-challenge_hint = "Variable assignment always follows this pattern:    name = valueThe variable name comes FIRST, then =, then the value."
+challenge_instruction = "Write Python code that creates two variables (name and score),assigns them values, then prints both."
+challenge_hint = "Variable assignment: name = valueThe variable name goes FIRST, then =, then the value.Use print(name) to display it."
+challenge_code = "name = \"PlayerOne\"
+score = 0
+print(name)
+print(score)"
+expected_output = "PlayerOne
+0"
 practice_question = "Which of the following correctly creates a variable called 'lives' with a value of 3?"
 practice_options = Array[String](["3 = lives", "lives == 3", "lives = 3", "var lives = 3"])
 practice_correct_index = 2

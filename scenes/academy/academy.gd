@@ -393,6 +393,125 @@ func _show_try_it_step() -> void:
 	instruction.add_theme_font_size_override("font_size", 15)
 	layout.add_child(instruction)
 
+	# Check if this lesson uses code editor mode
+	if not current_lesson.challenge_code.is_empty():
+		_show_code_editor(layout)
+	else:
+		_show_block_puzzle(layout)
+
+	scroll_content.add_child(layout)
+
+func _show_code_editor(layout: VBoxContainer) -> void:
+	var editor := TextEdit.new()
+	editor.name = "CodeEditor"
+	editor.custom_minimum_size = Vector2(0, 250)
+	editor.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	editor.add_theme_color_override("background_color", Color("#0A1628"))
+	editor.add_theme_color_override("font_color", Color("#E8F4FD"))
+	editor.add_theme_color_override("caret_color", Color("#00D4FF"))
+	editor.add_theme_color_override("selection_color", Color("#003366"))
+	editor.text = ""
+	editor.placeholder_text = "# Write your Python code here"
+	layout.add_child(editor)
+
+	var hint_line := Label.new()
+	hint_line.text = "💡 Write Python code. Press Run to test, then Check Answer when output matches expected."
+	hint_line.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+	hint_line.add_theme_color_override("font_color", Color("#4A7FA5"))
+	hint_line.add_theme_font_size_override("font_size", 11)
+	layout.add_child(hint_line)
+
+	# Run button
+	var run_btn := Button.new()
+	run_btn.text = "▶ Run Code"
+	run_btn.custom_minimum_size = Vector2(160, 44)
+	_style_accent_button(run_btn)
+	run_btn.pressed.connect(_on_run_code.bind(editor))
+	layout.add_child(run_btn)
+
+	# Check answer button
+	var check_btn := Button.new()
+	check_btn.text = "✔ Check Answer"
+	check_btn.custom_minimum_size = Vector2(160, 44)
+	_style_accent_button(check_btn)
+	check_btn.pressed.connect(_on_check_code_answer.bind(editor))
+	layout.add_child(check_btn)
+
+	# Run output area
+	var output_label := Label.new()
+	output_label.name = "OutputLabel"
+	output_label.text = ""
+	output_label.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+	output_label.add_theme_font_size_override("font_size", 13)
+	output_label.custom_minimum_size = Vector2(0, 60)
+	var output_bg := StyleBoxFlat.new()
+	output_bg.bg_color = Color("#080F1E")
+	output_bg.border_color = Color("#1A2A3A")
+	output_bg.border_width_left = 1
+	output_bg.border_width_right = 1
+	output_bg.border_width_top = 1
+	output_bg.border_width_bottom = 1
+	output_bg.corner_radius_top_left = 4
+	output_bg.corner_radius_top_right = 4
+	output_bg.corner_radius_bottom_left = 4
+	output_bg.corner_radius_bottom_right = 4
+	output_label.add_theme_stylebox_override("normal", output_bg)
+	layout.add_child(output_label)
+
+	var result_label := Label.new()
+	result_label.name = "CodeResultLabel"
+	result_label.text = ""
+	result_label.add_theme_font_size_override("font_size", 14)
+	result_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	layout.add_child(result_label)
+
+func _on_run_code(editor: TextEdit) -> void:
+	var code = editor.text
+	var result = PythonTranspiler.run_code(code)
+	var output_label = editor.get_parent().get_node_or_null("OutputLabel") as Label
+	var result_label = editor.get_parent().get_node_or_null("CodeResultLabel") as Label
+	if output_label:
+		if result.success:
+			output_label.text = "Output:\n" + result.output if result.output else "Output:\n(no output)"
+			output_label.add_theme_color_override("font_color", Color("#00FF88"))
+		else:
+			output_label.text = "Error:\n" + result.error
+			output_label.add_theme_color_override("font_color", Color("#FF3366"))
+	if result_label:
+		result_label.text = ""
+
+func _on_check_code_answer(editor: TextEdit) -> void:
+	var code = editor.text
+	var result = PythonTranspiler.run_code(code)
+	var result_label = editor.get_parent().get_node_or_null("CodeResultLabel") as Label
+	var output_label = editor.get_parent().get_node_or_null("OutputLabel") as Label
+	if not result.success:
+		if output_label:
+			output_label.text = "Error:\n" + result.error
+			output_label.add_theme_color_override("font_color", Color("#FF3366"))
+		if result_label:
+			result_label.text = "❌ Your code has errors."
+			result_label.add_theme_color_override("font_color", Color("#FF3366"))
+		return
+	var actual = result.output.strip_edges(false, true)
+	var expected = current_lesson.expected_output.strip_edges(false, true)
+	var passed = actual == expected
+	if result_label:
+		if passed:
+			result_label.text = "✅ Correct! Output matches expected."
+			result_label.add_theme_color_override("font_color", Color("#00FF88"))
+			next_step_btn.disabled = false
+			if current_step not in completed_steps:
+				completed_steps.append(current_step)
+		else:
+			result_label.text = "❌ Output doesn't match expected."
+			result_label.add_theme_color_override("font_color", Color("#FF3366"))
+			next_step_btn.disabled = true
+	if output_label:
+		output_label.text = "Your Output:\n" + actual + "\n\nExpected:\n" + expected
+		output_label.add_theme_color_override("font_color", Color("#E8F4FD"))
+
+func _show_block_puzzle(layout: VBoxContainer) -> void:
 	var answer_label := Label.new()
 	answer_label.text = "Your Answer:"
 	answer_label.add_theme_color_override("font_color", Color("#4A7FA5"))
@@ -454,8 +573,6 @@ func _show_try_it_step() -> void:
 	result_label.add_theme_font_size_override("font_size", 14)
 	result_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	layout.add_child(result_label)
-
-	scroll_content.add_child(layout)
 
 func _make_code_block(text: String, answer_area: VBoxContainer, blocks_area: VBoxContainer) -> Button:
 	var btn := Button.new()
