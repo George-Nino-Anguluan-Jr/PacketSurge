@@ -122,11 +122,11 @@ func _make_overview_cards() -> HBoxContainer:
 	)
 
 	row.add_child(_make_stat_card(
-		"LESSONS\nMASTERED", str(mastered) + "/12",
+		"LESSONS\nMASTERED", str(mastered) + "/18",
 		Color("#00FF88")
 	))
 	row.add_child(_make_stat_card(
-		"CAMPAIGN\nLEVELS", str(levels) + "/11",
+		"CAMPAIGN\nLEVELS", str(levels) + "/13",
 		Color("#FFB800")
 	))
 	row.add_child(_make_stat_card(
@@ -498,33 +498,28 @@ func _build_class_comparison() -> void:
 
 	# Calculate class averages
 	var total_mastered: float   = 0.0
-	var total_levels: float     = 0.0
-	var total_score: float      = 0.0
-	var total_time: float       = 0.0
+	var total_stars: float    = 0.0
+	var total_score: float    = 0.0
 	var count = class_data.size()
 
 	for entry in class_data:
 		total_mastered += float(entry.get("topics_mastered",           0))
-		total_levels   += float(entry.get("campaign_levels_completed", 0))
+		total_stars    += float(entry.get("total_stars",             0))
 		total_score    += float(entry.get("score",                     0))
-		total_time     += float(entry.get("total_time_spent",          0))
 
 	var avg_mastered = total_mastered / count
-	var avg_levels   = total_levels   / count
+	var avg_stars    = total_stars    / count
 	var avg_score    = total_score    / count
-	var avg_time     = total_time     / count
 
 	# My stats
 	var my_mastered: float = 0.0
 	for t in ProgressManager.topic_states:
 		if ProgressManager.topic_states[t] == "mastered":
 			my_mastered += 1.0
-	var my_levels = float(
-		ProgressManager.campaign_progress.get("waves_completed", 0)
-	)
-	var my_time: float = 0.0
-	for t in ProgressManager.time_spent:
-		my_time += float(ProgressManager.time_spent[t])
+	var my_stars: float = 0.0
+	var star_map = ProgressManager.campaign_progress.get("level_stars", {})
+	for level_num in star_map:
+		my_stars += float(star_map[level_num])
 
 	# Section title
 	class_content.add_child(
@@ -537,16 +532,16 @@ func _build_class_comparison() -> void:
 	# Comparison cards
 	class_content.add_child(_make_comparison_row(
 		"Topics Mastered",
-		my_mastered, avg_mastered, 12.0,
+		my_mastered, avg_mastered, 18.0,
 		Color("#00D4FF")
 	))
 	class_content.add_child(_make_comparison_row(
-		"Campaign Levels",
-		my_levels, avg_levels, 11.0,
+		"Total Stars",
+		my_stars, avg_stars, 39.0,
 		Color("#FFB800")
 	))
 	class_content.add_child(_make_comparison_row(
-		"Total Score",
+		"Score",
 		0.0, avg_score, 2850.0,
 		Color("#00FF88"),
 		true

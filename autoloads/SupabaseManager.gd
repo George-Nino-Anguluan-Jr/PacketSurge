@@ -358,18 +358,16 @@ func update_leaderboard() -> void:
 		if ProgressManager.topic_states[topic_id] == "mastered":
 			mastered += 1
 
-	var levels = ProgressManager.campaign_progress.get(
-		"waves_completed", 0
-	)
+	# ── Total stars from campaign ───────────────
+	var star_map = ProgressManager.campaign_progress.get("level_stars", {})
+	var total_stars := 0
+	for level_num in star_map:
+		total_stars += int(star_map[level_num])
 
-	var score = (mastered * 100) + (levels * 150)
+	# ── Scoring: topics + stars ──────────────────
+	var score = (mastered * 100) + (total_stars * 50)
 
-	# ── Mastery bonus ──────────────────────────
-	for topic_id in ProgressManager.topic_states:
-		if ProgressManager.topic_states[topic_id] == "mastered":
-			score += 50
-
-	# ── Total time ──────────────────────────────
+	# ── Total time (kept for display only) ───────
 	var total_time: float = 0.0
 	for t in ProgressManager.time_spent:
 		total_time += float(ProgressManager.time_spent[t])
@@ -379,7 +377,8 @@ func update_leaderboard() -> void:
 		"/rest/v1/leaderboard?student_id=eq." + student_id
 	var body = JSON.stringify({
 		"topics_mastered":           mastered,
-		"campaign_levels_completed": levels,
+		"campaign_levels_completed": ProgressManager.campaign_progress.get("waves_completed", 0),
+		"total_stars":               total_stars,
 		"total_time_spent":          total_time,
 		"score":                     score,
 		"updated_at": Time.get_datetime_string_from_system()
@@ -415,9 +414,9 @@ func submit_campaign_score(
 
 # ─── LEADERBOARD ───────────────────────────────────────
 func fetch_leaderboard(section_filter: String = "") -> void:
-	# Sort by score DESC, then time ASC as tiebreaker
+	# Sort by score DESC (no time tiebreaker)
 	var url = SUPABASE_URL + \
-		"/rest/v1/leaderboard?order=score.desc,total_time_spent.asc&limit=20"
+		"/rest/v1/leaderboard?order=score.desc&limit=20"
 	if section_filter != "":
 		url += "&section=eq." + section_filter.uri_encode()
 	var http := HTTPRequest.new()
