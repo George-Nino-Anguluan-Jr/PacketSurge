@@ -160,10 +160,14 @@ func _get_current_theme() -> Dictionary:
 	else:
 		return SECTOR_THEMES["firewall"]
 
+var _grid_redraw_skip: int = 0
+
 func _process(delta: float) -> void:
 	_time += delta
 	_update_binary_particles(delta)
-	queue_redraw()
+	_grid_redraw_skip += 1
+	if _grid_redraw_skip % 2 == 0:
+		queue_redraw()
 
 func _generate_decorations() -> void:
 	_decorations.clear()

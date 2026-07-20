@@ -32,6 +32,7 @@ var ability_max_cooldown: float = 8.0
 var _turret_angle: float       = -PI / 2
 var _recoil: float             = 0.0
 var _anim_time: float          = 0.0
+var _mobile_redraw_skip: int   = 0
 
 # ─── PROJECTILE & EXPLOSION STATE ─────────────────────
 var _projectiles: Array[Dictionary] = []
@@ -232,8 +233,10 @@ func _process(delta: float) -> void:
 	if _shoot_flash > 0:
 		_shoot_flash -= delta * 4.0
 
-	# Continuously request frame redraw to keep procedural 2D animations fluid and tracking alive
-	queue_redraw()
+	# Throttle redraws to every other frame on mobile for performance
+	_mobile_redraw_skip += 1
+	if _mobile_redraw_skip % 2 == 0:
+		queue_redraw()
 
 	# ─── UPDATE ACTIVE FLYING PROJECTILES ──────────────────
 	var remaining_projectiles: Array[Dictionary] = []
