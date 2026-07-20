@@ -24,6 +24,12 @@ var _flash_timer: float   = 0.0
 var _bob_time: float      = 0.0
 var _mobile_redraw_skip: int = 0
 
+# ─── PREVIEW MODE (Index screen) ───────────────────────
+# When true, the enemy is frozen in place and acts purely as a
+# static 3D model (no pathing, no DoT, no collisions). Toggled
+# externally; default false so existing scenes behave identically.
+var preview_mode: bool         = false
+
 # ─── DAMAGE OVER TIME (Insertion Tower) ────────────────
 var _dot_damage: float        = 0.0
 var _dot_timer: float         = 0.0
@@ -137,6 +143,15 @@ func _setup_type() -> void:
 
 func _physics_process(delta: float) -> void:
 	if is_dead or waypoints.size() == 0:
+		return
+
+	if preview_mode:
+		_bob_time += delta * 3.0
+		if _flash_timer > 0:
+			_flash_timer -= delta
+		_mobile_redraw_skip += 1
+		if _mobile_redraw_skip % 2 == 0:
+			queue_redraw()
 		return
 
 	# Damage-over-time tick (from Insertion Tower)

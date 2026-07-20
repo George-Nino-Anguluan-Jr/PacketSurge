@@ -1,6 +1,0 @@
-[gd_scene format=3 uid="uid://c8m7k4x2q9yj"]
-
-[ext_resource type="Script" uid="uid://d3f1a2b5c8e9" path="res://scenes/index/IconRenderer.gd" id="1_abc123"]
-
-[node name="IconRenderer" type="Node2D" unique_id=123456789]
-script = ExtResource("1_abc123")
