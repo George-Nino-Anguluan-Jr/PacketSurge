@@ -22,6 +22,7 @@ var is_dead: bool             = false
 var enemy_color: Color    = Color("#FF3366")
 var _flash_timer: float   = 0.0
 var _bob_time: float      = 0.0
+var _mobile_redraw_skip: int = 0
 
 # ─── DAMAGE OVER TIME (Insertion Tower) ────────────────
 var _dot_damage: float        = 0.0
@@ -159,7 +160,9 @@ func _physics_process(delta: float) -> void:
 		_reach_end()
 		return
 	_move_toward_waypoint(delta)
-	queue_redraw()
+	_mobile_redraw_skip += 1
+	if _mobile_redraw_skip % 2 == 0:
+		queue_redraw()
 
 func _process_type(delta: float) -> void:
 	match enemy_type:

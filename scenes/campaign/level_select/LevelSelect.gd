@@ -46,9 +46,12 @@ func _ready() -> void:
 	await get_tree().process_frame
 	_auto_scroll_to_current()
 
+var _map_redraw_counter: int = 0
+
 func _process(_delta: float) -> void:
-	# Continuous redrawing for rotating HUDs, pulsing packets and diagnostics (low performance overhead)
-	if is_inside_tree() and map_canvas.visible:
+	# Redraw map canvas at ~10 FPS to reduce GPU draw-call overhead on mobile
+	_map_redraw_counter += 1
+	if is_inside_tree() and map_canvas.visible and _map_redraw_counter % 6 == 0:
 		map_canvas.queue_redraw()
 
 func _setup_buttons() -> void:
