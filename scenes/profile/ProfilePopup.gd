@@ -99,10 +99,10 @@ func _build_stats_row() -> void:
 	var towers = ProgressManager.unlocked_towers.size()
 
 	stats_row.add_child(
-		_make_mini_stat("Lessons\nMastered", str(mastered) + "/12", Color("#00FF88"))
+		_make_mini_stat("Lessons\nMastered", str(mastered) + "/18", Color("#00FF88"))
 	)
 	stats_row.add_child(
-		_make_mini_stat("Campaign\nLevels", str(levels) + "/11", Color("#FFB800"))
+		_make_mini_stat("Campaign\nLevels", str(levels) + "/13", Color("#FFB800"))
 	)
 	stats_row.add_child(
 		_make_mini_stat("Towers\nUnlocked", str(towers), Color("#00D4FF"))

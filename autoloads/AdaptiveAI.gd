@@ -108,10 +108,10 @@ func record_level_performance(topic_id: String, grade: String, score: int, elaps
 	if topic_id.is_empty():
 		return
 	match grade:
-		"A", "B":
+		"S", "A", "B":
 			ProgressManager.set_topic_state(topic_id, "mastered")
-		"C", "D":
+		"C":
 			if ProgressManager.topic_states.get(topic_id) != "mastered":
 				ProgressManager.set_topic_state(topic_id, "practice")
-		"F", _:
+		"F":
 			ProgressManager.set_topic_state(topic_id, "struggling")

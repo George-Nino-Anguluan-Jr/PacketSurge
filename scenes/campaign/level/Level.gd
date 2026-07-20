@@ -1101,10 +1101,14 @@ func _on_wave_completed(wave_num: int) -> void:
 		Vector2(get_viewport_rect().size.x / 2, 60), Color("#00FF88"), 13)
 	_play_feedback(true)
 
+func _calc_performance() -> float:
+	return float(base_health) * 6.0 + min(float(score), 40.0)
+
 func _get_stars() -> int:
-	if base_health >= 9:
+	var p = _calc_performance()
+	if p >= 90:
 		return 3
-	elif base_health >= 6:
+	elif p >= 70:
 		return 2
 	return 1
 
@@ -1114,7 +1118,8 @@ func _on_all_waves_completed() -> void:
 	is_level_ended = true
 	var elapsed = (Time.get_ticks_msec() / 1000.0) - level_start_time
 	var stars = _get_stars()
-	var grade = ["F", "C", "B", "A"][stars]
+	var grade_dict = _get_grade()
+	var grade = grade_dict.letter
 	var topic_id = ProgressManager.get_topic_for_level(level_number)
 	ProgressManager.set_level_stars(level_number, stars)
 	ProgressManager.on_level_completed(level_number)
@@ -1253,14 +1258,14 @@ func _on_menu_pressed() -> void:
 	GameManager.go_to("campaign")
 
 func _get_grade() -> Dictionary:
-	var hp_ratio = float(base_health) / 10.0
-	if hp_ratio >= 0.9:
+	var p = _calc_performance()
+	if p >= 90:
 		return {"letter": "S", "color": Color("#FFD700")}
-	elif hp_ratio >= 0.7:
+	elif p >= 70:
 		return {"letter": "A", "color": Color("#00FF88")}
-	elif hp_ratio >= 0.5:
+	elif p >= 50:
 		return {"letter": "B", "color": Color("#00D4FF")}
-	elif hp_ratio >= 0.3:
+	elif p >= 30:
 		return {"letter": "C", "color": Color("#FFB800")}
 	else:
 		return {"letter": "F", "color": Color("#FF3366")}

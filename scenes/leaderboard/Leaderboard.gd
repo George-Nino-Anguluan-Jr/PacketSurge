@@ -228,19 +228,14 @@ func _make_entry_card(
 
 	_add_stat_column(
 	stats, "TOPICS",
-	str(int(entry.get("topics_mastered", 0))) + "/12",
+	str(int(entry.get("topics_mastered", 0))) + "/18",
 	Color("#00D4FF")
 	)
 	_add_stat_column(
-		stats, "LEVELS",
-		str(int(entry.get("campaign_levels_completed", 0))) + "/11",
+		stats, "STARS",
+		str(int(entry.get("total_stars", 0))) + "/39",
 		Color("#FFB800")
 	)
-
-	# Format time
-	var raw_time = float(entry.get("total_time_spent", 0))
-	var time_str = _format_time(raw_time)
-	_add_stat_column(stats, "TIME ⏱", time_str, Color("#9B59B6"))
 
 	# Score — most prominent
 	_add_stat_column(
