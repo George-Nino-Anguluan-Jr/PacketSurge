@@ -4,6 +4,7 @@ extends PanelContainer
 signal clicked(tower_id)
 signal drag_started(card)
 signal drag_ended(card, release_pos)
+signal info_requested(tower_id)
 
 @onready var name_label: Label = $CardLayout/NameLabel
 @onready var cost_label: Label = $CardLayout/CostLabel
@@ -17,20 +18,66 @@ var icon_text: String = "[ ]"
 
 var is_required: bool = false
 var is_selected: bool = false
-var home_position: Vector2 = Vector2.ZERO # The available anchor's global_pos
-var current_slot_idx: int = -1 # -1 if not in a slot
+var home_position: Vector2 = Vector2.ZERO
+var current_slot_idx: int = -1
 
 var is_dragging: bool = false
 var drag_offset: Vector2 = Vector2.ZERO
 var drag_start_global: Vector2 = Vector2.ZERO
 var _is_hovered: bool = false
+var _is_new: bool = false
 
 var tower_instance: Node2D = null
+
+var _info_btn: Label
+var _new_badge: Label
 
 func _ready() -> void:
 	mouse_entered.connect(_on_mouse_entered)
 	mouse_exited.connect(_on_mouse_exited)
 	pivot_offset = size / 2
+	_build_info_button()
+	_build_new_badge()
+
+func _build_info_button() -> void:
+	_info_btn = Label.new()
+	_info_btn.text = "?"
+	_info_btn.add_theme_font_size_override("font_size", 16)
+	_info_btn.add_theme_color_override("font_color", Color("#4A7FA5"))
+	_info_btn.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	_info_btn.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
+	_info_btn.custom_minimum_size = Vector2(32, 32)
+	_info_btn.mouse_filter = Control.MOUSE_FILTER_PASS
+	add_child(_info_btn)
+	_info_btn.position = Vector2(4, 4)
+
+func _build_new_badge() -> void:
+	_new_badge = Label.new()
+	_new_badge.text = "NEW!"
+	_new_badge.add_theme_font_size_override("font_size", 9)
+	_new_badge.add_theme_color_override("font_color", Color("#FFD700"))
+	_new_badge.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	_new_badge.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
+	_new_badge.custom_minimum_size = Vector2(40, 18)
+	_new_badge.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	var bg = StyleBoxFlat.new()
+	bg.bg_color = Color("#FFD700", 0.2)
+	bg.border_color = Color("#FFD700")
+	bg.border_width_left = 1
+	bg.border_width_right = 1
+	bg.border_width_top = 1
+	bg.border_width_bottom = 1
+	bg.corner_radius_top_left = 3
+	bg.corner_radius_top_right = 3
+	bg.corner_radius_bottom_left = 3
+	bg.corner_radius_bottom_right = 3
+	_new_badge.add_theme_stylebox_override("normal", bg)
+	_new_badge.set_anchors_preset(Control.PRESET_TOP_RIGHT)
+	_new_badge.offset_left = -44
+	_new_badge.offset_right = -4
+	_new_badge.offset_top = 4
+	_new_badge.offset_bottom = 22
+	add_child(_new_badge)
 
 func setup(p_tower_id: String, def: Dictionary, req: bool) -> void:
 	tower_id = p_tower_id
@@ -47,6 +94,7 @@ func setup(p_tower_id: String, def: Dictionary, req: bool) -> void:
 	
 	_apply_styles()
 	_instantiate_tower_model(def)
+	_refresh_badges()
 
 func _instantiate_tower_model(def: Dictionary) -> void:
 	if tower_instance:
@@ -107,6 +155,16 @@ func _apply_styles() -> void:
 		
 	add_theme_stylebox_override("panel", style)
 
+func set_new(val: bool) -> void:
+	_is_new = val
+	_refresh_badges()
+
+func _refresh_badges() -> void:
+	if _new_badge:
+		_new_badge.visible = _is_new
+	if _info_btn:
+		_info_btn.visible = not is_required
+
 func set_selected(sel: bool) -> void:
 	is_selected = sel
 	_apply_styles()
@@ -132,12 +190,15 @@ func _on_mouse_exited() -> void:
 
 func _gui_input(event: InputEvent) -> void:
 	if is_required:
-		return # Required towers are locked
-		
+		return
+
 	if event is InputEventMouseButton:
 		if event.button_index == MOUSE_BUTTON_LEFT:
 			if event.pressed:
-				# Start potential drag
+				if _info_btn and _info_btn.get_global_rect().has_point(event.global_position):
+					info_requested.emit(tower_id)
+					accept_event()
+					return
 				is_dragging = false
 				drag_start_global = global_position
 				drag_offset = global_position - event.global_position
@@ -147,7 +208,6 @@ func _gui_input(event: InputEvent) -> void:
 					is_dragging = false
 					drag_ended.emit(self, event.global_position)
 				else:
-					# Just a click!
 					clicked.emit(tower_id)
 					
 	elif event is InputEventMouseMotion and (event.button_mask & MOUSE_BUTTON_MASK_LEFT) != 0:

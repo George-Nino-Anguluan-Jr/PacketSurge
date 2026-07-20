@@ -28,6 +28,7 @@ SupabaseManager="*uid://d4c6t1sdehokl"
 SoundManager="*res://autoloads/SoundManager.gd"
 PythonTranspiler="*res://autoloads/PythonTranspiler.gd"
 VizUtil="*res://autoloads/VizUtil.gd"
+TowerIntroData="*res://autoloads/TowerIntroData.gd"
 
 [display]
 

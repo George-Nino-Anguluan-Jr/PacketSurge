@@ -49,6 +49,7 @@ const ALL_LESSONS = [
 var topic_states: Dictionary      = {}
 var time_spent: Dictionary        = {}
 var unlocked_towers: Array[String] = []
+var new_unlocked_towers: Array[String] = []
 var campaign_progress: Dictionary  = {
 	"placement_quiz_done": false,
 	"max_level_unlocked":  0,
@@ -226,9 +227,17 @@ func unlock_campaign_level(level_number: int) -> void:
 func unlock_tower(tower_id: String) -> void:
 	if tower_id not in unlocked_towers:
 		unlocked_towers.append(tower_id)
+		if tower_id not in new_unlocked_towers:
+			new_unlocked_towers.append(tower_id)
 
 func is_tower_unlocked(tower_id: String) -> bool:
 	return tower_id in unlocked_towers
+
+func get_new_unlocked_towers() -> Array[String]:
+	return new_unlocked_towers.duplicate()
+
+func mark_tower_seen(tower_id: String) -> void:
+	new_unlocked_towers.erase(tower_id)
 
 func is_level_unlocked(level_number: int) -> bool:
 	return level_number <= campaign_progress.get(
@@ -252,6 +261,7 @@ func save_progress() -> void:
 		"topic_states":      topic_states,
 		"time_spent":        time_spent,
 		"unlocked_towers":   unlocked_towers,
+		"new_unlocked_towers": new_unlocked_towers,
 		"campaign_progress": campaign_progress,
 	}
 	var json_string = JSON.stringify(data)
@@ -311,14 +321,20 @@ func load_progress() -> void:
 	for tower in loaded_towers:
 		unlocked_towers.append(str(tower))
 
+	var loaded_new = parsed.get("new_unlocked_towers", [])
+	new_unlocked_towers = []
+	for tower in loaded_new:
+		new_unlocked_towers.append(str(tower))
+
 	campaign_progress = parsed.get("campaign_progress", {})
 	print("[ProgressManager] Progress loaded.")
 
 func reset_all_progress() -> void:
-	topic_states      = {}
-	time_spent        = {}
-	unlocked_towers   = []
-	campaign_progress = {
+	topic_states        = {}
+	time_spent          = {}
+	unlocked_towers     = []
+	new_unlocked_towers = []
+	campaign_progress   = {
 		"placement_quiz_done": false,
 		"max_level_unlocked":  0,
 		"waves_completed":     0,
