@@ -24,6 +24,9 @@ var available_towers: Array  = [] # Holds all unlocked towers
 # Floating Card instances
 var active_cards: Array = []
 
+# Intro popup
+var _intro_popup: Control = null
+
 # ─── TOWER DEFINITIONS ─────────────────────────────────
 const TOWER_DEFINITIONS = {
 	"tower_array": {
@@ -139,6 +142,7 @@ func _ready() -> void:
 	_build_tower_cards()
 	_refresh_slots()
 	_refresh_start_btn()
+	_setup_intro_popup()
 
 # ─── LEFT PANEL ────────────────────────────────────────
 func _build_left_panel() -> void:
@@ -284,43 +288,40 @@ func _build_placeholders() -> void:
 
 # ─── TOWER CARD PREPARATION ────────────────────────────
 func _build_tower_cards() -> void:
-	# Clean up previous cards
 	for c in active_cards:
 		if is_instance_valid(c):
 			c.queue_free()
 	active_cards.clear()
-	
+
 	var required = level_config.get("required_towers", [])
-	
-	# Pre-select required towers
+	var new_towers = ProgressManager.get_new_unlocked_towers()
+
 	selected_towers = []
 	for t in required:
 		if available_towers.has(t):
 			selected_towers.append(t)
-			
-	# Create a floating card scene instance for each unlocked available tower
+
 	var card_scene = preload("res://scenes/campaign/tower_select/TowerCard.tscn")
-	
+
 	for i in range(available_towers.size()):
 		var tower_id = available_towers[i]
 		var def = TOWER_DEFINITIONS[tower_id]
 		var is_req = tower_id in required
-		
+
 		var card = card_scene.instantiate()
 		card_layer.add_child(card)
 		card.setup(tower_id, def, is_req)
-		
-		# Hook up interaction signals
+		card.set_new(tower_id in new_towers)
+
 		card.clicked.connect(_on_card_clicked)
 		card.drag_started.connect(_on_card_drag_started)
 		card.drag_ended.connect(_on_card_drag_ended)
-		
-		# Store coordinates of home position matching available placeholder slot i
+		card.info_requested.connect(_on_card_info_requested)
+
 		var anchor = available_grid.get_child(i)
 		card.home_position = anchor.global_position
-		
+
 		if is_req:
-			# Place locked required towers directly in selected slots if possible
 			var slot_idx = selected_towers.find(tower_id)
 			if slot_idx != -1 and slot_idx < max_slots:
 				card.current_slot_idx = slot_idx
@@ -330,7 +331,7 @@ func _build_tower_cards() -> void:
 				card.global_position = card.home_position
 		else:
 			card.global_position = card.home_position
-			
+
 		active_cards.append(card)
 
 # ─── SELECTION LOGIC ───────────────────────────────────
@@ -407,6 +408,29 @@ func _on_card_drag_ended(card, _release_pos: Vector2) -> void:
 		
 	_refresh_slots()
 	_refresh_start_btn()
+
+# ─── TOWER INTRO POPUP ────────────────────────────────
+func _setup_intro_popup() -> void:
+	var scene = preload("res://scenes/campaign/tower_intro/TowerIntroPopup.tscn")
+	_intro_popup = scene.instantiate()
+	add_child(_intro_popup)
+	_intro_popup.hide()
+	_intro_popup.closed.connect(_on_intro_closed)
+
+func _on_card_info_requested(tower_id: String) -> void:
+	if _intro_popup:
+		_intro_popup.show_for(tower_id)
+		_intro_popup.set_meta("viewing_tower", tower_id)
+
+func _on_intro_closed() -> void:
+	var viewed = _intro_popup.get_meta("viewing_tower", "")
+	if viewed == "":
+		return
+	for c in active_cards:
+		if is_instance_valid(c) and c.tower_id == viewed and c._is_new:
+			c.set_new(false)
+			ProgressManager.mark_tower_seen(viewed)
+			break
 
 # ─── HELPER METHODS ────────────────────────────────────
 func _get_card_by_id(tower_id: String):

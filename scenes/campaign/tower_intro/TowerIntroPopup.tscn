@@ -1,0 +1,171 @@
+[gd_scene format=3]
+
+[ext_resource type="Script" path="res://scenes/campaign/tower_intro/TowerIntroPopup.gd" id="1_dxxy7"]
+[ext_resource type="Script" path="res://scenes/campaign/tower_intro/TowerPreview.gd" id="2_w94sq"]
+
+[node name="TowerIntroPopup" type="Control"]
+layout_mode = 3
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+mouse_filter = 2
+script = ExtResource("1_dxxy7")
+
+[node name="Backdrop" type="ColorRect" parent="."]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+color = Color(0, 0, 0, 0.6)
+mouse_filter = 1
+
+[node name="Margin" type="MarginContainer" parent="Backdrop"]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+theme_override_constants/margin_left = 120
+theme_override_constants/margin_right = 120
+theme_override_constants/margin_top = 40
+theme_override_constants/margin_bottom = 40
+
+[node name="Panel" type="PanelContainer" parent="Backdrop/Margin"]
+layout_mode = 2
+size_flags_horizontal = 3
+size_flags_vertical = 3
+theme_override_constants/margin_left = 28
+theme_override_constants/margin_right = 28
+theme_override_constants/margin_top = 20
+theme_override_constants/margin_bottom = 20
+
+[node name="Content" type="VBoxContainer" parent="Backdrop/Margin/Panel"]
+layout_mode = 2
+theme_override_constants/separation = 8
+
+[node name="Header" type="HBoxContainer" parent="Backdrop/Margin/Panel/Content"]
+layout_mode = 2
+size_flags_horizontal = 3
+theme_override_constants/separation = 12
+
+[node name="IconLabel" type="Label" parent="Backdrop/Margin/Panel/Content/Header"]
+layout_mode = 2
+size_flags_vertical = 3
+theme_override_font_sizes/font_size = 36
+theme_override_colors/font_color = Color(0, 0.831, 1, 1)
+vertical_alignment = 1
+
+[node name="TitleLabel" type="Label" parent="Backdrop/Margin/Panel/Content/Header"]
+layout_mode = 2
+size_flags_horizontal = 3
+size_flags_vertical = 3
+theme_override_font_sizes/font_size = 24
+theme_override_colors/font_color = Color(0, 0.831, 1, 1)
+vertical_alignment = 1
+
+[node name="TaglineLabel" type="Label" parent="Backdrop/Margin/Panel/Content/Header"]
+layout_mode = 2
+size_flags_vertical = 3
+theme_override_font_sizes/font_size = 14
+theme_override_colors/font_color = Color(0, 0.831, 1, 1)
+vertical_alignment = 2
+
+[node name="PreviewWrap" type="Control" parent="Backdrop/Margin/Panel/Content"]
+layout_mode = 2
+size_flags_horizontal = 3
+custom_minimum_size = Vector2(0, 130)
+mouse_filter = 2
+
+[node name="Preview" type="Control" parent="Backdrop/Margin/Panel/Content/PreviewWrap"]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+mouse_filter = 2
+script = ExtResource("2_w94sq")
+
+[node name="Body" type="ScrollContainer" parent="Backdrop/Margin/Panel/Content"]
+layout_mode = 2
+size_flags_horizontal = 3
+size_flags_vertical = 3
+custom_minimum_size = Vector2(0, 180)
+
+[node name="BodyContent" type="VBoxContainer" parent="Backdrop/Margin/Panel/Content/Body"]
+layout_mode = 2
+size_flags_horizontal = 3
+size_flags_vertical = 3
+
+[node name="MechanicLabel" type="Label" parent="Backdrop/Margin/Panel/Content/Body/BodyContent"]
+layout_mode = 2
+size_flags_horizontal = 3
+size_flags_vertical = 0
+theme_override_font_sizes/font_size = 12
+theme_override_colors/font_color = Color(0.91, 0.957, 0.992, 1)
+autowrap_mode = 1
+
+[node name="TargetingLabel" type="Label" parent="Backdrop/Margin/Panel/Content/Body/BodyContent"]
+layout_mode = 2
+size_flags_horizontal = 3
+size_flags_vertical = 0
+theme_override_font_sizes/font_size = 12
+theme_override_colors/font_color = Color(0.91, 0.957, 0.992, 1)
+autowrap_mode = 1
+
+[node name="ShootingLabel" type="Label" parent="Backdrop/Margin/Panel/Content/Body/BodyContent"]
+layout_mode = 2
+size_flags_horizontal = 3
+size_flags_vertical = 0
+theme_override_font_sizes/font_size = 12
+theme_override_colors/font_color = Color(0.91, 0.957, 0.992, 1)
+autowrap_mode = 1
+
+[node name="AbilityLabel" type="Label" parent="Backdrop/Margin/Panel/Content/Body/BodyContent"]
+layout_mode = 2
+size_flags_horizontal = 3
+size_flags_vertical = 0
+theme_override_font_sizes/font_size = 12
+theme_override_colors/font_color = Color(0.91, 0.957, 0.992, 1)
+autowrap_mode = 1
+
+[node name="StrongBox" type="VBoxContainer" parent="Backdrop/Margin/Panel/Content/Body/BodyContent"]
+layout_mode = 2
+size_flags_horizontal = 3
+size_flags_vertical = 0
+theme_override_constants/separation = 2
+
+[node name="StrongContainer" type="VBoxContainer" parent="Backdrop/Margin/Panel/Content/Body/BodyContent/StrongBox"]
+layout_mode = 2
+size_flags_horizontal = 3
+size_flags_vertical = 0
+theme_override_constants/separation = 1
+
+[node name="WeakBox" type="VBoxContainer" parent="Backdrop/Margin/Panel/Content/Body/BodyContent"]
+layout_mode = 2
+size_flags_horizontal = 3
+size_flags_vertical = 0
+theme_override_constants/separation = 2
+
+[node name="WeakContainer" type="VBoxContainer" parent="Backdrop/Margin/Panel/Content/Body/BodyContent/WeakBox"]
+layout_mode = 2
+size_flags_horizontal = 3
+size_flags_vertical = 0
+theme_override_constants/separation = 1
+
+[node name="Footer" type="HBoxContainer" parent="Backdrop/Margin/Panel/Content"]
+layout_mode = 2
+size_flags_horizontal = 3
+alignment = 1
+
+[node name="CloseBtn" type="Button" parent="Backdrop/Margin/Panel/Content/Footer"]
+layout_mode = 2
+custom_minimum_size = Vector2(160, 36)
+theme_override_font_sizes/font_size = 14
+theme_override_colors/font_color = Color(0.91, 0.957, 0.992, 1)
+text = "GOT IT!"

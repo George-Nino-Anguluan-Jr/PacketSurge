@@ -53,7 +53,7 @@ const TOWER_DEFINITIONS = {
 		"description":    "Fast attack. O(1) access speed.",
 		"data_structure": "Array",
 		"ram_cost":       40,
-		"damage":         18.0,
+		"damage":         500.0,
 		"attack_speed":   2.0,
 		"attack_range":   140.0,
 		"time_complexity":"O(1)",
