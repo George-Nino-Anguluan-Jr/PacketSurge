@@ -26,6 +26,7 @@ extends Node2D
 @onready var timeline_flags: Control        = $HUD/HUDControl/TopHUD/TopLayout/WaveProgressTimeline/FlagsContainer
 @onready var skip_wave_btn: Button           = $HUD/HUDControl/TopHUD/TopLayout/SkipWaveBtn
 @onready var challenge_btn: Button           = $HUD/HUDControl/TopHUD/TopLayout/ChallengeBtn
+var _diff_badge: Button = null
 @onready var micro_panel: PanelContainer     = $HUD/HUDControl/MicroCodingPanel
 @onready var wave_splash: Control            = $HUD/HUDControl/WaveSplash
 @onready var wave_splash_label: Label        = $HUD/HUDControl/WaveSplash/WaveSplashLabel
@@ -310,7 +311,8 @@ func _ready() -> void:
 	_build_challenge_panel()
 	if level_number == 1:
 		_show_tutorial()
-	call_deferred("_show_challenge")
+	else:
+		call_deferred("_show_challenge")
 
 # ─── SETUP ─────────────────────────────────────────────
 func _setup_grid() -> void:
@@ -356,7 +358,7 @@ func _setup_level() -> void:
 		enemy_scene,
 		enemy_layer,
 		waypoints,
-		AdaptiveAI.get_wave_modifier(),
+		AdaptiveAI.get_wave_modifier(level_number),
 		config.get("enemy_types", ["basic_packet"])
 	)
 
@@ -375,6 +377,7 @@ func _setup_hud() -> void:
 	_build_tower_selector()
 	_setup_wave_timeline()
 	_setup_hud_icons()
+	_setup_diff_badge()
 
 func _setup_wave_timeline() -> void:
 	for child in timeline_flags.get_children():
@@ -601,6 +604,8 @@ func _show_tutorial_step() -> void:
 func _on_tutorial_next() -> void:
 	_tutorial_step += 1
 	_show_tutorial_step()
+	if _tutorial_overlay == null:
+		call_deferred("_show_challenge")
 
 func _create_overlay_menu() -> void:
 	# Use Control instead of PanelContainer for custom radial layout
@@ -979,8 +984,50 @@ func _update_wave_progress_bar() -> void:
 			wave_progress_bar.value = float(current_wave) + progress_frac
 			skip_wave_btn.disabled = false
 
+func _setup_diff_badge() -> void:
+	if _diff_badge != null and is_instance_valid(_diff_badge):
+		_diff_badge.queue_free()
+	var mod = AdaptiveAI.get_wave_modifier(level_number)
+	var label = _get_diff_label(mod)
+	_diff_badge = Button.new()
+	_diff_badge.text = label
+	_diff_badge.add_theme_color_override("font_color", _get_diff_color(mod))
+	_diff_badge.add_theme_font_size_override("font_size", 11)
+	_diff_badge.flat = true
+	_diff_badge.pressed.connect(_show_diff_popup.bind(mod))
+	challenge_btn.add_sibling(_diff_badge)
+
+func _show_diff_popup(mod: float) -> void:
+	SignalBus.hud_message_requested.emit(_get_diff_tip(mod), 3.0)
+
+func _get_diff_label(mod: float) -> String:
+	if mod < 0.7: return "⚡ EASY"
+	if mod < 0.95: return "⚡ NORMAL"
+	if mod < 1.25: return "⚡ HARD"
+	return "⚡ EXPERT"
+
+func _get_diff_color(mod: float) -> Color:
+	if mod < 0.7: return Color("#4A7FA5")
+	if mod < 0.95: return Color("#00FF88")
+	if mod < 1.25: return Color("#FFB800")
+	return Color("#FF3366")
+
+func _get_diff_tip(mod: float) -> String:
+	if mod < 0.7: return "Easy mode: Enemies have 30% less HP, move slower, and spawn slower."
+	if mod < 0.95: return "Normal mode: Default enemy stats."
+	if mod < 1.25: return "Hard mode: Enemies have 35% more HP, move faster, and spawn quicker!"
+	return "Expert mode: Enemies have 60% more HP, move much faster, and spawn back-to-back!"
+
 func _show_wave_splash_animation(wave_num: int) -> void:
-	wave_splash_label.text = "WAVE %d" % wave_num
+	var text = "WAVE %d" % wave_num
+	if wave_num == 1:
+		var mod = AdaptiveAI.get_wave_modifier(level_number)
+		var label = _get_diff_label(mod)
+		text += "\n" + label
+		print("[AdaptiveAI] Difficulty: ", label, " (", snapped(mod, 0.01), "x)")
+		_diff_badge.text = label
+		_diff_badge.add_theme_color_override("font_color", _get_diff_color(mod))
+	wave_splash_label.text = text
 	wave_splash_label.modulate = Color("#00FF88")
 	wave_splash_label.scale = Vector2(0.5, 0.5)
 	wave_splash_label.pivot_offset = wave_splash_label.size / 2.0
@@ -991,8 +1038,8 @@ func _show_wave_splash_animation(wave_num: int) -> void:
 	tween.tween_property(wave_splash_label, "scale", Vector2(1.2, 1.2), 0.4).set_trans(Tween.TRANS_BACK).set_ease(Tween.EASE_OUT)
 	
 	var seq = create_tween()
-	seq.tween_interval(1.2)
-	seq.tween_property(wave_splash_label, "modulate:a", 0.0, 0.4)
+	seq.tween_interval(1.8)
+	seq.tween_property(wave_splash_label, "modulate:a", 0.0, 0.5)
 	seq.tween_callback(func(): wave_splash.visible = false)
 
 # ─── INPUT ─────────────────────────────────────────────
