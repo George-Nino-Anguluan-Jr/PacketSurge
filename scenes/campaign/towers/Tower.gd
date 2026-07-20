@@ -24,6 +24,12 @@ var _flash_targets: Array[Vector2] = []  # Multiple flash lines for AoE/chain at
 var current_level: int         = 1
 var max_level: int             = 3
 
+# ─── PREVIEW MODE (Index screen) ───────────────────────
+# When true, the tower skips its gameplay loop (_process) and
+# just sits still as a static 3D model. Toggled externally;
+# default false so existing scenes behave identically.
+var preview_mode: bool         = false
+
 # Ability state
 var ability_cooldown: float    = 0.0
 var ability_max_cooldown: float = 8.0
@@ -209,6 +215,10 @@ func _animate_placement() -> void:
 	tween.tween_property(self, "scale", Vector2(1.35, 1.35), 0.35)
 
 func _process(delta: float) -> void:
+	if preview_mode:
+		_anim_time += delta
+		queue_redraw()
+		return
 	_anim_time += delta
 	attack_timer += delta
 	if ability_cooldown > 0:
