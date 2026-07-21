@@ -511,6 +511,7 @@ func _on_check_code_answer(editor: TextEdit) -> void:
 	var result_label = parent.get_node_or_null("CodeResultLabel") as Label
 	var output_label = parent.get_node_or_null("OutputLabel") as Label
 	if not result.success:
+		SoundManager.play_error()
 		if output_label:
 			output_label.text = "Error:\n" + result.error
 			output_label.add_theme_color_override("font_color", Color("#FF3366"))
@@ -523,12 +524,14 @@ func _on_check_code_answer(editor: TextEdit) -> void:
 	var passed = actual == expected
 	if result_label:
 		if passed:
+			SoundManager.play_success()
 			result_label.text = "✅ Correct! Output matches expected."
 			result_label.add_theme_color_override("font_color", Color("#00FF88"))
 			next_step_btn.disabled = false
 			if current_step not in completed_steps:
 				completed_steps.append(current_step)
 		else:
+			SoundManager.play_error()
 			result_label.text = "❌ Output doesn't match expected."
 			result_label.add_theme_color_override("font_color", Color("#FF3366"))
 			next_step_btn.disabled = true
@@ -671,12 +674,14 @@ func _check_code_answer(answer_area: VBoxContainer) -> void:
 
 	if result_label:
 		if passed:
+			SoundManager.play_success()
 			result_label.text = "✅ Correct! Well done."
 			result_label.add_theme_color_override("font_color", Color("#00FF88"))
 			next_step_btn.disabled = false
 			if current_step not in completed_steps:
 				completed_steps.append(current_step)
 		else:
+			SoundManager.play_error()
 			result_label.text = "❌ Not quite. Check the order and try again."
 			result_label.add_theme_color_override("font_color", Color("#FF3366"))
 			next_step_btn.disabled = true
@@ -713,6 +718,10 @@ func _show_practice_step() -> void:
 func _check_practice_answer(index: int, layout: VBoxContainer) -> void:
 	var explanation = layout.get_node_or_null("ExplanationLabel")
 	var passed      = index == current_lesson.practice_correct_index
+	if passed:
+		SoundManager.play_success()
+	else:
+		SoundManager.play_error()
 	if explanation:
 		explanation.text = current_lesson.practice_explanation
 		if passed:

@@ -7,7 +7,6 @@ extends Control
 @onready var general_content: VBoxContainer = $ContentArea/GeneralPanel/GeneralContent
 
 # ─── STATE ─────────────────────────────────────────────
-var sound_enabled: bool = true
 var music_enabled: bool = true
 var shake_enabled: bool = true
 
@@ -37,11 +36,11 @@ func _build_general() -> void:
 
 	general_content.add_child(_make_section_label("AUDIO"))
 	general_content.add_child(
-		_make_toggle_row(
-			"Sound Effects",
-			"Enable or disable all sound effects",
-			sound_enabled,
-			_on_sound_toggled
+		_make_slider_row(
+			"Effects Volume",
+			"Adjust sound effects volume",
+			SoundManager.get_effects_volume(),
+			_on_effects_volume_changed
 		)
 	)
 	general_content.add_child(
@@ -72,12 +71,8 @@ func _build_general() -> void:
 	general_content.add_child(_make_info_row("Developer", "Packet Surge Team"))
 
 # ─── GENERAL TOGGLE HANDLERS ───────────────────────────
-func _on_sound_toggled(val: bool) -> void:
-	sound_enabled = val
-	AudioServer.set_bus_mute(0, not val)
-	SignalBus.hud_message_requested.emit(
-		"Sound " + ("ON" if val else "OFF"), 2.0
-	)
+func _on_effects_volume_changed(val: float) -> void:
+	SoundManager.set_effects_volume(val)
 
 func _on_music_toggled(val: bool) -> void:
 	music_enabled = val
@@ -154,6 +149,82 @@ func _on_toggle_pressed(toggle: Button, on_toggle: Callable) -> void:
 	toggle.text = "ON" if new_val else "OFF"
 	_style_toggle_button(toggle, new_val)
 	on_toggle.call(new_val)
+
+# ─── SLIDER ROW ────────────────────────────────────────
+func _make_slider_row(
+		label: String,
+		description: String,
+		current_value: float,
+		on_changed: Callable) -> PanelContainer:
+
+	var card := PanelContainer.new()
+	card.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+
+	var style := StyleBoxFlat.new()
+	style.bg_color               = Color("#0A1628")
+	style.border_color           = Color("#1A3A5A")
+	style.border_width_left      = 1
+	style.border_width_right     = 1
+	style.border_width_top       = 1
+	style.border_width_bottom    = 1
+	style.corner_radius_top_left     = 4
+	style.corner_radius_top_right    = 4
+	style.corner_radius_bottom_left  = 4
+	style.corner_radius_bottom_right = 4
+	style.content_margin_left    = 16
+	style.content_margin_right   = 16
+	style.content_margin_top     = 12
+	style.content_margin_bottom  = 12
+	card.add_theme_stylebox_override("panel", style)
+
+	var row := VBoxContainer.new()
+	row.add_theme_constant_override("separation", 8)
+
+	var lbl := Label.new()
+	lbl.text = label
+	lbl.add_theme_font_size_override("font_size", 14)
+	lbl.add_theme_color_override("font_color", Color("#E8F4FD"))
+	row.add_child(lbl)
+
+	var desc := Label.new()
+	desc.text          = description
+	desc.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+	desc.add_theme_font_size_override("font_size", 11)
+	desc.add_theme_color_override("font_color", Color("#4A7FA5"))
+	row.add_child(desc)
+
+	var slider_box := HBoxContainer.new()
+	slider_box.add_theme_constant_override("separation", 12)
+
+	var slider := HSlider.new()
+	slider.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	slider.custom_minimum_size = Vector2(100, 0)
+	slider.min_value = 0.0
+	slider.max_value = 1.0
+	slider.step = 0.01
+	slider.value = current_value
+	slider.add_theme_color_override("grabber_color", Color("#00D4FF"))
+	slider.add_theme_color_override("fill_color", Color("#00D4FF"))
+	slider.add_theme_color_override("background_color", Color("#1A3A5A"))
+	slider_box.add_child(slider)
+
+	var pct_label := Label.new()
+	pct_label.custom_minimum_size = Vector2(40, 0)
+	pct_label.text = str(int(current_value * 100)) + "%"
+	pct_label.add_theme_font_size_override("font_size", 14)
+	pct_label.add_theme_color_override("font_color", Color("#00D4FF"))
+	pct_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_RIGHT
+	slider_box.add_child(pct_label)
+
+	row.add_child(slider_box)
+	card.add_child(row)
+
+	slider.value_changed.connect(func(val: float):
+		pct_label.text = str(int(val * 100)) + "%"
+		on_changed.call(val)
+	)
+
+	return card
 
 # ─── HELPERS ───────────────────────────────────────────
 func _make_section_label(text: String) -> Label:

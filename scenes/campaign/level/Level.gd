@@ -1166,6 +1166,10 @@ func _update_base_health_label() -> void:
 
 # ─── RESULT PANEL ──────────────────────────────────────
 func _show_result_panel(victory: bool) -> void:
+	if victory:
+		SoundManager.play_level_complete()
+	else:
+		SoundManager.play_game_over()
 	for child in game_over_panel.get_children():
 		child.queue_free()
 
