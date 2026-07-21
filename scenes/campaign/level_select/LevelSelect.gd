@@ -81,7 +81,7 @@ func _auto_scroll_to_current() -> void:
 	var tween = create_tween()
 	tween.set_ease(Tween.EASE_OUT)
 	tween.set_trans(Tween.TRANS_QUAD)
-	tween.tween_property(map_scroll, "h_scroll", int(center_offset), 0.8)
+	tween.tween_property(map_scroll, "scroll_horizontal", int(center_offset), 0.8)
 
 # ─── floating tooltip CARD setup ───────────────────────
 func _setup_floating_tooltip() -> void:

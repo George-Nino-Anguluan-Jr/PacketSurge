@@ -315,16 +315,27 @@ func _show_current_step() -> void:
 		child.queue_free()
 	_update_step_indicator()
 	_update_nav_buttons()
-	match current_step:
-		0: _show_concept_step()
-		1: _show_visualization_step()
-		2: _show_real_world_step()
-		3: _show_guided_step()
-		4: _show_block_puzzle_step()
-		5: _show_code_editor_step()
-		6: _show_practice_step()
-		7: _show_recap_step()
-		8: _show_complete_step()
+	if current_lesson.challenge_code.is_empty():
+		match current_step:
+			0: _show_concept_step()
+			1: _show_visualization_step()
+			2: _show_real_world_step()
+			3: _show_guided_step()
+			4: _show_block_puzzle_step()
+			5: _show_practice_step()
+			6: _show_recap_step()
+			7: _show_complete_step()
+	else:
+		match current_step:
+			0: _show_concept_step()
+			1: _show_visualization_step()
+			2: _show_real_world_step()
+			3: _show_guided_step()
+			4: _show_block_puzzle_step()
+			5: _show_code_editor_step()
+			6: _show_practice_step()
+			7: _show_recap_step()
+			8: _show_complete_step()
 	await get_tree().process_frame
 	scroll_area.scroll_vertical = 0
 
@@ -855,7 +866,10 @@ func _update_nav_buttons() -> void:
 		next_step_btn.disabled = true
 		return
 	back_step_btn.disabled = current_step == 0
-	if current_step == 4 or current_step == 5 or current_step == 6:
+	var needs_completion = current_step == 4 or current_step == 5
+	if not current_lesson.challenge_code.is_empty() and current_step == 6:
+		needs_completion = true
+	if needs_completion:
 		next_step_btn.disabled = current_step not in completed_steps
 	else:
 		next_step_btn.disabled = false
