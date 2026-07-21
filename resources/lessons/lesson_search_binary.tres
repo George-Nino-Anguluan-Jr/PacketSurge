@@ -1,6 +1,7 @@
 [gd_resource type="Resource" script_class="LessonData" format=3 uid="uid://djadipn5esgie"]
 
 [ext_resource type="Script" uid="uid://ciet8k3fqk8tr" path="res://scripts/data/LessonData.gd" id="1_xk5ya"]
+[ext_resource type="PackedScene" uid="uid://bv8s2d5f7h0g" path="res://scenes/academy/visualizations/VizBinarySearch.tscn" id="2_bn84h"]
 
 [resource]
 script = ExtResource("1_xk5ya")
@@ -9,6 +10,7 @@ title = "Binary Search"
 category = "data_structures"
 icon_text = "½"
 prerequisites = Array[String](["search_linear"])
+visualization_scene = ExtResource("2_bn84h")
 concept_text = "Binary Search is a fast search that works ONLY on sorted arrays.
 It repeatedly cuts the search range in half by comparing the target to the middle element.
 

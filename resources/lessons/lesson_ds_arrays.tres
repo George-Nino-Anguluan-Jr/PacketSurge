@@ -1,6 +1,7 @@
 [gd_resource type="Resource" script_class="LessonData" format=3 uid="uid://jc7po1d2w1h7"]
 
 [ext_resource type="Script" uid="uid://ciet8k3fqk8tr" path="res://scripts/data/LessonData.gd" id="1_mo1o6"]
+[ext_resource type="PackedScene" uid="uid://dg7hrcywlcjyy" path="res://scenes/academy/visualizations/VizArrays.tscn" id="2_qsa84"]
 
 [resource]
 script = ExtResource("1_mo1o6")
@@ -8,6 +9,7 @@ lesson_id = "ds_arrays"
 title = "Arrays"
 category = "data_structures"
 prerequisites = Array[String](["py_functions"])
+visualization_scene = ExtResource("2_qsa84")
 concept_text = "An array stores multiple items in a fixed-size sequence.
 Each item has a numbered position called an index, starting at 0.
 

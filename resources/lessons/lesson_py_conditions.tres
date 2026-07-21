@@ -1,6 +1,7 @@
 [gd_resource type="Resource" script_class="LessonData" format=3 uid="uid://bfc86ytyp0sb5"]
 
 [ext_resource type="Script" uid="uid://ciet8k3fqk8tr" path="res://scripts/data/LessonData.gd" id="1_artpg"]
+[ext_resource type="PackedScene" uid="uid://lla8kmg1ee38" path="res://scenes/academy/visualizations/VizConditions.tscn" id="2_iddpb"]
 
 [resource]
 script = ExtResource("1_artpg")
@@ -9,6 +10,7 @@ title = "Conditions"
 category = "python"
 icon_text = "?"
 prerequisites = Array[String](["py_loops"])
+visualization_scene = ExtResource("2_iddpb")
 concept_text = "Conditions let your code make decisions.
 Check if something is True or False and run different code.
 

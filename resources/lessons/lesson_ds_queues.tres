@@ -1,6 +1,7 @@
 [gd_resource type="Resource" script_class="LessonData" format=3 uid="uid://ba2hjywpum87f"]
 
 [ext_resource type="Script" uid="uid://ciet8k3fqk8tr" path="res://scripts/data/LessonData.gd" id="1_eftlh"]
+[ext_resource type="PackedScene" uid="uid://df3bprhcgboo" path="res://scenes/academy/visualizations/VizQueues.tscn" id="2_m1hvm"]
 
 [resource]
 script = ExtResource("1_eftlh")
@@ -9,6 +10,7 @@ title = "Queues"
 category = "data_structures"
 icon_text = "→"
 prerequisites = Array[String](["ds_stacks"])
+visualization_scene = ExtResource("2_m1hvm")
 concept_text = "A queue follows First In First Out (FIFO).
 The first item added is the first item removed.
 

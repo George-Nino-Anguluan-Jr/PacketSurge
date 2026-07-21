@@ -1,6 +1,7 @@
 [gd_resource type="Resource" script_class="LessonData" format=3 uid="uid://c83nfhavopace"]
 
 [ext_resource type="Script" uid="uid://ciet8k3fqk8tr" path="res://scripts/data/LessonData.gd" id="1_0x24s"]
+[ext_resource type="PackedScene" uid="uid://dxaf2h6n4t1r" path="res://scenes/academy/visualizations/VizCountingSort.tscn" id="2_ct84h"]
 
 [resource]
 script = ExtResource("1_0x24s")
@@ -9,6 +10,7 @@ title = "Counting Sort"
 category = "data_structures"
 icon_text = "#"
 prerequisites = Array[String](["sort_merge"])
+visualization_scene = ExtResource("2_ct84h")
 concept_text = "Counting Sort is different from other sorts — it doesn't compare elements.
 Instead, it counts how many times each value appears, then uses those counts to place elements in order.
 

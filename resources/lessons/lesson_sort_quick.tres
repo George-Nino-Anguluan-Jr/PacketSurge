@@ -1,6 +1,7 @@
 [gd_resource type="Resource" script_class="LessonData" format=3 uid="uid://ccjgr1oo6glkq"]
 
 [ext_resource type="Script" uid="uid://ciet8k3fqk8tr" path="res://scripts/data/LessonData.gd" id="1_xgqti"]
+[ext_resource type="PackedScene" uid="uid://cd6tn5r3q7g8" path="res://scenes/academy/visualizations/VizQuickSort.tscn" id="2_ql84h"]
 [resource]
 script = ExtResource("1_xgqti")
 lesson_id = "sort_quick"
@@ -8,6 +9,7 @@ title = "Quick Sort"
 category = "data_structures"
 icon_text = "⚡"
 prerequisites = Array[String](["sort_insertion"])
+visualization_scene = ExtResource("2_ql84h")
 concept_text = "Quick Sort picks a pivot element, then partitions the array so smaller elements go left and larger go right. Each half is then sorted the same way (recursively).
 
 How it works:
@@ -53,9 +55,9 @@ recap_text = "- Pick a pivot, partition into smaller/larger/equal
 - Very fast in practice — widely used
 - Not stable: equal elements may swap order"
 challenge_instruction = "Arrange the blocks to pick a pivot and partition the array into smaller and larger halves."
-challenge_blocks = Array[String](["pivot = arr[len(arr) // 2]", "left = []", "right = []", "for x in arr:", "if x < pivot: left.append(x)", "if x > pivot: right.append(x)", "print(left, pivot, right)", "arr = [3, 6, 8, 1]", "if x == pivot:"])
-correct_sequence = Array[String](["arr = [3, 6, 8, 1]", "pivot = arr[len(arr) // 2]", "left = []", "right = []", "for x in arr:", "if x < pivot: left.append(x)", "if x > pivot: right.append(x)", "print(left, pivot, right)"])
-code_template = "arr = [5, 2, 8, 1]
+challenge_blocks = Array[String](["pivot = arr[len(arr) // 2]", "left = []", "right = []", "for x in arr:", "if x < pivot: left.append(x)", "if x > pivot: right.append(x)", "print(left, pivot, right)", "arr = [8, 1, 5, 2]", "if x == pivot:"])
+correct_sequence = Array[String](["arr = [8, 1, 5, 2]", "pivot = arr[len(arr) // 2]", "left = []", "right = []", "for x in arr:", "if x < pivot: left.append(x)", "if x > pivot: right.append(x)", "print(left, pivot, right)"])
+code_template = "arr = [8, 1, 5, 2]
 pivot = arr[len(arr) // 2]
 left = []
 right = []
@@ -65,7 +67,7 @@ for x in arr:
     elif x > pivot:
         right.append(x)
 print(left, pivot, right)"
-challenge_code = "arr = [5, 2, 8, 1]
+challenge_code = "arr = [8, 1, 5, 2]
 pivot = arr[len(arr) // 2]
 left = []
 right = []

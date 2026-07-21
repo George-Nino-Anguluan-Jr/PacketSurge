@@ -311,6 +311,23 @@ func _eval_expr(expr, env, state):
 			state.err = "Cannot multiply " + _type_name(lt) + " and " + _type_name(rt) + "."
 			return null
 		return left * right
+	var fdiv_idx = _find_op(s, "//")
+	if fdiv_idx != -1:
+		var left = _eval_expr(s.substr(0, fdiv_idx).strip_edges(), env, state)
+		if not state.ok:
+			return null
+		var right = _eval_expr(s.substr(fdiv_idx + 2).strip_edges(), env, state)
+		if not state.ok:
+			return null
+		if not _is_numeric(left) or not _is_numeric(right):
+			state.ok = false
+			state.err = "Cannot floor divide " + _type_name(typeof(left)) + " and " + _type_name(typeof(right)) + "."
+			return null
+		if right == 0:
+			state.ok = false
+			state.err = "Division by zero."
+			return null
+		return int(left / right)
 	var div_idx = _find_op(s, "/")
 	if div_idx != -1:
 		var left = _eval_expr(s.substr(0, div_idx).strip_edges(), env, state)
