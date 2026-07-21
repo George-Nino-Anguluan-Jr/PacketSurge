@@ -10,65 +10,62 @@ title = "Lists"
 category = "python"
 prerequisites = Array[String](["py_variables"])
 visualization_scene = ExtResource("2_ontg8")
-concept_text = "A list is a collection that holds multiple values in order.
-Think of it like a row of labeled boxes, each with a number starting from 0.
+concept_text = "A list stores multiple items in a single variable.
+Items are ordered and each has a position number (index).
 
-In Python, you create a list like this:
-    fruits = [\"apple\", \"banana\", \"cherry\"]
+Create a list with square brackets:
+    colors = [\"red\", \"green\", \"blue\"]
 
-Each item has an index — its position in the list.
-    fruits[0] is \"apple\"
-    fruits[1] is \"banana\"
-    fruits[2] is \"cherry\"
+Indexes start at 0:
+    colors[0] → \"red\"
+    colors[1] → \"green\"
+    colors[2] → \"blue\"
 
-Lists can hold any type of value — numbers, text, or even other lists.
-You can also change, add, or remove items anytime."
-real_world_example = "Think of a playlist on your phone.
-Songs are arranged in order and each has a position number.
+Lists are flexible — you can add, remove, or change items."
+real_world_example = "Think of a shopping list on your fridge.
+You write items in order, cross them off, and add new ones.
 
-In Python:
-    playlist = [\"Song A\", \"Song B\", \"Song C\"]
+    shopping = [\"milk\", \"eggs\", \"bread\"]
+    print(shopping[0])  # milk
 
-You can:
-    Add a song:    playlist.append(\"Song D\")
-    Remove a song: playlist.remove(\"Song A\")
-    Play first:    print(playlist[0])
+    shopping.append(\"butter\")
+    print(shopping)     # [\"milk\", \"eggs\", \"bread\", \"butter\"]
 
-Lists work exactly like this — ordered, changeable, and indexed from 0."
-guided_example = "Let's build a student grade list step by step.
+    shopping.remove(\"eggs\")
+    print(shopping)     # [\"milk\", \"bread\", \"butter\"]"
+guided_example = "Let's manage a game inventory.
 
-Step 1 — Create the list:
-    grades = [88, 92, 75, 95, 60]
+Step 1 — Create the inventory:
+    inventory = [\"sword\", \"shield\", \"potion\"]
 
-Step 2 — Access individual grades:
-    print(grades[0])   # 88 (first grade)
-    print(grades[4])   # 60 (last grade)
+Step 2 — Check the first item:
+    print(inventory[0])   # sword
 
-Step 3 — Add a new grade:
-    grades.append(85)
-    print(grades)      # [88, 92, 75, 95, 60, 85]
+Step 3 — Add a new item:
+    inventory.append(\"ring\")
+    print(inventory)      # [\"sword\", \"shield\", \"potion\", \"ring\"]
 
-Step 4 — Find how many grades:
-    print(len(grades)) # 6
+Step 4 — Replace an item:
+    inventory[1] = \"armor\"
+    print(inventory[1])   # armor
 
-Step 5 — Change a grade:
-    grades[2] = 80
-    print(grades[2])   # 80"
-recap_text = "- A list stores multiple values in order
-- Lists use square brackets: [item1, item2, item3]
-- Items are accessed by index starting at 0
-- Use append() to add items
-- Use remove() to delete items
-- Use len() to count items
-- Lists are mutable — you can change them anytime"
-challenge_instruction = "Arrange the blocks to create a list of student namesand print the first one."
-challenge_blocks = Array[String](["students = [\"Ana\", \"Ben\", \"Carl\"]", "print(students[0])", "students = \"Ana\", \"Ben\", \"Carl\"", "print(students[1])", "[students] = [\"Ana\", \"Ben\", \"Carl\"]"])
-correct_sequence = Array[String](["students = [\"Ana\", \"Ben\", \"Carl\"]", "print(students[0])"])
-code_template = "students = [\"___\", \"Ben\", \"Carl\"]\nprint(students[0])"
-challenge_code = "students = [\"Ana\", \"Ben\", \"Carl\"]\nprint(students[0])"
-expected_output = "Ana"
-challenge_hint = "Lists use square brackets [].Index 0 is always the first item."
-practice_question = "What is the output of this code?    colors = [\"red\", \"green\", \"blue\"]    print(colors[2])"
-practice_options = Array[String](["red", "green", "blue", "colors[2]"])
-practice_correct_index = 2
-practice_explanation = "Index 2 refers to the third item in the list.Lists start counting from 0, so:    colors[0] = \"red\"    colors[1] = \"green\"    colors[2] = \"blue\""
+Step 5 — Count items:
+    print(len(inventory)) # 4"
+recap_text = "- Lists hold multiple values in one variable
+- Use [] brackets: items = [\"a\", \"b\", \"c\"]
+- Index starts at 0: items[0] is the first item
+- append() adds to the end
+- remove() deletes an item
+- len() counts the items
+- You can change any item by assigning to its index"
+challenge_instruction = "Arrange the blocks to create a list of power-ups and print the second one."
+challenge_blocks = Array[String](["powerups = [\"mushroom\", \"star\", \"flower\"]", "print(powerups[1])", "powerups = \"mushroom\", \"star\", \"flower\"", "print(powerups[2])", "list powerups = [\"mushroom\", \"star\", \"flower\"]"])
+correct_sequence = Array[String](["powerups = [\"mushroom\", \"star\", \"flower\"]", "print(powerups[1])"])
+code_template = "items = [\"___\", \"bow\", \"arrow\"]\nprint(items[0])"
+challenge_code = "items = [\"sword\", \"bow\", \"arrow\"]\nprint(items[0])"
+expected_output = "sword"
+challenge_hint = "Use square brackets [ ] for lists. Index 1 gives the second item. Remember: lists start counting at 0!"
+practice_question = "What does len() tell you about a list?"
+practice_options = Array[String](["The number of items in the list", "The last item in the list", "The first item in the list", "The total size of the list in memory"])
+practice_correct_index = 0
+practice_explanation = "len() returns the number of items (length) of the list. For example, len([10, 20, 30]) returns 3."

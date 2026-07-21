@@ -11,83 +11,87 @@ category = "python"
 icon_text = "?"
 prerequisites = Array[String](["py_loops"])
 visualization_scene = ExtResource("2_iddpb")
-concept_text = "A condition lets your code make decisions.
-It checks if something is true or false, then runs different code.
+concept_text = "Conditions let your code make decisions.
+Check if something is True or False and run different code.
 
-In Python:
-    if condition:
-        # runs if true
-    elif other_condition:
-        # runs if first was false but this is true
+Python uses if, elif, and else:
+    age = 18
+    if age >= 18:
+        print(\"Adult\")
     else:
-        # runs if nothing above was true
+        print(\"Minor\")
+    # Output: Adult
 
-Example:
-    score = 85
-    if score >= 90:
-        print(\"Excellent\")
-    elif score >= 75:
-        print(\"Good\")
+Comparison operators:
+    ==  equal to
+    !=  not equal
+    >   greater than
+    <   less than
+    >=  greater or equal
+    <=  less or equal"
+real_world_example = "A traffic light system decides what to do:
+
+    light_color = \"red\"
+
+    if light_color == \"green\":
+        print(\"Go!\")
+    elif light_color == \"yellow\":
+        print(\"Slow down\")
     else:
-        print(\"Keep practicing\")
-    Output: Good"
-real_world_example = "Think of a tower defense game deciding what to do with an enemy.
+        print(\"Stop\")
 
-    enemy_health = 30
-    if enemy_health <= 0:
-        print(\"Enemy defeated!\")
-    elif enemy_health < 50:
-        print(\"Enemy is weak — focus fire!\")
+    # Output: Stop
+
+The program checks each condition from top to bottom.
+The first matching condition runs, and the rest are skipped."
+guided_example = "Let's write a temperature guide.
+
+Step 1 — Set temperature:
+    temp = 30
+
+Step 2 — Add conditions:
+    if temp > 35:
+        print(\"Very hot!\")
+    elif temp > 25:
+        print(\"Warm\")
+    elif temp > 15:
+        print(\"Cool\")
     else:
-        print(\"Enemy is strong — use more towers!\")
+        print(\"Cold\")
 
-Output: Enemy is weak — focus fire!
+    # Output: Warm
 
-Conditions let your program react to different situations automatically."
-guided_example = "Let's build a grade classifier step by step.
-
-Step 1 — Get a grade:
-    grade = 78
-
-Step 2 — Check conditions in order:
-    if grade >= 90:
-        result = \"A\"
-    elif grade >= 80:
-        result = \"B\"
-    elif grade >= 70:
-        result = \"C\"
-    else:
-        result = \"F\"
-
-Step 3 — Print the result:
-    print(\"Grade:\", result)
-    Output: Grade: C
-
-Note: Python checks conditions top to bottom.
-The first true condition wins and the rest are skipped."
-recap_text = "- if checks a condition and runs code if true
-- elif checks another condition if the first was false
-- else runs when no condition above was true
-- Comparison operators: == != > < >= <=
-- Logical operators: and, or, not
-- Conditions always evaluate to True or False
-- Python checks top to bottom — first match wins"
-challenge_instruction = "Arrange the blocks to check if health is low and print a warning."
-challenge_blocks = Array[String](["health = 20", "if health < 30:", "    print(\"Warning: Low health!\")", "else:", "    print(\"Health is fine.\")", "health > 30:", "if print(\"Warning: Low health!\")"])
-correct_sequence = Array[String](["health = 20", "if health < 30:", "    print(\"Warning: Low health!\")", "else:", "    print(\"Health is fine.\")"])
-challenge_hint = "Use if condition: then indent the body with 4 spaces.Use else: for the alternative. Print inside each block."
-code_template = "health = 20
-if health < 30:
+Step 3 — Test with different values:
+    temp = 10  → \"Cold\"
+    temp = 40  → \"Very hot!\"
+    temp = 20  → \"Cool\""
+recap_text = "- if runs code when a condition is True
+- elif checks another condition if previous ones were False
+- else catches everything that didn't match
+- Use == to compare values
+- Use >, <, >=, <= for number comparisons
+- Conditions are checked top to bottom
+- Indent the code inside each condition"
+challenge_instruction = "Arrange the blocks to check if a number is positive, negative, or zero."
+challenge_blocks = Array[String](["number = -5", "if number > 0:", "    print(\"Positive\")", "elif number < 0:", "    print(\"Negative\")", "else:", "    print(\"Zero\")", "if number > 0", "    print \"Positive\""])
+correct_sequence = Array[String](["number = -5", "if number > 0:", "    print(\"Positive\")", "elif number < 0:", "    print(\"Negative\")", "else:", "    print(\"Zero\")"])
+code_template = "num = ___
+if num > 0:
     print(\"___\")
+elif num < 0:
+    print(\"Negative\")
 else:
-    print(\"Health is fine.\")"
-challenge_code = "health = 20
-if health < 30:
-    print(\"Warning: Low health!\")
+    print(\"___\")"
+challenge_code = "num = 7
+if num > 0:
+    print(\"Positive\")
+elif num < 0:
+    print(\"Negative\")
 else:
-    print(\"Health is fine.\")"
-expected_output = "Warning: Low health!"
-practice_question = "What will this code print?    x = 10    if x > 20: print(\"Big\")    elif x > 5: print(\"Medium\")    else: print(\"Small\")"
-practice_options = Array[String](["Big", "Medium", "Small", "Nothing"])
+    print(\"Zero\")"
+expected_output = "Positive"
+challenge_hint = "Start with a number. Use if/elif/else to check if it's above, below, or equal to zero. Don't forget the colons :"
+practice_question = "What does this code print?    x = 7    if x > 10: print(\"Big\")    else: print(\"Small\")"
+practice_options = Array[String](["Big", "Small", "7", "Nothing"])
 practice_correct_index = 1
-practice_explanation = "x = 10.First condition: 10 > 20 is False — skip.Second condition: 10 > 5 is True — print \"Medium\".The else block is skipped because a condition already matched."
+practice_explanation = "Since 7 is NOT greater than 10, the if condition is False. The else block runs instead and prints \"Small\"."
