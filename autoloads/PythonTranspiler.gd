@@ -311,6 +311,23 @@ func _eval_expr(expr, env, state):
 			state.err = "Cannot multiply " + _type_name(lt) + " and " + _type_name(rt) + "."
 			return null
 		return left * right
+	var mod_idx = _find_op(s, "%")
+	if mod_idx != -1:
+		var left = _eval_expr(s.substr(0, mod_idx).strip_edges(), env, state)
+		if not state.ok:
+			return null
+		var right = _eval_expr(s.substr(mod_idx + 1).strip_edges(), env, state)
+		if not state.ok:
+			return null
+		if not _is_numeric(left) or not _is_numeric(right):
+			state.ok = false
+			state.err = "Cannot modulo " + _type_name(typeof(left)) + " and " + _type_name(typeof(right)) + "."
+			return null
+		if right == 0:
+			state.ok = false
+			state.err = "Modulo by zero."
+			return null
+		return int(left) % int(right)
 	var fdiv_idx = _find_op(s, "//")
 	if fdiv_idx != -1:
 		var left = _eval_expr(s.substr(0, fdiv_idx).strip_edges(), env, state)
@@ -405,6 +422,9 @@ func _eval_expr(expr, env, state):
 				if state.ok and typeof(obj) == TYPE_ARRAY:
 					obj.append(arg)
 					return obj
+	if s.begins_with("(") and s.ends_with(")"):
+		var inner = s.substr(1, s.length() - 2).strip_edges()
+		return _eval_expr(inner, env, state)
 	var paren_idx = s.find("(")
 	if paren_idx != -1 and s.ends_with(")"):
 		var fname = s.substr(0, paren_idx).strip_edges()
@@ -474,6 +494,32 @@ func _eval_expr(expr, env, state):
 	if idx_br != -1 and s.ends_with("]"):
 		var var_name = s.substr(0, idx_br).strip_edges()
 		var index_str = s.substr(idx_br + 1, s.length() - idx_br - 2).strip_edges()
+		# Handle slice syntax: arr[start:end] or arr[:end] or arr[start:] or arr[:]
+		var colon_idx = index_str.find(":")
+		if colon_idx != -1:
+			var start_str = index_str.substr(0, colon_idx).strip_edges()
+			var end_str = index_str.substr(colon_idx + 1).strip_edges()
+			if env.has(var_name):
+				var target = env[var_name]
+				if typeof(target) == TYPE_ARRAY:
+					var start_idx = 0 if start_str == "" else _eval_expr(start_str, env, state)
+					if not state.ok:
+						return null
+					var end_idx = target.size() if end_str == "" else _eval_expr(end_str, env, state)
+					if not state.ok:
+						return null
+					if typeof(start_idx) != TYPE_INT or typeof(end_idx) != TYPE_INT:
+						state.ok = false
+						state.err = "Slice indices must be integers."
+						return null
+					if start_idx < 0:
+						start_idx = max(0, target.size() + start_idx)
+					if end_idx < 0:
+						end_idx = max(0, target.size() + end_idx)
+					var result = []
+					for si in range(start_idx, min(end_idx, target.size())):
+						result.append(target[si])
+					return result
 		var index = _eval_expr(index_str, env, state)
 		if state.ok and env.has(var_name):
 			var target = env[var_name]
