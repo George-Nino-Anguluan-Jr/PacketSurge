@@ -133,8 +133,8 @@ func update_content_scale() -> void:
 		if size.x < 1000 or size.y < 600:
 			scale_factor = max(base_scale, 1.25)
 	else:
-		# On desktop platforms, scale up or down proportionally with the window size to guarantee perfectly responsive scenes
-		scale_factor = max(0.65, base_scale)
+		# Desktop uses Godot's built-in stretch mode — no manual content scale needed
+		return
 			
 	get_window().content_scale_factor = scale_factor
 
