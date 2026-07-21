@@ -308,11 +308,15 @@ func _ready() -> void:
 	_on_viewport_size_changed()
 	_create_overlay_menu()
 	_setup_sounds()
+	SoundManager.play_level_music(level_number)
 	_build_challenge_panel()
 	if level_number == 1:
 		_show_tutorial()
 	else:
 		call_deferred("_show_challenge")
+
+func _exit_tree() -> void:
+	SoundManager.stop_music()
 
 # ─── SETUP ─────────────────────────────────────────────
 func _setup_grid() -> void:
@@ -1166,9 +1170,8 @@ func _update_base_health_label() -> void:
 
 # ─── RESULT PANEL ──────────────────────────────────────
 func _show_result_panel(victory: bool) -> void:
+	SoundManager.stop_music()
 	if victory:
-		SoundManager.play_level_complete()
-	else:
 		SoundManager.play_game_over()
 	for child in game_over_panel.get_children():
 		child.queue_free()
