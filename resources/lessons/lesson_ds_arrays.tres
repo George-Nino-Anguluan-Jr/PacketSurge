@@ -10,79 +10,77 @@ title = "Arrays"
 category = "data_structures"
 prerequisites = Array[String](["py_functions"])
 visualization_scene = ExtResource("2_qsa84")
-concept_text = "An array is a data structure that stores items in a fixed sequence.
-Each item is stored at a numbered position called an index, starting at 0.
+concept_text = "An array stores multiple items in a fixed-size sequence.
+Each item has a numbered position called an index, starting at 0.
 
-Unlike Python lists, traditional arrays have a fixed size —
-you decide how many items it can hold when you create it.
+In Python, we use lists to work like arrays:
+    scores = [0, 0, 0, 0]   # array with 4 slots
 
-In Python we simulate arrays using lists:
-    array = [0, 0, 0, 0, 0]   # 5 slots, all empty
+Access any item instantly by its index:
+    print(scores[0])   # first item
+    scores[2] = 95     # change the third item
 
-Key properties:
-    Access:  O(1) — instant access by index
-    Search:  O(n) — may need to check every item
-    Insert:  O(n) — shifting items is expensive
-    Delete:  O(n) — shifting items is expensive
+Key speeds:
+- Access by index: fast (O(1))
+- Search without index: slow (O(n))
+- Insert/delete in middle: slow (O(n))"
+real_world_example = "Think of a parking lot with numbered spots.
+Spot 3 is always the third spot from the start.
+You can go straight to spot 3 without checking spots 1 and 2.
 
-Arrays are the foundation of almost every other data structure."
-real_world_example = "Think of a row of lockers at school.
-Each locker has a number and holds exactly one item.
-You can go directly to locker 7 without checking 1 through 6.
+    parking = [\"\", \"\", \"\", \"\", \"\"]
+    parking[0] = \"Car A\"
+    parking[3] = \"Car B\"
+    print(parking[0])   # Car A — instant!
+    print(parking[3])   # Car B — instant!
 
-In Python:
-    lockers = [\"\", \"\", \"\", \"\", \"\"]   # 5 empty lockers
-    lockers[0] = \"Math Book\"
-    lockers[3] = \"Lunch Box\"
-    print(lockers[0])   # Math Book — instant access!
-    print(lockers[3])   # Lunch Box — instant access!
+Finding a specific car without knowing its spot:
+    for car in parking:
+        if car == \"Car B\":
+            print(\"Found!\")   # must check each one"
+guided_example = "Let's track daily temperatures.
 
-This is O(1) access — it doesn't matter if there are 5 or 5 million lockers.
-Going to locker 3 takes the same time as going to locker 3,000,000."
-guided_example = "Let's simulate a student grade array step by step.
+Step 1 — Create an array of 7 slots (one per day):
+    temps = [0, 0, 0, 0, 0, 0, 0]
 
-Step 1 — Create an array of 5 slots:
-    grades = [0, 0, 0, 0, 0]
+Step 2 — Fill in temperatures:
+    temps[0] = 72
+    temps[1] = 75
+    temps[2] = 68
+    temps[3] = 70
+    temps[4] = 73
 
-Step 2 — Fill in grades by index:
-    grades[0] = 88
-    grades[1] = 92
-    grades[2] = 75
-    grades[3] = 95
-    grades[4] = 60
+Step 3 — Read Wednesday's temp (index 2):
+    print(temps[2])   # 68 — O(1) instant access
 
-Step 3 — Access a specific grade:
-    print(grades[2])    # 75 — O(1) instant access
+Step 4 — Find the highest temp:
+    highest = temps[0]
+    for t in temps:
+        if t > highest:
+            highest = t
+    print(highest)    # 75 — O(n) checks all
 
-Step 4 — Find the highest grade:
-    highest = grades[0]
-    for grade in grades:
-        if grade > highest:
-            highest = grade
-    print(highest)      # 95 — O(n) search
-
-Step 5 — Update a grade:
-    grades[4] = 70
-    print(grades)       # [88, 92, 75, 95, 70]"
-recap_text = "- Arrays store items in fixed sequential positions
-- Index starts at 0 — always
-- Access by index is O(1) — the fastest operation
-- Searching without an index is O(n) — checks each item
-- Inserting or deleting requires shifting — O(n)
-- Arrays are the base of stacks, queues, and more
-- Best used when: you know the size, need fast access by position"
-challenge_instruction = "Arrange the blocks to create an array, set a valueat index 2, and print it."
-challenge_blocks = Array[String](["data = [0, 0, 0, 0, 0]", "data[2] = 42", "print(data[2])", "data = [0, 0, 0, 0, 0", "print(data[3])", "data[2] == 42"])
-correct_sequence = Array[String](["data = [0, 0, 0, 0, 0]", "data[2] = 42", "print(data[2])"])
-challenge_hint = "Create: data = [0, 0, 0, 0, 0]Assign: data[2] = 42Print: print(data[2])"
-code_template = "data = [0, 0, 0, 0, 0]
-data[___] = 42
-print(data[2])"
-challenge_code = "data = [0, 0, 0, 0, 0]
-data[2] = 42
-print(data[2])"
-expected_output = "42"
-practice_question = "What is the time complexity of accessing an itemby index in an array?"
-practice_options = Array[String](["O(n) — depends on array size", "O(log n) — binary search", "O(1) — constant time", "O(n²) — quadratic time"])
-practice_correct_index = 2
-practice_explanation = "Array access by index is O(1) — constant time.The computer calculates the exact memory location directly.It doesn't matter if the array has 5 or 5 million items —accessing index 3 always takes the same time."
+Step 5 — Update a value:
+    temps[4] = 74
+    print(temps)      # [72, 75, 68, 70, 74, 0, 0]"
+recap_text = "- Arrays store items in a fixed sequence
+- Index starts at 0
+- Access by index is O(1) — instant
+- Searching without index is O(n) — checks each item
+- Inserting/deleting needs shifting — O(n)
+- Great for: fixed-size data, fast position-based access"
+challenge_instruction = "Arrange the blocks to create an array, change the first item to 99, and print it."
+challenge_blocks = Array[String](["nums = [0, 0, 0]", "nums[0] = 99", "print(nums[0])", "nums = [0, 0, 0", "nums[0] == 99", "print(nums[1])"])
+correct_sequence = Array[String](["nums = [0, 0, 0]", "nums[0] = 99", "print(nums[0])"])
+challenge_hint = "Create with: nums = [0, 0, 0]. Assign with: nums[0] = 99. Print with: print(nums[0])."
+code_template = "nums = [0, 0, 0]
+nums[___] = 55
+print(nums[1])"
+challenge_code = "nums = [0, 0, 0]
+nums[1] = 55
+print(nums[1])"
+expected_output = "55"
+practice_question = "What is the index of the first item in an array?"
+practice_options = Array[String](["1", "0", "-1", "It depends on the array"])
+practice_correct_index = 1
+practice_explanation = "Array indexes always start at 0. The first item is at index 0, the second at index 1, and so on. This is true in Python and most programming languages."

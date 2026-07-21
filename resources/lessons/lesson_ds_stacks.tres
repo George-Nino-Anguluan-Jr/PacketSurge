@@ -11,11 +11,10 @@ category = "data_structures"
 icon_text = "↑↓"
 prerequisites = Array[String](["ds_arrays"])
 visualization_scene = ExtResource("2_t55l4")
-concept_text = "A stack is a data structure that follows Last In First Out (LIFO).
-The last item you add is the first one you can remove.
+concept_text = "A stack follows Last In First Out (LIFO).
+The last item added is the first item removed.
 
-Think of it like a stack of plates —
-you can only add or remove from the top.
+Think of a stack of plates — you add to the top and remove from the top.
 
 Two main operations:
     push  — add an item to the top
@@ -23,71 +22,69 @@ Two main operations:
 
 In Python:
     stack = []
-    stack.append(\"A\")   # push A
-    stack.append(\"B\")   # push B
-    stack.append(\"C\")   # push C
-    print(stack.pop())  # pop → C (last in, first out)
-    print(stack.pop())  # pop → B
+    stack.append(\"A\")     # push A
+    stack.append(\"B\")     # push B
+    print(stack.pop())    # pop → B (last in, first out)
+    print(stack.pop())    # pop → A
 
-Time complexity:
-    Push: O(1)
-    Pop:  O(1)
-    Peek: O(1)"
-real_world_example = "Think of the Undo button in any app.
-Every action you do gets pushed onto a stack.
-When you press Undo, the most recent action is popped off.
+All operations are fast (O(1))."
+real_world_example = "Think of a browser's back button.
+Each page you visit gets pushed onto a stack.
+Clicking Back pops the most recent page.
 
+    history = []
+    history.append(\"Home\")      # push
+    history.append(\"About\")     # push
+    history.append(\"Contact\")   # push
+
+    print(history.pop())        # → Contact
+    print(history.pop())        # → About
+    print(history.pop())        # → Home
+
+The most recent page is always returned first."
+guided_example = "Let's use a stack to track game actions.
+
+Step 1 — Create empty stack:
     actions = []
-    actions.append(\"typed Hello\")    # push
-    actions.append(\"deleted Hello\")  # push
-    actions.append(\"typed World\")    # push
 
-    undone = actions.pop()           # pop → \"typed World\"
-    print(\"Undone:\", undone)
+Step 2 — Player performs actions:
+    actions.append(\"jump\")
+    actions.append(\"shoot\")
+    actions.append(\"dodge\")
 
-    undone = actions.pop()           # pop → \"deleted Hello\"
-    print(\"Undone:\", undone)
+Step 3 — Look at the top (peek):
+    print(actions[-1])      # dodge
 
-This is exactly how real Undo/Redo systems work — using a stack."
-guided_example = "Let's build a stack to track a player's moves.
+Step 4 — Undo the last action:
+    last = actions.pop()
+    print(\"Undid:\", last)   # Undid: dodge
+    print(actions)           # [\"jump\", \"shoot\"]
 
-Step 1 — Create an empty stack:
-    move_stack = []
-
-Step 2 — Push moves as player acts:
-    move_stack.append(\"move_north\")
-    move_stack.append(\"move_east\")
-    move_stack.append(\"attack\")
-    print(move_stack)
-    # [\"move_north\", \"move_east\", \"attack\"]
-
-Step 3 — Peek at the top (without removing):
-    print(move_stack[-1])   # \"attack\"
-
-Step 4 — Pop to undo last move:
-    undone = move_stack.pop()
-    print(\"Undid:\", undone)   # Undid: attack
-    print(move_stack)
-    # [\"move_north\", \"move_east\"]
-
-Step 5 — Check if empty:
-    if len(move_stack) == 0:
-        print(\"No moves to undo\")"
-recap_text = "- Stacks follow LIFO — Last In First Out
-- push adds to the top — O(1)
+Step 5 — Undo again:
+    last = actions.pop()
+    print(\"Undid:\", last)   # Undid: shoot"
+recap_text = "- Stacks use LIFO: Last In, First Out
+- push (= append) adds to the top — O(1)
 - pop removes from the top — O(1)
-- peek views the top without removing — O(1)
-- In Python use a list: append() to push, pop() to pop
-- Real uses: Undo systems, browser back button, call stack
-- Only the top item is ever directly accessible"
-challenge_instruction = "Arrange the blocks to push two items onto a stackand pop the last one."
-challenge_blocks = Array[String](["stack = []", "stack.append(\"first\")", "stack.append(\"second\")", "print(stack.pop())", "stack.push(\"first\")", "print(stack[0])", "stack = {}"])
-correct_sequence = Array[String](["stack = []", "stack.append(\"first\")", "stack.append(\"second\")", "print(stack.pop())"])
-code_template = "stack = []\nstack.append(\"___\")\nstack.append(\"second\")\nprint(stack.pop())"
-challenge_code = "stack = []\nstack.append(\"first\")\nstack.append(\"second\")\nprint(stack.pop())"
-expected_output = "second"
-challenge_hint = "In Python, stacks use a regular list.append() is push — adds to the end (top).pop() removes and returns the last item (top)."
-practice_question = "What does LIFO stand for and which structure uses it?"
-practice_options = Array[String](["Last In First Out — Queue", "Last In First Out — Stack", "Last Item Found Online — Stack", "Linear Index For Output — Array"])
+- peek (= [-1]) views the top — O(1)
+- In Python: use a list with append() and pop()
+- Real uses: undo systems, browser history, call stack"
+challenge_instruction = "Arrange the blocks to push three items onto a stack and pop and print the last one."
+challenge_blocks = Array[String](["stack = []", "stack.append(\"x\")", "stack.append(\"y\")", "stack.append(\"z\")", "print(stack.pop())", "stack.push(\"x\")", "print(stack[0])"])
+correct_sequence = Array[String](["stack = []", "stack.append(\"x\")", "stack.append(\"y\")", "stack.append(\"z\")", "print(stack.pop())"])
+code_template = "stack = []
+stack.append(\"___\")
+stack.append(\"middle\")
+stack.append(\"last\")
+print(stack.pop())"
+challenge_code = "stack = []
+stack.append(\"first\")
+stack.append(\"middle\")
+stack.append(\"last\")
+print(stack.pop())"
+expected_output = "last"
+challenge_hint = "Use a list as a stack. append() adds to the top. pop() removes and returns the top item."
+practice_question = "What will this code print?    s = []    s.append(1)    s.append(2)    print(s.pop())"
+practice_options = Array[String](["1", "2", "[1, 2]", "Nothing"])
 practice_correct_index = 1
-practice_explanation = "LIFO stands for Last In First Out.Stacks use LIFO — the most recently added item is the first to be removed.Queues use FIFO (First In First Out) — the opposite."
+practice_explanation = "Items are pushed in order: 1 then 2. The stack is [1, 2] with 2 on top. pop() removes and returns the top item, so it prints 2."
