@@ -7,7 +7,6 @@ extends Control
 @onready var general_content: VBoxContainer = $ContentArea/GeneralPanel/GeneralContent
 
 # ─── STATE ─────────────────────────────────────────────
-var music_enabled: bool = true
 var shake_enabled: bool = true
 
 # ─── READY ─────────────────────────────────────────────
@@ -44,11 +43,11 @@ func _build_general() -> void:
 		)
 	)
 	general_content.add_child(
-		_make_toggle_row(
-			"Music",
-			"Enable or disable background music",
-			music_enabled,
-			_on_music_toggled
+		_make_slider_row(
+			"Music Volume",
+			"Adjust background music volume",
+			SoundManager.get_music_volume(),
+			_on_music_volume_changed
 		)
 	)
 
@@ -74,11 +73,8 @@ func _build_general() -> void:
 func _on_effects_volume_changed(val: float) -> void:
 	SoundManager.set_effects_volume(val)
 
-func _on_music_toggled(val: bool) -> void:
-	music_enabled = val
-	SignalBus.hud_message_requested.emit(
-		"Music " + ("ON" if val else "OFF"), 2.0
-	)
+func _on_music_volume_changed(val: float) -> void:
+	SoundManager.set_music_volume(val)
 
 func _on_shake_toggled(val: bool) -> void:
 	shake_enabled = val
