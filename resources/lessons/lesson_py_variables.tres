@@ -10,69 +10,71 @@ title = "Variables"
 category = "python"
 icon_text = "[x]"
 visualization_scene = ExtResource("2_3o5rh")
-concept_text = "A variable is a named container that stores a value.
-Think of it like a labeled box — you put something
-inside it and refer to it by the label whenever you need it.
+concept_text = "A variable is like a labeled box where you store information.
+You give it a name and put a value inside.
 
-In Python, you create a variable like this:
-    name = \"Alice\"
-    age = 17
-    score = 0
+Example:
+    player_name = \"Alex\"
+    player_score = 100
+    is_ready = True
 
-The variable name is on the left.
-The value is on the right.
-The = sign assigns the value to the name."
-real_world_example = "Imagine a scoreboard at a basketball game.
-The scoreboard has a label \"HOME\" and shows a number.
-That number changes as the game goes on.
+The variable name goes on the LEFT of the = sign.
+The value goes on the RIGHT.
 
-In Python:
-    home_score = 0
-    home_score = 42
+Python automatically knows the type of data stored."
+real_world_example = "Imagine a whiteboard where you write the daily special.
+You erase and rewrite it every day — same label, new value.
 
-The label (home_score) stays the same.
-The value inside it can change anytime."
-guided_example = "Let's create variables for a student profile.
+    special = \"Monday: Pizza\"
+    print(special)
 
-Step 1 — Store the student's name:
-    student_name = \"Maria\"
+    special = \"Tuesday: Pasta\"
+    print(special)
 
-Step 2 — Store their year level:
-    year_level = 1
+The label \"special\" stays the same, but the value changes.
+This is how variables work in Python."
+guided_example = "Let's create a player profile.
 
-Step 3 — Store their current grade:
-    grade = 88.5
+Step 1 — Store the player name:
+    username = \"ProGamer99\"
 
-Step 4 — Print them out:
-    print(student_name)
-    print(year_level)
-    print(grade)
+Step 2 — Store their level:
+    level = 5
+
+Step 3 — Store their health:
+    health = 100
+
+Step 4 — Display everything:
+    print(username)
+    print(level)
+    print(health)
 
 Output:
-    Maria
-    1
-    88.5"
-recap_text = "- A variable stores a value under a name
-- Use = to assign a value to a variable
-- Variable names should be descriptive
-- Values can be text (str), numbers (int/float), or true/false (bool)
-- Variables can be updated anytime by assigning a new value"
-challenge_instruction = "Arrange the blocks to create two variables,assign them values, then print both."
-challenge_blocks = Array[String](["name = \"PlayerOne\"", "score = 0", "print(name)", "print(score)", "= \"PlayerOne\" name", "0 = score"])
-correct_sequence = Array[String](["name = \"PlayerOne\"", "score = 0", "print(name)", "print(score)"])
-challenge_hint = "Variable assignment: name = valueThe variable name goes FIRST, then =, then the value.Use print(name) to display it."
-code_template = "name = \"___\"
-score = ___
-print(name)
-print(score)"
-challenge_code = "name = \"PlayerOne\"
-score = 0
-print(name)
-print(score)"
-expected_output = "PlayerOne
-0"
-practice_question = "Which of the following correctly creates a variable called 'lives' with a value of 3?"
-practice_options = Array[String](["3 = lives", "lives == 3", "lives = 3", "var lives = 3"])
-practice_correct_index = 2
-practice_explanation = "In Python, variables are assigned using a single = sign.The variable name goes on the LEFT, the value on the RIGHT.lives = 3 is correct.Note: == is for comparison, not assignment.var is used in other languages like JavaScript, not Python."
+    ProGamer99
+    5
+    100"
+recap_text = "- Variables store data under a name
+- Use = to assign: name = value
+- Variable names should describe what they hold
+- Common types: str (text), int (whole number), float (decimal), bool (True/False)
+- You can change a variable's value anytime
+- Variables must be created before use"
+challenge_instruction = "Arrange the blocks to store a player's high score and lives, then display both."
+challenge_blocks = Array[String](["high_score = 9999", "lives = 3", "print(high_score)", "print(lives)", "9999 = high_score", "print high_score"])
+correct_sequence = Array[String](["high_score = 9999", "lives = 3", "print(high_score)", "print(lives)"])
+challenge_hint = "Create variables with: name = value. The name goes on the LEFT of =. Use print(name) to display it."
+code_template = "game = \"___\"
+level = ___
+print(game)
+print(level)"
+challenge_code = "game = \"Super Mario\"
+level = 1
+print(game)
+print(level)"
+expected_output = "Super Mario
+1"
+practice_question = "What will this code do?    x = 5    print(x)"
+practice_options = Array[String](["Show the number 5", "Show the letter x", "Cause an error", "Show \"x\""])
+practice_correct_index = 0
+practice_explanation = "The variable x stores the value 5. When you write print(x), Python looks up the value stored in x and prints 5. It does NOT print the letter 'x'."
 metadata/_custom_type_script = "uid://b3jcovwhgerid"

@@ -11,81 +11,83 @@ category = "python"
 icon_text = "↺"
 prerequisites = Array[String](["py_lists"])
 visualization_scene = ExtResource("2_24ibr")
-concept_text = "A loop repeats a block of code multiple times.
-Instead of writing the same line 10 times, you write it once inside a loop.
+concept_text = "A loop lets you run the same code multiple times.
+Instead of repeating yourself, write the code once inside a loop.
 
-Python has two main loop types:
-
-FOR loop — repeats for each item in a sequence:
+For loop — repeats for each item:
     for i in range(5):
         print(i)
-    Output: 0 1 2 3 4
+    # Prints: 0 1 2 3 4
 
-WHILE loop — repeats while a condition is true:
-    count = 0
-    while count < 3:
+While loop — repeats while a condition is true:
+    count = 1
+    while count <= 3:
         print(count)
-        count += 1
-    Output: 0 1 2"
-real_world_example = "Imagine checking every student's grade in a class.
-Instead of reading each grade manually, you loop through the list.
+        count = count + 1
+    # Prints: 1 2 3
 
-In Python:
-    grades = [88, 92, 75, 95]
-    for grade in grades:
-        print(grade)
+Loops save time and make your code shorter."
+real_world_example = "Imagine printing tickets for 5 guests.
+Without a loop, you'd write print(\"ticket\") five times.
+With a loop:
 
-Output:
-    88
-    92
-    75
-    95
+    for guest in range(5):
+        print(\"Ticket printed\")
 
-The loop visits each item automatically — no matter how long the list is."
-guided_example = "Let's use a loop to count down from 5.
+    # Output:
+    # Ticket printed
+    # Ticket printed
+    # Ticket printed
+    # Ticket printed
+    # Ticket printed
 
-Step 1 — Using range():
-    for i in range(5, 0, -1):
-        print(i)
-    Output: 5 4 3 2 1
+The loop handles the repetition for you."
+guided_example = "Let's count even numbers from 2 to 10.
 
-Step 2 — Loop through a list:
-    towers = [\"Array\", \"Stack\", \"Queue\"]
-    for tower in towers:
-        print(\"Deploying:\", tower)
-    Output:
-        Deploying: Array
-        Deploying: Stack
-        Deploying: Queue
+Step 1 — Use range with step:
+    for num in range(2, 11, 2):
+        print(num)
+    # Output: 2 4 6 8 10
 
-Step 3 — Loop with index:
-    for i in range(len(towers)):
-        print(i, towers[i])
-    Output:
-        0 Array
-        1 Stack
-        2 Queue"
-recap_text = "- Loops repeat code automatically
-- for loops iterate over a sequence or range
-- while loops repeat while a condition is true
-- range(n) generates numbers from 0 to n-1
-- range(start, stop, step) gives more control
-- Use loops to process lists without repeating code
-- Always make sure while loops have an exit condition"
-challenge_instruction = "Arrange the blocks to create a list of scoresand loop through and print each one."
-challenge_blocks = Array[String](["scores = [10, 20, 30]", "for score in scores:", "    print(score)", "for score in range(scores):", "    print score"])
-correct_sequence = Array[String](["scores = [10, 20, 30]", "for score in scores:", "    print(score)"])
-challenge_hint = "Create the list: scores = [10, 20, 30]Loop: for score in scores:    print(score)"
-code_template = "scores = [10, 20, 30]
-for score in scores:
-    print(___)"
-challenge_code = "scores = [10, 20, 30]
-for score in scores:
-    print(score)"
-expected_output = "10
-20
-30"
-practice_question = "How many times will this loop print?    for i in range(3): print(\"hello\")"
-practice_options = Array[String](["2 times", "3 times", "4 times", "0 times"])
+Step 2 — Loop through names:
+    players = [\"Ana\", \"Bob\", \"Eve\"]
+    for p in players:
+        print(\"Hello,\", p)
+    # Output:
+    # Hello, Ana
+    # Hello, Bob
+    # Hello, Eve
+
+Step 3 — Use a while loop:
+    x = 1
+    while x <= 5:
+        print(x * 2)
+        x = x + 1
+    # Output: 2 4 6 8 10"
+recap_text = "- for loops iterate over items or a range of numbers
+- while loops run as long as a condition is True
+- range(n) gives numbers 0 to n-1
+- range(start, stop, step) gives custom sequences
+- Use loops to avoid repeating code
+- Indent the code inside the loop with 4 spaces"
+challenge_instruction = "Arrange the blocks to print numbers 1 to 5 using a while loop."
+challenge_blocks = Array[String](["num = 1", "while num <= 5:", "    print(num)", "    num = num + 1", "for num in range(5):", "while num > 5:"])
+correct_sequence = Array[String](["num = 1", "while num <= 5:", "    print(num)", "    num = num + 1"])
+code_template = "count = ___
+while count <= 5:
+    print(count)
+    count = count + ___"
+challenge_code = "count = 1
+while count <= 5:
+    print(count)
+    count = count + 1"
+expected_output = "1
+2
+3
+4
+5"
+challenge_hint = "Start with count = 1. Use while count <= 5: to keep looping. Inside, print count then add 1 each time."
+practice_question = "How many times does this loop print?    for i in range(4):    print(i)"
+practice_options = Array[String](["3", "4", "5", "0"])
 practice_correct_index = 1
-practice_explanation = "range(3) generates: 0, 1, 2That is 3 values, so the loop runs 3 times.Remember: range(n) starts at 0 and stops before n."
+practice_explanation = "range(4) generates 0, 1, 2, 3 — that's 4 values. So the loop body runs 4 times. Note: range(4) gives 0 through 3, not 1 through 4."

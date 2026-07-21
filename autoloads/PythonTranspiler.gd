@@ -34,7 +34,7 @@ func _exec_block(lines, idx, depth, env, state):
 				state.err = "Invalid function definition."
 				return
 			var fname = parts[0].substr(4).strip_edges()
-			var params_str = parts[1].substr(0, parts[1].length() - 1).strip_edges()
+			var params_str = parts[1].substr(0, parts[1].length() - 2).strip_edges()
 			var params = []
 			if params_str != "":
 				for p in params_str.split(","):
@@ -175,6 +175,8 @@ func _exec_stmt(stripped, env, state):
 		if state.ok:
 			state.output += str(val) + "\n"
 		return
+	if stripped.begins_with("def ") or stripped.begins_with("if ") or stripped.begins_with("elif ") or stripped.begins_with("else:") or stripped.begins_with("for ") or stripped.begins_with("while ") or stripped.begins_with("return "):
+		return
 	if "=" in stripped and not "==" in stripped:
 		var parts = stripped.split("=", true, 1)
 		if parts.size() == 2:
@@ -199,8 +201,6 @@ func _exec_stmt(stripped, env, state):
 				state.ok = false
 				state.err = "Invalid assignment: '" + lhs + "' is not a valid variable name or array index."
 				return
-	if stripped.begins_with("def ") or stripped.begins_with("if ") or stripped.begins_with("elif ") or stripped.begins_with("else:") or stripped.begins_with("for ") or stripped.begins_with("while ") or stripped.begins_with("return "):
-		return
 	if "(" in stripped and stripped.ends_with(")"):
 		_eval_expr(stripped, env, state)
 		return
@@ -417,7 +417,12 @@ func _call_func(fname, args, env, state):
 		var s = line.strip_edges()
 		if s.begins_with("return "):
 			var r = s.substr(7).strip_edges()
-			return _eval_expr(r, local_env, func_state)
+			var val = _eval_expr(r, local_env, func_state)
+			if not func_state.ok:
+				state.ok = false
+				state.err = func_state.err
+				return null
+			return val
 		_exec_stmt(s, local_env, func_state)
 		if not func_state.ok:
 			state.ok = false
