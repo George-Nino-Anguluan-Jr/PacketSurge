@@ -171,11 +171,16 @@ func _advance_to(lines, start, depth):
 func _exec_stmt(stripped, env, state):
 	if stripped.begins_with("print("):
 		var inner = stripped.substr(6, stripped.length() - 7).strip_edges()
-		var val = _eval_expr(inner, env, state)
-		if state.ok:
-			state.output += str(val) + "\n"
+		var args = _split_print_args(inner)
+		var parts = []
+		for a in args:
+			var v = _eval_expr(a.strip_edges(), env, state)
+			if not state.ok:
+				return
+			parts.append(str(v))
+		state.output += " ".join(parts) + "\n"
 		return
-	if stripped.begins_with("def ") or stripped.begins_with("if ") or stripped.begins_with("elif ") or stripped.begins_with("else:") or stripped.begins_with("for ") or stripped.begins_with("while ") or stripped.begins_with("return "):
+	if stripped.begins_with("def ") or stripped.begins_with("if ") or stripped.begins_with("elif ") or stripped.begins_with("else:") or stripped.begins_with("for ") or stripped.begins_with("while ") or stripped.begins_with("return ") or stripped.begins_with("from ") or stripped.begins_with("import "):
 		return
 	if "=" in stripped and not "==" in stripped:
 		var parts = stripped.split("=", true, 1)
@@ -349,6 +354,7 @@ func _eval_expr(expr, env, state):
 					r.append(i)
 					i += 1
 				return r
+			"deque": return []
 		if env.has(fname):
 			return _call_func(fname, arg_vals, env, state)
 		var dot_idx = fname.find(".")
@@ -370,6 +376,11 @@ func _eval_expr(expr, env, state):
 						"extend":
 							if arg_vals.size() == 1:
 								obj.append_array(arg_vals[0])
+							return null
+						"popleft": return obj.pop_at(0)
+						"appendleft":
+							if arg_vals.size() == 1:
+								obj.insert(0, arg_vals[0])
 							return null
 						_:
 							state.ok = false
@@ -453,6 +464,37 @@ func _split_comma(s):
 			depth -= 1
 			current += c
 		elif c == "," and depth == 0:
+			result.append(current.strip_edges())
+			current = ""
+		else:
+			current += c
+	if current.strip_edges() != "":
+		result.append(current.strip_edges())
+	return result
+
+func _split_print_args(s):
+	var result = []
+	var depth = 0
+	var in_single = false
+	var in_double = false
+	var current = ""
+	for i in range(s.length()):
+		var c = s[i]
+		if c == "'" and not in_double:
+			in_single = not in_single
+			current += c
+		elif c == "\"" and not in_single:
+			in_double = not in_double
+			current += c
+		elif c == "(" or c == "[":
+			if not in_single and not in_double:
+				depth += 1
+			current += c
+		elif c == ")" or c == "]":
+			if not in_single and not in_double:
+				depth -= 1
+			current += c
+		elif c == "," and depth == 0 and not in_single and not in_double:
 			result.append(current.strip_edges())
 			current = ""
 		else:

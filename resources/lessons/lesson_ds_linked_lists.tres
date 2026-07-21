@@ -9,73 +9,82 @@ lesson_id = "ds_linked_lists"
 title = "Linked Lists"
 category = "data_structures"
 icon_text = "→→"
-prerequisites = Array[String](["ds_queuesds_queues"])
+prerequisites = Array[String](["ds_queues"])
 visualization_scene = ExtResource("2_1p6j0")
-concept_text = "A Linked List is a data structure where elements (nodes) are stored in sequence, but not in consecutive memory locations. Instead, each node contains a value and a pointer (or reference) to other nodes in the sequence.
+concept_text = "A linked list is a chain of nodes where each node holds a value and points to the next node.
 
-There are three basic forms of linked lists:
+Unlike arrays, nodes are not stored in consecutive memory spots.
+Each node knows where the next one is.
 
-1. Singly Linked Lists:
-   - Each node contains a value AND a single pointer \"next\" pointing to the next node.
-   - Traversal can only be done in one direction (forward).
-   - The last node points to None/Null.
-   - [ value | next → ] → [ value | next → ] → None
+    Node1               Node2               Node3
+    [value | next] →    [value | next] →    [value | next] → None
 
-2. Doubly Linked Lists:
-   - Each node contains a value AND two pointers: \"next\" (to the next node) and \"prev\" (to the previous node).
-   - Allows bi-directional traversal (forward and backward).
-   - Requires more memory for the extra pointer.
-   - None ← [ prev | value | next ] ↔ [ prev | value | next ] → None
+Types of linked lists:
+- Singly: each node points only forward
+- Doubly: each node points forward and backward
+- Circular: last node points back to the first
 
-3. Circular Linked Lists:
-   - The last node's \"next\" pointer points back to the first node (head), instead of pointing to None.
-   - Can be Singly or Doubly linked.
-   - Useful for circular loops (like round-robin scheduling or board game turns).
-   - [ value | next → ] → [ value | next → ] → (loops back to head)"
-real_world_example = "Let's look at real-world examples for each type:
+Key speeds:
+- Access: slow O(n) — must walk the chain
+- Insert at known position: fast O(1)
+- Delete at known position: fast O(1)"
+real_world_example = "Think of a treasure hunt where each clue leads to the next.
 
-1. Singly Linked List: A scavenger hunt where each clue leads to the next. You can't go backward because you don't know where you came from, only where to go next!
-   - Clue1 → Clue2 → Clue3 → None
+    Clue 1: \"Check the tree\" → Clue 2: \"Look under the rock\"
+    → Clue 3: \"Open the chest\" → Done
 
-2. Doubly Linked List: Web Browser History or Music Playlist. You can click \"Next\" (forward) to go to the next page/song, or \"Back\" (backward) to return to the previous page/song!
-   - Page1 ↔ Page2 ↔ Page3
+Each clue knows only the location of the next clue.
+You must follow the chain from the start — you can't jump to Clue 3.
 
-3. Circular Linked List: A multiplayer board game (like Monopoly) where players take turns. After the last player (Player 4) completes their turn, the turn loops back to the first player (Player 1)!
-   - Player1 → Player2 → Player3 → Player4 → (loops back to Player1)"
-guided_example = "Let's see how each of these is implemented in Python:
+Doubly linked: like a music playlist where you can skip forward or go back to the previous song.
 
-1. Singly Linked List Node:
-    class SinglyNode:
-        def __init__(self, value):
-            self.value = value
-            self.next = None
+Circular linked: like a board game where turns cycle from the last player back to the first."
+guided_example = "Let's build a simple chain of two nodes.
 
-2. Doubly Linked List Node:
-    class DoublyNode:
-        def __init__(self, value):
-            self.value = value
-            self.next = None
-            self.prev = None
+Step 1 — Create two node values:
+    node1_val = 5
+    node2_val = 10
 
-3. Circular Linked List (Singly-based):
-    # Setup a circular loop of 2 nodes
-    head = SinglyNode(10)
-    second = SinglyNode(20)
-    head.next = second
-    second.next = head  # Loops back to head!"
-recap_text = "- Linked Lists store nodes dynamically without a fixed size in memory.
-- Singly Linked Lists only point forward. Simple to implement, low memory overhead, but unidirectional.
-- Doubly Linked Lists point both forward and backward. Bi-directional traversal, but uses extra memory.
-- Circular Linked Lists loop back from the tail to the head. Great for round-robin applications and repeating queues.
-- Key complexities: Access O(n), Search O(n), Insertion/Deletion O(1) (if node position is known)."
-challenge_instruction = "Arrange the blocks to set up a Doubly Linked List node, then set up two nodes connected bi-directionally."
-challenge_blocks = Array[String](["class Node:    def __init__(self, value):        self.value = value        self.next = None        self.prev = None", "a = Node(1)", "b = Node(2)", "a.next = b", "b.prev = a", "a.value = b", "b.value = a"])
-correct_sequence = Array[String](["class Node:    def __init__(self, value):        self.value = value        self.next = None        self.prev = None", "a = Node(1)", "b = Node(2)", "a.next = b", "b.prev = a"])
-code_template = "node1 = ___\nnode2 = 2\nprint(node1)\nprint(node2)"
-challenge_code = "node1 = 1\nnode2 = 2\nprint(node1)\nprint(node2)"
-expected_output = "1\n2"
-challenge_hint = "Define the Node class with both next and prev attributes. Instantiate nodes a and b, then link a.next to b, and b.prev back to a."
-practice_question = "Which type of linked list allows traversing backwards and forwards, but uses the most memory per node?"
-practice_options = Array[String](["Singly Linked List", "Doubly Linked List", "Circular Singly Linked List", "Array List"])
+Step 2 — Link them (node1 → node2):
+    node1_next = \"node2\"
+
+Step 3 — Start at the head and follow:
+    current = \"node1\"
+    while current != None:
+        if current == \"node1\":
+            print(node1_val)
+            current = node1_next
+        elif current == \"node2\":
+            print(node2_val)
+            current = None
+
+    Output:
+    5
+    10
+
+This shows the core idea: each node knows the next one.
+You walk from the head through the chain until you hit None."
+recap_text = "- Linked lists store nodes connected by pointers
+- Singly: each node has a next pointer
+- Doubly: each node has next and prev pointers
+- Access is O(n) — must follow the chain
+- Insert/delete at known position is O(1)
+- No fixed size limit — grows dynamically"
+challenge_instruction = "Arrange the blocks to create two linked nodes and print the first one's value."
+challenge_blocks = Array[String](["first = 7", "second = 3", "next_node = \"second\"", "print(first)", "print(second)", "first = 7 second = 3"])
+correct_sequence = Array[String](["first = 7", "second = 3", "next_node = \"second\"", "print(first)"])
+challenge_hint = "Create the node values with variables. The next pointer can be a string naming the next node. Print the head node's value."
+code_template = "head = ___
+tail = ___
+print(\"Head:\", head)
+print(\"Tail:\", tail)"
+challenge_code = "head = 10
+tail = 20
+print(\"Head:\", head)
+print(\"Tail:\", tail)"
+expected_output = "Head: 10\nTail: 20"
+challenge_hint = "Create variables for each node's value. The first node is the head, the last is the tail."
+practice_question = "How do you access a specific item in a singly linked list?"
+practice_options = Array[String](["Directly by index, like an array", "You must follow the chain from the head", "You use a hash function", "Items are accessed randomly"])
 practice_correct_index = 1
-practice_explanation = "Doubly Linked Lists store both \"next\" and \"prev\" pointers for every node, allowing complete bi-directional traversal at the cost of additional memory overhead per node."
+practice_explanation = "Linked lists don't have indexes like arrays. To find an item, you must start at the head node and follow the next pointers until you find the value you're looking for. This takes O(n) time."
