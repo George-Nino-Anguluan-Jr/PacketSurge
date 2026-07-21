@@ -183,6 +183,14 @@ func _exec_stmt(stripped, env, state):
 	if stripped.begins_with("def ") or stripped.begins_with("if ") or stripped.begins_with("elif ") or stripped.begins_with("else:") or stripped.begins_with("for ") or stripped.begins_with("while ") or stripped.begins_with("return ") or stripped.begins_with("from ") or stripped.begins_with("import "):
 		return
 	if "=" in stripped and not "==" in stripped:
+		# Handle compound assignment: += -= *= /=
+		for op_str in ["+=", "-=", "*=", "/="]:
+			if op_str in stripped:
+				var idx = stripped.find(op_str)
+				var lhs = stripped.substr(0, idx).strip_edges()
+				var rhs = stripped.substr(idx + 2).strip_edges()
+				stripped = lhs + " = " + lhs + " " + op_str[0] + " " + rhs
+				break
 		var parts = stripped.split("=", true, 1)
 		if parts.size() == 2:
 			var lhs = parts[0].strip_edges()
@@ -240,6 +248,30 @@ func _eval_expr(expr, env, state):
 					return null
 				arr.append(v)
 		return arr
+	# Handle logical operators: or (lowest precedence), then and
+	var or_idx = _find_op(s, " or ")
+	if or_idx != -1:
+		var left = _eval_expr(s.substr(0, or_idx).strip_edges(), env, state)
+		if not state.ok:
+			return null
+		if left:
+			return left
+		return _eval_expr(s.substr(or_idx + 4).strip_edges(), env, state)
+	var and_idx = _find_op(s, " and ")
+	if and_idx != -1:
+		var left = _eval_expr(s.substr(0, and_idx).strip_edges(), env, state)
+		if not state.ok:
+			return null
+		if not left:
+			return left
+		return _eval_expr(s.substr(and_idx + 5).strip_edges(), env, state)
+	# Handle not (prefix operator)
+	if s.begins_with("not "):
+		var val = _eval_expr(s.substr(4).strip_edges(), env, state)
+		if not state.ok:
+			return null
+		return not val
+
 	var ops_compare = ["==", "!=", "<=", ">=", "<", ">"]
 	for op in ops_compare:
 		var idx = _find_op(s, op)
@@ -250,6 +282,13 @@ func _eval_expr(expr, env, state):
 			var right = _eval_expr(s.substr(idx + op.length()).strip_edges(), env, state)
 			if not state.ok:
 				return null
+			if op in ["<", ">", "<=", ">="]:
+				var lt = typeof(left)
+				var rt = typeof(right)
+				if not ((lt == TYPE_INT or lt == TYPE_FLOAT) and (rt == TYPE_INT or rt == TYPE_FLOAT)):
+					state.ok = false
+					state.err = "Cannot compare " + _type_name(lt) + " and " + _type_name(rt) + " with " + op + "."
+					return null
 			match op:
 				"==": return left == right
 				"!=": return left != right
@@ -265,6 +304,12 @@ func _eval_expr(expr, env, state):
 		var right = _eval_expr(s.substr(mult_idx + 1).strip_edges(), env, state)
 		if not state.ok:
 			return null
+		var lt = typeof(left)
+		var rt = typeof(right)
+		if not ((_is_numeric(left) and _is_numeric(right)) or (lt == TYPE_ARRAY and rt == TYPE_INT) or (lt == TYPE_INT and rt == TYPE_ARRAY)):
+			state.ok = false
+			state.err = "Cannot multiply " + _type_name(lt) + " and " + _type_name(rt) + "."
+			return null
 		return left * right
 	var div_idx = _find_op(s, "/")
 	if div_idx != -1:
@@ -273,6 +318,10 @@ func _eval_expr(expr, env, state):
 			return null
 		var right = _eval_expr(s.substr(div_idx + 1).strip_edges(), env, state)
 		if not state.ok:
+			return null
+		if not _is_numeric(left) or not _is_numeric(right):
+			state.ok = false
+			state.err = "Cannot divide " + _type_name(typeof(left)) + " and " + _type_name(typeof(right)) + "."
 			return null
 		if right == 0:
 			state.ok = false
@@ -287,11 +336,22 @@ func _eval_expr(expr, env, state):
 		var right = _eval_expr(s.substr(plus_idx + 1).strip_edges(), env, state)
 		if not state.ok:
 			return null
-		if typeof(left) == TYPE_STRING or typeof(right) == TYPE_STRING:
+		var lt = typeof(left)
+		var rt = typeof(right)
+		if lt == TYPE_STRING or rt == TYPE_STRING:
 			return str(left) + str(right)
-		if typeof(left) == TYPE_FLOAT or typeof(right) == TYPE_FLOAT:
+		if lt == TYPE_FLOAT or rt == TYPE_FLOAT:
 			return float(left) + float(right)
-		return left + right
+		if _is_numeric(left) and _is_numeric(right):
+			return left + right
+		if lt == TYPE_ARRAY and rt == TYPE_ARRAY:
+			var out = []
+			out.append_array(left)
+			out.append_array(right)
+			return out
+		state.ok = false
+		state.err = "Cannot add " + _type_name(lt) + " and " + _type_name(rt) + "."
+		return null
 	var minus_idx = _find_op(s, "-")
 	if minus_idx != -1:
 		var left = _eval_expr(s.substr(0, minus_idx).strip_edges(), env, state)
@@ -299,6 +359,10 @@ func _eval_expr(expr, env, state):
 			return null
 		var right = _eval_expr(s.substr(minus_idx + 1).strip_edges(), env, state)
 		if not state.ok:
+			return null
+		if not _is_numeric(left) or not _is_numeric(right):
+			state.ok = false
+			state.err = "Cannot subtract " + _type_name(typeof(left)) + " and " + _type_name(typeof(right)) + "."
 			return null
 		return left - right
 	var idx_dot = _find_op(s, ".")
@@ -520,6 +584,21 @@ func _find_op(s, op):
 		elif c == ')' or c == ']':
 			depth -= 1
 	return -1
+
+func _is_numeric(v) -> bool:
+	var t = typeof(v)
+	return t == TYPE_INT or t == TYPE_FLOAT
+
+func _type_name(t: int) -> String:
+	match t:
+		TYPE_NIL:       return "None"
+		TYPE_BOOL:      return "bool"
+		TYPE_INT:       return "int"
+		TYPE_FLOAT:     return "float"
+		TYPE_STRING:    return "str"
+		TYPE_ARRAY:     return "list"
+		TYPE_DICTIONARY: return "dict"
+		_:              return "unknown"
 
 func _count_ws(s):
 	var n = 0

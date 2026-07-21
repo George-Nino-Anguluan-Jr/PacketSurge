@@ -45,12 +45,13 @@ func initialize(
 		p_speed: float,
 		p_type: String = "basic_packet",
 		p_type_data: Dictionary = {}) -> void:
-	waypoints      = p_waypoints
-	max_health     = p_health
-	current_health = p_health
-	move_speed     = p_speed
-	enemy_type     = p_type
-	type_data      = p_type_data
+	waypoints          = p_waypoints
+	current_waypoint   = 0
+	max_health         = p_health
+	current_health     = p_health
+	move_speed         = p_speed
+	enemy_type         = p_type
+	type_data          = p_type_data
 	_setup_type()
 	if waypoints.size() > 0:
 		position = waypoints[0]
@@ -264,6 +265,20 @@ func _move_toward_waypoint(delta: float) -> void:
 
 	velocity      = direction * move_speed
 	move_and_slide()
+
+	# Path correction — snap back to the line between waypoints
+	# Prevents enemies drifting off the path due to collisions
+	if current_waypoint > 0:
+		var prev = waypoints[current_waypoint - 1]
+		var seg  = target - prev
+		var seg_len_sq = seg.length_squared()
+		if seg_len_sq > 0.0:
+			var t = clamp((position - prev).dot(seg) / seg_len_sq, 0.0, 1.0)
+			var closest = prev + seg * t
+			var drift = position.distance_to(closest)
+			if drift > 4.0:
+				position = position.lerp(closest, 0.3)
+
 	if position.distance_to(target) < 8.0:
 		current_waypoint += 1
 		if current_waypoint >= waypoints.size():
@@ -407,11 +422,18 @@ func _on_merge_partner_died(partner_hp: float) -> void:
 	queue_redraw()
 
 func _spawn_split_enemies(count: int) -> void:
+	var perp = Vector2.RIGHT
+	if current_waypoint > 0 and current_waypoint < waypoints.size():
+		var dir = (waypoints[current_waypoint] - waypoints[current_waypoint - 1]).normalized()
+		perp = Vector2(-dir.y, dir.x)
+	elif current_waypoint < waypoints.size() - 1:
+		var dir = (waypoints[current_waypoint + 1] - waypoints[current_waypoint]).normalized()
+		perp = Vector2(-dir.y, dir.x)
 	for i in range(count):
 		var split = duplicate()
 		if split and get_parent():
 			get_parent().add_child(split)
-			split.position      = position + Vector2(i * 20 - 10, 0)
+			split.position      = position + perp * (i * 20 - 10)
 			split.enemy_type    = "basic_packet"
 			split.max_health    = 60.0
 			split.current_health = 60.0

@@ -5,50 +5,76 @@
 
 [resource]
 script = ExtResource("1_3d2s1")
-visualization_scene = ExtResource("2_rd84h")
 lesson_id = "sort_radix"
 title = "Radix Sort"
 category = "data_structures"
 icon_text = "0→9"
 prerequisites = Array[String](["sort_counting"])
-concept_text = "Radix Sort sorts numbers digit by digit, from least significant to most significant. It uses Counting Sort as a subroutine for each digit pass.
+visualization_scene = ExtResource("2_rd84h")
+concept_text = "Radix Sort sorts numbers digit by digit, from least significant (ones place) to most significant.
 
-Time complexity: O(d × (n + k)) where d is the number of digits.
+It uses Counting Sort as a helper for each digit position.
 
-def radix_sort(arr):
-    max_val = max(arr)
-    exp     = 1
-    while max_val // exp > 0:
-        arr = counting_sort_by_digit(arr, exp)
-        exp *= 10
-    return arr"
-real_world_example = "Radix Sort is used for:
-- Sorting large lists of integers efficiently
-- Sorting IP addresses in network routing tables
+How it works on [170, 45, 75, 90, 2, 24]:
+
+    Pass 1 (ones digit): sort by last digit
+    [170, 90, 2, 24, 45, 75]
+
+    Pass 2 (tens digit): sort by middle digit
+    [2, 24, 45, 75, 170, 90]
+
+    Pass 3 (hundreds digit): sort by first digit
+    [2, 24, 45, 75, 90, 170] ✓
+
+Time: O(d × n) where d is the number of digits
+Space: O(n + k) for the counting sort helper"
+real_world_example = "Radix Sort is great for integer-heavy data:
+- Sorting millions of phone numbers or IDs
+- Network routing (sorting IP addresses)
 - Card sorting machines (the original inspiration)
-- DNA sequence sorting in bioinformatics"
-guided_example = "Trace Radix Sort on [170, 45, 75, 90, 2, 24]:
+- DNA sequence sorting in bioinformatics
 
-Pass 1 (ones digit):
-170→0, 90→0, 2→2, 24→4, 45→5, 75→5
-Result: [170, 90, 2, 24, 45, 75]
+Any data that can be split into digit-like buckets can use Radix Sort."
+guided_example = "Let's trace Radix Sort on [170, 45, 75, 90, 2, 24].
 
-Pass 2 (tens digit):
-2→0, 24→2, 45→4, 75→7, 90→9, 170→7
-Result: [2, 24, 45, 75, 170, 90]
+Step 1 — Sort by ones digit:
+    Look at last digit of each number:
+    170→0, 90→0, 2→2, 24→4, 45→5, 75→5
+    After sorting: [170, 90, 2, 24, 45, 75]
 
-Pass 3 (hundreds digit):
-Result: [2, 24, 45, 75, 90, 170] ✅"
-recap_text = "Radix Sort sorts digit by digit from least to most significant using Counting Sort for each pass. Achieves near-linear O(d×n) time for integer sorting — excellent for large numbers with a known digit range."
-challenge_instruction = "Arrange the code blocks to implement Radix Sort:"
-challenge_blocks = Array[String](["def radix_sort(arr):", "max_val = max(arr)", "exp = 1", "while max_val // exp > 0:", "arr = counting_sort_by_digit(arr, exp)", "exp *= 10", "return arr"])
-correct_sequence = Array[String](["def radix_sort(arr):", "max_val = max(arr)", "exp = 1", "while max_val // exp > 0:", "arr = counting_sort_by_digit(arr, exp)", "exp *= 10", "return arr"])
-code_template = "arr = [3, 1, ___]\nprint(arr[0])"
-challenge_code = "arr = [3, 1, 2]\nprint(arr[0])"
-expected_output = "3"
-challenge_hint = "Find max value, start exp=1 for ones digit, loop while digits remain, sort by current digit, multiply exp by 10."
-practice_question = "Radix Sort processes digits starting from which end?"
-practice_options = Array[String](["Most significant (left)", "Least significant (right)", "Middle digit", "Random digit"])
+Step 2 — Sort by tens digit:
+    Look at middle digit:
+    2→0, 24→2, 45→4, 75→7, 90→9, 170→7
+    After sorting: [2, 24, 45, 75, 170, 90]
+
+Step 3 — Sort by hundreds digit:
+    Look at first digit:
+    2→0, 24→0, 45→0, 75→0, 90→0, 170→1
+    After sorting: [2, 24, 45, 75, 90, 170] ✓ Sorted!
+
+Each pass preserves the order from the previous pass, so the final result is correct."
+recap_text = "- Sort numbers digit by digit, from rightmost to leftmost
+- Uses Counting Sort as a helper for each digit
+- Time: O(d × n) where d is the number of digits
+- Space: O(n + k) for the helper sort
+- Fast for integers with a limited digit count
+- Also works for strings and other sequence-based data"
+challenge_instruction = "Arrange the blocks to extract each digit using place value and print a number's digits."
+challenge_blocks = Array[String](["num = 123", "ones = num % 10", "tens = (num // 10) % 10", "hundreds = num // 100", "print(ones, tens, hundreds)", "tens = num % 10", "hundreds = num % 100"])
+correct_sequence = Array[String](["num = 123", "ones = num % 10", "tens = (num // 10) % 10", "hundreds = num // 100", "print(ones, tens, hundreds)"])
+code_template = "num = 456
+ones = num % 10
+tens = (num // ___) % 10
+hundreds = num // 100
+print(ones, tens, hundreds)"
+challenge_code = "num = 456
+ones = num % 10
+tens = (num // 10) % 10
+hundreds = num // 100
+print(ones, tens, hundreds)"
+expected_output = "6 5 4"
+challenge_hint = "Get the ones digit first: num % 10 gives the last digit. For the tens digit: divide by 10 first to shift one place right (num // 10), then % 10 again. For the hundreds digit: divide by 100 to shift two places right."
+practice_question = "Which digit does Radix Sort start sorting from?"
+practice_options = Array[String](["Most significant (leftmost)", "Least significant (rightmost)", "Middle digit", "The largest digit"])
 practice_correct_index = 1
-practice_explanation = "Radix Sort starts from the least significant digit (rightmost/ones place) and works toward the most significant. This preserves relative order from previous passes."
-metadata/_custom_type_script = "uid://ciet8k3fqk8tr"
+practice_explanation = "Radix Sort starts from the least significant digit (ones place, rightmost) and works toward the most significant digit. This preserves the relative order from previous passes."
