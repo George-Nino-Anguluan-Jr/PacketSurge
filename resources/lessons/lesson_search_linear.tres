@@ -1,7 +1,6 @@
 [gd_resource type="Resource" script_class="LessonData" format=3 uid="uid://bs1g4gull5nu0"]
 
 [ext_resource type="Script" uid="uid://ciet8k3fqk8tr" path="res://scripts/data/LessonData.gd" id="1_l7yaq"]
-[ext_resource type="PackedScene" uid="uid://bt3r6k9m1n4w" path="res://scenes/academy/visualizations/VizLinearSearch.tscn" id="2_ln84h"]
 
 [resource]
 script = ExtResource("1_l7yaq")
@@ -10,7 +9,6 @@ title = "Linear Search"
 category = "data_structures"
 icon_text = "→"
 prerequisites = Array[String](["sort_radix"])
-visualization_scene = ExtResource("2_ln84h")
 concept_text = "Linear Search checks every item one by one until it finds the target.
 
 It's the simplest search — it works on ANY list (sorted or not).

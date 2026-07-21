@@ -1,7 +1,6 @@
 [gd_resource type="Resource" script_class="LessonData" format=3 uid="uid://cqsek7qtlpavv"]
 
 [ext_resource type="Script" uid="uid://ciet8k3fqk8tr" path="res://scripts/data/LessonData.gd" id="1_51rxj"]
-[ext_resource type="PackedScene" uid="uid://dtk8twss45m7q" path="res://scenes/academy/visualizations/VizFunctions.tscn" id="2_384g4"]
 
 [resource]
 script = ExtResource("1_51rxj")
@@ -10,7 +9,6 @@ title = "Functions"
 category = "python"
 icon_text = "f()"
 prerequisites = Array[String](["py_conditions"])
-visualization_scene = ExtResource("2_384g4")
 concept_text = "A function is a reusable block of code.
 Define it once with def, then call it by name whenever needed.
 

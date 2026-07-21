@@ -1,7 +1,6 @@
 [gd_resource type="Resource" script_class="LessonData" format=3 uid="uid://n6gd71iio3v1"]
 
 [ext_resource type="Script" uid="uid://b3jcovwhgerid" path="res://scripts/data/LessonData.gd" id="1_38uo3"]
-[ext_resource type="PackedScene" uid="uid://bfmvnhmt8alcr" path="res://scenes/academy/visualizations/VizVariables.tscn" id="2_3o5rh"]
 
 [resource]
 script = ExtResource("1_38uo3")
@@ -9,7 +8,6 @@ lesson_id = "py_variables"
 title = "Variables"
 category = "python"
 icon_text = "[x]"
-visualization_scene = ExtResource("2_3o5rh")
 concept_text = "A variable is like a labeled box where you store information.
 You give it a name and put a value inside.
 

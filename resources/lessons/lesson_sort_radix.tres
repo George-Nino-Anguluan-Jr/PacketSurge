@@ -1,7 +1,6 @@
 [gd_resource type="Resource" script_class="LessonData" format=3 uid="uid://dd6ghqysj336w"]
 
 [ext_resource type="Script" uid="uid://ciet8k3fqk8tr" path="res://scripts/data/LessonData.gd" id="1_3d2s1"]
-[ext_resource type="PackedScene" uid="uid://cx5j8l3p2q7v" path="res://scenes/academy/visualizations/VizRadixSort.tscn" id="2_rd84h"]
 
 [resource]
 script = ExtResource("1_3d2s1")
@@ -10,7 +9,6 @@ title = "Radix Sort"
 category = "data_structures"
 icon_text = "0→9"
 prerequisites = Array[String](["sort_counting"])
-visualization_scene = ExtResource("2_rd84h")
 concept_text = "Radix Sort sorts numbers digit by digit, from least significant (ones place) to most significant.
 
 It uses Counting Sort as a helper for each digit position.

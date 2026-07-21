@@ -1,7 +1,6 @@
 [gd_resource type="Resource" script_class="LessonData" format=3 uid="uid://c008n744a0h1u"]
 
 [ext_resource type="Script" uid="uid://ciet8k3fqk8tr" path="res://scripts/data/LessonData.gd" id="1_h46rf"]
-[ext_resource type="PackedScene" uid="uid://2jjgc7gim5wi" path="res://scenes/academy/visualizations/VizInsertionSort.tscn" id="2_h3kw3"]
 
 [resource]
 script = ExtResource("1_h46rf")
@@ -10,7 +9,6 @@ title = "Insertion Sort"
 category = "data_structures"
 icon_text = "←↑"
 prerequisites = Array[String](["sort_selection"])
-visualization_scene = ExtResource("2_h3kw3")
 concept_text = "Insertion Sort builds a sorted list one item at a time.
 It takes each new element and inserts it into its correct position among already-sorted elements.
 

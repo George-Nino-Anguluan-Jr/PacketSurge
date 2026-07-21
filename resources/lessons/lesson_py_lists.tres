@@ -1,7 +1,6 @@
 [gd_resource type="Resource" script_class="LessonData" format=3 uid="uid://c0s0tnbukxy8v"]
 
 [ext_resource type="Script" uid="uid://ciet8k3fqk8tr" path="res://scripts/data/LessonData.gd" id="1_6cnu5"]
-[ext_resource type="PackedScene" uid="uid://ky81v2gcgf6" path="res://scenes/academy/visualizations/VizLists.tscn" id="2_ontg8"]
 
 [resource]
 script = ExtResource("1_6cnu5")
@@ -9,7 +8,6 @@ lesson_id = "py_lists"
 title = "Lists"
 category = "python"
 prerequisites = Array[String](["py_variables"])
-visualization_scene = ExtResource("2_ontg8")
 concept_text = "A list stores multiple items in a single variable.
 Items are ordered and each has a position number (index).
 
