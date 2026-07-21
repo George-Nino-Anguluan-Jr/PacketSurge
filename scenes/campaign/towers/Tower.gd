@@ -273,7 +273,7 @@ func _process(delta: float) -> void:
 			var next_pos = current_pos.move_toward(mid, p["speed"] * delta)
 			p["pos"] = next_pos
 			p["draw_pos"] = next_pos
-			if next_pos.distance_to(mid) < 6.0 or p["elapsed_time"] > 2.0:
+			if next_pos.distance_to(mid) < 20.0 or p["elapsed_time"] > 2.0:
 				_on_projectile_impact(p)
 			else:
 				remaining_projectiles.append(p)
@@ -301,7 +301,7 @@ func _process(delta: float) -> void:
 		else:
 			p["draw_pos"] = next_pos
 
-		if next_pos.distance_to(target_pos) < 6.0:
+		if next_pos.distance_to(target_pos) < 20.0:
 			_on_projectile_impact(p)
 		else:
 			remaining_projectiles.append(p)
