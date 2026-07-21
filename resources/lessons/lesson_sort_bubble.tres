@@ -11,87 +11,80 @@ category = "data_structures"
 icon_text = "↑↑"
 prerequisites = Array[String](["ds_linked_lists"])
 visualization_scene = ExtResource("2_10maa")
-concept_text = "Bubble Sort is the simplest sorting algorithm.
-It repeatedly steps through the list, compares
-adjacent items, and swaps them if they are in
-the wrong order.
+concept_text = "Bubble Sort steps through a list, compares adjacent items, and swaps them if they're in the wrong order.
 
-Like bubbles rising to the surface —
-the largest values gradually \"bubble up\" to the end.
+Larger values \"bubble up\" to the end like bubbles in water.
 
-In Python:
-    def bubble_sort(arr):
-        n = len(arr)
-        for i in range(n):
-            for j in range(0, n - i - 1):
-                if arr[j] > arr[j + 1]:
-                    arr[j], arr[j + 1] = arr[j + 1], arr[j]
-        return arr
+How it works:
+    arr = [5, 3, 8, 1]
+    Step 1: 5 > 3? → swap → [3, 5, 8, 1]
+    Step 2: 5 > 8? → no swap
+    Step 3: 8 > 1? → swap → [3, 5, 1, 8]
+    ✓ 8 bubbled to the end
 
-Time Complexity:
-    Best:    O(n)   — already sorted
-    Average: O(n²)  — random order
-    Worst:   O(n²)  — reverse sorted
-
-Space Complexity: O(1) — sorts in place"
+Time: O(n²) average, O(n) best (already sorted)
+Space: O(1) — sorts in place"
 real_world_example = "Imagine sorting a row of students by height.
-You walk down the line comparing two students at a time.
-If the left one is taller, you swap them.
-You keep walking until no more swaps are needed.
+Walk down the line, compare two at a time.
+If the left is taller, swap them.
+Keep walking until no more swaps are needed.
 
-    heights = [165, 150, 172, 148, 160]
+    heights = [165, 150, 172, 148]
 
-Pass 1: compare pairs and swap if needed
-    [150, 165, 148, 160, 172]  ← 172 bubbled to end
+    Pass 1: compare and swap
+    [150, 165, 148, 172]  ← 172 bubbled to end
 
-Pass 2:
-    [150, 148, 160, 165, 172]
+    Pass 2:
+    [150, 148, 165, 172]
 
-Pass 3:
-    [148, 150, 160, 165, 172]  ← sorted!
+    Pass 3:
+    [148, 150, 165, 172]  ← sorted!
 
-Each pass guarantees the largest unsorted item
-reaches its correct position."
-guided_example = "Let's trace Bubble Sort step by step.
+Each pass guarantees the next largest value reaches its correct spot."
+guided_example = "Let's trace Bubble Sort on [64, 34, 25, 12].
 
-Initial array: [64, 34, 25, 12, 22]
+Step 1 — Pass 1 (compare pairs 0-1, 1-2, 2-3):
+    64 > 34? swap → [34, 64, 25, 12]
+    64 > 25? swap → [34, 25, 64, 12]
+    64 > 12? swap → [34, 25, 12, 64]
+    ✓ 64 is in correct position
 
-Step 1 — Pass 1 (compare adjacent pairs):
-    64 > 34? Yes → swap → [34, 64, 25, 12, 22]
-    64 > 25? Yes → swap → [34, 25, 64, 12, 22]
-    64 > 12? Yes → swap → [34, 25, 12, 64, 22]
-    64 > 22? Yes → swap → [34, 25, 12, 22, 64]
-    ✓ 64 is now in its correct position
+Step 2 — Pass 2 (compare pairs 0-1, 1-2):
+    34 > 25? swap → [25, 34, 12, 64]
+    34 > 12? swap → [25, 12, 34, 64]
+    ✓ 34 is in correct position
 
-Step 2 — Pass 2:
-    34 > 25? Yes → swap → [25, 34, 12, 22, 64]
-    34 > 12? Yes → swap → [25, 12, 34, 22, 64]
-    34 > 22? Yes → swap → [25, 12, 22, 34, 64]
-    ✓ 34 is now in its correct position
+Step 3 — Pass 3 (compare pair 0-1):
+    25 > 12? swap → [12, 25, 34, 64]
+    ✓ Sorted!
 
-Step 3 — Pass 3:
-    25 > 12? Yes → swap → [12, 25, 22, 34, 64]
-    25 > 22? Yes → swap → [12, 22, 25, 34, 64]
-
-Step 4 — Pass 4:
-    12 > 22? No → no swap
-    Result: [12, 22, 25, 34, 64] ✓ Sorted!"
-recap_text = "- Bubble Sort compares adjacent pairs and swaps if needed
+After each pass, the next largest value is locked in place at the end."
+recap_text = "- Compare adjacent pairs, swap if wrong order
 - Largest values bubble to the end each pass
-- Time complexity: O(n²) average and worst case
-- Best case O(n) when array is already sorted
-- Space complexity: O(1) — no extra memory needed
-- Simple to understand but inefficient for large data
-- Good for: small arrays, nearly sorted data, teaching
-- Bad for: large datasets — use better algorithms instead"
-challenge_instruction = "Arrange the blocks to implement one passof Bubble Sort on a list."
-challenge_blocks = Array[String](["arr = [64, 34, 25, 12]", "for j in range(len(arr) - 1):", "if arr[j] > arr[j + 1]:", "arr[j], arr[j + 1] = arr[j + 1], arr[j]", "print(arr)", "if arr[j] < arr[j + 1]:", "for j in range(len(arr)):", "arr[j] = arr[j + 1]"])
-correct_sequence = Array[String](["arr = [64, 34, 25, 12]", "for j in range(len(arr) - 1):", "if arr[j] > arr[j + 1]:", "arr[j], arr[j + 1] = arr[j + 1], arr[j]", "print(arr)"])
-code_template = "arr = [64, 34, 25, 12]\nfor j in range(len(arr) - 1):\n    if arr[j] > arr[j + 1]:\n        temp = arr[j]\n        arr[j] = arr[j + 1]\n        arr[j + 1] = ___\nprint(arr)"
-challenge_code = "arr = [64, 34, 25, 12]\nfor j in range(len(arr) - 1):\n    if arr[j] > arr[j + 1]:\n        temp = arr[j]\n        arr[j] = arr[j + 1]\n        arr[j + 1] = temp\nprint(arr)"
-expected_output = "[34, 25, 12, 64]"
-challenge_hint = "Bubble Sort compares arr[j] with arr[j+1].If the left is greater swap them.Use range(len(arr) - 1) to avoid going out of bounds.Python swap: a, b = b, a"
-practice_question = "What is the worst case time complexity of Bubble Sortand when does it occur?"
-practice_options = Array[String](["O(n) — when array is already sorted", "O(n log n) — when array is random", "O(n²) — when array is reverse sorted", "O(1) — when array has one element"])
-practice_correct_index = 2
-practice_explanation = "Worst case is O(n²) — when the array is reverse sorted.Every comparison results in a swap.For n items you make n × (n-1) / 2 comparisons.Best case is O(n) — when already sorted and no swaps occur."
+- Time: O(n²) average/worst, O(n) best (already sorted)
+- Space: O(1) — no extra memory
+- Simple but slow for large datasets
+- Good for: small arrays, nearly sorted data, learning"
+challenge_instruction = "Arrange the blocks for one pass of Bubble Sort."
+challenge_blocks = Array[String](["arr = [7, 3, 9, 2]", "for j in range(len(arr) - 1):", "if arr[j] > arr[j + 1]:", "arr[j], arr[j + 1] = arr[j + 1], arr[j]", "print(arr)", "if arr[j] < arr[j + 1]:", "for j in range(len(arr)):", "arr[j] = arr[j + 1]"])
+correct_sequence = Array[String](["arr = [7, 3, 9, 2]", "for j in range(len(arr) - 1):", "if arr[j] > arr[j + 1]:", "arr[j], arr[j + 1] = arr[j + 1], arr[j]", "print(arr)"])
+code_template = "arr = [7, 3, 9, 2]
+for j in range(len(arr) - 1):
+    if arr[j] > arr[j + 1]:
+        temp = arr[j]
+        arr[j] = arr[j + 1]
+        arr[j + 1] = ___
+print(arr)"
+challenge_code = "arr = [7, 3, 9, 2]
+for j in range(len(arr) - 1):
+    if arr[j] > arr[j + 1]:
+        temp = arr[j]
+        arr[j] = arr[j + 1]
+        arr[j + 1] = temp
+print(arr)"
+expected_output = "[3, 7, 2, 9]"
+challenge_hint = "Start by setting up the array. Then loop through each adjacent pair (j and j+1) from the beginning up to the second-to-last element. Compare arr[j] with arr[j+1] — if the left is bigger, swap them by saving arr[j] in a temporary variable first. Finally print the result."
+practice_question = "What happens in one pass of Bubble Sort?"
+practice_options = Array[String](["The smallest value moves to the start", "The largest value bubbles to the end", "The array is fully sorted", "The array is reversed"])
+practice_correct_index = 1
+practice_explanation = "In each pass, the largest unsorted value \"bubbles up\" to its correct position at the end. You need n-1 passes to fully sort n items."

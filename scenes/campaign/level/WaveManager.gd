@@ -18,6 +18,8 @@ var path_waypoints: Array[Vector2]  = []
 var difficulty_modifier: float      = 1.0
 var enemy_pool: Array          = []
 
+var _spawn_index: int = 0
+
 func initialize(
 		waves: int,
 		e_scene: PackedScene,
@@ -32,6 +34,7 @@ func initialize(
 	difficulty_modifier = modifier
 	enemy_pool          = pool
 	current_wave        = 0
+	_spawn_index        = 0
 
 func start_next_wave() -> void:
 	if wave_in_progress or level_completed:
@@ -112,6 +115,15 @@ func _spawn_enemy(wave_num: int, index: int) -> void:
 		var speed  = 80.0 * difficulty_modifier
 		enemy.initialize(path_waypoints, health, speed, enemy_type)
 
+	# Spread enemies perpendicular to the path direction at spawn
+	# so they don't stack on top of each other and get stuck
+	if path_waypoints.size() >= 2:
+		var spawn_dir = (path_waypoints[1] - path_waypoints[0]).normalized()
+		var perp = Vector2(-spawn_dir.y, spawn_dir.x)
+		var spawn_offset = (_spawn_index % 5 - 2) * 24.0
+		_spawn_index += 1
+		enemy.position += perp * spawn_offset
+
 	enemy.connect("enemy_defeated",    _on_enemy_defeated)
 	enemy.connect("enemy_reached_end", _on_enemy_reached_end)
 	enemies_alive += 1
@@ -123,6 +135,12 @@ func _spawn_enemy(wave_num: int, index: int) -> void:
 	elif enemy_type == "merge_twin":
 		_spawn_merge_twin(enemy, wave_num)
 
+func _get_spawn_perp() -> Vector2:
+	if path_waypoints.size() >= 2:
+		var dir = (path_waypoints[1] - path_waypoints[0]).normalized()
+		return Vector2(-dir.y, dir.x)
+	return Vector2.RIGHT
+
 func _spawn_linked_partner(enemy: Node, wave_num: int) -> void:
 	var partner = enemy_scene.instantiate()
 	enemy_layer.add_child(partner)
@@ -133,8 +151,9 @@ func _spawn_linked_partner(enemy: Node, wave_num: int) -> void:
 	partner.initialize(path_waypoints, health * 0.8, speed, "linked_drain", part_data)
 	enemy.type_data["partner"] = partner
 
-	partner.current_waypoint = enemy.current_waypoint
-	partner.position = enemy.position + Vector2(30, 0)
+	# Place partner on the path and skip waypoints[0] so it doesn't converge
+	# on the same point as the enemy — prevents collision overlap
+	partner.current_waypoint = 1 if path_waypoints.size() > 1 else 0
 
 	partner.connect("enemy_defeated", _on_enemy_defeated)
 	partner.connect("enemy_reached_end", _on_enemy_reached_end)
@@ -151,8 +170,8 @@ func _spawn_merge_twin(enemy: Node, wave_num: int) -> void:
 	partner.initialize(path_waypoints, health, speed, "merge_twin", part_data)
 	enemy.type_data["partner"] = partner
 
-	partner.current_waypoint = enemy.current_waypoint
-	partner.position = enemy.position + Vector2(-30, 0)
+	# Place partner on the path and skip waypoints[0]
+	partner.current_waypoint = 1 if path_waypoints.size() > 1 else 0
 
 	partner.connect("enemy_defeated", _on_enemy_defeated)
 	partner.connect("enemy_reached_end", _on_enemy_reached_end)

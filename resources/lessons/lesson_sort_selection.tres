@@ -11,92 +11,86 @@ category = "data_structures"
 icon_text = "→↓"
 prerequisites = Array[String](["sort_bubble"])
 visualization_scene = ExtResource("2_wjjx8")
-concept_text = "Selection Sort finds the minimum element from
-the unsorted portion and places it at the beginning.
+concept_text = "Selection Sort finds the smallest element and moves it to the front.
+Then finds the next smallest and puts it in position 1, and so on.
 
-Unlike Bubble Sort which swaps repeatedly —
-Selection Sort makes exactly one swap per pass.
+Unlike Bubble Sort (many swaps), Selection Sort makes only ONE swap per pass.
 
-In Python:
-    def selection_sort(arr):
-        n = len(arr)
-        for i in range(n):
-            min_idx = i
-            for j in range(i + 1, n):
-                if arr[j] < arr[min_idx]:
-                    min_idx = j
-            arr[i], arr[min_idx] = arr[min_idx], arr[i]
-        return arr
+How it works:
+    arr = [29, 10, 14, 37, 13]
+    Pass 1: find minimum (10 at index 1) → swap with index 0
+    [10, 29, 14, 37, 13]
+    Pass 2: find min in rest (13 at index 4) → swap with index 1
+    [10, 13, 14, 37, 29]
 
-Time Complexity:
-    Best:    O(n²)
-    Average: O(n²)
-    Worst:   O(n²)
-
-Space Complexity: O(1) — sorts in place
-
-Key difference from Bubble Sort:
-    Bubble Sort — many swaps per pass
-    Selection Sort — exactly ONE swap per pass"
+Time: O(n²) always (best, average, worst)
+Space: O(1) — sorts in place"
 real_world_example = "Imagine picking teams for a game.
-Each round you find the best available player
-and add them to your team first.
+Each round, find the best remaining player and add them first.
 
-    players = [72, 45, 88, 31, 60]  ← scores
+    scores = [72, 45, 88, 31, 60]
 
-Round 1: find minimum (31) → put at position 0
+    Round 1: find lowest (31) → swap to position 0
     [31, 45, 88, 72, 60]
 
-Round 2: find minimum of remaining (45) → position 1
-    [31, 45, 88, 72, 60]  ← already in place
+    Round 2: find lowest in rest (45) → already at position 1
+    [31, 45, 88, 72, 60]
 
-Round 3: find minimum of remaining (60) → position 2
+    Round 3: find lowest (60) → swap to position 2
     [31, 45, 60, 72, 88]
 
-Each round selects the best remaining option —
-just like Selection Sort selects the minimum."
-guided_example = "Let's trace Selection Sort step by step.
+Each round \"selects\" the next smallest item — hence the name."
+guided_example = "Let's trace Selection Sort on [29, 10, 14, 37, 13].
 
-Initial: [29, 10, 14, 37, 13]
-
-Pass 1 — find minimum in entire array:
+Step 1 — Find minimum in entire array:
     minimum = 10 at index 1
     swap arr[0] with arr[1]
     Result: [10, 29, 14, 37, 13]
-    ✓ 10 is in correct position
 
-Pass 2 — find minimum in arr[1:]
+Step 2 — Find minimum in arr[1:]:
     minimum = 13 at index 4
     swap arr[1] with arr[4]
     Result: [10, 13, 14, 37, 29]
-    ✓ 13 is in correct position
 
-Pass 3 — find minimum in arr[2:]
+Step 3 — Find minimum in arr[2:]:
     minimum = 14 at index 2
     no swap needed
     Result: [10, 13, 14, 37, 29]
 
-Pass 4 — find minimum in arr[3:]
+Step 4 — Find minimum in arr[3:]:
     minimum = 29 at index 4
     swap arr[3] with arr[4]
-    Result: [10, 13, 14, 29, 37]
-    ✓ Sorted!"
-recap_text = "- Selection Sort finds the minimum and places it correctly
-- Makes exactly ONE swap per pass — fewer swaps than Bubble
-- Time complexity is always O(n²) — best worst and average
-- Space complexity O(1) — in place sorting
-- Better than Bubble Sort when swaps are expensive
-- Still too slow for large datasets
-- Good for: small arrays, when writes/swaps are costly
-- Stable: No — equal elements may change relative order"
-challenge_instruction = "Arrange the blocks to find the minimum elementin a list and swap it to the front."
-challenge_blocks = Array[String](["arr = [29, 10, 14, 37, 13]", "min_idx = 0", "for j in range(1, len(arr)):", "if arr[j] < arr[min_idx]:", "min_idx = j", "arr[0], arr[min_idx] = arr[min_idx], arr[0]", "print(arr)", "if arr[j] > arr[min_idx]:", "min_idx = len(arr)"])
-correct_sequence = Array[String](["arr = [29, 10, 14, 37, 13]", "min_idx = 0", "for j in range(1, len(arr)):", "if arr[j] < arr[min_idx]:", "min_idx = j", "arr[0], arr[min_idx] = arr[min_idx], arr[0]", "print(arr)"])
-code_template = "arr = [29, 10, 14, 37, 13]\nmin_idx = 0\nfor j in range(1, len(arr)):\n    if arr[j] < arr[min_idx]:\n        min_idx = ___\ntemp = arr[0]\narr[0] = arr[min_idx]\narr[min_idx] = temp\nprint(arr)"
-challenge_code = "arr = [29, 10, 14, 37, 13]\nmin_idx = 0\nfor j in range(1, len(arr)):\n    if arr[j] < arr[min_idx]:\n        min_idx = j\ntemp = arr[0]\narr[0] = arr[min_idx]\narr[min_idx] = temp\nprint(arr)"
-expected_output = "[10, 29, 14, 37, 13]"
-challenge_hint = "Start by assuming the first element is the minimum.Loop through the rest to find a smaller one.Update min_idx when you find something smaller.After the loop swap the minimum into position 0."
-practice_question = "How many swaps does Selection Sort makefor an array of 5 elements?"
-practice_options = Array[String](["Up to 10 swaps", "Exactly 5 swaps", "At most 4 swaps", "It depends on the data"])
+    Result: [10, 13, 14, 29, 37] ✓ Sorted!"
+recap_text = "- Find minimum element and swap it to the front
+- ONE swap per pass — fewer than Bubble Sort
+- Time: always O(n²) (best, average, worst)
+- Space: O(1) — in place
+- Better than Bubble Sort when swaps are costly
+- Still too slow for large datasets"
+challenge_instruction = "Arrange the blocks to find the minimum and swap it to the front."
+challenge_blocks = Array[String](["arr = [9, 4, 7, 2]", "min_idx = 0", "for j in range(1, len(arr)):", "if arr[j] < arr[min_idx]:", "min_idx = j", "arr[0], arr[min_idx] = arr[min_idx], arr[0]", "print(arr)", "if arr[j] > arr[min_idx]:", "min_idx = len(arr)"])
+correct_sequence = Array[String](["arr = [9, 4, 7, 2]", "min_idx = 0", "for j in range(1, len(arr)):", "if arr[j] < arr[min_idx]:", "min_idx = j", "arr[0], arr[min_idx] = arr[min_idx], arr[0]", "print(arr)"])
+code_template = "arr = [9, 4, 7, 2]
+min_idx = 0
+for j in range(1, len(arr)):
+    if arr[j] < arr[min_idx]:
+        min_idx = ___
+temp = arr[0]
+arr[0] = arr[min_idx]
+arr[min_idx] = temp
+print(arr)"
+challenge_code = "arr = [9, 4, 7, 2]
+min_idx = 0
+for j in range(1, len(arr)):
+    if arr[j] < arr[min_idx]:
+        min_idx = j
+temp = arr[0]
+arr[0] = arr[min_idx]
+arr[min_idx] = temp
+print(arr)"
+expected_output = "[2, 4, 7, 9]"
+challenge_hint = "Start by assuming the first element (index 0) is the minimum — set min_idx = 0. Then loop from index 1 to the end: whenever you find a smaller element, update min_idx to that position. After the loop, swap the minimum value from min_idx to position 0."
+practice_question = "How many swaps does Selection Sort make for an array of 5 elements?"
+practice_options = Array[String](["Up to 10 swaps", "Exactly 5 swaps", "At most 4 swaps", "Depends on the data"])
 practice_correct_index = 2
-practice_explanation = "Selection Sort makes at most n-1 swaps for n elements.For 5 elements that is at most 4 swaps — one per pass.This is one of its advantages over Bubble Sortwhich can make many more swaps per pass."
+practice_explanation = "Selection Sort makes at most n-1 swaps for n elements. For 5 elements that's 4 swaps — one per pass. This is less than Bubble Sort which can swap many times per pass."

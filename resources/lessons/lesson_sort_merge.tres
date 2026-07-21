@@ -5,50 +5,78 @@
 
 [resource]
 script = ExtResource("1_ri56b")
-visualization_scene = ExtResource("2_mr84h")
 lesson_id = "sort_merge"
 title = "Merge Sort"
 category = "data_structures"
 icon_text = "⊕"
 prerequisites = Array[String](["sort_quick"])
-concept_text = "Merge Sort is a stable divide-and-conquer algorithm. It splits the array in half, recursively sorts each half, then merges the sorted halves back together.
+visualization_scene = ExtResource("2_mr84h")
+concept_text = "Merge Sort is a divide-and-conquer algorithm.
+It splits the array in half, recursively sorts each half, then merges the sorted halves together.
 
-Unlike Quick Sort, Merge Sort always runs in O(n log n) even in the worst case.
+Unlike Quick Sort, Merge Sort always runs in O(n log n) — even in the worst case.
 
-def merge_sort(arr):
-    if len(arr) <= 1:
-        return arr
-    mid   = len(arr) // 2
-    left  = merge_sort(arr[:mid])
-    right = merge_sort(arr[mid:])
-    return merge(left, right)"
-real_world_example = "Merge Sort is used when stability matters:
-- Sorting linked lists (preferred algorithm)
-- External sorting of large files that don't fit in memory
-- Git uses merge-based algorithms to combine code changes
-- Database systems for sorting large datasets"
-guided_example = "Trace Merge Sort on [38, 27, 43, 3]:
+How it works:
+    arr = [38, 27, 43, 3]
+    Split → [38, 27] and [43, 3]
+    Split → [38], [27] and [43], [3]
+    Merge [38] + [27] → [27, 38]
+    Merge [43] + [3]  → [3, 43]
+    Merge [27, 38] + [3, 43] → [3, 27, 38, 43]
 
-Split → [38, 27] and [43, 3]
-Split → [38],[27] and [43],[3]
-Merge [38],[27] → [27, 38]
-Merge [43],[3]  → [3, 43]
-Merge [27,38] and [3,43]:
-  3 < 27 → take 3
-  27 < 43 → take 27
-  38 < 43 → take 38
-  take 43
-Result: [3, 27, 38, 43] ✅"
-recap_text = "Merge Sort divides the array in half, recursively sorts each half, then merges them back. Guaranteed O(n log n) in all cases and stable — ideal when equal elements must keep their original order."
-challenge_instruction = "Arrange the code blocks to implement Merge Sort:"
-challenge_blocks = Array[String](["def merge_sort(arr):", "if len(arr) <= 1:", "return arr", "mid = len(arr) // 2", "left = merge_sort(arr[:mid])", "right = merge_sort(arr[mid:])", "return merge(left, right)"])
-correct_sequence = Array[String](["def merge_sort(arr):", "if len(arr) <= 1:", "return arr", "mid = len(arr) // 2", "left = merge_sort(arr[:mid])", "right = merge_sort(arr[mid:])", "return merge(left, right)"])
-code_template = "arr = [3, ___, 2]\nprint(arr[0])"
-challenge_code = "arr = [3, 1, 2]\nprint(arr[0])"
-expected_output = "3"
-challenge_hint = "Function definition, base case, find midpoint, sort left half, sort right half, merge and return."
+Time: O(n log n) always (best, average, worst)
+Space: O(n) — needs extra memory for merging"
+real_world_example = "Merge Sort is preferred when stability matters:
+- Sorting linked lists (it's the best choice)
+- External sorting of huge files (too big for memory)
+- Git uses merge-based algorithms to combine code
+- Database systems for reliable sorting
+
+It's guaranteed O(n log n) and stable — equal elements keep their original order."
+guided_example = "Let's trace Merge Sort on [38, 27, 43, 3].
+
+Step 1 — Split array in half:
+    [38, 27] and [43, 3]
+
+Step 2 — Split each half:
+    [38], [27] and [43], [3]
+
+Step 3 — Merge [38] and [27]:
+    27 < 38 → [27, 38]
+
+Step 4 — Merge [43] and [3]:
+    3 < 43 → [3, 43]
+
+Step 5 — Merge [27, 38] and [3, 43]:
+    3 < 27 → take 3
+    27 < 43 → take 27
+    38 < 43 → take 38
+    take 43
+    Result: [3, 27, 38, 43] ✓
+
+The key is the merge step: compare the fronts of each sorted half and take the smaller one."
+recap_text = "- Split array in half, sort each half, merge them back
+- Always O(n log n) — guaranteed
+- Space O(n) — needs extra array for merging
+- Stable: equal elements keep original order
+- Great for linked lists and huge datasets
+- Trade-off: uses more memory than Quick Sort"
+challenge_instruction = "Arrange the blocks to split an array in half and merge two sorted halves."
+challenge_blocks = Array[String](["arr = [4, 2, 7, 1]", "mid = len(arr) // 2", "left = arr[:mid]", "right = arr[mid:]", "print(left, right)", "left = arr[0]", "right = arr[1]", "mid = len(arr)"])
+correct_sequence = Array[String](["arr = [4, 2, 7, 1]", "mid = len(arr) // 2", "left = arr[:mid]", "right = arr[mid:]", "print(left, right)"])
+code_template = "arr = [6, 3, 9, 1]
+mid = len(arr) // ___
+left = arr[:mid]
+right = arr[mid:]
+print(left, right)"
+challenge_code = "arr = [6, 3, 9, 1]
+mid = len(arr) // 2
+left = arr[:mid]
+right = arr[mid:]
+print(left, right)"
+expected_output = "[6, 3] [9, 1]"
+challenge_hint = "Find the middle index by dividing the array length by 2 (mid = len(arr) // 2). Slice from the start up to mid for the left half. Slice from mid to the end for the right half. Print both halves to see the split."
 practice_question = "What is the worst-case time complexity of Merge Sort?"
 practice_options = Array[String](["O(n²)", "O(n)", "O(n log n)", "O(log n)"])
 practice_correct_index = 2
-practice_explanation = "Merge Sort always runs O(n log n) regardless of input because it always divides in half and always does O(n) merge work per level — unlike Quick Sort which can degrade to O(n²)."
-metadata/_custom_type_script = "uid://ciet8k3fqk8tr"
+practice_explanation = "Merge Sort always runs in O(n log n) regardless of input. It always divides the array in half (log n levels) and does O(n) merge work per level — unlike Quick Sort which can degrade to O(n²)."

@@ -11,90 +11,85 @@ category = "data_structures"
 icon_text = "←↑"
 prerequisites = Array[String](["sort_selection"])
 visualization_scene = ExtResource("2_h3kw3")
-concept_text = "Insertion Sort builds the sorted array one item at a time.
-It takes each element and inserts it into
-its correct position among the already-sorted elements.
+concept_text = "Insertion Sort builds a sorted list one item at a time.
+It takes each new element and inserts it into its correct position among already-sorted elements.
 
-Like sorting playing cards in your hand —
-you pick up one card at a time and slide it
-into the right position.
+Like sorting playing cards — pick up one card and slide it into the right spot.
 
-In Python:
-    def insertion_sort(arr):
-        for i in range(1, len(arr)):
-            key = arr[i]
-            j = i - 1
-            while j >= 0 and arr[j] > key:
-                arr[j + 1] = arr[j]
-                j -= 1
-            arr[j + 1] = key
-        return arr
+How it works:
+    arr = [12, 11, 13, 5]
+    Take 11 → compare with 12 → 11 < 12 → insert before 12
+    [11, 12, 13, 5]
+    Take 13 → compare with 12 → 13 > 12 → stays
+    [11, 12, 13, 5]
+    Take 5 → compare with 13, 12, 11 → slide and insert at front
+    [5, 11, 12, 13]
 
-Time Complexity:
-    Best:    O(n)   — already sorted
-    Average: O(n²)
-    Worst:   O(n²)  — reverse sorted
+Time: O(n²) average/worst, O(n) best (nearly sorted)
+Space: O(1) — sorts in place"
+real_world_example = "Think of sorting cards dealt to you one at a time.
 
-Space Complexity: O(1) — sorts in place
+    Dealt: 7, then 3, then 9, then 1, then 5
 
-Key advantage: Excellent for nearly sorted data."
-real_world_example = "Think of how you sort cards dealt to you one at a time.
+    Card 7:  [7]
+    Card 3:  3 < 7 → [3, 7]
+    Card 9:  9 > 7 → [3, 7, 9]
+    Card 1:  1 < everything → [1, 3, 7, 9]
+    Card 5:  between 3 and 7 → [1, 3, 5, 7, 9]
 
-You receive: 7, then 3, then 9, then 1, then 5
+Each new card is inserted into its correct position among the cards you already hold."
+guided_example = "Let's trace Insertion Sort on [12, 11, 13, 5, 6].
 
-Card 7:  [7]              ← first card, nothing to compare
-Card 3:  3 < 7 → [3, 7]  ← insert before 7
-Card 9:  9 > 7 → [3, 7, 9] ← insert at end
-Card 1:  1 < everything → [1, 3, 7, 9] ← insert at start
-Card 5:  3 < 5 < 7 → [1, 3, 5, 7, 9] ← insert in middle
-
-Each new card is inserted into its correct position
-among the cards you already hold — exactly like Insertion Sort."
-guided_example = "Let's trace Insertion Sort step by step.
-
-Initial: [12, 11, 13, 5, 6]
-
-Pass 1 — key = 11 (index 1):
+Step 1 — key = 11 (index 1):
     11 < 12 → shift 12 right
     Insert 11 at index 0
-    Result: [11, 12, 13, 5, 6]
+    [11, 12, 13, 5, 6]
 
-Pass 2 — key = 13 (index 2):
+Step 2 — key = 13 (index 2):
     13 > 12 → no shift needed
-    13 stays in place
-    Result: [11, 12, 13, 5, 6]
+    [11, 12, 13, 5, 6]
 
-Pass 3 — key = 5 (index 3):
+Step 3 — key = 5 (index 3):
     5 < 13 → shift 13 right
     5 < 12 → shift 12 right
     5 < 11 → shift 11 right
     Insert 5 at index 0
-    Result: [5, 11, 12, 13, 6]
+    [5, 11, 12, 13, 6]
 
-Pass 4 — key = 6 (index 4):
-    6 < 13 → shift
-    6 < 12 → shift
-    6 < 11 → shift
+Step 4 — key = 6 (index 4):
+    6 < 13, 6 < 12, 6 < 11 → shift all three
     6 > 5 → stop
     Insert 6 at index 1
-    Result: [5, 6, 11, 12, 13] ✓ Sorted!"
-recap_text = "- Insertion Sort builds sorted array one element at a time
-- Each element is inserted into correct position
+    [5, 6, 11, 12, 13] ✓ Sorted!"
+recap_text = "- Build sorted list one element at a time
+- Each element is inserted into its correct position
 - Best case O(n) — when data is nearly sorted
-- Average and worst case O(n²)
-- Space complexity O(1) — in place
-- Stable sort — equal elements keep their original order
-- Best of the three basic sorts for nearly sorted data
-- Used in practice for small arrays (< 10-20 elements)
-- Hybrid algorithms like Timsort use Insertion Sort internally"
-challenge_instruction = "Arrange the blocks to perform one step ofInsertion Sort — insert the second elementinto its correct position."
-challenge_blocks = Array[String](["arr = [12, 11, 13, 5]", "key = arr[1]", "j = 0", "while j >= 0 and arr[j] > key:", "arr[j + 1] = arr[j]", "j -= 1", "arr[j + 1] = key", "print(arr)", "key = arr[0]", "j = 1"])
-correct_sequence = Array[String](["arr = [12, 11, 13, 5]", "key = arr[1]", "j = 0", "while j >= 0 and arr[j] > key:", "arr[j + 1] = arr[j]", "j -= 1", "arr[j + 1] = key", "print(arr)"])
-code_template = "arr = [12, 11, 13, 5]\nkey = arr[1]\nj = 0\nwhile j >= 0 and arr[j] > key:\n    arr[j + 1] = arr[j]\n    j -= 1\narr[j + 1] = ___\nprint(arr)"
-challenge_code = "arr = [12, 11, 13, 5]\nkey = arr[1]\nj = 0\nwhile j >= 0 and arr[j] > key:\n    arr[j + 1] = arr[j]\n    j -= 1\narr[j + 1] = key\nprint(arr)"
-expected_output = "[11, 12, 13, 5]"
-challenge_hint = "key holds the element being inserted.j starts one position before key.Shift elements right while they are greater than key.Place key at j + 1 after the while loop ends."
-practice_question = "Which scenario gives Insertion Sort its best case O(n) performance?"
-practice_options = Array[String](["Array is in reverse sorted order", "Array has all duplicate elements", "Array is already sorted", "Array has random elements"])
-practice_correct_index = 2
-practice_explanation = "When the array is already sorted Insertion Sort runs in O(n).Each element is compared once to the element before it.No shifting is needed — the while loop never executes.This makes it ideal for nearly sorted data."
+- Average/worst case O(n²)
+- Space O(1) — in place
+- Stable: equal elements keep their original order
+- Best of the basic sorts for nearly sorted data"
+challenge_instruction = "Arrange the blocks to insert the second element into its correct position."
+challenge_blocks = Array[String](["arr = [8, 3, 6, 2]", "key = arr[1]", "j = 0", "while j >= 0 and arr[j] > key:", "arr[j + 1] = arr[j]", "j -= 1", "arr[j + 1] = key", "print(arr)", "key = arr[0]", "j = 1"])
+correct_sequence = Array[String](["arr = [8, 3, 6, 2]", "key = arr[1]", "j = 0", "while j >= 0 and arr[j] > key:", "arr[j + 1] = arr[j]", "j -= 1", "arr[j + 1] = key", "print(arr)"])
+code_template = "arr = [8, 3, 6, 2]
+key = arr[1]
+j = 0
+while j >= 0 and arr[j] > key:
+    arr[j + 1] = arr[j]
+    j -= 1
+arr[j + 1] = ___
+print(arr)"
+challenge_code = "arr = [8, 3, 6, 2]
+key = arr[1]
+j = 0
+while j >= 0 and arr[j] > key:
+    arr[j + 1] = arr[j]
+    j -= 1
+arr[j + 1] = key
+print(arr)"
+expected_output = "[3, 8, 6, 2]"
+challenge_hint = "Save the element at index 1 as your key. Start j at 0 (one position behind key). While j is at least 0 AND arr[j] is larger than key, shift arr[j] one spot to the right and decrease j. After the loop, place key into the empty spot at j + 1."
+practice_question = "When does Insertion Sort perform best (O(n))?"
+practice_options = Array[String](["Array is reverse sorted", "Array is already sorted", "Array has all duplicates", "Array has random elements"])
+practice_correct_index = 1
+practice_explanation = "When the array is already sorted, Insertion Sort runs in O(n). Each element only needs one comparison — no shifting needed since every element is already in place."
