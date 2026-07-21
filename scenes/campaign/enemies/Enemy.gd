@@ -429,6 +429,8 @@ func _spawn_split_enemies(count: int) -> void:
 	elif current_waypoint < waypoints.size() - 1:
 		var dir = (waypoints[current_waypoint + 1] - waypoints[current_waypoint]).normalized()
 		perp = Vector2(-dir.y, dir.x)
+	var wm_nodes = get_tree().get_nodes_in_group("wave_manager")
+	var wm = wm_nodes[0] if wm_nodes.size() > 0 else null
 	for i in range(count):
 		var split = duplicate()
 		if split and get_parent():
@@ -441,6 +443,11 @@ func _spawn_split_enemies(count: int) -> void:
 			split._setup_type()
 			split.current_waypoint = current_waypoint
 			split.waypoints     = waypoints
+			if wm:
+				split.connect("enemy_defeated", Callable(wm, "_on_enemy_defeated"))
+				split.connect("enemy_reached_end", Callable(wm, "_on_enemy_reached_end"))
+				wm.enemies_alive += 1
+				wm.enemy_spawned.emit(split)
 
 func _notify_overflow_ahead() -> void:
 	if not get_parent():

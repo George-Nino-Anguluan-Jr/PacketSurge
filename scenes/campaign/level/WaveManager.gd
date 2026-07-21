@@ -6,6 +6,9 @@ signal wave_completed(wave_number: int)
 signal all_waves_completed()
 signal enemy_spawned(enemy: Node)
 
+func _ready():
+	add_to_group("wave_manager")
+
 var current_wave: int      = 0
 var total_waves: int       = 3
 var enemies_alive: int     = 0
