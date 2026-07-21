@@ -17,7 +17,9 @@ func can_afford(cost: int) -> bool:
 
 func spend(cost: int) -> bool:
 	if not can_afford(cost):
+		SoundManager.play_error()
 		return false
+	SoundManager.play_ram_spend()
 	current_ram -= cost
 	ram_changed.emit(current_ram, max_ram)
 	return true

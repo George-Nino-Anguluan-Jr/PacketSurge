@@ -343,6 +343,7 @@ func _update_entry_order() -> void:
 func _attack() -> void:
 	if not _get_closest_enemy() and _entry_order.is_empty():
 		return
+	SoundManager.play_tower_attack(tower_id)
 	_flash_targets.clear()
 	_recoil = 1.0
 	match tower_id:
