@@ -527,8 +527,8 @@ func go_to(scene_key: String) -> void:
 		push_error("[GameManager] Unknown scene key: " + scene_key)
 		return
 	current_scene_key = scene_key
+	SoundManager.play_transition()
 	get_tree().change_scene_to_file(SCENES[scene_key])
-	print("[GameManager] Navigating to: ", scene_key)
 
 func _on_scene_change_requested(scene_path: String) -> void:
 	get_tree().change_scene_to_file(scene_path)
