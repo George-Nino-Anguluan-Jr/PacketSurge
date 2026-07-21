@@ -12,6 +12,7 @@ extends Control
 @onready var selected_row: HBoxContainer    = $ContentArea/RightMargin/RightContent/SelectedRow
 @onready var available_grid: GridContainer  = $ContentArea/RightMargin/RightContent/ScrollContainer/AvailableGrid
 @onready var start_btn: Button              = $ContentArea/RightMargin/RightContent/StartBtn
+@onready var scroll_container: ScrollContainer = $ContentArea/RightMargin/RightContent/ScrollContainer
 @onready var card_layer: Control            = $CardLayer
 
 # ─── STATE ─────────────────────────────────────────────
@@ -142,6 +143,7 @@ func _ready() -> void:
 	
 	# Wait one frame so that container layouts solve and positions are valid
 	await get_tree().process_frame
+	_setup_scroll_clipping()
 	_build_tower_cards()
 	_refresh_slots()
 	_refresh_start_btn()
@@ -461,6 +463,30 @@ func _refresh_start_btn() -> void:
 	var has_any = selected_towers.size() > 0
 	start_btn.disabled = not has_any
 	start_btn.text = "▶ START LEVEL"
+
+# ─── SCROLL CLIPPING ─────────────────────────────────────
+func _setup_scroll_clipping() -> void:
+	var rc = $ContentArea/RightMargin/RightContent
+	var rc_rect = rc.get_global_rect()
+	card_layer.position = rc_rect.position
+	card_layer.size = Vector2(rc_rect.size.x, start_btn.global_position.y - rc_rect.position.y)
+	card_layer.clip_contents = true
+	scroll_container.get_v_scroll_bar().value_changed.connect(_on_scroll_changed)
+
+func _on_scroll_changed(_value: float) -> void:
+	_update_card_positions()
+
+func _update_card_positions() -> void:
+	for i in range(active_cards.size()):
+		var card = active_cards[i]
+		if card.is_dragging:
+			continue
+		var anchor = available_grid.get_child(i)
+		if not anchor:
+			continue
+		card.home_position = anchor.global_position
+		if not card.is_selected:
+			card.global_position = card.home_position
 
 # ─── BUTTONS ───────────────────────────────────────────
 func _setup_buttons() -> void:
