@@ -407,6 +407,7 @@ func _die() -> void:
 			if partner and is_instance_valid(partner) and not partner.is_dead:
 				partner.type_data["partner"] = null
 
+	SoundManager.play_enemy_death()
 	SignalBus.enemy_defeated.emit(name)
 	enemy_defeated.emit(self)
 	queue_free()

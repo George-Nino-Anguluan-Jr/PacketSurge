@@ -12,8 +12,13 @@ var collect_sound: AudioStreamWAV
 var wave_alert_sound: AudioStreamWAV
 var level_complete_sound: AudioStreamWAV
 var game_over_sound: AudioStreamWAV
+var enemy_hit_sound: AudioStreamWAV
+var enemy_death_sound: AudioStreamWAV
+var enemy_reach_base_sound: AudioStreamWAV
+var ram_spend_sound: AudioStreamWAV
+var tower_attack_sounds: Dictionary = {}
 
-var effects_volume: float = 1.0
+var effects_volume: float = 0.2
 
 func _ready() -> void:
 	process_mode = PROCESS_MODE_ALWAYS
@@ -27,8 +32,8 @@ func _connect_signals() -> void:
 	SignalBus.lesson_unlocked.connect(func(_id): play_notify())
 	SignalBus.campaign_level_unlocked.connect(func(_n): play_notify())
 	SignalBus.lesson_completed.connect(func(_id): play_success())
-	SignalBus.scene_change_requested.connect(func(_p): play_transition())
 	SignalBus.tower_placed.connect(func(_id, _pos): play_collect())
+	SignalBus.enemy_reached_end.connect(func(_id): play_enemy_reach_base())
 
 func _generate_all_sounds() -> void:
 	hover_sound = _generate_sine_sweep(700.0, 1100.0, 0.05, 0.06)
@@ -42,6 +47,26 @@ func _generate_all_sounds() -> void:
 	wave_alert_sound = _generate_sine_sweep(300.0, 900.0, 0.18, 0.12)
 	level_complete_sound = _generate_arpeggio([523.0, 659.0, 784.0, 1047.0], 0.12, 0.15)
 	game_over_sound = _generate_sine_sweep(300.0, 60.0, 0.60, 0.12)
+	enemy_hit_sound = _generate_noise_tick(0.04, 0.08)
+	enemy_death_sound = _generate_sine_sweep(200.0, 50.0, 0.20, 0.10)
+	enemy_reach_base_sound = _generate_sine_sweep(150.0, 80.0, 0.30, 0.12)
+	ram_spend_sound = _generate_sine_sweep(1000.0, 500.0, 0.08, 0.10)
+	_generate_tower_attack_sounds()
+
+func _generate_tower_attack_sounds() -> void:
+	tower_attack_sounds["tower_array"] = _generate_noise_tick(0.03, 0.06)
+	tower_attack_sounds["tower_stack"] = _generate_sine_sweep(150.0, 80.0, 0.15, 0.10)
+	tower_attack_sounds["tower_queue"] = _generate_sine_sweep(1200.0, 400.0, 0.06, 0.08)
+	tower_attack_sounds["tower_linked_list"] = _generate_noise_tick(0.05, 0.08)
+	tower_attack_sounds["tower_bubble"] = _generate_sine_sweep(600.0, 900.0, 0.05, 0.08)
+	tower_attack_sounds["tower_selection"] = _generate_sine_sweep(500.0, 800.0, 0.10, 0.08)
+	tower_attack_sounds["tower_insertion"] = _generate_sine_sweep(300.0, 100.0, 0.08, 0.10)
+	tower_attack_sounds["tower_quick"] = _generate_sine_sweep(900.0, 600.0, 0.06, 0.08)
+	tower_attack_sounds["tower_merge"] = _generate_sine_sweep(400.0, 700.0, 0.12, 0.06)
+	tower_attack_sounds["tower_counting"] = _generate_noise_tick(0.02, 0.05)
+	tower_attack_sounds["tower_radix"] = _generate_sine_sweep(800.0, 1200.0, 0.07, 0.08)
+	tower_attack_sounds["tower_linear"] = _generate_sine_sweep(300.0, 1000.0, 0.10, 0.07)
+	tower_attack_sounds["tower_binary"] = _generate_sine_sweep(2000.0, 500.0, 0.04, 0.10)
 
 func _generate_sine_sweep(start_freq: float, end_freq: float, duration: float, volume: float) -> AudioStreamWAV:
 	var stream = AudioStreamWAV.new()
@@ -169,6 +194,23 @@ func play_level_complete() -> void:
 
 func play_game_over() -> void:
 	_play(game_over_sound, -8.0)
+
+func play_enemy_hit() -> void:
+	_play(enemy_hit_sound, -10.0)
+
+func play_enemy_death() -> void:
+	_play(enemy_death_sound, -8.0)
+
+func play_enemy_reach_base() -> void:
+	_play(enemy_reach_base_sound, -8.0)
+
+func play_tower_attack(tower_id: String) -> void:
+	var s = tower_attack_sounds.get(tower_id)
+	if s:
+		_play(s, -8.0)
+
+func play_ram_spend() -> void:
+	_play(ram_spend_sound, -8.0)
 
 func _play(stream: AudioStreamWAV, vol_db: float) -> void:
 	var player = AudioStreamPlayer.new()
