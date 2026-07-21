@@ -145,6 +145,7 @@ func _ready() -> void:
 	await get_tree().process_frame
 	_setup_scroll_clipping()
 	_build_tower_cards()
+	_update_card_positions()
 	_refresh_slots()
 	_refresh_start_btn()
 	_setup_intro_popup()
@@ -466,27 +467,24 @@ func _refresh_start_btn() -> void:
 
 # ─── SCROLL CLIPPING ─────────────────────────────────────
 func _setup_scroll_clipping() -> void:
-	var rc = $ContentArea/RightMargin/RightContent
-	var rc_rect = rc.get_global_rect()
-	card_layer.position = rc_rect.position
-	card_layer.size = Vector2(rc_rect.size.x, start_btn.global_position.y - rc_rect.position.y)
-	card_layer.clip_contents = true
+	card_layer.clip_contents = false
 	scroll_container.get_v_scroll_bar().value_changed.connect(_on_scroll_changed)
 
 func _on_scroll_changed(_value: float) -> void:
 	_update_card_positions()
 
 func _update_card_positions() -> void:
+	var scroll_rect = scroll_container.get_global_rect()
 	for i in range(active_cards.size()):
 		var card = active_cards[i]
-		if card.is_dragging:
+		if card.is_dragging or card.is_selected:
 			continue
 		var anchor = available_grid.get_child(i)
 		if not anchor:
 			continue
 		card.home_position = anchor.global_position
-		if not card.is_selected:
-			card.global_position = card.home_position
+		card.global_position = card.home_position
+		card.visible = scroll_rect.has_point(card.global_position + card.size * 0.5)
 
 # ─── BUTTONS ───────────────────────────────────────────
 func _setup_buttons() -> void:
