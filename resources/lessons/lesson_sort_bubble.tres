@@ -1,6 +1,7 @@
 [gd_resource type="Resource" script_class="LessonData" format=3 uid="uid://c0e7xktjeripg"]
 
 [ext_resource type="Script" uid="uid://ciet8k3fqk8tr" path="res://scripts/data/LessonData.gd" id="1_csds4"]
+[ext_resource type="PackedScene" uid="uid://bo3d2ss0lir0v" path="res://scenes/academy/visualizations/VizBubbleSort.tscn" id="2_10maa"]
 
 [resource]
 script = ExtResource("1_csds4")
@@ -9,6 +10,7 @@ title = "Bubble Sort"
 category = "data_structures"
 icon_text = "↑↑"
 prerequisites = Array[String](["ds_linked_lists"])
+visualization_scene = ExtResource("2_10maa")
 concept_text = "Bubble Sort steps through a list, compares adjacent items, and swaps them if they're in the wrong order.
 
 Larger values \"bubble up\" to the end like bubbles in water.
