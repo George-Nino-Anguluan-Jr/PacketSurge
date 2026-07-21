@@ -1,6 +1,8 @@
 # Tower.gd
 extends Node2D
 
+const ENEMY_RADIUS: float = 20.0
+
 # ─── STATS ─────────────────────────────────────────────
 var tower_id: String      = ""
 var tower_name: String    = "Tower"
@@ -44,6 +46,7 @@ var _mobile_redraw_skip: int   = 0
 var _projectiles: Array[Dictionary] = []
 var _explosions: Array[Dictionary]  = []
 var _chain_arcs: Array[Dictionary]  = []
+var _selected: bool = false
 
 @onready var sprite: Sprite2D = $TowerSprite
 
@@ -91,6 +94,10 @@ func get_ability_cost() -> int:
 
 func is_ability_ready() -> bool:
 	return ability_cooldown <= 0.0
+
+func set_selected(v: bool) -> void:
+	_selected = v
+	queue_redraw()
 
 func activate_ability() -> bool:
 	if not is_ability_ready():
@@ -233,7 +240,7 @@ func _process(delta: float) -> void:
 
 	# Active target tracking rotation
 	var target_to_track = current_target
-	if not is_instance_valid(target_to_track) or position.distance_to(target_to_track.position) > attack_range:
+	if not is_instance_valid(target_to_track) or position.distance_to(target_to_track.position) > attack_range + ENEMY_RADIUS * 2:
 		target_to_track = _get_closest_enemy()
 
 	if is_instance_valid(target_to_track):
@@ -325,8 +332,8 @@ func _process(delta: float) -> void:
 			remaining_arcs.append(arc)
 	_chain_arcs = remaining_arcs
 
-	# ─── FIRE WHEN TIMER ELAPSES ──────────────────────────
-	if attack_timer >= 1.0 / attack_speed and (_get_closest_enemy() or not _entry_order.is_empty()):
+	# ─── FIRE WHEN ENEMY IN RANGE ─────────────────────────
+	if attack_timer >= 1.0 / attack_speed and (_get_closest_enemy() != null or not _entry_order.is_empty()):
 		attack_timer = 0.0
 		_attack()
 
@@ -337,16 +344,17 @@ func _update_entry_order() -> void:
 
 	# Remove enemies that left range or died
 	_entry_order = _entry_order.filter(func(e):
-		return is_instance_valid(e) and position.distance_to(e.position) <= attack_range
+		return is_instance_valid(e) and position.distance_to(e.position) <= attack_range + ENEMY_RADIUS * 2
 	)
 
-	# Add newly entered enemies
+	# Add newly entered enemies and trigger immediate attack
 	for enemy in enemy_layer.get_children():
 		if not enemy.has_method("take_damage"):
 			continue
 		var dist = position.distance_to(enemy.position)
-		if dist <= attack_range and not _entry_order.has(enemy):
+		if dist <= attack_range + ENEMY_RADIUS * 2 and not _entry_order.has(enemy):
 			_entry_order.append(enemy)
+			attack_timer = 1.0 / attack_speed
 
 # ─── MAIN ATTACK ROUTER ────────────────────────────────
 func _attack() -> void:
@@ -377,7 +385,7 @@ func _attack_array() -> void:
 		return
 	var targets: Array[Node] = []
 	for enemy in enemy_layer.get_children():
-		if enemy.has_method("take_damage") and position.distance_to(enemy.position) <= attack_range:
+		if enemy.has_method("take_damage") and position.distance_to(enemy.position) <= attack_range + ENEMY_RADIUS * 2:
 			targets.append(enemy)
 	if targets.is_empty():
 		return
@@ -486,7 +494,7 @@ func _attack_bubble() -> void:
 		return
 	var enemies: Array[Node] = []
 	for enemy in enemy_layer.get_children():
-		if enemy.has_method("take_damage") and position.distance_to(enemy.position) <= attack_range:
+		if enemy.has_method("take_damage") and position.distance_to(enemy.position) <= attack_range + ENEMY_RADIUS * 2:
 			enemies.append(enemy)
 	if enemies.size() < 2:
 		for e in enemies:
@@ -560,7 +568,7 @@ func _attack_quick() -> void:
 		return
 	var targets: Array[Node] = []
 	for enemy in enemy_layer.get_children():
-		if enemy.has_method("take_damage") and position.distance_to(enemy.position) <= attack_range:
+		if enemy.has_method("take_damage") and position.distance_to(enemy.position) <= attack_range + ENEMY_RADIUS * 2:
 			targets.append(enemy)
 			if targets.size() >= 2:
 				break
@@ -830,7 +838,7 @@ func _get_closest_enemy() -> Node:
 	if enemy_layer == null:
 		return null
 	var closest: Node = null
-	var closest_dist: float = attack_range
+	var closest_dist: float = attack_range + ENEMY_RADIUS * 2
 	for enemy in enemy_layer.get_children():
 		if not enemy.has_method("take_damage"):
 			continue
@@ -844,7 +852,7 @@ func _get_closest_to_point(point: Vector2, exclude: Array[Node]) -> Node:
 	if enemy_layer == null:
 		return null
 	var closest: Node = null
-	var closest_dist: float = attack_range
+	var closest_dist: float = attack_range + ENEMY_RADIUS * 2
 	for enemy in enemy_layer.get_children():
 		if not enemy.has_method("take_damage"):
 			continue
@@ -865,7 +873,7 @@ func _get_lowest_hp_enemy() -> Node:
 		if not enemy.has_method("take_damage"):
 			continue
 		var dist = position.distance_to(enemy.position)
-		if dist > attack_range:
+		if dist > attack_range + ENEMY_RADIUS * 2:
 			continue
 		if "current_health" in enemy and enemy.current_health < lowest_hp:
 			lowest_hp = enemy.current_health
@@ -893,6 +901,12 @@ func _draw() -> void:
 			HORIZONTAL_ALIGNMENT_LEFT, -1, 9,
 			Color("#FFB800")
 		)
+
+	if _selected:
+		draw_circle(Vector2.ZERO, attack_range + ENEMY_RADIUS, Color(tower_color, 0.06))
+		draw_arc(Vector2.ZERO, attack_range + ENEMY_RADIUS, 0, TAU, 64, Color(tower_color, 0.25), 1.5)
+		var label = "Range: " + str(attack_range)
+		draw_string(ThemeDB.fallback_font, Vector2(0, -attack_range - ENEMY_RADIUS - 14), label, HORIZONTAL_ALIGNMENT_CENTER, -1, 10, Color(tower_color, 0.7))
 
 # ─── VOLUMETRIC 3D PRIMITIVE DRAWING HELPERS ───────────────────────
 func _draw_3d_cylinder(center: Vector2, radius: float, height: float, color: Color, outline_color: Color = Color.WHITE, line_width: float = 1.5) -> void:
