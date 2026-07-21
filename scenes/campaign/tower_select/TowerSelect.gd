@@ -415,6 +415,7 @@ func _on_card_drag_ended(card, _release_pos: Vector2) -> void:
 func _setup_intro_popup() -> void:
 	var scene = preload("res://scenes/campaign/tower_intro/TowerIntroPopup.tscn")
 	_intro_popup = scene.instantiate()
+	_intro_popup.z_index = 1000
 	add_child(_intro_popup)
 	_intro_popup.hide()
 	_intro_popup.closed.connect(_on_intro_closed)
