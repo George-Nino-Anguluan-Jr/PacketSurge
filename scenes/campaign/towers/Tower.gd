@@ -43,6 +43,7 @@ var _mobile_redraw_skip: int   = 0
 # ─── PROJECTILE & EXPLOSION STATE ─────────────────────
 var _projectiles: Array[Dictionary] = []
 var _explosions: Array[Dictionary]  = []
+var _chain_arcs: Array[Dictionary]  = []
 
 @onready var sprite: Sprite2D = $TowerSprite
 
@@ -63,6 +64,7 @@ func initialize(data: TowerData, cell: Vector2i, e_layer: Node2D) -> void:
 	grid_cell     = cell
 	enemy_layer   = e_layer
 	current_level = 1
+	z_index = 1
 	_setup_sprite()
 	_animate_placement()
 	queue_redraw()
@@ -273,7 +275,7 @@ func _process(delta: float) -> void:
 			var next_pos = current_pos.move_toward(mid, p["speed"] * delta)
 			p["pos"] = next_pos
 			p["draw_pos"] = next_pos
-			if next_pos.distance_to(mid) < 20.0 or p["elapsed_time"] > 2.0:
+			if next_pos.distance_to(mid) < 25.0 or p["elapsed_time"] > 2.0:
 				_on_projectile_impact(p)
 			else:
 				remaining_projectiles.append(p)
@@ -301,7 +303,7 @@ func _process(delta: float) -> void:
 		else:
 			p["draw_pos"] = next_pos
 
-		if next_pos.distance_to(target_pos) < 20.0:
+		if next_pos.distance_to(target_pos) < 25.0:
 			_on_projectile_impact(p)
 		else:
 			remaining_projectiles.append(p)
@@ -315,6 +317,13 @@ func _process(delta: float) -> void:
 		if e["elapsed"] < e["lifetime"]:
 			remaining_explosions.append(e)
 	_explosions = remaining_explosions
+
+	var remaining_arcs: Array[Dictionary] = []
+	for arc in _chain_arcs:
+		arc["elapsed"] += delta
+		if arc["elapsed"] < arc["lifetime"]:
+			remaining_arcs.append(arc)
+	_chain_arcs = remaining_arcs
 
 	# ─── FIRE WHEN TIMER ELAPSES ──────────────────────────
 	if attack_timer >= 1.0 / attack_speed and (_get_closest_enemy() or not _entry_order.is_empty()):
@@ -731,31 +740,32 @@ func _on_projectile_impact(p: Dictionary) -> void:
 
 	_spawn_impact_explosion(p["target_last_pos"], p["style"])
 
-	# Cascade lightning chaining on impact for Linked List!
+	# Chain lightning arcs on impact for Linked List!
 	if p["style"] == "chain_lightning" and p.has("chains_left") and p["chains_left"] > 0:
-		var next_target = _get_closest_to_point(p["target_last_pos"], p["chained_targets"])
-		if next_target:
-			var new_chains_left = p["chains_left"] - 1
-			var new_chained_list: Array[Node] = []
-			for n in p["chained_targets"]:
-				new_chained_list.append(n)
-			new_chained_list.append(next_target)
+		var last_pos = p["target_last_pos"]
+		var chained: Array[Node] = []
+		for n in p["chained_targets"]:
+			chained.append(n)
+		var current_damage = p["damage"]
+		var chains_left = p["chains_left"]
+		
+		while chains_left > 0:
+			var next_target = _get_closest_to_point(last_pos, chained)
+			if not next_target:
+				break
 			
-			var p_next = {
-				"pos": p["target_last_pos"],
-				"start_pos": p["target_last_pos"],
-				"draw_pos": p["target_last_pos"],
-				"target": next_target,
-				"target_last_pos": next_target.position,
-				"speed": 340.0,
-				"damage": p["damage"] * 0.8,
-				"style": "chain_lightning",
-				"elapsed_time": 0.0,
-				"total_dist": (next_target.position - p["target_last_pos"]).length(),
-				"chains_left": new_chains_left,
-				"chained_targets": new_chained_list
-			}
-			_projectiles.append(p_next)
+			chains_left -= 1
+			chained.append(next_target)
+			current_damage *= 0.8
+			
+			var next_pos = next_target.position
+			_spawn_chain_arc(last_pos, next_pos)
+			
+			if next_target.has_method("take_damage"):
+				next_target.take_damage(current_damage)
+			_spawn_impact_explosion(next_pos, "chain_lightning")
+			
+			last_pos = next_pos
 
 func _spawn_impact_explosion(pos: Vector2, style: String) -> void:
 	var radius_map = {
@@ -775,6 +785,14 @@ func _spawn_impact_explosion(pos: Vector2, style: String) -> void:
 		"lifetime": 0.22
 	}
 	_explosions.append(e)
+
+func _spawn_chain_arc(from_pos: Vector2, to_pos: Vector2) -> void:
+	_chain_arcs.append({
+		"from": from_pos - position,
+		"to": to_pos - position,
+		"elapsed": 0.0,
+		"lifetime": 0.35
+	})
 
 func _draw_ellipse(center: Vector2, radius: float, color: Color, filled: bool = true, width: float = -1.0) -> void:
 	# Custom ellipse drawer that scales purely on math and never touches/messes with canvas transforms
@@ -1385,6 +1403,22 @@ func _draw_overlays(color: Color) -> void:
 			draw_line(Vector2.ZERO, target_offset, flash_color, 2.5)
 		draw_circle(Vector2.ZERO, 8.0 * _shoot_flash, flash_color)
 		draw_circle(Vector2.ZERO, 4.0 * _shoot_flash, Color.WHITE)
+
+	for arc in _chain_arcs:
+		var life = 1.0 - (arc["elapsed"] / arc["lifetime"])
+		var pts = PackedVector2Array()
+		pts.append(arc["from"])
+		var dir = arc["to"] - arc["from"]
+		var dist = dir.length()
+		if dist > 4.0:
+			var n = Vector2(-dir.y, dir.x).normalized()
+			for i in range(1, 4):
+				var f = float(i) / 4.0
+				var jag = sin(_anim_time * 25.0 + i * 5.0) * (dist * 0.12)
+				pts.append(arc["from"] + dir * f + n * jag)
+		pts.append(arc["to"])
+		draw_polyline(pts, Color(color, life), 2.5)
+		draw_polyline(pts, Color(1, 1, 1, life), 1.0)
 
 	if Engine.is_editor_hint():
 		draw_arc(Vector2.ZERO, attack_range, 0, TAU, 64, Color(color, 0.15), 1.0)
