@@ -31,6 +31,7 @@ var _diff_badge: Button = null
 @onready var wave_splash: Control            = $HUD/HUDControl/WaveSplash
 @onready var wave_splash_label: Label        = $HUD/HUDControl/WaveSplash/WaveSplashLabel
 
+var _is_retrying: bool = false
 var _sound_ok: AudioStreamPlayer2D
 var _sound_fail: AudioStreamPlayer2D
 var _prev_ram: int = -1
@@ -311,7 +312,7 @@ func _ready() -> void:
 	SoundManager.play_level_music(level_number)
 	_build_challenge_panel()
 	if level_number == 1:
-		_show_tutorial()
+		call_deferred("_show_tutorial")
 	else:
 		call_deferred("_show_challenge")
 
@@ -1259,7 +1260,14 @@ func _show_result_panel(victory: bool) -> void:
 	game_over_panel.visible = true
 
 func _on_retry_pressed() -> void:
-	get_tree().reload_current_scene()
+	if _is_retrying:
+		return
+	_is_retrying = true
+	call_deferred(&"_do_retry")
+
+func _do_retry() -> void:
+	get_tree().paused = false
+	get_tree().change_scene_to_file("res://scenes/retry_redirect/retry_redirect.tscn")
 
 func _on_menu_pressed() -> void:
 	GameManager.go_to("campaign")

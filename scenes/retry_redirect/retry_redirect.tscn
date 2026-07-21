@@ -1,0 +1,6 @@
+[gd_scene format=3 uid="uid://dikbkp7g6rvuh"]
+
+[ext_resource type="Script" path="res://autoloads/RetryRedirect.gd" id="1_8y8dx"]
+
+[node name="RetryRedirect" type="Node"]
+script = ExtResource("1_8y8dx")
