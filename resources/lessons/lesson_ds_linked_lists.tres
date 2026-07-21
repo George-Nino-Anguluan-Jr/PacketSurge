@@ -1,7 +1,6 @@
 [gd_resource type="Resource" script_class="LessonData" format=3 uid="uid://dkofpb08ix8c8"]
 
 [ext_resource type="Script" uid="uid://ciet8k3fqk8tr" path="res://scripts/data/LessonData.gd" id="1_5ypmi"]
-[ext_resource type="PackedScene" uid="uid://b4jun8j02220n" path="res://scenes/academy/visualizations/VizLinkedLists.tscn" id="2_1p6j0"]
 
 [resource]
 script = ExtResource("1_5ypmi")
@@ -10,7 +9,6 @@ title = "Linked Lists"
 category = "data_structures"
 icon_text = "→→"
 prerequisites = Array[String](["ds_queues"])
-visualization_scene = ExtResource("2_1p6j0")
 concept_text = "A linked list is a chain of nodes where each node holds a value and points to the next node.
 
 Unlike arrays, nodes are not stored in consecutive memory spots.

@@ -1,7 +1,6 @@
 [gd_resource type="Resource" script_class="LessonData" format=3 uid="uid://ddywnc14ns7gy"]
 
 [ext_resource type="Script" uid="uid://ciet8k3fqk8tr" path="res://scripts/data/LessonData.gd" id="1_ureiw"]
-[ext_resource type="PackedScene" uid="uid://cqbi2028yebeg" path="res://scenes/academy/visualizations/VizStacks.tscn" id="2_t55l4"]
 
 [resource]
 script = ExtResource("1_ureiw")
@@ -10,7 +9,6 @@ title = "Stacks"
 category = "data_structures"
 icon_text = "↑↓"
 prerequisites = Array[String](["ds_arrays"])
-visualization_scene = ExtResource("2_t55l4")
 concept_text = "A stack follows Last In First Out (LIFO).
 The last item added is the first item removed.
 

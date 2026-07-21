@@ -1,7 +1,6 @@
 [gd_resource type="Resource" script_class="LessonData" format=3 uid="uid://b7mfo8srbw8gg"]
 
 [ext_resource type="Script" uid="uid://ciet8k3fqk8tr" path="res://scripts/data/LessonData.gd" id="1_wqrxq"]
-[ext_resource type="PackedScene" uid="uid://br2hviuvfjjba" path="res://scenes/academy/visualizations/VizSelectionSort.tscn" id="2_wjjx8"]
 
 [resource]
 script = ExtResource("1_wqrxq")
@@ -10,7 +9,6 @@ title = "Selection Sort"
 category = "data_structures"
 icon_text = "→↓"
 prerequisites = Array[String](["sort_bubble"])
-visualization_scene = ExtResource("2_wjjx8")
 concept_text = "Selection Sort finds the smallest element and moves it to the front.
 Then finds the next smallest and puts it in position 1, and so on.
 
