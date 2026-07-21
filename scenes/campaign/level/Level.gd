@@ -500,6 +500,7 @@ func _play_feedback(ok: bool) -> void:
 var overlay_menu: Control = null
 var current_clicked_cell: Vector2i = Vector2i(-1, -1)
 var _current_menu_cell: Vector2i = Vector2i(-1, -1)
+var _selected_tower: Node = null
 
 var _tutorial_step: int = 0
 var _tutorial_overlay: Control = null
@@ -646,6 +647,9 @@ func _on_cell_clicked(cell: Vector2i) -> void:
 	overlay_menu.visible = false
 	for child in overlay_menu.get_children():
 		child.queue_free()
+	if is_instance_valid(_selected_tower):
+		_selected_tower.set_selected(false)
+	_selected_tower = null
 
 	var existing = grid_system.get_tower_at(cell)
 	if existing:
@@ -663,6 +667,8 @@ func _on_cell_clicked(cell: Vector2i) -> void:
 	_show_placement_radial(cell)
 
 func _show_tower_menu(cell: Vector2i, tower: Node) -> void:
+	_selected_tower = tower
+	tower.set_selected(true)
 	var cell_center = grid_system.get_cell_center(cell)
 	var canvas_pos = get_canvas_transform() * cell_center
 	overlay_menu.position = canvas_pos
@@ -752,7 +758,12 @@ func _show_tower_menu(cell: Vector2i, tower: Node) -> void:
 	close_btn.size = Vector2(btn_w, btn_h)
 	close_btn.add_theme_font_size_override("font_size", 9)
 	close_btn.add_theme_color_override("font_color", Color("#4A7FA5"))
-	close_btn.pressed.connect(func(): overlay_menu.visible = false; _current_menu_cell = Vector2i(-1, -1))
+	close_btn.pressed.connect(func():
+		overlay_menu.visible = false
+		_current_menu_cell = Vector2i(-1, -1)
+		if is_instance_valid(_selected_tower):
+			_selected_tower.set_selected(false)
+		_selected_tower = null)
 	layout.add_child(close_btn)
 
 	overlay_menu.visible = true
@@ -760,6 +771,9 @@ func _show_tower_menu(cell: Vector2i, tower: Node) -> void:
 func _on_sell_tower(cell: Vector2i, tower: Node, value: int) -> void:
 	ram_manager.earn(value)
 	grid_system.remove_tower(cell)
+	if is_instance_valid(_selected_tower):
+		_selected_tower.set_selected(false)
+	_selected_tower = null
 	tower.queue_free()
 	overlay_menu.visible = false
 	_spawn_floating_text("+" + str(value) + "⚡ Sold!", tower.global_position, Color("#FF8844"), 14)
@@ -771,6 +785,7 @@ func _on_upgrade_tower(tower: Node, cost: int) -> void:
 		_play_feedback(false)
 		return
 	var new_lvl = tower.upgrade()
+	tower.set_selected(true)
 	overlay_menu.visible = false
 	_spawn_floating_text("⬆ Lv." + str(new_lvl), tower.global_position, Color("#00FF88"), 14)
 	_play_feedback(true)
