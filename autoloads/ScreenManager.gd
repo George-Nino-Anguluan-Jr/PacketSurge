@@ -49,6 +49,10 @@ func get_scale() -> float:
 	var scale_y = size.y / BASE_HEIGHT
 	return min(scale_x, scale_y)
 
+func make_scroll_touch_friendly(scroll: ScrollContainer) -> void:
+	scroll.set_script(preload("res://scripts/utils/TouchScrollContainer.gd"))
+	scroll.set_process_input(true)
+
 func apply_panel_padding(panel: PanelContainer, padding: int) -> void:
 	var style = panel.get_theme_stylebox("panel")
 	if style and style is StyleBoxFlat:

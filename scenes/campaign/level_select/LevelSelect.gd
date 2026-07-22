@@ -44,6 +44,7 @@ func _ready() -> void:
 	
 	# Responsive layout
 	_apply_responsive_layout()
+	ScreenManager.make_scroll_touch_friendly(map_scroll)
 	get_tree().root.size_changed.connect(_apply_responsive_layout)
 	
 	# Smoothly auto-scroll to center on current/unlocked progress

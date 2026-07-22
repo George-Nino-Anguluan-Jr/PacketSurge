@@ -87,6 +87,7 @@ func _ready() -> void:
 	_apply_styles()
 	_build_cards()
 	_apply_responsive_layout()
+	ScreenManager.make_scroll_touch_friendly($ContentArea/ScrollContainer)
 	get_tree().root.size_changed.connect(_apply_responsive_layout)
 	SignalBus.topic_mastered.connect(_on_topic_mastered)
 

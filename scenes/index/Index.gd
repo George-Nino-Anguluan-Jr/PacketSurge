@@ -43,6 +43,9 @@ func _ready() -> void:
 	_build_enemies_tab()
 	_build_path_tab()
 	_show_towers_tab()
+	ScreenManager.make_scroll_touch_friendly(towers_panel)
+	ScreenManager.make_scroll_touch_friendly(enemies_panel)
+	ScreenManager.make_scroll_touch_friendly(path_panel)
 	_apply_responsive_layout()
 	get_tree().root.size_changed.connect(_apply_responsive_layout)
 

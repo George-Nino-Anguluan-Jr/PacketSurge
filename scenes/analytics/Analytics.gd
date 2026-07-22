@@ -23,6 +23,8 @@ func _ready() -> void:
 	_apply_styles()
 	_show_my_stats_tab()
 	_apply_responsive_layout()
+	ScreenManager.make_scroll_touch_friendly(my_stats_panel)
+	ScreenManager.make_scroll_touch_friendly(class_panel)
 	get_tree().root.size_changed.connect(_apply_responsive_layout)
 	SupabaseManager.leaderboard_loaded.connect(_on_class_data_loaded)
 	

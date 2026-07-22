@@ -147,6 +147,7 @@ func _ready() -> void:
 	# Wait one frame so that container layouts solve and positions are valid
 	await get_tree().process_frame
 	_setup_scroll_clipping()
+	ScreenManager.make_scroll_touch_friendly(scroll_container)
 	_build_tower_cards()
 	_update_card_positions()
 	_refresh_slots()
