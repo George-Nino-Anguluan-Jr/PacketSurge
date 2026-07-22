@@ -330,27 +330,26 @@ func _apply_responsive_layout() -> void:
 		_build_general()
 	
 	# Adjust scene-level layout
+	var top_bar = $TopBar
 	var content_area = $ContentArea
 	var title_label = $TopBar/TopBarLayout/TitleLabel
 	
 	if ScreenManager.is_mobile():
-		content_area.add_theme_constant_override("margin_left", 8)
-		content_area.add_theme_constant_override("margin_right", 8)
-		content_area.add_theme_constant_override("margin_top", 8)
-		content_area.add_theme_constant_override("margin_bottom", 8)
+		ScreenManager.apply_panel_padding(top_bar, 20)
+		content_area.add_theme_constant_override("margin_left", 20)
+		content_area.add_theme_constant_override("margin_right", 20)
+		content_area.add_theme_constant_override("margin_top", 20)
+		content_area.add_theme_constant_override("margin_bottom", 20)
 		back_btn.custom_minimum_size = Vector2(70, 44)
 		title_label.add_theme_font_size_override("font_size", 14)
 	elif ScreenManager.is_tablet():
-		content_area.add_theme_constant_override("margin_left", 16)
-		content_area.add_theme_constant_override("margin_right", 16)
-		content_area.add_theme_constant_override("margin_top", 16)
-		content_area.add_theme_constant_override("margin_bottom", 16)
-		back_btn.custom_minimum_size = Vector2(80, 44)
-		title_label.add_theme_font_size_override("font_size", 15)
-	else:
+		ScreenManager.apply_panel_padding(top_bar, 24)
 		content_area.add_theme_constant_override("margin_left", 24)
 		content_area.add_theme_constant_override("margin_right", 24)
 		content_area.add_theme_constant_override("margin_top", 24)
 		content_area.add_theme_constant_override("margin_bottom", 24)
+		back_btn.custom_minimum_size = Vector2(80, 44)
+		title_label.add_theme_font_size_override("font_size", 15)
+	else:
 		back_btn.custom_minimum_size = Vector2(90, 0)
 		title_label.add_theme_font_size_override("font_size", 16)

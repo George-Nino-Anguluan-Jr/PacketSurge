@@ -355,30 +355,34 @@ func _style_active_tab(btn: Button, active: bool) -> void:
 
 # ─── RESPONSIVE ────────────────────────────────────────
 func _apply_responsive_layout() -> void:
+	var top_bar = $TopBar
 	var content_area = $ContentArea
 	var title_label = $TopBar/TopBarLayout/TitleLabel
+	var tab_bar = $TabBar
 	
 	if ScreenManager.is_mobile():
 		my_rank_label.visible = false
-		content_area.add_theme_constant_override("margin_left", 8)
-		content_area.add_theme_constant_override("margin_right", 8)
-		content_area.add_theme_constant_override("margin_top", 8)
-		content_area.add_theme_constant_override("margin_bottom", 8)
+		ScreenManager.apply_panel_padding(top_bar, 20)
+		tab_bar.offset_left = 20
+		tab_bar.offset_right = -20
+		content_area.add_theme_constant_override("margin_left", 20)
+		content_area.add_theme_constant_override("margin_right", 20)
+		content_area.add_theme_constant_override("margin_top", 20)
+		content_area.add_theme_constant_override("margin_bottom", 20)
 		title_label.add_theme_font_size_override("font_size", 14)
 		back_btn.custom_minimum_size = Vector2(70, 44)
 	elif ScreenManager.is_tablet():
 		my_rank_label.visible = true
-		content_area.add_theme_constant_override("margin_left", 12)
-		content_area.add_theme_constant_override("margin_right", 12)
-		content_area.add_theme_constant_override("margin_top", 12)
-		content_area.add_theme_constant_override("margin_bottom", 12)
+		ScreenManager.apply_panel_padding(top_bar, 24)
+		tab_bar.offset_left = 24
+		tab_bar.offset_right = -24
+		content_area.add_theme_constant_override("margin_left", 24)
+		content_area.add_theme_constant_override("margin_right", 24)
+		content_area.add_theme_constant_override("margin_top", 24)
+		content_area.add_theme_constant_override("margin_bottom", 24)
 		title_label.add_theme_font_size_override("font_size", 15)
 		back_btn.custom_minimum_size = Vector2(80, 44)
 	else:
 		my_rank_label.visible = true
-		content_area.add_theme_constant_override("margin_left", 16)
-		content_area.add_theme_constant_override("margin_right", 16)
-		content_area.add_theme_constant_override("margin_top", 16)
-		content_area.add_theme_constant_override("margin_bottom", 16)
 		title_label.add_theme_font_size_override("font_size", 16)
 		back_btn.custom_minimum_size = Vector2(90, 0)

@@ -688,18 +688,17 @@ func _apply_responsive_layout() -> void:
 	
 	var left_margin = $ContentArea/LeftMargin
 	var right_margin = $ContentArea/RightMargin
-	var title_label = $TopBar/TopBarLayout/TitleLabel
-	var level_name_label = $ContentArea/LeftMargin/LeftContent/LevelNameLabel
-	var slot_label = $ContentArea/RightMargin/RightContent/SlotLabel
+	var top_bar = $TopBar
 	
 	if ScreenManager.is_mobile():
 		# Collapse left info panel on mobile - player saw this before entering
 		left_margin.visible = false
 		left_margin.custom_minimum_size = Vector2(0, 0)
-		right_margin.add_theme_constant_override("margin_left", 8)
-		right_margin.add_theme_constant_override("margin_right", 8)
-		right_margin.add_theme_constant_override("margin_top", 8)
-		right_margin.add_theme_constant_override("margin_bottom", 8)
+		ScreenManager.apply_panel_padding(top_bar, 20)
+		right_margin.add_theme_constant_override("margin_left", 20)
+		right_margin.add_theme_constant_override("margin_right", 20)
+		right_margin.add_theme_constant_override("margin_top", 20)
+		right_margin.add_theme_constant_override("margin_bottom", 20)
 		available_grid.columns = 2
 		title_label.add_theme_font_size_override("font_size", 14)
 		slot_label.add_theme_font_size_override("font_size", 11)
@@ -708,22 +707,7 @@ func _apply_responsive_layout() -> void:
 	elif ScreenManager.is_tablet():
 		left_margin.visible = true
 		left_margin.custom_minimum_size = Vector2(260, 0)
-		left_margin.add_theme_constant_override("margin_left", 12)
-		left_margin.add_theme_constant_override("margin_right", 12)
-		left_margin.add_theme_constant_override("margin_top", 12)
-		left_margin.add_theme_constant_override("margin_bottom", 12)
-		right_margin.add_theme_constant_override("margin_left", 12)
-		right_margin.add_theme_constant_override("margin_right", 12)
-		right_margin.add_theme_constant_override("margin_top", 12)
-		right_margin.add_theme_constant_override("margin_bottom", 12)
-		available_grid.columns = 3
-		title_label.add_theme_font_size_override("font_size", 16)
-		slot_label.add_theme_font_size_override("font_size", 12)
-		level_name_label.add_theme_font_size_override("font_size", 18)
-		back_btn.custom_minimum_size = Vector2(80, 44)
-	else:
-		left_margin.visible = true
-		left_margin.custom_minimum_size = Vector2(380, 0)
+		ScreenManager.apply_panel_padding(top_bar, 24)
 		left_margin.add_theme_constant_override("margin_left", 24)
 		left_margin.add_theme_constant_override("margin_right", 24)
 		left_margin.add_theme_constant_override("margin_top", 24)
@@ -732,6 +716,23 @@ func _apply_responsive_layout() -> void:
 		right_margin.add_theme_constant_override("margin_right", 24)
 		right_margin.add_theme_constant_override("margin_top", 24)
 		right_margin.add_theme_constant_override("margin_bottom", 24)
+		available_grid.columns = 3
+		title_label.add_theme_font_size_override("font_size", 16)
+		slot_label.add_theme_font_size_override("font_size", 12)
+		level_name_label.add_theme_font_size_override("font_size", 18)
+		back_btn.custom_minimum_size = Vector2(80, 44)
+	else:
+		left_margin.visible = true
+		left_margin.custom_minimum_size = Vector2(380, 0)
+		ScreenManager.apply_panel_padding(top_bar, 8)
+		left_margin.add_theme_constant_override("margin_left", 32)
+		left_margin.add_theme_constant_override("margin_right", 32)
+		left_margin.add_theme_constant_override("margin_top", 32)
+		left_margin.add_theme_constant_override("margin_bottom", 32)
+		right_margin.add_theme_constant_override("margin_left", 32)
+		right_margin.add_theme_constant_override("margin_right", 32)
+		right_margin.add_theme_constant_override("margin_top", 32)
+		right_margin.add_theme_constant_override("margin_bottom", 32)
 		available_grid.columns = 5
 		title_label.add_theme_font_size_override("font_size", 18)
 		slot_label.add_theme_font_size_override("font_size", 13)
