@@ -17,6 +17,7 @@ var path_panel: ScrollContainer = null
 # ─── STATE ──────────────────────────────────────────────
 var active_tab: String   = "towers"
 var search_query: String = ""
+var _last_device: String = ""
 
 # ─── CACHED SCENES (preloaded once) ─────────────────────
 const TOWER_SCENE  = preload("res://scenes/campaign/towers/Tower.tscn")
@@ -191,6 +192,11 @@ func _build_towers_tab() -> void:
 		if _matches_search(data["name"], data["ds"]):
 			towers_content.add_child(_make_tower_card(data))
 
+func _preview_size() -> Vector2:
+	if ScreenManager.is_mobile():
+		return Vector2(80, 80)
+	return Vector2(120, 120)
+
 func _make_tower_card(data: Dictionary) -> Control:
 	var is_unlocked = ProgressManager.is_tower_unlocked(data["id"])
 	var color       = data["color"]
@@ -200,11 +206,11 @@ func _make_tower_card(data: Dictionary) -> Control:
 	card.add_theme_stylebox_override("panel", _make_card_style(color, is_unlocked))
 
 	var layout = HBoxContainer.new()
-	layout.add_theme_constant_override("separation", 16)
+	layout.add_theme_constant_override("separation", _card_separation())
 
 	# ── LEFT: live 3D preview ──
 	layout.add_child(_make_preview_panel(
-		data["id"], true, color, Vector2(120, 120)
+		data["id"], true, color, _preview_size()
 	))
 
 	# ── MIDDLE: identity + description + stats ──
@@ -214,7 +220,7 @@ func _make_tower_card(data: Dictionary) -> Control:
 
 	var name_label = Label.new()
 	name_label.text = data["name"]
-	name_label.add_theme_font_size_override("font_size", 18)
+	name_label.add_theme_font_size_override("font_size", _card_font_size())
 	name_label.add_theme_color_override(
 		"font_color", C_TEXT if is_unlocked else C_DIM
 	)
@@ -222,7 +228,7 @@ func _make_tower_card(data: Dictionary) -> Control:
 
 	var ds_label = Label.new()
 	ds_label.text = "%s   •   💾 %d RAM" % [data["ds"], data["cost"]]
-	ds_label.add_theme_font_size_override("font_size", 12)
+	ds_label.add_theme_font_size_override("font_size", 11 if ScreenManager.is_mobile() else 12)
 	ds_label.add_theme_color_override("font_color", color if is_unlocked else C_DIM)
 	middle.add_child(ds_label)
 
@@ -289,6 +295,12 @@ func _build_enemies_tab() -> void:
 		if _matches_search(data["name"], ""):
 			enemies_content.add_child(_make_enemy_card(data))
 
+func _card_separation() -> int:
+	return 8 if ScreenManager.is_mobile() else 16
+
+func _card_font_size() -> int:
+	return 14 if ScreenManager.is_mobile() else 18
+
 func _make_enemy_card(data: Dictionary) -> Control:
 	var color = data["color"]
 
@@ -297,11 +309,11 @@ func _make_enemy_card(data: Dictionary) -> Control:
 	card.add_theme_stylebox_override("panel", _make_card_style(color, true))
 
 	var layout = HBoxContainer.new()
-	layout.add_theme_constant_override("separation", 16)
+	layout.add_theme_constant_override("separation", _card_separation())
 
 	# ── LEFT: live 3D preview ──
 	layout.add_child(_make_preview_panel(
-		data["id"], false, color, Vector2(120, 120)
+		data["id"], false, color, _preview_size()
 	))
 
 	# ── MIDDLE: identity + description + stats ──
@@ -311,13 +323,13 @@ func _make_enemy_card(data: Dictionary) -> Control:
 
 	var name_label = Label.new()
 	name_label.text = data["name"]
-	name_label.add_theme_font_size_override("font_size", 18)
+	name_label.add_theme_font_size_override("font_size", _card_font_size())
 	name_label.add_theme_color_override("font_color", C_TEXT)
 	middle.add_child(name_label)
 
 	var meta = Label.new()
 	meta.text = "%s Threat   •   💾 +%d RAM" % [data["threat"], data["reward"]]
-	meta.add_theme_font_size_override("font_size", 12)
+	meta.add_theme_font_size_override("font_size", 11 if ScreenManager.is_mobile() else 12)
 	meta.add_theme_color_override("font_color", _threat_color(data["threat"]))
 	middle.add_child(meta)
 
@@ -355,6 +367,8 @@ func _make_enemy_card(data: Dictionary) -> Control:
 
 # ─── PATH TAB (unchanged behavior, refactored) ─────────
 func _build_path_tab() -> void:
+	for child in path_panel.get_children():
+		child.queue_free()
 	var content = VBoxContainer.new()
 	content.name = "PathContent"
 	content.add_theme_constant_override("separation", 4)
@@ -546,10 +560,16 @@ func _make_card_style(color: Color, is_active: bool) -> StyleBoxFlat:
 	s.corner_radius_top_right    = 6
 	s.corner_radius_bottom_left  = 6
 	s.corner_radius_bottom_right = 6
-	s.content_margin_left   = 16
-	s.content_margin_right  = 16
-	s.content_margin_top    = 12
-	s.content_margin_bottom = 12
+	if ScreenManager.is_mobile():
+		s.content_margin_left   = 10
+		s.content_margin_right  = 10
+		s.content_margin_top    = 8
+		s.content_margin_bottom = 8
+	else:
+		s.content_margin_left   = 16
+		s.content_margin_right  = 16
+		s.content_margin_top    = 12
+		s.content_margin_bottom = 12
 	return s
 
 func _add_stat(container: HBoxContainer, label: String, value: String) -> void:
@@ -688,7 +708,41 @@ func _style_active_tab(btn: Button, active: bool) -> void:
 
 # ─── RESPONSIVE ────────────────────────────────────────
 func _apply_responsive_layout() -> void:
+	var current = "mobile" if ScreenManager.is_mobile() else "tablet" if ScreenManager.is_tablet() else "desktop"
+	var device_changed = current != _last_device
+	_last_device = current
+	
+	var content_area = $ContentArea
+	var title_label = $TopBar/TopBarLayout/TitleLabel
+	
 	if ScreenManager.is_mobile():
 		search_field.visible = false
+		content_area.add_theme_constant_override("margin_left", 8)
+		content_area.add_theme_constant_override("margin_right", 8)
+		content_area.add_theme_constant_override("margin_top", 8)
+		content_area.add_theme_constant_override("margin_bottom", 8)
+		title_label.add_theme_font_size_override("font_size", 14)
+		back_btn.custom_minimum_size = Vector2(70, 44)
+	elif ScreenManager.is_tablet():
+		search_field.visible = true
+		content_area.add_theme_constant_override("margin_left", 12)
+		content_area.add_theme_constant_override("margin_right", 12)
+		content_area.add_theme_constant_override("margin_top", 12)
+		content_area.add_theme_constant_override("margin_bottom", 12)
+		title_label.add_theme_font_size_override("font_size", 15)
+		back_btn.custom_minimum_size = Vector2(80, 44)
 	else:
 		search_field.visible = true
+		content_area.add_theme_constant_override("margin_left", 16)
+		content_area.add_theme_constant_override("margin_right", 16)
+		content_area.add_theme_constant_override("margin_top", 16)
+		content_area.add_theme_constant_override("margin_bottom", 16)
+		title_label.add_theme_font_size_override("font_size", 16)
+		back_btn.custom_minimum_size = Vector2(90, 0)
+	
+	# Rebuild current tab if device changed (card sizes differ)
+	if device_changed:
+		match active_tab:
+			"towers": _build_towers_tab()
+			"enemies": _build_enemies_tab()
+			"path": _build_path_tab()

@@ -140,6 +140,7 @@ func _make_entry_card(
 		entry: Dictionary,
 		is_me: bool) -> PanelContainer:
 
+	var compact = ScreenManager.is_mobile()
 	var card  := PanelContainer.new()
 	card.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 
@@ -153,10 +154,16 @@ func _make_entry_card(
 	style.border_width_right     = 1
 	style.border_width_top       = 1
 	style.border_width_bottom    = 1
-	style.content_margin_left    = 16
-	style.content_margin_right   = 16
-	style.content_margin_top     = 12
-	style.content_margin_bottom  = 12
+	if compact:
+		style.content_margin_left    = 10
+		style.content_margin_right   = 10
+		style.content_margin_top     = 8
+		style.content_margin_bottom  = 8
+	else:
+		style.content_margin_left    = 16
+		style.content_margin_right   = 16
+		style.content_margin_top     = 12
+		style.content_margin_bottom  = 12
 
 	if is_me:
 		style.bg_color     = Color("#0D2A1A")
@@ -177,13 +184,13 @@ func _make_entry_card(
 	card.add_theme_stylebox_override("panel", style)
 
 	var layout := HBoxContainer.new()
-	layout.add_theme_constant_override("separation", 16)
+	layout.add_theme_constant_override("separation", 8 if compact else 16)
 
 	# ── Rank ──
 	var rank_label := Label.new()
-	rank_label.custom_minimum_size = Vector2(40, 0)
+	rank_label.custom_minimum_size = Vector2(32 if compact else 40, 0)
 	rank_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
-	rank_label.add_theme_font_size_override("font_size", 20)
+	rank_label.add_theme_font_size_override("font_size", 16 if compact else 20)
 
 	match rank:
 		1: rank_label.text = "🥇"
@@ -207,7 +214,7 @@ func _make_entry_card(
 	name_label.text = entry.get("username", "Unknown")
 	if is_me:
 		name_label.text += " (You)"
-	name_label.add_theme_font_size_override("font_size", 15)
+	name_label.add_theme_font_size_override("font_size", 13 if compact else 15)
 	name_label.add_theme_color_override(
 		"font_color",
 		Color("#00FF88") if is_me else Color("#E8F4FD")
@@ -216,7 +223,7 @@ func _make_entry_card(
 
 	var section_label := Label.new()
 	section_label.text = entry.get("section", "")
-	section_label.add_theme_font_size_override("font_size", 11)
+	section_label.add_theme_font_size_override("font_size", 10 if compact else 11)
 	section_label.add_theme_color_override("font_color", Color("#4A7FA5"))
 	name_section.add_child(section_label)
 
@@ -224,7 +231,7 @@ func _make_entry_card(
 
 	# ── Stats ──
 	var stats := HBoxContainer.new()
-	stats.add_theme_constant_override("separation", 20)
+	stats.add_theme_constant_override("separation", 12 if compact else 20)
 
 	_add_stat_column(
 	stats, "TOPICS",
@@ -253,20 +260,21 @@ func _add_stat_column(
 		label: String,
 		value: String,
 		color: Color) -> void:
+	var compact = ScreenManager.is_mobile()
 	var col := VBoxContainer.new()
 	col.add_theme_constant_override("separation", 2)
-	col.custom_minimum_size = Vector2(60, 0)
+	col.custom_minimum_size = Vector2(50 if compact else 60, 0)
 
 	var lbl := Label.new()
 	lbl.text = label
-	lbl.add_theme_font_size_override("font_size", 10)
+	lbl.add_theme_font_size_override("font_size", 9 if compact else 10)
 	lbl.add_theme_color_override("font_color", Color("#4A7FA5"))
 	lbl.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	col.add_child(lbl)
 
 	var val := Label.new()
 	val.text = value
-	val.add_theme_font_size_override("font_size", 14)
+	val.add_theme_font_size_override("font_size", 12 if compact else 14)
 	val.add_theme_color_override("font_color", color)
 	val.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	col.add_child(val)
@@ -347,7 +355,30 @@ func _style_active_tab(btn: Button, active: bool) -> void:
 
 # ─── RESPONSIVE ────────────────────────────────────────
 func _apply_responsive_layout() -> void:
+	var content_area = $ContentArea
+	var title_label = $TopBar/TopBarLayout/TitleLabel
+	
 	if ScreenManager.is_mobile():
 		my_rank_label.visible = false
+		content_area.add_theme_constant_override("margin_left", 8)
+		content_area.add_theme_constant_override("margin_right", 8)
+		content_area.add_theme_constant_override("margin_top", 8)
+		content_area.add_theme_constant_override("margin_bottom", 8)
+		title_label.add_theme_font_size_override("font_size", 14)
+		back_btn.custom_minimum_size = Vector2(70, 44)
+	elif ScreenManager.is_tablet():
+		my_rank_label.visible = true
+		content_area.add_theme_constant_override("margin_left", 12)
+		content_area.add_theme_constant_override("margin_right", 12)
+		content_area.add_theme_constant_override("margin_top", 12)
+		content_area.add_theme_constant_override("margin_bottom", 12)
+		title_label.add_theme_font_size_override("font_size", 15)
+		back_btn.custom_minimum_size = Vector2(80, 44)
 	else:
 		my_rank_label.visible = true
+		content_area.add_theme_constant_override("margin_left", 16)
+		content_area.add_theme_constant_override("margin_right", 16)
+		content_area.add_theme_constant_override("margin_top", 16)
+		content_area.add_theme_constant_override("margin_bottom", 16)
+		title_label.add_theme_font_size_override("font_size", 16)
+		back_btn.custom_minimum_size = Vector2(90, 0)
