@@ -115,11 +115,13 @@ func _setup_floating_tooltip() -> void:
 	
 	var layout := VBoxContainer.new()
 	layout.name = "Layout"
+	layout.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	layout.add_theme_constant_override("separation", 2)
 	tooltip_panel.add_child(layout)
 	
 	var title := Label.new()
 	title.name = "Title"
+	title.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	title.text = "Level Info"
 	title.add_theme_font_size_override("font_size", 14)
 	title.add_theme_color_override("font_color", Color.WHITE)
@@ -127,6 +129,7 @@ func _setup_floating_tooltip() -> void:
 	
 	var ds := Label.new()
 	ds.name = "DS"
+	ds.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	ds.text = "Arrays"
 	ds.add_theme_font_size_override("font_size", 11)
 	ds.add_theme_color_override("font_color", Color("#00D4FF"))
@@ -134,6 +137,7 @@ func _setup_floating_tooltip() -> void:
 	
 	var stats := Label.new()
 	stats.name = "Stats"
+	stats.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	stats.text = "Waves: 3"
 	stats.add_theme_font_size_override("font_size", 11)
 	stats.add_theme_color_override("font_color", Color("#4A7FA5"))
@@ -555,16 +559,18 @@ func _apply_responsive_layout() -> void:
 	
 	if ScreenManager.is_mobile():
 		ScreenManager.apply_panel_padding(top_bar, 20)
+		content_area.offset_top = 72
 		content_area.add_theme_constant_override("margin_left", 20)
 		content_area.add_theme_constant_override("margin_right", 20)
-		content_area.add_theme_constant_override("margin_top", 20)
+		content_area.add_theme_constant_override("margin_top", 0)
 		content_area.add_theme_constant_override("margin_bottom", 20)
 		back_btn.custom_minimum_size = Vector2(70, 44)
 	elif ScreenManager.is_tablet():
 		ScreenManager.apply_panel_padding(top_bar, 24)
+		content_area.offset_top = 76
 		content_area.add_theme_constant_override("margin_left", 24)
 		content_area.add_theme_constant_override("margin_right", 24)
-		content_area.add_theme_constant_override("margin_top", 24)
+		content_area.add_theme_constant_override("margin_top", 0)
 		content_area.add_theme_constant_override("margin_bottom", 24)
 		back_btn.custom_minimum_size = Vector2(80, 44)
 	else:
