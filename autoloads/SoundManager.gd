@@ -259,13 +259,9 @@ func play_level_music(level: int) -> void:
 	_music_player.play()
 
 func _load_music(path: String) -> AudioStreamMP3:
-	var file = FileAccess.open(path, FileAccess.READ)
-	if not file:
+	var stream = ResourceLoader.load(path)
+	if not stream or not stream is AudioStreamMP3:
 		return null
-	var data = file.get_buffer(file.get_length())
-	file.close()
-	var stream = AudioStreamMP3.new()
-	stream.data = data
 	stream.loop = true
 	stream.loop_offset = 0.0
 	return stream
