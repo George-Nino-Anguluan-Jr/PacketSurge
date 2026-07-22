@@ -8,6 +8,7 @@ extends Control
 
 # ─── STATE ─────────────────────────────────────────────
 var shake_enabled: bool = true
+var _last_device: String = ""
 
 # ─── READY ─────────────────────────────────────────────
 func _ready() -> void:
@@ -103,10 +104,10 @@ func _make_toggle_row(
 	style.corner_radius_top_right    = 4
 	style.corner_radius_bottom_left  = 4
 	style.corner_radius_bottom_right = 4
-	style.content_margin_left    = 16
-	style.content_margin_right   = 16
-	style.content_margin_top     = 12
-	style.content_margin_bottom  = 12
+	style.content_margin_left    = 12 if _is_compact() else 16
+	style.content_margin_right   = 12 if _is_compact() else 16
+	style.content_margin_top     = 8 if _is_compact() else 12
+	style.content_margin_bottom  = 8 if _is_compact() else 12
 	card.add_theme_stylebox_override("panel", style)
 
 	var row := HBoxContainer.new()
@@ -118,20 +119,20 @@ func _make_toggle_row(
 
 	var lbl := Label.new()
 	lbl.text = label
-	lbl.add_theme_font_size_override("font_size", 14)
+	lbl.add_theme_font_size_override("font_size", 13 if _is_compact() else 14)
 	lbl.add_theme_color_override("font_color", Color("#E8F4FD"))
 	text_col.add_child(lbl)
 
 	var desc := Label.new()
 	desc.text          = description
 	desc.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
-	desc.add_theme_font_size_override("font_size", 11)
+	desc.add_theme_font_size_override("font_size", 10 if _is_compact() else 11)
 	desc.add_theme_color_override("font_color", Color("#4A7FA5"))
 	text_col.add_child(desc)
 	row.add_child(text_col)
 
 	var toggle := Button.new()
-	toggle.custom_minimum_size = Vector2(80, 36)
+	toggle.custom_minimum_size = Vector2(70 if _is_compact() else 80, 40 if _is_compact() else 36)
 	toggle.text = "ON" if current_value else "OFF"
 	_style_toggle_button(toggle, current_value)
 	toggle.pressed.connect(_on_toggle_pressed.bind(toggle, on_toggle))
@@ -167,10 +168,10 @@ func _make_slider_row(
 	style.corner_radius_top_right    = 4
 	style.corner_radius_bottom_left  = 4
 	style.corner_radius_bottom_right = 4
-	style.content_margin_left    = 16
-	style.content_margin_right   = 16
-	style.content_margin_top     = 12
-	style.content_margin_bottom  = 12
+	style.content_margin_left    = 12 if _is_compact() else 16
+	style.content_margin_right   = 12 if _is_compact() else 16
+	style.content_margin_top     = 8 if _is_compact() else 12
+	style.content_margin_bottom  = 8 if _is_compact() else 12
 	card.add_theme_stylebox_override("panel", style)
 
 	var row := VBoxContainer.new()
@@ -178,14 +179,14 @@ func _make_slider_row(
 
 	var lbl := Label.new()
 	lbl.text = label
-	lbl.add_theme_font_size_override("font_size", 14)
+	lbl.add_theme_font_size_override("font_size", 13 if _is_compact() else 14)
 	lbl.add_theme_color_override("font_color", Color("#E8F4FD"))
 	row.add_child(lbl)
 
 	var desc := Label.new()
 	desc.text          = description
 	desc.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
-	desc.add_theme_font_size_override("font_size", 11)
+	desc.add_theme_font_size_override("font_size", 10 if _is_compact() else 11)
 	desc.add_theme_color_override("font_color", Color("#4A7FA5"))
 	row.add_child(desc)
 
@@ -194,7 +195,7 @@ func _make_slider_row(
 
 	var slider := HSlider.new()
 	slider.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-	slider.custom_minimum_size = Vector2(100, 0)
+	slider.custom_minimum_size = Vector2(80 if _is_compact() else 100, 0)
 	slider.min_value = 0.0
 	slider.max_value = 1.0
 	slider.step = 0.01
@@ -205,9 +206,9 @@ func _make_slider_row(
 	slider_box.add_child(slider)
 
 	var pct_label := Label.new()
-	pct_label.custom_minimum_size = Vector2(40, 0)
+	pct_label.custom_minimum_size = Vector2(36 if _is_compact() else 40, 0)
 	pct_label.text = str(int(current_value * 100)) + "%"
-	pct_label.add_theme_font_size_override("font_size", 14)
+	pct_label.add_theme_font_size_override("font_size", 13 if _is_compact() else 14)
 	pct_label.add_theme_color_override("font_color", Color("#00D4FF"))
 	pct_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_RIGHT
 	slider_box.add_child(pct_label)
@@ -223,6 +224,9 @@ func _make_slider_row(
 	return card
 
 # ─── HELPERS ───────────────────────────────────────────
+func _is_compact() -> bool:
+	return ScreenManager.is_mobile() or ScreenManager.is_tablet()
+
 func _make_section_label(text: String) -> Label:
 	var lbl := Label.new()
 	lbl.text = text
@@ -250,25 +254,25 @@ func _make_info_row(label: String, value: String) -> PanelContainer:
 	style.corner_radius_top_right    = 4
 	style.corner_radius_bottom_left  = 4
 	style.corner_radius_bottom_right = 4
-	style.content_margin_left    = 16
-	style.content_margin_right   = 16
-	style.content_margin_top     = 12
-	style.content_margin_bottom  = 12
+	style.content_margin_left    = 12 if _is_compact() else 16
+	style.content_margin_right   = 12 if _is_compact() else 16
+	style.content_margin_top     = 8 if _is_compact() else 12
+	style.content_margin_bottom  = 8 if _is_compact() else 12
 	card.add_theme_stylebox_override("panel", style)
 
 	var row := HBoxContainer.new()
 
 	var lbl := Label.new()
 	lbl.text = label
-	lbl.custom_minimum_size = Vector2(120, 0)
-	lbl.add_theme_font_size_override("font_size", 13)
+	lbl.custom_minimum_size = Vector2(100 if _is_compact() else 120, 0)
+	lbl.add_theme_font_size_override("font_size", 12 if _is_compact() else 13)
 	lbl.add_theme_color_override("font_color", Color("#4A7FA5"))
 	row.add_child(lbl)
 
 	var val := Label.new()
 	val.text = value if value != "" else "—"
 	val.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-	val.add_theme_font_size_override("font_size", 13)
+	val.add_theme_font_size_override("font_size", 12 if _is_compact() else 13)
 	val.add_theme_color_override("font_color", Color("#E8F4FD"))
 	row.add_child(val)
 
@@ -318,4 +322,35 @@ func _style_toggle_button(btn: Button, is_on: bool) -> void:
 
 # ─── RESPONSIVE ────────────────────────────────────────
 func _apply_responsive_layout() -> void:
-	pass
+	var current = "mobile" if ScreenManager.is_mobile() else "tablet" if ScreenManager.is_tablet() else "desktop"
+	
+	# Rebuild content if device category changed (widgets need different sizing)
+	if current != _last_device:
+		_last_device = current
+		_build_general()
+	
+	# Adjust scene-level layout
+	var content_area = $ContentArea
+	var title_label = $TopBar/TopBarLayout/TitleLabel
+	
+	if ScreenManager.is_mobile():
+		content_area.add_theme_constant_override("margin_left", 8)
+		content_area.add_theme_constant_override("margin_right", 8)
+		content_area.add_theme_constant_override("margin_top", 8)
+		content_area.add_theme_constant_override("margin_bottom", 8)
+		back_btn.custom_minimum_size = Vector2(70, 44)
+		title_label.add_theme_font_size_override("font_size", 14)
+	elif ScreenManager.is_tablet():
+		content_area.add_theme_constant_override("margin_left", 16)
+		content_area.add_theme_constant_override("margin_right", 16)
+		content_area.add_theme_constant_override("margin_top", 16)
+		content_area.add_theme_constant_override("margin_bottom", 16)
+		back_btn.custom_minimum_size = Vector2(80, 44)
+		title_label.add_theme_font_size_override("font_size", 15)
+	else:
+		content_area.add_theme_constant_override("margin_left", 24)
+		content_area.add_theme_constant_override("margin_right", 24)
+		content_area.add_theme_constant_override("margin_top", 24)
+		content_area.add_theme_constant_override("margin_bottom", 24)
+		back_btn.custom_minimum_size = Vector2(90, 0)
+		title_label.add_theme_font_size_override("font_size", 16)

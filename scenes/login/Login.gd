@@ -340,12 +340,28 @@ func _style_active_tab(btn: Button, active: bool) -> void:
 # ─── RESPONSIVE ────────────────────────────────────────
 func _apply_responsive_layout() -> void:
 	var card = $CenterContainer/MainLayout/FormCard
+	var main_layout = $CenterContainer/MainLayout
+	var login_form = $CenterContainer/MainLayout/FormCard/CardLayout/LoginForm
+	var register_form = $CenterContainer/MainLayout/FormCard/CardLayout/RegisterForm
+	
 	if ScreenManager.is_mobile():
 		card.custom_minimum_size = Vector2(320, 0)
-		title_label.add_theme_font_size_override("font_size", 32)
+		title_label.add_theme_font_size_override("font_size", 28)
+		main_layout.add_theme_constant_override("separation", 16)
+		login_form.add_theme_constant_override("separation", 10)
+		register_form.add_theme_constant_override("separation", 8)
+		status_label.add_theme_font_size_override("font_size", 12)
 	elif ScreenManager.is_tablet():
 		card.custom_minimum_size = Vector2(380, 0)
-		title_label.add_theme_font_size_override("font_size", 40)
+		title_label.add_theme_font_size_override("font_size", 36)
+		main_layout.add_theme_constant_override("separation", 20)
+		login_form.add_theme_constant_override("separation", 12)
+		register_form.add_theme_constant_override("separation", 10)
+		status_label.add_theme_font_size_override("font_size", 13)
 	else:
 		card.custom_minimum_size = Vector2(420, 0)
 		title_label.add_theme_font_size_override("font_size", 48)
+		main_layout.add_theme_constant_override("separation", 24)
+		login_form.add_theme_constant_override("separation", 12)
+		register_form.add_theme_constant_override("separation", 10)
+		status_label.add_theme_font_size_override("font_size", 14)

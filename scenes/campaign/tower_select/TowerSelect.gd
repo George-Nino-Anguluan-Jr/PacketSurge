@@ -28,6 +28,8 @@ var active_cards: Array = []
 # Intro popup
 var _intro_popup: Control = null
 
+var _last_device: String = ""
+
 # ─── TOWER DEFINITIONS ─────────────────────────────────
 const TOWER_DEFINITIONS = {
 	"tower_array": {
@@ -135,6 +137,7 @@ func _ready() -> void:
 
 	_setup_buttons()
 	_apply_styles()
+	_apply_responsive_layout()
 	_build_left_panel()
 	
 	# Determine unlocked towers first to build placeholders correctly
@@ -149,6 +152,8 @@ func _ready() -> void:
 	_refresh_slots()
 	_refresh_start_btn()
 	_setup_intro_popup()
+	
+	get_tree().root.size_changed.connect(_on_size_changed)
 
 # ─── LEFT PANEL ────────────────────────────────────────
 func _build_left_panel() -> void:
@@ -675,3 +680,70 @@ func _make_enemy_preview_cell(enemy_id: String, tint: Color, intro: Dictionary) 
 	cell.add_child(lbl)
 
 	return cell
+
+# ─── RESPONSIVE ────────────────────────────────────────
+func _apply_responsive_layout() -> void:
+	var current = "mobile" if ScreenManager.is_mobile() else "tablet" if ScreenManager.is_tablet() else "desktop"
+	_last_device = current
+	
+	var left_margin = $ContentArea/LeftMargin
+	var right_margin = $ContentArea/RightMargin
+	var title_label = $TopBar/TopBarLayout/TitleLabel
+	var level_name_label = $ContentArea/LeftMargin/LeftContent/LevelNameLabel
+	var slot_label = $ContentArea/RightMargin/RightContent/SlotLabel
+	
+	if ScreenManager.is_mobile():
+		# Collapse left info panel on mobile - player saw this before entering
+		left_margin.visible = false
+		left_margin.custom_minimum_size = Vector2(0, 0)
+		right_margin.add_theme_constant_override("margin_left", 8)
+		right_margin.add_theme_constant_override("margin_right", 8)
+		right_margin.add_theme_constant_override("margin_top", 8)
+		right_margin.add_theme_constant_override("margin_bottom", 8)
+		available_grid.columns = 2
+		title_label.add_theme_font_size_override("font_size", 14)
+		slot_label.add_theme_font_size_override("font_size", 11)
+		back_btn.custom_minimum_size = Vector2(70, 44)
+		start_btn.custom_minimum_size = Vector2(0, 48)
+	elif ScreenManager.is_tablet():
+		left_margin.visible = true
+		left_margin.custom_minimum_size = Vector2(260, 0)
+		left_margin.add_theme_constant_override("margin_left", 12)
+		left_margin.add_theme_constant_override("margin_right", 12)
+		left_margin.add_theme_constant_override("margin_top", 12)
+		left_margin.add_theme_constant_override("margin_bottom", 12)
+		right_margin.add_theme_constant_override("margin_left", 12)
+		right_margin.add_theme_constant_override("margin_right", 12)
+		right_margin.add_theme_constant_override("margin_top", 12)
+		right_margin.add_theme_constant_override("margin_bottom", 12)
+		available_grid.columns = 3
+		title_label.add_theme_font_size_override("font_size", 16)
+		slot_label.add_theme_font_size_override("font_size", 12)
+		level_name_label.add_theme_font_size_override("font_size", 18)
+		back_btn.custom_minimum_size = Vector2(80, 44)
+	else:
+		left_margin.visible = true
+		left_margin.custom_minimum_size = Vector2(380, 0)
+		left_margin.add_theme_constant_override("margin_left", 24)
+		left_margin.add_theme_constant_override("margin_right", 24)
+		left_margin.add_theme_constant_override("margin_top", 24)
+		left_margin.add_theme_constant_override("margin_bottom", 24)
+		right_margin.add_theme_constant_override("margin_left", 24)
+		right_margin.add_theme_constant_override("margin_right", 24)
+		right_margin.add_theme_constant_override("margin_top", 24)
+		right_margin.add_theme_constant_override("margin_bottom", 24)
+		available_grid.columns = 5
+		title_label.add_theme_font_size_override("font_size", 18)
+		slot_label.add_theme_font_size_override("font_size", 13)
+		level_name_label.add_theme_font_size_override("font_size", 22)
+		back_btn.custom_minimum_size = Vector2(90, 0)
+
+func _on_size_changed() -> void:
+	var current = "mobile" if ScreenManager.is_mobile() else "tablet" if ScreenManager.is_tablet() else "desktop"
+	if current != _last_device:
+		_apply_responsive_layout()
+		_determine_unlocked_towers()
+		_build_placeholders()
+		await get_tree().process_frame
+		_build_tower_cards()
+		_update_card_positions()
