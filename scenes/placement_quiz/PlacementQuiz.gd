@@ -122,8 +122,8 @@ func _build_intro() -> void:
 
 	# Description
 	var desc := Label.new()
-	desc.text = "Answer 10 quick questions about Python basics.\n\n" + \
-		"Score 80% or higher  →  Skip Python lessons, Level 1 unlocks now\n" + \
+		desc.text = "Answer 10 quick questions about Python basics.\n\n" + \
+		"Score 80% or higher  →  Skip Python lessons\n" + \
 		"Score below 80%  →  Start Academy from the beginning\n\n" + \
 		"This takes about 2 minutes."
 	desc.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
@@ -246,9 +246,8 @@ func _show_result() -> void:
 		)
 		result_desc.text = "You scored " + str(correct_count) + " out of " + \
 			str(QUESTIONS.size()) + " correct.\n\n" + \
-			"Python lessons are now unlocked as optional review.\n" + \
-			"Campaign is open — go test your skills!"
-		continue_btn.text = "▶  Go to Campaign"
+			"Python lessons are now unlocked as optional review."
+		continue_btn.text = "▶  Go to Academy"
 		# Clear previous connections
 		if continue_btn.pressed.is_connected(_on_failed):
 			continue_btn.pressed.disconnect(_on_failed)
@@ -283,15 +282,11 @@ func _on_passed() -> void:
 	# Unlock ds_arrays (first DSA lesson)
 	ProgressManager.topic_states["ds_arrays"] = "unlocked"
 
-	# Unlock first campaign level and starter tower
-	ProgressManager.unlock_campaign_level(1)
-	ProgressManager.unlock_tower("tower_array")
-
 	# Mark quiz done
 	ProgressManager.campaign_progress["placement_quiz_done"] = true
 	ProgressManager.save_progress()
 
-	GameManager.go_to("campaign")
+	GameManager.go_to("academy")
 
 func _on_failed() -> void:
 	# Lock python lessons, only variables is unlocked but not mastered

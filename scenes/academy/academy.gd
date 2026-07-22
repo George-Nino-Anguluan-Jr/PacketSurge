@@ -47,6 +47,8 @@ func _ready() -> void:
 	_apply_styles()
 	_update_progress_label()
 	_apply_responsive_layout()
+	ScreenManager.make_scroll_touch_friendly(scroll_area)
+	ScreenManager.make_scroll_touch_friendly($ContentArea/Sidebar/ScrollContainer)
 	get_tree().root.size_changed.connect(_apply_responsive_layout)
 	SignalBus.topic_unlocked.connect(_on_topic_state_changed)
 	SignalBus.topic_mastered.connect(_on_topic_state_changed)

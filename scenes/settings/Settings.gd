@@ -16,6 +16,7 @@ func _ready() -> void:
 	_apply_styles()
 	_build_general()
 	_apply_responsive_layout()
+	ScreenManager.make_scroll_touch_friendly(general_panel)
 	get_tree().root.size_changed.connect(_apply_responsive_layout)
 
 # ─── BUTTON SETUP ──────────────────────────────────────
