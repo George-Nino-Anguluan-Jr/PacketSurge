@@ -1031,9 +1031,21 @@ func _apply_styles() -> void:
 
 # ─── RESPONSIVE ────────────────────────────────────────
 func _apply_responsive_layout() -> void:
+	var top_bar = $TopBar
+	var content_area = $ContentArea
+	var bottom_bar = $BottomBar
+	
 	if ScreenManager.is_mobile():
+		ScreenManager.apply_panel_padding(top_bar, 20)
+		content_area.offset_left = 20
+		content_area.offset_right = -20
+		ScreenManager.apply_panel_padding(bottom_bar, 20)
 		_apply_mobile_layout()
 	elif ScreenManager.is_tablet():
+		ScreenManager.apply_panel_padding(top_bar, 24)
+		content_area.offset_left = 24
+		content_area.offset_right = -24
+		ScreenManager.apply_panel_padding(bottom_bar, 24)
 		_apply_tablet_layout()
 	else:
 		_apply_desktop_layout()
@@ -1067,6 +1079,8 @@ func _apply_mobile_layout() -> void:
 	lesson_title.add_theme_font_size_override("font_size", 18)
 	lesson_category.add_theme_font_size_override("font_size", 11)
 	# Bigger touch targets for buttons
+	back_btn.custom_minimum_size = Vector2(70, 44)
+	menu_btn.custom_minimum_size = Vector2(44, 44)
 	back_step_btn.custom_minimum_size = Vector2(90, 52)
 	next_step_btn.custom_minimum_size = Vector2(90, 52)
 	hint_button.custom_minimum_size   = Vector2(80, 52)

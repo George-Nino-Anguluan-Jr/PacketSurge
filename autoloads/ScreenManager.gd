@@ -49,6 +49,12 @@ func get_scale() -> float:
 	var scale_y = size.y / BASE_HEIGHT
 	return min(scale_x, scale_y)
 
+func apply_panel_padding(panel: PanelContainer, padding: int) -> void:
+	var style = panel.get_theme_stylebox("panel")
+	if style and style is StyleBoxFlat:
+		style.content_margin_left = padding
+		style.content_margin_right = padding
+
 # ─── SCALE HELPERS ─────────────────────────────────────
 # Call these everywhere instead of hardcoding pixel values
 

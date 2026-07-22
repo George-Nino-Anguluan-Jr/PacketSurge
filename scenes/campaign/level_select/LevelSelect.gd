@@ -42,6 +42,10 @@ func _ready() -> void:
 	# Create hover tooltip card at screen level (so it doesn't get clipped by scrolling)
 	_setup_floating_tooltip()
 	
+	# Responsive layout
+	_apply_responsive_layout()
+	get_tree().root.size_changed.connect(_apply_responsive_layout)
+	
 	# Smoothly auto-scroll to center on current/unlocked progress
 	await get_tree().process_frame
 	_auto_scroll_to_current()
@@ -545,5 +549,22 @@ func _style_back_btn() -> void:
 	back_btn.add_theme_color_override("font_color", Color("#00D4FF"))
 
 func _apply_responsive_layout() -> void:
-	# Since we are using an absolute MapCanvas horizontally scrollable system, plain responsive layouts of Grid columns are not required!
-	pass
+	var content_area = $ContentArea
+	var top_bar = $TopBar
+	
+	if ScreenManager.is_mobile():
+		ScreenManager.apply_panel_padding(top_bar, 20)
+		content_area.add_theme_constant_override("margin_left", 20)
+		content_area.add_theme_constant_override("margin_right", 20)
+		content_area.add_theme_constant_override("margin_top", 20)
+		content_area.add_theme_constant_override("margin_bottom", 20)
+		back_btn.custom_minimum_size = Vector2(70, 44)
+	elif ScreenManager.is_tablet():
+		ScreenManager.apply_panel_padding(top_bar, 24)
+		content_area.add_theme_constant_override("margin_left", 24)
+		content_area.add_theme_constant_override("margin_right", 24)
+		content_area.add_theme_constant_override("margin_top", 24)
+		content_area.add_theme_constant_override("margin_bottom", 24)
+		back_btn.custom_minimum_size = Vector2(80, 44)
+	else:
+		back_btn.custom_minimum_size = Vector2(90, 0)

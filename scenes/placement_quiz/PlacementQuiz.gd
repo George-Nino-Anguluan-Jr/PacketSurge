@@ -422,23 +422,15 @@ func _style_secondary_btn(btn: Button) -> void:
 
 # ─── RESPONSIVE ────────────────────────────────────────
 func _apply_responsive_layout() -> void:
-	var current = "mobile" if ScreenManager.is_mobile() else "tablet" if ScreenManager.is_tablet() else "desktop"
-	_last_device = current
-	
 	var content_area = $ContentArea
-	var title_label = $TopBar/TopBarLayout/TitleLabel
-	var progress_label = $TopBar/TopBarLayout/ProgressLabel
-	var question_label = $ContentArea/Content/QuizPanel/QuestionLabel
-	var result_title = $ContentArea/Content/ResultPanel/ResultTitle
-	var result_desc = $ContentArea/Content/ResultPanel/ResultDesc
-	var continue_btn = $ContentArea/Content/ResultPanel/ContinueBtn
-	var intro_panel = $ContentArea/Content/IntroPanel
+	var top_bar = $TopBar
 	
 	if ScreenManager.is_mobile():
-		content_area.add_theme_constant_override("margin_left", 12)
-		content_area.add_theme_constant_override("margin_right", 12)
-		content_area.add_theme_constant_override("margin_top", 12)
-		content_area.add_theme_constant_override("margin_bottom", 12)
+		ScreenManager.apply_panel_padding(top_bar, 20)
+		content_area.add_theme_constant_override("margin_left", 20)
+		content_area.add_theme_constant_override("margin_right", 20)
+		content_area.add_theme_constant_override("margin_top", 20)
+		content_area.add_theme_constant_override("margin_bottom", 20)
 		title_label.add_theme_font_size_override("font_size", 14)
 		progress_label.add_theme_font_size_override("font_size", 12)
 		question_label.add_theme_font_size_override("font_size", 15)
@@ -450,10 +442,11 @@ func _apply_responsive_layout() -> void:
 		intro_panel.add_theme_constant_override("margin_top", 12)
 		intro_panel.add_theme_constant_override("margin_bottom", 12)
 	elif ScreenManager.is_tablet():
-		content_area.add_theme_constant_override("margin_left", 20)
-		content_area.add_theme_constant_override("margin_right", 20)
-		content_area.add_theme_constant_override("margin_top", 20)
-		content_area.add_theme_constant_override("margin_bottom", 20)
+		ScreenManager.apply_panel_padding(top_bar, 24)
+		content_area.add_theme_constant_override("margin_left", 24)
+		content_area.add_theme_constant_override("margin_right", 24)
+		content_area.add_theme_constant_override("margin_top", 24)
+		content_area.add_theme_constant_override("margin_bottom", 24)
 		title_label.add_theme_font_size_override("font_size", 15)
 		progress_label.add_theme_font_size_override("font_size", 13)
 		question_label.add_theme_font_size_override("font_size", 17)
@@ -465,10 +458,6 @@ func _apply_responsive_layout() -> void:
 		intro_panel.add_theme_constant_override("margin_top", 16)
 		intro_panel.add_theme_constant_override("margin_bottom", 16)
 	else:
-		content_area.add_theme_constant_override("margin_left", 32)
-		content_area.add_theme_constant_override("margin_right", 32)
-		content_area.add_theme_constant_override("margin_top", 32)
-		content_area.add_theme_constant_override("margin_bottom", 32)
 		title_label.add_theme_font_size_override("font_size", 16)
 		progress_label.add_theme_font_size_override("font_size", 13)
 		question_label.add_theme_font_size_override("font_size", 18)
