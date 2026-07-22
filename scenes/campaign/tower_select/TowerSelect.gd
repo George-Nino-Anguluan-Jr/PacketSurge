@@ -691,9 +691,8 @@ func _apply_responsive_layout() -> void:
 	var top_bar = $TopBar
 	
 	if ScreenManager.is_mobile():
-		# Collapse left info panel on mobile - player saw this before entering
-		left_margin.visible = false
-		left_margin.custom_minimum_size = Vector2(0, 0)
+		left_margin.visible = true
+		left_margin.custom_minimum_size = Vector2(180, 0)
 		ScreenManager.apply_panel_padding(top_bar, 20)
 		right_margin.add_theme_constant_override("margin_left", 20)
 		right_margin.add_theme_constant_override("margin_right", 20)
@@ -702,6 +701,7 @@ func _apply_responsive_layout() -> void:
 		available_grid.columns = 2
 		title_label.add_theme_font_size_override("font_size", 14)
 		slot_label.add_theme_font_size_override("font_size", 11)
+		level_name_label.add_theme_font_size_override("font_size", 14)
 		back_btn.custom_minimum_size = Vector2(70, 44)
 		start_btn.custom_minimum_size = Vector2(0, 48)
 	elif ScreenManager.is_tablet():
