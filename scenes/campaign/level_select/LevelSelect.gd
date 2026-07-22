@@ -166,8 +166,19 @@ func _show_tooltip(global_pos: Vector2, info: Dictionary, is_unlocked: bool, is_
 		tooltip_panel.get_theme_stylebox("panel").border_color = Color("#2A3A4A")
 		ds.add_theme_color_override("font_color", Color("#2A3A4A"))
 		
-	# Adjust tooltip screen position above hovered node
-	tooltip_panel.global_position = global_pos - Vector2(100, 110)
+	# Adjust tooltip screen position — bounces to opposite side if off-screen
+	var tooltip_size = tooltip_panel.custom_minimum_size
+	var screen = DisplayServer.window_get_size()
+	var pos = global_pos - Vector2(100, 110)
+	if pos.x < 0:
+		pos.x = global_pos.x + 20
+	if pos.y < 52:
+		pos.y = global_pos.y + 20
+	if pos.x + tooltip_size.x > screen.x:
+		pos.x = screen.x - tooltip_size.x
+	if pos.y + tooltip_size.y > screen.y:
+		pos.y = screen.y - tooltip_size.y
+	tooltip_panel.global_position = pos
 	
 	var tween = create_tween().set_parallel(true)
 	tween.tween_property(tooltip_panel, "modulate:a", 1.0, 0.15)
