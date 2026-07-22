@@ -4,15 +4,15 @@ extends Control
 # ─── NODE REFERENCES ───────────────────────────────────
 @onready var back_btn: Button               = $TopBar/TopBarLayout/BackBtn
 @onready var title_label: Label             = $TopBar/TopBarLayout/TitleLabel
-@onready var level_name_label: Label        = $ContentArea/LeftMargin/LeftContent/LevelNameLabel
-@onready var concept_content: VBoxContainer = $ContentArea/LeftMargin/LeftContent/ConceptPanel/ConceptMargin/ConceptContent
-@onready var enemy_tip_content: VBoxContainer = $ContentArea/LeftMargin/LeftContent/EnemyTipPanel/EnemyTipMargin/EnemyTipContent
-@onready var stats_content: VBoxContainer   = $ContentArea/LeftMargin/LeftContent/StatsPanel/StatsMargin/StatsContent
-@onready var slot_label: Label              = $ContentArea/RightMargin/RightContent/SlotLabel
-@onready var selected_row: HBoxContainer    = $ContentArea/RightMargin/RightContent/SelectedRow
-@onready var available_grid: GridContainer  = $ContentArea/RightMargin/RightContent/ScrollContainer/AvailableGrid
-@onready var start_btn: Button              = $ContentArea/RightMargin/RightContent/StartBtn
-@onready var scroll_container: ScrollContainer = $ContentArea/RightMargin/RightContent/ScrollContainer
+@onready var level_name_label: Label        = $OuterScroll/ContentArea/LeftMargin/LeftContent/LevelNameLabel
+@onready var concept_content: VBoxContainer = $OuterScroll/ContentArea/LeftMargin/LeftContent/ConceptPanel/ConceptMargin/ConceptContent
+@onready var enemy_tip_content: VBoxContainer = $OuterScroll/ContentArea/LeftMargin/LeftContent/EnemyTipPanel/EnemyTipMargin/EnemyTipContent
+@onready var stats_content: VBoxContainer   = $OuterScroll/ContentArea/LeftMargin/LeftContent/StatsPanel/StatsMargin/StatsContent
+@onready var slot_label: Label              = $OuterScroll/ContentArea/RightMargin/RightContent/SlotLabel
+@onready var selected_row: HBoxContainer    = $OuterScroll/ContentArea/RightMargin/RightContent/SelectedRow
+@onready var available_grid: GridContainer  = $OuterScroll/ContentArea/RightMargin/RightContent/AvailableGrid
+@onready var start_btn: Button              = get_node("OuterScroll/ContentArea/RightMargin/RightContent/StartBtn")
+@onready var scroll_container: ScrollContainer = $OuterScroll
 @onready var card_layer: Control            = $CardLayer
 
 # ─── STATE ─────────────────────────────────────────────
@@ -557,7 +557,7 @@ func _apply_styles() -> void:
 	concept_style.corner_radius_top_right    = 6
 	concept_style.corner_radius_bottom_left  = 6
 	concept_style.corner_radius_bottom_right = 6
-	$ContentArea/LeftMargin/LeftContent/ConceptPanel.add_theme_stylebox_override(
+	$OuterScroll/ContentArea/LeftMargin/LeftContent/ConceptPanel.add_theme_stylebox_override(
 		"panel", concept_style
 	)
 
@@ -573,7 +573,7 @@ func _apply_styles() -> void:
 	tip_style.corner_radius_top_right    = 6
 	tip_style.corner_radius_bottom_left  = 6
 	tip_style.corner_radius_bottom_right = 6
-	$ContentArea/LeftMargin/LeftContent/EnemyTipPanel.add_theme_stylebox_override(
+	$OuterScroll/ContentArea/LeftMargin/LeftContent/EnemyTipPanel.add_theme_stylebox_override(
 		"panel", tip_style
 	)
 
@@ -589,7 +589,7 @@ func _apply_styles() -> void:
 	stats_style.corner_radius_top_right    = 6
 	stats_style.corner_radius_bottom_left  = 6
 	stats_style.corner_radius_bottom_right = 6
-	$ContentArea/LeftMargin/LeftContent/StatsPanel.add_theme_stylebox_override(
+	$OuterScroll/ContentArea/LeftMargin/LeftContent/StatsPanel.add_theme_stylebox_override(
 		"panel", stats_style
 	)
 
@@ -687,8 +687,8 @@ func _apply_responsive_layout() -> void:
 	var current = "mobile" if ScreenManager.is_mobile() else "tablet" if ScreenManager.is_tablet() else "desktop"
 	_last_device = current
 	
-	var left_margin = $ContentArea/LeftMargin
-	var right_margin = $ContentArea/RightMargin
+	var left_margin = $OuterScroll/ContentArea/LeftMargin
+	var right_margin = $OuterScroll/ContentArea/RightMargin
 	var top_bar = $TopBar
 	
 	if ScreenManager.is_mobile():
