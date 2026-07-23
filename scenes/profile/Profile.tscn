@@ -1,0 +1,70 @@
+[gd_scene format=3 uid="uid://b0d3admqmwgd2"]
+
+[ext_resource type="Script" uid="uid://ce1kn4j7qpu7n" path="res://scenes/profile/Profile.gd" id="1_p65ra"]
+[ext_resource type="PackedScene" uid="uid://r0pj7cuytrqm" path="res://scenes/core/ToastManager.tscn" id="2_gevsd"]
+
+[node name="Profile" type="Control" unique_id=999888800]
+layout_mode = 3
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+script = ExtResource("1_p65ra")
+
+[node name="Background" type="ColorRect" parent="." unique_id=999888801]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+color = Color(0.019607844, 0.050980393, 0.101960786, 1)
+
+[node name="TopBar" type="PanelContainer" parent="." unique_id=999888802]
+custom_minimum_size = Vector2(0, 52)
+layout_mode = 1
+anchors_preset = 10
+anchor_right = 1.0
+offset_bottom = 23.0
+grow_horizontal = 2
+
+[node name="TopBarLayout" type="HBoxContainer" parent="TopBar" unique_id=999888803]
+layout_mode = 2
+theme_override_constants/separation = 16
+
+[node name="BackBtn" type="Button" parent="TopBar/TopBarLayout" unique_id=999888804]
+custom_minimum_size = Vector2(90, 0)
+layout_mode = 2
+text = "← BACK"
+
+[node name="TitleLabel" type="Label" parent="TopBar/TopBarLayout" unique_id=999888805]
+layout_mode = 2
+size_flags_horizontal = 3
+theme_override_colors/font_color = Color(0.9098039, 0.95686275, 0.99215686, 1)
+text = "STUDENT PROFILE"
+
+[node name="AnalyticsBtn" type="Button" parent="TopBar/TopBarLayout" unique_id=999888806]
+custom_minimum_size = Vector2(120, 0)
+layout_mode = 2
+text = "📊 ANALYTICS"
+
+[node name="ContentArea" type="MarginContainer" parent="." unique_id=999888807]
+layout_mode = 1
+anchors_preset = -1
+anchor_right = 1.0
+anchor_bottom = 1.0
+offset_top = 52.0
+grow_horizontal = 2
+grow_vertical = 2
+
+[node name="ScrollContainer" type="ScrollContainer" parent="ContentArea" unique_id=999888808]
+layout_mode = 2
+horizontal_scroll_mode = 0
+
+[node name="Content" type="VBoxContainer" parent="ContentArea/ScrollContainer" unique_id=999888809]
+layout_mode = 2
+size_flags_horizontal = 3
+theme_override_constants/separation = 16
+
+[node name="ToastManager" parent="." unique_id=999888810 instance=ExtResource("2_gevsd")]

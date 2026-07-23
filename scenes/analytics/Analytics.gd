@@ -1,21 +1,17 @@
-# Analytics.gd
-extends ColorRect
+extends Control
 
 # ─── NODE REFERENCES ───────────────────────────────────
-@onready var back_btn: Button             = $CenterContainer/PopupCard/MarginContainer/ContentLayout/TopBar/TopBarLayout/BackBtn
-@onready var my_stats_tab: Button         = $CenterContainer/PopupCard/MarginContainer/ContentLayout/TabBar/MyStatsTab
-@onready var class_tab: Button            = $CenterContainer/PopupCard/MarginContainer/ContentLayout/TabBar/ClassTab
-@onready var my_stats_panel: ScrollContainer = $CenterContainer/PopupCard/MarginContainer/ContentLayout/ContentArea/MyStatsPanel
-@onready var class_panel: ScrollContainer    = $CenterContainer/PopupCard/MarginContainer/ContentLayout/ContentArea/ClassPanel
-@onready var my_stats_content: VBoxContainer = $CenterContainer/PopupCard/MarginContainer/ContentLayout/ContentArea/MyStatsPanel/MyStatsContent
-@onready var class_content: VBoxContainer    = $CenterContainer/PopupCard/MarginContainer/ContentLayout/ContentArea/ClassPanel/ClassContent
+@onready var back_btn: Button         = $TopBar/TopBarLayout/BackBtn
+@onready var my_stats_tab: Button     = $TabBar/MyStatsTab
+@onready var class_tab: Button        = $TabBar/ClassTab
+@onready var my_stats_panel: ScrollContainer = $ContentArea/MyStatsPanel
+@onready var class_panel: ScrollContainer    = $ContentArea/ClassPanel
+@onready var my_stats_content: VBoxContainer = $ContentArea/MyStatsPanel/MyStatsContent
+@onready var class_content: VBoxContainer    = $ContentArea/ClassPanel/ClassContent
 
 # ─── STATE ─────────────────────────────────────────────
 var active_tab: String  = "my_stats"
 var class_data: Array   = []
-var is_popup_mode: bool = false
-
-signal back_requested
 
 # ─── READY ─────────────────────────────────────────────
 func _ready() -> void:
@@ -23,16 +19,11 @@ func _ready() -> void:
 	_apply_styles()
 	_show_my_stats_tab()
 	_apply_responsive_layout()
+	_animate_enter()
 	ScreenManager.make_scroll_touch_friendly(my_stats_panel)
 	ScreenManager.make_scroll_touch_friendly(class_panel)
 	get_tree().root.size_changed.connect(_apply_responsive_layout)
 	SupabaseManager.leaderboard_loaded.connect(_on_class_data_loaded)
-	
-	# Also update responsive layout whenever visibility changes
-	visibility_changed.connect(func():
-		if visible:
-			_apply_responsive_layout()
-	)
 
 # ─── BUTTON SETUP ──────────────────────────────────────
 func _setup_buttons() -> void:
@@ -41,18 +32,11 @@ func _setup_buttons() -> void:
 	class_tab.pressed.connect(_show_class_tab)
 
 func _on_back_pressed() -> void:
-	if is_popup_mode:
-		back_requested.emit()
-	else:
-		GameManager.go_to("main_menu")
+	GameManager.go_to("main_menu")
 
 func _input(event: InputEvent) -> void:
 	if event.is_action_pressed("ui_cancel"):
-		if is_popup_mode:
-			back_requested.emit()
-			get_viewport().set_input_as_handled()
-		else:
-			GameManager.go_to("main_menu")
+		GameManager.go_to("main_menu")
 
 # ─── TAB SWITCHING ─────────────────────────────────────
 func _show_my_stats_tab() -> void:
@@ -744,25 +728,11 @@ func _format_time(seconds: float) -> String:
 
 # ─── STYLES ────────────────────────────────────────────
 func _apply_styles() -> void:
-	# Style the centered PopupCard panel
-	var card_style := StyleBoxFlat.new()
-	card_style.bg_color               = Color("#0A1628", 0.95)
-	card_style.border_color           = Color("#00D4FF")
-	card_style.border_width_left      = 2
-	card_style.border_width_right     = 2
-	card_style.border_width_top       = 2
-	card_style.border_width_bottom    = 2
-	card_style.corner_radius_top_left     = 8
-	card_style.corner_radius_top_right    = 8
-	card_style.corner_radius_bottom_left  = 8
-	card_style.corner_radius_bottom_right = 8
-	$CenterContainer/PopupCard.add_theme_stylebox_override("panel", card_style)
-
 	var top_style := StyleBoxFlat.new()
 	top_style.bg_color          = Color("#0A1628")
 	top_style.border_color      = Color("#00D4FF")
 	top_style.border_width_bottom = 1
-	$CenterContainer/PopupCard/MarginContainer/ContentLayout/TopBar.add_theme_stylebox_override("panel", top_style)
+	$TopBar.add_theme_stylebox_override("panel", top_style)
 
 	var back_style := StyleBoxFlat.new()
 	back_style.bg_color               = Color("#0A1628")
@@ -799,52 +769,23 @@ func _style_active_tab(btn: Button, active: bool) -> void:
 	btn.add_theme_stylebox_override("pressed", style)
 	btn.add_theme_font_size_override("font_size", 14)
 
+func _animate_enter() -> void:
+	modulate.a = 0.0
+	var tween = create_tween()
+	tween.set_ease(Tween.EASE_OUT)
+	tween.set_trans(Tween.TRANS_CUBIC)
+	tween.tween_property(self, "modulate:a", 1.0, 0.4)
+
 # ─── RESPONSIVE ────────────────────────────────────────
 func _apply_responsive_layout() -> void:
-	# Force Analytics to cover the entire viewport/screen
-	set_anchors_preset(Control.PRESET_FULL_RECT)
-	anchor_right = 1.0
-	anchor_bottom = 1.0
-	offset_left = 0
-	offset_right = 0
-	offset_top = 0
-	offset_bottom = 0
-
-	# Ensure CenterContainer also fills the entire screen to center the card
-	var center_container = get_node_or_null("CenterContainer")
-	if center_container:
-		center_container.set_anchors_preset(Control.PRESET_FULL_RECT)
-		center_container.anchor_right = 1.0
-		center_container.anchor_bottom = 1.0
-		center_container.offset_left = 0
-		center_container.offset_right = 0
-		center_container.offset_top = 0
-		center_container.offset_bottom = 0
-
-	var card = $CenterContainer/PopupCard
-	var margin_container = $CenterContainer/PopupCard/MarginContainer
-	var content_layout = $CenterContainer/PopupCard/MarginContainer/ContentLayout
-	var content_area = $CenterContainer/PopupCard/MarginContainer/ContentLayout/ContentArea
-	
+	var content_area = $ContentArea
 	if ScreenManager.is_mobile():
-		card.custom_minimum_size = Vector2(480, 290)
-		margin_container.add_theme_constant_override("margin_left", 12)
-		margin_container.add_theme_constant_override("margin_top", 12)
-		margin_container.add_theme_constant_override("margin_right", 12)
-		margin_container.add_theme_constant_override("margin_bottom", 12)
-		content_layout.add_theme_constant_override("separation", 8)
-		content_area.add_theme_constant_override("margin_left", 8)
-		content_area.add_theme_constant_override("margin_top", 8)
-		content_area.add_theme_constant_override("margin_right", 8)
-		content_area.add_theme_constant_override("margin_bottom", 8)
+		content_area.add_theme_constant_override("margin_left", 12)
+		content_area.add_theme_constant_override("margin_top", 12)
+		content_area.add_theme_constant_override("margin_right", 12)
+		content_area.add_theme_constant_override("margin_bottom", 12)
 	else:
-		card.custom_minimum_size = Vector2(900, 650)
-		margin_container.add_theme_constant_override("margin_left", 24)
-		margin_container.add_theme_constant_override("margin_top", 24)
-		margin_container.add_theme_constant_override("margin_right", 24)
-		margin_container.add_theme_constant_override("margin_bottom", 24)
-		content_layout.add_theme_constant_override("separation", 16)
-		content_area.add_theme_constant_override("margin_left", 16)
-		content_area.add_theme_constant_override("margin_top", 16)
-		content_area.add_theme_constant_override("margin_right", 16)
-		content_area.add_theme_constant_override("margin_bottom", 16)
+		content_area.add_theme_constant_override("margin_left", 24)
+		content_area.add_theme_constant_override("margin_top", 24)
+		content_area.add_theme_constant_override("margin_right", 24)
+		content_area.add_theme_constant_override("margin_bottom", 24)
