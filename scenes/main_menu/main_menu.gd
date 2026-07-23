@@ -15,8 +15,6 @@ extends Control
 @onready var avatar_label: Label           = $TopLeftContainer/ProfileCard/MarginContainer/ProfileLayout/AvatarPanel/AvatarLabel
 @onready var username_label: Label         = $TopLeftContainer/ProfileCard/MarginContainer/ProfileLayout/TextLayout/UsernameLabel
 @onready var class_label: Label            = $TopLeftContainer/ProfileCard/MarginContainer/ProfileLayout/TextLayout/ClassLabel
-@onready var profile_popup: ColorRect       = $ProfilePopup
-
 var _core_buttons: Array[Button]  = []
 var _all_buttons: Array[Button]   = []
 var _continue_btn: Button = null
@@ -293,8 +291,7 @@ func _setup_profile_card() -> void:
 
 func _on_profile_card_gui_input(event: InputEvent) -> void:
 	if event is InputEventMouseButton and event.button_index == MOUSE_BUTTON_LEFT and event.pressed:
-		if profile_popup.has_method("open"):
-			profile_popup.open()
+		GameManager.go_to("profile")
 
 func _style_profile_card() -> void:
 	# Card glass/tech style

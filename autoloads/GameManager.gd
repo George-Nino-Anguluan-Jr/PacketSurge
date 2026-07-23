@@ -19,6 +19,7 @@ const SCENES = {
 	"leaderboard":  "res://scenes/leaderboard/Leaderboard.tscn",
 	"analytics":    "res://scenes/analytics/Analytics.tscn",
 	"settings":     "res://scenes/settings/Settings.tscn",
+	"profile":      "res://scenes/profile/Profile.tscn",
 
 }
 

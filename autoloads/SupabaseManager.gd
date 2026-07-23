@@ -12,6 +12,7 @@ var username:     String = ""
 var section:      String = ""
 var year_level:   String = ""
 var access_token: String = ""
+var last_login:  String = ""
 var is_logged_in: bool   = false
 
 # ─── SIGNALS ───────────────────────────────────────────
@@ -202,6 +203,7 @@ func _on_profile_loaded(
 			username   = s.get("username",   "")
 			year_level = s.get("year_level", "")
 			section    = s.get("section",    "")
+			last_login = s.get("last_seen", "")
 			_update_last_seen()
 			load_progress_from_cloud()   # ← loads progress THEN navigates
 			login_completed.emit(
@@ -224,6 +226,7 @@ func logout() -> void:
 	username     = ""
 	section      = ""
 	year_level   = ""
+	last_login   = ""
 	access_token = ""
 	is_logged_in = false
 	ProgressManager.reset_all_progress()
