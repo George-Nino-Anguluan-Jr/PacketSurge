@@ -30,6 +30,13 @@ var _intro_popup: Control = null
 
 var _last_device: String = ""
 
+func _process(_delta: float) -> void:
+	for card in active_cards:
+		if card.is_selected and is_instance_valid(card):
+			var slot = selected_row.get_child(card.current_slot_idx)
+			if slot:
+				card.global_position = slot.global_position
+
 # ─── TOWER DEFINITIONS ─────────────────────────────────
 const TOWER_DEFINITIONS = {
 	"tower_array": {
@@ -146,10 +153,8 @@ func _ready() -> void:
 	
 	# Wait one frame so that container layouts solve and positions are valid
 	await get_tree().process_frame
-	_setup_scroll_clipping()
 	ScreenManager.make_scroll_touch_friendly(scroll_container)
 	_build_tower_cards()
-	_update_card_positions()
 	_refresh_slots()
 	_refresh_start_btn()
 	_setup_intro_popup()
@@ -254,7 +259,7 @@ func _build_placeholders() -> void:
 	for child in available_grid.get_children():
 		child.queue_free()
 		
-	# 1. Selected Slot Placeholders (Exactly 5 slots)
+	# Selected Slot Placeholders (Exactly 5 slots)
 	for i in range(max_slots):
 		var p_slot := PanelContainer.new()
 		p_slot.custom_minimum_size = Vector2(96, 130)
@@ -282,27 +287,6 @@ func _build_placeholders() -> void:
 		p_slot.add_child(lbl)
 		
 		selected_row.add_child(p_slot)
-		
-	# 2. Available Slot Placeholders (Matching number of unlocked towers)
-	for i in range(available_towers.size()):
-		var p_slot := PanelContainer.new()
-		p_slot.custom_minimum_size = Vector2(96, 130)
-		p_slot.name = "AvailableSlot_" + str(i)
-		
-		var style := StyleBoxFlat.new()
-		style.bg_color = Color("#030A14", 0.5)
-		style.border_color = Color("#0F2238")
-		style.border_width_left = 1
-		style.border_width_right = 1
-		style.border_width_top = 1
-		style.border_width_bottom = 1
-		style.corner_radius_top_left = 8
-		style.corner_radius_top_right = 8
-		style.corner_radius_bottom_left = 8
-		style.corner_radius_bottom_right = 8
-		p_slot.add_theme_stylebox_override("panel", style)
-		
-		available_grid.add_child(p_slot)
 
 # ─── TOWER CARD PREPARATION ────────────────────────────
 func _build_tower_cards() -> void:
@@ -314,7 +298,6 @@ func _build_tower_cards() -> void:
 	var required = level_config.get("required_towers", [])
 	var new_towers = ProgressManager.get_new_unlocked_towers()
 
-	# Start with nothing selected — players pick freely.
 	selected_towers = []
 
 	var card_scene = preload("res://scenes/campaign/tower_select/TowerCard.tscn")
@@ -322,12 +305,10 @@ func _build_tower_cards() -> void:
 	for i in range(available_towers.size()):
 		var tower_id = available_towers[i]
 		var def = TOWER_DEFINITIONS[tower_id]
-		# "Required" stays as informational only — the card shows the
-		# marker but is no longer locked or pre-selected.
 		var is_req = tower_id in required
 
 		var card = card_scene.instantiate()
-		card_layer.add_child(card)
+		available_grid.add_child(card)
 		card.setup(tower_id, def, is_req)
 		card.set_new(tower_id in new_towers)
 
@@ -336,11 +317,25 @@ func _build_tower_cards() -> void:
 		card.drag_ended.connect(_on_card_drag_ended)
 		card.info_requested.connect(_on_card_info_requested)
 
-		var anchor = available_grid.get_child(i)
-		card.home_position = anchor.global_position
-		card.global_position = card.home_position
-
 		active_cards.append(card)
+
+	call_deferred("_save_home_positions")
+
+func _save_home_positions() -> void:
+	for card in active_cards:
+		if is_instance_valid(card) and not card.is_selected:
+			card.home_position = card.global_position
+
+func _reparent_card(card: Node, new_parent: Node) -> void:
+	var pos = card.global_position
+	if card.get_parent():
+		card.get_parent().remove_child(card)
+	new_parent.add_child(card)
+	if new_parent == available_grid:
+		var idx = available_towers.find(card.tower_id)
+		if idx >= 0 and idx < new_parent.get_child_count():
+			new_parent.move_child(card, idx)
+	card.global_position = pos
 
 # ─── SELECTION LOGIC ───────────────────────────────────
 func _on_card_clicked(tower_id: String) -> void:
@@ -349,13 +344,11 @@ func _on_card_clicked(tower_id: String) -> void:
 		return
 
 	if card.is_selected:
-		# Deselect: return home
 		selected_towers.erase(tower_id)
 		card.current_slot_idx = -1
 		card.set_selected(false)
-		card.animate_to(card.home_position)
+		_reparent_card(card, available_grid)
 	else:
-		# Select: find first open selected placeholder slot
 		var open_idx = _get_first_empty_slot_idx()
 		if open_idx == -1:
 			SignalBus.hud_message_requested.emit(
@@ -366,7 +359,7 @@ func _on_card_clicked(tower_id: String) -> void:
 		selected_towers.append(tower_id)
 		card.current_slot_idx = open_idx
 		card.set_selected(true)
-
+		_reparent_card(card, card_layer)
 		var target_pos = selected_row.get_child(open_idx).global_position
 		card.animate_to(target_pos)
 
@@ -375,18 +368,17 @@ func _on_card_clicked(tower_id: String) -> void:
 
 # ─── DRAG & DROP RESOLUTION ─────────────────────────────
 func _on_card_drag_started(card) -> void:
-	# Temporarily lift card from any previous slot calculations to avoid double assignments
 	if card.is_selected:
 		selected_towers.erase(card.tower_id)
 		card.current_slot_idx = -1
 		card.set_selected(false)
 		_refresh_slots()
 		_refresh_start_btn()
+	_reparent_card(card, card_layer)
 
 func _on_card_drag_ended(card, _release_pos: Vector2) -> void:
-	# Find closest selected slot placeholder within snapping distance
 	var closest_slot_idx = -1
-	var min_dist = 64.0 # Maximum drop-snapping radius in pixels
+	var min_dist = 64.0
 	
 	for i in range(max_slots):
 		var placeholder = selected_row.get_child(i)
@@ -396,23 +388,19 @@ func _on_card_drag_ended(card, _release_pos: Vector2) -> void:
 			closest_slot_idx = i
 			
 	if closest_slot_idx != -1:
-		# We dropped it near a slot! Let's check if another card is already occupying this slot
 		var existing_card = _get_card_in_slot(closest_slot_idx)
 		if existing_card:
-			# Displace/kick back the existing card home to keep it super clean!
 			selected_towers.erase(existing_card.tower_id)
 			existing_card.current_slot_idx = -1
 			existing_card.set_selected(false)
-			existing_card.animate_to(existing_card.home_position)
-			
-		# Snap this card to the slot!
+			_reparent_card(existing_card, available_grid)
+
 		selected_towers.append(card.tower_id)
 		card.current_slot_idx = closest_slot_idx
 		card.set_selected(true)
 		card.animate_to(selected_row.get_child(closest_slot_idx).global_position, 0.2)
 	else:
-		# Return home safely
-		card.animate_to(card.home_position, 0.3)
+		_reparent_card(card, available_grid)
 		
 	_refresh_slots()
 	_refresh_start_btn()
@@ -471,27 +459,6 @@ func _refresh_start_btn() -> void:
 	var has_any = selected_towers.size() > 0
 	start_btn.disabled = not has_any
 	start_btn.text = "▶ START LEVEL"
-
-# ─── SCROLL CLIPPING ─────────────────────────────────────
-func _setup_scroll_clipping() -> void:
-	card_layer.clip_contents = false
-	scroll_container.get_v_scroll_bar().value_changed.connect(_on_scroll_changed)
-
-func _on_scroll_changed(_value: float) -> void:
-	_update_card_positions()
-
-func _update_card_positions() -> void:
-	var scroll_rect = scroll_container.get_global_rect()
-	for i in range(active_cards.size()):
-		var card = active_cards[i]
-		if card.is_dragging or card.is_selected:
-			continue
-		var anchor = available_grid.get_child(i)
-		if not anchor:
-			continue
-		card.home_position = anchor.global_position
-		card.global_position = card.home_position
-		card.visible = scroll_rect.has_point(card.global_position + card.size * 0.5)
 
 # ─── BUTTONS ───────────────────────────────────────────
 func _setup_buttons() -> void:
@@ -748,4 +715,3 @@ func _on_size_changed() -> void:
 		_build_placeholders()
 		await get_tree().process_frame
 		_build_tower_cards()
-		_update_card_positions()
