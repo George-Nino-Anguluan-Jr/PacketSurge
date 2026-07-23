@@ -104,6 +104,13 @@ func _build_enemy_queue() -> void:
 		var is_strong = strong_enemies.has(etype)
 		enemy_queue.append({"type": etype, "strong": is_strong, "hp": 60 if is_strong else 800, "speed": 60.0})
 
+func stop() -> void:
+	set_process(false)
+	if _tower_instance:
+		_tower_instance.set_process(false)
+	for c in _enemy_layer.get_children():
+		c.queue_free()
+
 func _clear_enemies() -> void:
 	for c in _enemy_layer.get_children():
 		c.queue_free()
