@@ -410,13 +410,14 @@ func _setup_wave_timeline() -> void:
 		t.tween_property(flag, "modulate", Color(1, 1, 1, 1), 0.8 + i * 0.1)
 
 func _on_viewport_size_changed() -> void:
-	var vp_width = get_viewport().get_visible_rect().size.x
-	# Map/Grid is centered: GRID_COLS * CELL_SIZE = 18 * 64 = 1152 width. Centered X is 576.0.
-	# Viewport center is vp_width / 2.0. Shift the camera so the grid (centered at 576) aligns with the viewport center.
-	var visible_center = vp_width / 2.0
-	var shift = (vp_width / 2.0) - visible_center
-	$GameCamera.position.x = 576.0 + shift
-	$GameCamera.position.y = 320.0 # 10 * 64 / 2 = 320.0
+	var vp_size = get_viewport().get_visible_rect().size
+	var grid_w = GridSystem.GRID_COLS * GridSystem.CELL_SIZE
+	var grid_h = GridSystem.GRID_ROWS * GridSystem.CELL_SIZE
+	var zoom_x = vp_size.x / grid_w
+	var zoom_y = vp_size.y / grid_h
+	var zoom = max(zoom_x, zoom_y)
+	$GameCamera.zoom = Vector2(zoom, zoom)
+	$GameCamera.position = Vector2(grid_w / 2.0, grid_h / 2.0)
 
 func _build_tower_selector() -> void:
 	pass
