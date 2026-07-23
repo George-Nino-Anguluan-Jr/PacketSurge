@@ -8,7 +8,6 @@ func _ready() -> void:
 	_setup_buttons()
 	_apply_styles()
 	_build_content()
-	_animate_enter()
 	_apply_responsive_layout()
 	get_tree().root.size_changed.connect(_apply_responsive_layout)
 
@@ -502,22 +501,22 @@ func _apply_styles() -> void:
 	analytics_btn.add_theme_stylebox_override("hover", analytics_hover)
 	analytics_btn.add_theme_color_override("font_hover_color", Color("#E8F4FD"))
 
-func _animate_enter() -> void:
-	modulate.a = 0.0
-	var tween = create_tween()
-	tween.set_ease(Tween.EASE_OUT)
-	tween.set_trans(Tween.TRANS_CUBIC)
-	tween.tween_property(self, "modulate:a", 1.0, 0.4)
-
 func _apply_responsive_layout() -> void:
+	var top_bar = $TopBar
 	var content_area = $ContentArea
 	if ScreenManager.is_mobile():
-		content_area.add_theme_constant_override("margin_left", 12)
-		content_area.add_theme_constant_override("margin_top", 12)
-		content_area.add_theme_constant_override("margin_right", 12)
-		content_area.add_theme_constant_override("margin_bottom", 12)
-	else:
+		ScreenManager.apply_panel_padding(top_bar, 20)
+		content_area.add_theme_constant_override("margin_left", 20)
+		content_area.add_theme_constant_override("margin_right", 20)
+		content_area.add_theme_constant_override("margin_top", 20)
+		content_area.add_theme_constant_override("margin_bottom", 20)
+		back_btn.custom_minimum_size = Vector2(70, 44)
+	elif ScreenManager.is_tablet():
+		ScreenManager.apply_panel_padding(top_bar, 24)
 		content_area.add_theme_constant_override("margin_left", 24)
-		content_area.add_theme_constant_override("margin_top", 24)
 		content_area.add_theme_constant_override("margin_right", 24)
+		content_area.add_theme_constant_override("margin_top", 24)
 		content_area.add_theme_constant_override("margin_bottom", 24)
+		back_btn.custom_minimum_size = Vector2(80, 44)
+	else:
+		back_btn.custom_minimum_size = Vector2(90, 0)
