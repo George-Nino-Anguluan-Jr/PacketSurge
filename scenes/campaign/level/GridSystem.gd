@@ -322,23 +322,19 @@ func _input(event: InputEvent) -> void:
 
 # ─── DRAW ──────────────────────────────────────────────
 func _draw() -> void:
+	_draw_background()
 	_draw_binary_particles()
 	_draw_hover()
 
 func _draw_background() -> void:
-	# Core background backdrop - cover the entire viewport screen to eliminate gray margins
-	var rect_full = Rect2(-2000, -2000, 5000, 4000)
-	draw_rect(rect_full, _theme.get("bg_color", Color("#050D1A")))
-
-	# Grid cells overlay
-	for row in range(GRID_ROWS):
-		for col in range(GRID_COLS):
-			var rect = Rect2(col * CELL_SIZE, row * CELL_SIZE, CELL_SIZE, CELL_SIZE)
-			draw_rect(rect, _theme.get("grid_line", Color("#00FF88", 0.05)), false, 0.5)
-			
-			# Mini junction points
-			if col > 0 and row > 0:
-				draw_circle(Vector2(col * CELL_SIZE, row * CELL_SIZE), 1.2, _theme.get("grid_glow", Color("#00FF88", 0.2)))
+	var bg = _theme.get("bg_color", Color("#050D1A"))
+	var gw = GRID_COLS * CELL_SIZE
+	var gh = GRID_ROWS * CELL_SIZE
+	var m = 2000
+	draw_rect(Rect2(-m, -m, m, gh + m * 2), bg)       # left
+	draw_rect(Rect2(gw, -m, m, gh + m * 2), bg)        # right
+	draw_rect(Rect2(0, -m, gw, m), bg)                  # top
+	draw_rect(Rect2(0, gh, gw, m), bg)                  # bottom
 
 func _draw_circuit_board_decorations() -> void:
 	_draw_circuit_traces()
