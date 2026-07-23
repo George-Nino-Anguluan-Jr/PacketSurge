@@ -24,6 +24,11 @@ func _ready() -> void:
 	var btn_style = StyleBoxFlat.new()
 	btn_style.bg_color = Color(0, 0, 0, 0)
 	close_btn.add_theme_stylebox_override("normal", btn_style)
+
+	var sfx = get_node_or_null("/root/SoundManager")
+	if sfx:
+		close_btn.mouse_entered.connect(sfx.play_hover)
+		close_btn.pressed.connect(sfx.play_click)
 	var panel_style = StyleBoxFlat.new()
 	panel_style.bg_color = Color("#0A1628")
 	panel_style.border_color = Color("#00D4FF")
@@ -120,6 +125,8 @@ func _close_btn_unhover() -> void:
 	close_btn.add_theme_stylebox_override("normal", s)
 
 func _on_close() -> void:
+	if preview and preview.has_method("stop"):
+		preview.stop()
 	var tween = create_tween().set_parallel(true)
 	tween.set_ease(Tween.EASE_IN)
 	tween.set_trans(Tween.TRANS_QUAD)
