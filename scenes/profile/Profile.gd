@@ -2,7 +2,10 @@ extends Control
 
 @onready var back_btn: Button       = $TopBar/TopBarLayout/BackBtn
 @onready var analytics_btn: Button  = $TopBar/TopBarLayout/AnalyticsBtn
+@onready var scroll_container: ScrollContainer = $ContentArea/ScrollContainer
 @onready var content: VBoxContainer  = $ContentArea/ScrollContainer/Content
+
+var _last_device: String = ""
 
 func _ready() -> void:
 	_setup_buttons()
@@ -10,6 +13,10 @@ func _ready() -> void:
 	_build_content()
 	_apply_responsive_layout()
 	get_tree().root.size_changed.connect(_apply_responsive_layout)
+	ScreenManager.make_scroll_touch_friendly(scroll_container)
+
+func _is_compact() -> bool:
+	return ScreenManager.is_mobile() or ScreenManager.is_tablet()
 
 func _setup_buttons() -> void:
 	back_btn.pressed.connect(func(): GameManager.go_to("main_menu"))
@@ -100,25 +107,41 @@ func _make_details_section() -> PanelContainer:
 	card.add_child(layout)
 	return card
 
-func _make_info_row(label: String, value: String) -> HBoxContainer:
+func _make_info_row(label: String, value: String) -> PanelContainer:
+	var card := PanelContainer.new()
+	card.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+
+	var style := StyleBoxFlat.new()
+	style.bg_color               = Color("#080F1E")
+	style.corner_radius_top_left     = 4
+	style.corner_radius_top_right    = 4
+	style.corner_radius_bottom_left  = 4
+	style.corner_radius_bottom_right = 4
+	style.content_margin_left    = 12 if _is_compact() else 16
+	style.content_margin_right   = 12 if _is_compact() else 16
+	style.content_margin_top     = 8 if _is_compact() else 12
+	style.content_margin_bottom  = 8 if _is_compact() else 12
+	card.add_theme_stylebox_override("panel", style)
+
 	var row := HBoxContainer.new()
 	row.add_theme_constant_override("separation", 12)
 
 	var lbl := Label.new()
 	lbl.text = label
-	lbl.custom_minimum_size = Vector2(120, 0)
-	lbl.add_theme_font_size_override("font_size", 13)
+	lbl.custom_minimum_size = Vector2(100 if _is_compact() else 120, 0)
+	lbl.add_theme_font_size_override("font_size", 12 if _is_compact() else 13)
 	lbl.add_theme_color_override("font_color", Color("#4A7FA5"))
 	row.add_child(lbl)
 
 	var val := Label.new()
 	val.text = value
 	val.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-	val.add_theme_font_size_override("font_size", 13)
+	val.add_theme_font_size_override("font_size", 12 if _is_compact() else 13)
 	val.add_theme_color_override("font_color", Color("#E8F4FD"))
 	row.add_child(val)
 
-	return row
+	card.add_child(row)
+	return card
 
 func _make_stats_row() -> HBoxContainer:
 	var row := HBoxContainer.new()
@@ -502,8 +525,15 @@ func _apply_styles() -> void:
 	analytics_btn.add_theme_color_override("font_hover_color", Color("#E8F4FD"))
 
 func _apply_responsive_layout() -> void:
+	var current = "mobile" if ScreenManager.is_mobile() else "tablet" if ScreenManager.is_tablet() else "desktop"
+	if current != _last_device:
+		_last_device = current
+		_build_content()
+
 	var top_bar = $TopBar
 	var content_area = $ContentArea
+	var title_label = $TopBar/TopBarLayout/TitleLabel
+
 	if ScreenManager.is_mobile():
 		ScreenManager.apply_panel_padding(top_bar, 20)
 		content_area.add_theme_constant_override("margin_left", 20)
@@ -511,6 +541,7 @@ func _apply_responsive_layout() -> void:
 		content_area.add_theme_constant_override("margin_top", 20)
 		content_area.add_theme_constant_override("margin_bottom", 20)
 		back_btn.custom_minimum_size = Vector2(70, 44)
+		title_label.add_theme_font_size_override("font_size", 14)
 	elif ScreenManager.is_tablet():
 		ScreenManager.apply_panel_padding(top_bar, 24)
 		content_area.add_theme_constant_override("margin_left", 24)
@@ -518,5 +549,7 @@ func _apply_responsive_layout() -> void:
 		content_area.add_theme_constant_override("margin_top", 24)
 		content_area.add_theme_constant_override("margin_bottom", 24)
 		back_btn.custom_minimum_size = Vector2(80, 44)
+		title_label.add_theme_font_size_override("font_size", 15)
 	else:
 		back_btn.custom_minimum_size = Vector2(90, 0)
+		title_label.add_theme_font_size_override("font_size", 16)
