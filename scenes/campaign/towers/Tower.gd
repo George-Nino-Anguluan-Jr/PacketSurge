@@ -403,33 +403,6 @@ func _attack_array() -> void:
 			_spire.fire(targets[i], damage * 0.4)
 		return
 
-	if enemy_layer == null:
-		return
-	var targets: Array[Node] = []
-	for enemy in enemy_layer.get_children():
-		if enemy.has_method("take_damage") and position.distance_to(enemy.position) <= attack_range + ENEMY_RADIUS * 2:
-			targets.append(enemy)
-	if targets.is_empty():
-		return
-	current_target = targets[0]
-	var spawn_origin = position + Vector2(0, -14).rotated(_turret_angle)
-	for i in range(min(5, targets.size())):
-		var p = {
-			"pos": spawn_origin,
-			"start_pos": spawn_origin,
-			"draw_pos": spawn_origin,
-			"target": targets[i],
-			"target_last_pos": targets[i].position,
-			"speed": 300.0 + i * 30.0,
-			"damage": damage * 0.4,
-			"style": "index_bolt",
-			"elapsed_time": 0.0,
-			"index": i,
-			"delay": i * 0.06
-		}
-		_projectiles.append(p)
-	queue_redraw()
-
 func _attack_stack() -> void:
 	if _entry_order.is_empty():
 		return
@@ -439,21 +412,6 @@ func _attack_stack() -> void:
 		if _spire:
 			_spire.fire(target, damage * 1.4)
 			return
-		var spawn_origin = position + Vector2(0, -14).rotated(_turret_angle)
-		var p = {
-			"pos": spawn_origin,
-			"start_pos": spawn_origin,
-			"draw_pos": spawn_origin,
-			"target": target,
-			"target_last_pos": target.position,
-			"speed": 180.0,
-			"damage": damage * 1.4,
-			"style": "stack_mortar",
-			"elapsed_time": 0.0,
-			"total_dist": (target.position - spawn_origin).length()
-		}
-		_projectiles.append(p)
-		queue_redraw()
 
 func _attack_queue() -> void:
 	if _entry_order.is_empty():
@@ -462,56 +420,18 @@ func _attack_queue() -> void:
 	if not is_instance_valid(target):
 		return
 	current_target = target
-	var spawn_origin = position + Vector2(0, -14).rotated(_turret_angle)
-	var p = {
-		"pos": spawn_origin,
-		"start_pos": spawn_origin,
-		"draw_pos": spawn_origin,
-		"target": target,
-		"target_last_pos": target.position,
-		"speed": 380.0,
-		"damage": damage,
-		"style": "queue_rail",
-		"elapsed_time": 0.0,
-		"total_dist": (target.position - spawn_origin).length()
-	}
-	_projectiles.append(p)
-	if _entry_order.size() > 1 and is_instance_valid(_entry_order[1]):
-		var p2 = {
-			"pos": spawn_origin,
-			"start_pos": spawn_origin,
-			"draw_pos": spawn_origin,
-			"target": _entry_order[1],
-			"target_last_pos": _entry_order[1].position,
-			"speed": 380.0,
-			"damage": damage * 0.5,
-			"style": "queue_rail",
-			"elapsed_time": 0.0,
-			"total_dist": (_entry_order[1].position - spawn_origin).length()
-		}
-		_projectiles.append(p2)
+	if _spire:
+		_spire.fire(target, damage)
+		return
 	queue_redraw()
 
 func _attack_linked() -> void:
 	var target = _get_closest_enemy()
 	if target:
 		current_target = target
-		var spawn_origin = position + Vector2(0, -14).rotated(_turret_angle)
-		var p = {
-			"pos": spawn_origin,
-			"start_pos": spawn_origin,
-			"draw_pos": spawn_origin,
-			"target": target,
-			"target_last_pos": target.position,
-			"speed": 340.0,
-			"damage": damage,
-			"style": "chain_lightning",
-			"elapsed_time": 0.0,
-			"total_dist": (target.position - spawn_origin).length(),
-			"chains_left": 2,
-			"chained_targets": [target] as Array[Node]
-		}
-		_projectiles.append(p)
+		if _spire:
+			_spire.fire(target, damage)
+			return
 		queue_redraw()
 
 func _attack_bubble() -> void:
