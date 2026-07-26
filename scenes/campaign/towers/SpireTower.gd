@@ -35,7 +35,7 @@ func _projectile_dir(level: int) -> String:
 	return _base_path() + "/projectiles/L" + str(level) + "/"
 
 func _impact_dir(level: int) -> String:
-	if variant in ["tower_02", "tower_03", "tower_04", "tower_05"]:
+	if variant in ["tower_02", "tower_03", "tower_04", "tower_05", "tower_07"]:
 		return _base_path() + "/impact/L" + str(level) + "/"
 	return _base_path() + "/impact/"
 

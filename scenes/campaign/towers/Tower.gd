@@ -446,20 +446,11 @@ func _attack_insertion() -> void:
 	var target = _get_closest_enemy()
 	if target:
 		current_target = target
-		var spawn_origin = position + Vector2(0, -14).rotated(_turret_angle)
-		var p = {
-			"pos": spawn_origin,
-			"start_pos": spawn_origin,
-			"draw_pos": spawn_origin,
-			"target": target,
-			"target_last_pos": target.position,
-			"speed": 300.0,
-			"damage": damage,
-			"style": "insertion_stake",
-			"elapsed_time": 0.0,
-			"total_dist": (target.position - spawn_origin).length()
-		}
-		_projectiles.append(p)
+		if _spire:
+			_spire.fire(target, damage)
+			if target.has_method("apply_dot"):
+				target.apply_dot(damage * 0.3, 3.0)
+			return
 		queue_redraw()
 
 func _attack_quick() -> void:
@@ -474,21 +465,11 @@ func _attack_quick() -> void:
 	if targets.is_empty():
 		return
 	current_target = targets[0]
-	var spawn_origin = position + Vector2(0, -14).rotated(_turret_angle)
-	for t in targets:
-		var p = {
-			"pos": spawn_origin,
-			"start_pos": spawn_origin,
-			"draw_pos": spawn_origin,
-			"target": t,
-			"target_last_pos": t.position,
-			"speed": 280.0,
-			"damage": damage * 0.8,
-			"style": "quick_split",
-			"elapsed_time": 0.0,
-			"total_dist": (t.position - spawn_origin).length()
-		}
-		_projectiles.append(p)
+	if _spire:
+		_spire.fire(targets[0], damage * 0.8)
+		if targets.size() >= 2:
+			_spire.fire(targets[1], damage * 0.8)
+		return
 	queue_redraw()
 
 func _attack_merge() -> void:
@@ -631,10 +612,7 @@ func _spawn_projectile(p_style: String, p_damage: float, p_speed: float, p_targe
 
 func _on_projectile_impact(p: Dictionary) -> void:
 	if is_instance_valid(p["target"]) and p["target"].has_method("take_damage"):
-		if p["style"] == "insertion_stake" and p["target"].has_method("apply_dot"):
-			p["target"].apply_dot(p["damage"] * 0.3, 3.0)
-		else:
-			p["target"].take_damage(p["damage"])
+		p["target"].take_damage(p["damage"])
 
 	_spawn_impact_explosion(p["target_last_pos"], p["style"])
 
@@ -669,7 +647,7 @@ func _spawn_impact_explosion(pos: Vector2, style: String) -> void:
 	var radius_map = {
 		"stack_mortar": 18.0, "chain_lightning": 22.0, "queue_rail": 14.0,
 		"binary_sniper": 16.0,
-		"insertion_stake": 10.0, "index_bolt": 8.0, "quick_split": 12.0,
+		"index_bolt": 8.0,
 		"merge_beam": 14.0, "counting_pellet": 10.0, "radix_digit": 8.0,
 		"linear_scan": 12.0
 	}
@@ -958,10 +936,6 @@ func _draw_base_extrusion_geometry(color: Color, height: float) -> void:
 			var outline_loop = top_pts
 			outline_loop.append(top_pts[0])
 			draw_polyline(outline_loop, color, 1.8)
-		"tower_insertion":
-			_draw_3d_box(b_offset, Vector2(15, 21), height, Color("#101721"), color, 1.8)
-		"tower_quick":
-			_draw_3d_cylinder(b_offset, 16.0, height, Color("#101721"), color, 1.8)
 		"tower_merge":
 			_draw_3d_cylinder(b_offset, 20.0, height, Color("#101721"), color, 1.8)
 		"tower_counting":
@@ -1023,26 +997,6 @@ func _draw_turret_assembly(color: Color) -> void:
 				_draw_3d_sphere(n, 3.0, Color(color, 0.4 + i * 0.2))
 				_draw_3d_cylinder(Vector2(n.x + 3 + recoil, n.y), 1.5, 5.0, Color("#203040"), color, 1.0)
 				draw_circle(Vector2(n.x + 8 + recoil, n.y * SQUASH), 1.0, Color.BLACK)
-
-		"tower_insertion":
-			var recoil = -_recoil * 10.0
-			_draw_3d_box(Vector2(3, 0), Vector2(10, 6), 7.0, Color("#15202E"), color, 1.5)
-			_draw_3d_box(Vector2(-9 + recoil, 0), Vector2(5, 4), 5.0, Color("#203040"), Color(color, 0.6), 1.0)
-			_draw_3d_cylinder(Vector2(10, 0), 3.0, 6.0, Color("#223344"), color, 1.2)
-			draw_circle(Vector2(16, 0), 2.0, Color.BLACK)
-			draw_line(Vector2(-12, -4), Vector2(8, -4), Color(color, 0.2), 1.0)
-			draw_line(Vector2(-12, 4), Vector2(8, 4), Color(color, 0.2), 1.0)
-
-		"tower_quick":
-			var recoil = -_recoil * 7.0
-			_draw_3d_sphere(Vector2.ZERO, 4.5, color)
-			_draw_3d_cylinder(Vector2(4 + recoil, 0), 3.0, 10.0, Color("#223344"), color, 1.2)
-			draw_circle(Vector2(14 + recoil, 0), 2.0, Color.BLACK)
-			_draw_3d_cylinder(Vector2(-3, -9), 2.0, 4.0, Color("#1C2C3D"), color, 1.0)
-			draw_circle(Vector2(1, -9 * SQUASH), 1.2, Color.BLACK)
-			_draw_3d_cylinder(Vector2(-3, 9), 2.0, 4.0, Color("#1C2C3D"), color, 1.0)
-			draw_circle(Vector2(1, 9 * SQUASH), 1.2, Color.BLACK)
-			draw_line(Vector2(-5, -13), Vector2(-5, 13), Color(color, 0.3), 1.5)
 
 		"tower_merge":
 			var recoil = -_recoil * 7.0
@@ -1166,22 +1120,6 @@ func _draw_overlays(color: Color) -> void:
 					draw_line(prev, next, color, 1.0)
 					prev = next
 
-			"insertion_stake":
-				var heading = (p["target_last_pos"] - p["pos"]).normalized() if (p["target_last_pos"] - p["pos"]).length() > 0 else Vector2.RIGHT
-				var start_pt = rd - heading * 9.0
-				draw_line(start_pt, rd, Color("#6C7C8C"), 3.5)
-				draw_line(start_pt, rd, Color.WHITE, 1.5)
-				draw_circle(rd - heading * 4.0, 2.0, Color(color, 0.6))
-
-			"quick_split":
-				var heading = (p["target_last_pos"] - p["pos"]).normalized() if (p["target_last_pos"] - p["pos"]).length() > 0 else Vector2.RIGHT
-				var perp = Vector2(-heading.y, heading.x)
-				var split_offset = perp * 4.0 * (1.0 - sin(_anim_time * 15.0 + p.get("_split_seed", 0)) * 0.3)
-				var split_pos = rd + split_offset
-				draw_circle(split_pos, 3.5, Color.WHITE)
-				draw_circle(split_pos, 6.0, Color(color, 0.45))
-				draw_arc(split_pos, 8.0, _anim_time * 10.0, _anim_time * 10.0 + PI, 8, color, 1.5)
-
 			"merge_beam":
 				var frac = clamp(p["elapsed_time"] / (p["total_dist"] / p["speed"]), 0.0, 1.0) if p["total_dist"] > 0 else 1.0
 				var side = p.get("merge_side", "left")
@@ -1249,9 +1187,6 @@ func _draw_overlays(color: Color) -> void:
 				draw_line(e["pos"] - Vector2(e["radius"], 0), e["pos"] + Vector2(e["radius"], 0), e_color, 2.0)
 				draw_line(e["pos"] - Vector2(0, e["radius"]), e["pos"] + Vector2(0, e["radius"]), e_color, 2.0)
 				draw_circle(e["pos"], 4.5 * flash_val, Color.WHITE)
-			"insertion_stake":
-				draw_arc(e["pos"], e["radius"], 0, TAU, 16, Color("#1ABC9C", flash_val), 1.5)
-				draw_arc(e["pos"], e["radius"] * 0.5, 0, TAU, 16, Color("#1ABC9C", flash_val * 0.6), 1.0)
 			"counting_pellet", "radix_digit":
 				var count = 5
 				for j in range(count):
