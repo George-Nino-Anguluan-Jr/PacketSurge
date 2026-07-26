@@ -499,6 +499,8 @@ const TOWER_DEFINITIONS = {
 		"color":       Color("#FFB800"),
 		"icon_text":   "↑↑",
 		"ability_name":"AoE Pulse",
+		"spire_variant":"tower_05",
+		"spire_base_h": 128,
 	},
 	"tower_selection": {
 		"tower_id":    "tower_selection",
@@ -513,6 +515,8 @@ const TOWER_DEFINITIONS = {
 		"color":       Color("#E74C3C"),
 		"icon_text":   "→↓",
 		"ability_name":"Find Weakest",
+		"spire_variant":"tower_06",
+		"spire_base_h": 128,
 	},
 	"tower_insertion": {
 		"tower_id":    "tower_insertion",

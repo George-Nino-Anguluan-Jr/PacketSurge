@@ -275,26 +275,6 @@ func _process(delta: float) -> void:
 				remaining_projectiles.append(p)
 				continue
 
-		if p["style"] == "bubble_swap":
-			var ta_pos = p["target_a_last"]
-			if is_instance_valid(p["target_a"]):
-				ta_pos = p["target_a"].position
-				p["target_a_last"] = ta_pos
-			var tb_pos = p["target_b_last"]
-			if is_instance_valid(p["target_b"]):
-				tb_pos = p["target_b"].position
-				p["target_b_last"] = tb_pos
-			var mid = (ta_pos + tb_pos) / 2.0
-			var current_pos = p["pos"]
-			var next_pos = current_pos.move_toward(mid, p["speed"] * delta)
-			p["pos"] = next_pos
-			p["draw_pos"] = next_pos
-			if next_pos.distance_to(mid) < 25.0 or p["elapsed_time"] > 2.0:
-				_on_projectile_impact(p)
-			else:
-				remaining_projectiles.append(p)
-			continue
-
 		var target_pos = p["target_last_pos"]
 		if is_instance_valid(p["target"]):
 			target_pos = p["target"].position
@@ -441,51 +421,25 @@ func _attack_bubble() -> void:
 	for enemy in enemy_layer.get_children():
 		if enemy.has_method("take_damage") and position.distance_to(enemy.position) <= attack_range + ENEMY_RADIUS * 2:
 			enemies.append(enemy)
-	if enemies.size() < 2:
-		for e in enemies:
-			e.take_damage(damage * 0.6)
-			_flash_targets.append(e.position - position)
-		if not enemies.is_empty():
-			_shoot_flash = 1.0
-		queue_redraw()
+	if enemies.is_empty():
 		return
 	current_target = enemies[0]
-	var spawn_origin = position + Vector2(0, -14).rotated(_turret_angle)
-	var p = {
-		"pos": spawn_origin,
-		"start_pos": spawn_origin,
-		"draw_pos": spawn_origin,
-		"target_a": enemies[0],
-		"target_b": enemies[1],
-		"target_a_last": enemies[0].position,
-		"target_b_last": enemies[1].position,
-		"speed": 200.0,
-		"damage": damage * 0.8,
-		"style": "bubble_swap",
-		"elapsed_time": 0.0,
-		"swapped": false
-	}
-	_projectiles.append(p)
+	if _spire:
+		if enemies.size() >= 2:
+			_spire.fire(enemies[0], damage * 0.8)
+			_spire.fire(enemies[1], damage * 0.8)
+		else:
+			_spire.fire(enemies[0], damage * 0.6)
+		return
 	queue_redraw()
 
 func _attack_selection() -> void:
 	var target = _get_lowest_hp_enemy()
 	if target:
 		current_target = target
-		var spawn_origin = position + Vector2(0, -14).rotated(_turret_angle)
-		var p = {
-			"pos": spawn_origin,
-			"start_pos": spawn_origin,
-			"draw_pos": spawn_origin,
-			"target": target,
-			"target_last_pos": target.position,
-			"speed": 220.0,
-			"damage": damage * 1.8,
-			"style": "seeker",
-			"elapsed_time": 0.0,
-			"total_dist": (target.position - spawn_origin).length()
-		}
-		_projectiles.append(p)
+		if _spire:
+			_spire.fire(target, damage * 1.8)
+			return
 		queue_redraw()
 
 func _attack_insertion() -> void:
@@ -676,15 +630,6 @@ func _spawn_projectile(p_style: String, p_damage: float, p_speed: float, p_targe
 	_projectiles.append(p)
 
 func _on_projectile_impact(p: Dictionary) -> void:
-	if p["style"] == "bubble_swap":
-		if is_instance_valid(p["target_a"]) and p["target_a"].has_method("take_damage"):
-			p["target_a"].take_damage(p["damage"])
-		if is_instance_valid(p["target_b"]) and p["target_b"].has_method("take_damage"):
-			p["target_b"].take_damage(p["damage"])
-		_spawn_impact_explosion(p["target_a_last"], "bubble_swap")
-		_spawn_impact_explosion(p["target_b_last"], "bubble_swap")
-		return
-
 	if is_instance_valid(p["target"]) and p["target"].has_method("take_damage"):
 		if p["style"] == "insertion_stake" and p["target"].has_method("apply_dot"):
 			p["target"].apply_dot(p["damage"] * 0.3, 3.0)
@@ -723,7 +668,7 @@ func _on_projectile_impact(p: Dictionary) -> void:
 func _spawn_impact_explosion(pos: Vector2, style: String) -> void:
 	var radius_map = {
 		"stack_mortar": 18.0, "chain_lightning": 22.0, "queue_rail": 14.0,
-		"binary_sniper": 16.0, "bubble_swap": 20.0, "seeker": 12.0,
+		"binary_sniper": 16.0,
 		"insertion_stake": 10.0, "index_bolt": 8.0, "quick_split": 12.0,
 		"merge_beam": 14.0, "counting_pellet": 10.0, "radix_digit": 8.0,
 		"linear_scan": 12.0
@@ -1013,10 +958,6 @@ func _draw_base_extrusion_geometry(color: Color, height: float) -> void:
 			var outline_loop = top_pts
 			outline_loop.append(top_pts[0])
 			draw_polyline(outline_loop, color, 1.8)
-		"tower_bubble":
-			_draw_3d_cylinder(b_offset, 18.0, height, Color("#101721"), color, 1.8)
-		"tower_selection":
-			_draw_3d_hexagon(b_offset, 18.0, height, Color("#101721"), color, 1.8)
 		"tower_insertion":
 			_draw_3d_box(b_offset, Vector2(15, 21), height, Color("#101721"), color, 1.8)
 		"tower_quick":
@@ -1082,26 +1023,6 @@ func _draw_turret_assembly(color: Color) -> void:
 				_draw_3d_sphere(n, 3.0, Color(color, 0.4 + i * 0.2))
 				_draw_3d_cylinder(Vector2(n.x + 3 + recoil, n.y), 1.5, 5.0, Color("#203040"), color, 1.0)
 				draw_circle(Vector2(n.x + 8 + recoil, n.y * SQUASH), 1.0, Color.BLACK)
-
-		"tower_bubble":
-			var recoil = -_recoil * 6.0
-			_draw_3d_sphere(Vector2.ZERO, 5.5, color)
-			draw_set_transform(Vector2.ZERO, 0.0, Vector2(1.0, SQUASH))
-			draw_arc(Vector2.ZERO, 11.0, 0, PI * 1.6, 14, Color(color, 0.35), 2.0)
-			draw_arc(Vector2.ZERO, 14.0, PI * 0.3, PI * 1.3, 14, Color(color, 0.2), 1.5)
-			draw_set_transform(t_pivot, _turret_angle, Vector2.ONE)
-			_draw_3d_cylinder(Vector2(6 + recoil, 0), 2.0, 6.0, Color("#203040"), color, 1.0)
-			draw_circle(Vector2(12 + recoil, 0), 1.5, Color.BLACK)
-
-		"tower_selection":
-			var recoil = -_recoil * 5.0
-			_draw_3d_hexagon(Vector2.ZERO, 6.0, 5.0, Color("#15202E"), color, 1.2)
-			draw_set_transform(Vector2.ZERO, 0.0, Vector2(1.0, SQUASH))
-			draw_arc(Vector2.ZERO, 12.0, -PI/4, PI/4, 14, color, 2.5)
-			draw_set_transform(t_pivot, _turret_angle, Vector2.ONE)
-			_draw_3d_cylinder(Vector2(6 + recoil, 0), 2.5, 7.0, Color("#203040"), color, 1.0)
-			draw_circle(Vector2(13 + recoil, 0), 1.5, Color.BLACK)
-			draw_circle(Vector2(6, 0), 1.5, Color.WHITE)
 
 		"tower_insertion":
 			var recoil = -_recoil * 10.0
@@ -1245,30 +1166,6 @@ func _draw_overlays(color: Color) -> void:
 					draw_line(prev, next, color, 1.0)
 					prev = next
 
-			"bubble_swap":
-				var heading = (p["target_a_last"] - p["pos"]).normalized() if (p["target_a_last"] - p["pos"]).length() > 0 else Vector2.RIGHT
-				draw_circle(rd, 4.0, Color.WHITE)
-				draw_circle(rd, 6.0, Color(color, 0.4))
-				draw_arc(rd, 8.0, _anim_time * 6.0, _anim_time * 6.0 + PI, 8, color, 1.5)
-				var to_a = p["target_a_last"] - p["pos"]
-				var to_b = p["target_b_last"] - p["pos"]
-				if to_a.length() > 0 and to_b.length() > 0:
-					var dir_a = to_a.normalized()
-					var dir_b = to_b.normalized()
-					draw_line(rd, rd + dir_a * 12.0, Color(color, 0.3), 1.0)
-					draw_line(rd, rd + dir_b * 12.0, Color(color, 0.3), 1.0)
-
-			"seeker":
-				draw_circle(rd, 4.5, Color.WHITE)
-				draw_circle(rd, 7.0, Color(color, 0.4))
-				var orbit_ang = _anim_time * 12.0
-				for j in range(3):
-					var angle = orbit_ang + j * (TAU / 3.0)
-					draw_circle(rd + Vector2(cos(angle), sin(angle)) * 6.5, 1.8, color)
-				var to_target = (p["target_last_pos"] - p["pos"]).normalized()
-				if to_target.length() > 0:
-					draw_line(rd, rd + to_target * 12.0, Color(color, 0.2), 1.5)
-
 			"insertion_stake":
 				var heading = (p["target_last_pos"] - p["pos"]).normalized() if (p["target_last_pos"] - p["pos"]).length() > 0 else Vector2.RIGHT
 				var start_pt = rd - heading * 9.0
@@ -1355,12 +1252,6 @@ func _draw_overlays(color: Color) -> void:
 			"insertion_stake":
 				draw_arc(e["pos"], e["radius"], 0, TAU, 16, Color("#1ABC9C", flash_val), 1.5)
 				draw_arc(e["pos"], e["radius"] * 0.5, 0, TAU, 16, Color("#1ABC9C", flash_val * 0.6), 1.0)
-			"seeker":
-				draw_arc(e["pos"], e["radius"], 0, TAU, 24, e_color, 2.0)
-				draw_circle(e["pos"], 3.5 * flash_val, Color.WHITE)
-			"bubble_swap":
-				draw_arc(e["pos"], e["radius"], 0, PI, 12, e_color, 2.0)
-				draw_arc(e["pos"], e["radius"], PI, TAU, 12, Color(color, flash_val * 0.5), 1.5)
 			"counting_pellet", "radix_digit":
 				var count = 5
 				for j in range(count):
