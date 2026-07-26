@@ -531,6 +531,8 @@ const TOWER_DEFINITIONS = {
 		"color":       Color("#1ABC9C"),
 		"icon_text":   "←↑",
 		"ability_name":"Insert DOT",
+		"spire_variant":"tower_07",
+		"spire_base_h": 128,
 	},
 	"tower_quick": {
 		"tower_id":    "tower_quick",
@@ -545,6 +547,8 @@ const TOWER_DEFINITIONS = {
 		"color":       Color("#E91E63"),
 		"icon_text":   "⚡",
 		"ability_name":"Quick Split",
+		"spire_variant":"tower_08",
+		"spire_base_h": 192,
 	},
 	"tower_merge": {
 		"tower_id":    "tower_merge",
