@@ -2,15 +2,16 @@ extends Node2D
 class_name SpireEnemy
 
 var variant: String = ""
+var pack: String = "enemy_pack1"
 var current_state: String = "idle"
 
 var _sprite: AnimatedSprite2D
 
-const VARIANT_PATH = "res://assets/enemies/imported/enemy_pack1/"
 const DISPLAY_SCALE: float = 0.7
 
-func setup(p_variant: String) -> void:
+func setup(p_variant: String, p_pack: String = "enemy_pack1") -> void:
 	variant = p_variant
+	pack = p_pack
 	_sprite = AnimatedSprite2D.new()
 	_sprite.centered = true
 	_sprite.scale = Vector2(DISPLAY_SCALE, DISPLAY_SCALE)
@@ -18,7 +19,7 @@ func setup(p_variant: String) -> void:
 	_reload_frames()
 
 func _reload_frames() -> void:
-	var dir_path = VARIANT_PATH + variant
+	var dir_path = "res://assets/enemies/imported/" + pack + "/" + variant
 	var sf = SpriteFrames.new()
 	sf.remove_animation("idle")
 	sf.remove_animation("move")

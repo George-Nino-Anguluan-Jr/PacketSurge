@@ -29,15 +29,17 @@ const _SpireEnemy = preload("res://scenes/campaign/enemies/SpireEnemy.gd")
 var _spire: Node2D = null
 
 const SPIRE_VARIANTS: Dictionary = {
-	"basic_packet":   "Clampbeetle",
-	"queue_jumper":   "Firewasp",
-	"indexed_packet": "Flying_Locust",
-	"linked_drain":   "Voidbutterfly",
+	"basic_packet":   { "variant": "Clampbeetle",    "pack": "enemy_pack1" },
+	"queue_jumper":   { "variant": "Firewasp",        "pack": "enemy_pack1" },
+	"indexed_packet": { "variant": "Flying_Locust",   "pack": "enemy_pack1" },
+	"linked_drain":   { "variant": "Voidbutterfly",   "pack": "enemy_pack1" },
+	"overflow_packet":{ "variant": "Firebug",        "pack": "enemy_pack2" },
+	"bubble_shield":  { "variant": "Leafbug",        "pack": "enemy_pack2" },
+	"pivot_splitter": { "variant": "Magma_Crab",     "pack": "enemy_pack2" },
+	"selection_mark": { "variant": "Scorpion",       "pack": "enemy_pack2" },
 }
 
 var _last_position: Vector2 = Vector2.ZERO
-var _move_accum: float = 0.0
-var _dx_accum: float = 0.0         # Accumulated horizontal movement for facing direction
 
 # ─── PREVIEW MODE (Index screen) ───────────────────────
 # When true, the enemy is frozen in place and acts purely as a
@@ -150,11 +152,13 @@ func _setup_type() -> void:
 func _setup_spire() -> void:
 	if not SPIRE_VARIANTS.has(enemy_type):
 		return
-	var variant = SPIRE_VARIANTS[enemy_type]
+	var entry = SPIRE_VARIANTS[enemy_type]
+	var variant_name = entry["variant"] if entry is Dictionary else entry
+	var pack_name = entry.get("pack", "enemy_pack1") if entry is Dictionary else "enemy_pack1"
 	_spire = _SpireEnemy.new()
 	_spire.name = "SpireSprite"
 	add_child(_spire)
-	_spire.setup(variant)
+	_spire.setup(variant_name, pack_name)
 
 func _physics_process(delta: float) -> void:
 	if is_dead or waypoints.size() == 0:
@@ -193,16 +197,11 @@ func _physics_process(delta: float) -> void:
 
 	# Update spire animation state based on movement
 	if _spire:
-		var cur_pos = position
-		var dist_frame = cur_pos.distance_to(_last_position)
-		# Accumulate real movement; ignore tiny per-frame jitter
-		if dist_frame > 1.5:
-			_move_accum += dist_frame
-		else:
-			_move_accum = max(0.0, _move_accum - delta * 30.0)
-		var is_moving = _move_accum > 6.0
+		# If enemy is still pathing toward a waypoint, it's moving.
+		# Use state-based check (more reliable than pixel thresholds for slow enemies).
+		var is_moving = current_waypoint < waypoints.size() and not is_dead
 		_spire.set_state("move" if is_moving else "idle")
-		_last_position = cur_pos
+		_last_position = position
 
 	_mobile_redraw_skip += 1
 	if _mobile_redraw_skip % 2 == 0:
@@ -604,10 +603,6 @@ func _draw() -> void:
 	# For spire-mapped enemies, skip procedural body drawing (the spire sprite is shown instead)
 	if not _spire:
 		match enemy_type:
-			"overflow_packet":   _draw_overflow(col, bob)
-			"bubble_shield":     _draw_bubble(col, bob)
-			"pivot_splitter":    _draw_pivot(col, bob)
-			"selection_mark":    _draw_selection(col, bob)
 			"insertion_stack":   _draw_insertion(col, bob)
 			"merge_twin":        _draw_merge(col, bob)
 			"count_meter":       _draw_count(col, bob)
@@ -641,24 +636,6 @@ func _draw_type_overlay(bob: float) -> void:
 			var ahead = _count_enemies_ahead()
 			draw_string(ThemeDB.fallback_font, Vector2(-6, 14 + bob), "#" + str(ahead),
 				HORIZONTAL_ALIGNMENT_LEFT, -1, 8, Color("#FFFFFF", 0.7))
-
-		"overflow_packet":
-			var layers = type_data.get("layers", 0)
-			if layers > 0:
-				draw_string(ThemeDB.fallback_font, Vector2(-6, 12 + bob * 0.3), "×" + str(layers),
-					HORIZONTAL_ALIGNMENT_LEFT, -1, 10, Color("#FFB800"))
-
-		"selection_mark":
-			if type_data.get("marked", false):
-				var cx = 16
-				var cy = -6 + bob
-				var pts = PackedVector2Array([
-					Vector2(cx, cy - 6), Vector2(cx + 5, cy + 2),
-					Vector2(cx - 5, cy + 2)
-				])
-				draw_colored_polygon(pts, Color("#FFD700", 0.9))
-				draw_string(ThemeDB.fallback_font, Vector2(cx - 2, cy + 6),
-					"!", HORIZONTAL_ALIGNMENT_LEFT, -1, 7, Color("#000000"))
 
 		"count_meter":
 			var cnt = type_data.get("count", 0)
@@ -713,113 +690,6 @@ func _draw_type_overlay(bob: float) -> void:
 				draw_arc(Vector2(0, 0 + bob), 20, 0, TAU, 16, Color("#00FF88", 0.6), 2.0)
 			else:
 				draw_arc(Vector2(0, 0 + bob), 18, 0, TAU, 16, Color("#FF3366", 0.3), 1.0)
-
-func _draw_overflow(col: Color, bob: float) -> void:
-	# 3D stacked cubes — grows with layers
-	var layers = type_data.get("layers", 0)
-	var stack_height = min(layers, 4) * 4.0
-	# Bottom base layer (always)
-	_draw_3d_box(Vector2(0, bob - 2), Vector2(13, 13), 7.0, Color("#15202E"), col, 1.5)
-	# Stacked layers above
-	for i in range(min(layers, 4)):
-		var y_offset = bob - 10 - i * 8.0
-		var layer_col = Color(col).lerp(Color("#FFB800"), float(i) / 4.0)
-		_draw_3d_box(Vector2(0, y_offset), Vector2(10 - i * 0.8, 10 - i * 0.8), 6.0,
-			Color("#15202E"), layer_col, 1.3)
-	# Top crown spike
-	if layers > 0:
-		var top_y = bob - 10 - stack_height
-		draw_line(Vector2(0, top_y - 8 * SQUASH), Vector2(0, top_y - 18), Color("#FFB800"), 2.0)
-		draw_circle(Vector2(0, top_y - 18), 2.5, Color("#FFB800", 0.8))
-	# Drop shadow
-	draw_set_transform(Vector2(0, bob + 6), 0.0, Vector2(1.0, 0.3))
-	draw_circle(Vector2.ZERO, 14, Color(0, 0, 0, 0.3))
-	draw_set_transform(Vector2.ZERO, 0.0, Vector2.ONE)
-
-func _draw_bubble(col: Color, bob: float) -> void:
-	# 3D sphere core
-	_draw_3d_sphere(Vector2(0, bob - 2), 11.0, col)
-	# Shield ring (orbiting segments)
-	var shield_hp = type_data.get("shield_hp", 0)
-	var shield_max = type_data.get("shield_max", 3)
-	if shield_hp > 0:
-		var seg_angle = TAU / shield_max
-		for i in range(shield_max):
-			var a = i * seg_angle + _bob_time * 0.3
-			var sx = cos(a) * 16
-			var sy = bob - 2 + sin(a) * 16 * SQUASH
-			var is_active = i < shield_hp
-			var seg_col = Color("#00D4FF", 0.8) if is_active else Color("#1A3A5A", 0.4)
-			draw_circle(Vector2(sx, sy), 2.5, seg_col)
-			# Connecting ring
-			if i < shield_max - 1:
-				var next_a = (i + 1) * seg_angle + _bob_time * 0.3
-				var nx = cos(next_a) * 16
-				var ny = bob - 2 + sin(next_a) * 16 * SQUASH
-				draw_line(Vector2(sx, sy), Vector2(nx, ny),
-					Color("#00D4FF", 0.5 if is_active else 0.2), 1.5)
-	# Drop shadow
-	draw_set_transform(Vector2(0, bob + 8), 0.0, Vector2(1.0, 0.3))
-	draw_circle(Vector2.ZERO, 12, Color(0, 0, 0, 0.25))
-	draw_set_transform(Vector2.ZERO, 0.0, Vector2.ONE)
-
-func _draw_pivot(col: Color, bob: float) -> void:
-	# Large 3D box boss with prominent pivot line
-	_draw_3d_box(Vector2(0, bob - 4), Vector2(20, 12), 12.0, Color("#15202E"), col, 2.0)
-	# Top-face pivot rod (long thin 3D box running through center)
-	_draw_3d_box(Vector2(0, bob - 4 - 12 * SQUASH), Vector2(22, 1.5), 3.0, Color("#0D141C"), Color("#FFFFFF", 0.8), 1.0)
-	# Top face warning markers
-	draw_circle(Vector2(-14, bob - 4 - 12 * SQUASH), 2.0, Color("#FFFFFF", 0.7))
-	draw_circle(Vector2(14, bob - 4 - 12 * SQUASH), 2.0, Color("#FFFFFF", 0.7))
-	# Side spikes (3D cylinders pointing up)
-	var spike_positions = [-12.0, 0.0, 12.0]
-	for sx in spike_positions:
-		_draw_3d_cylinder(Vector2(sx, bob - 4 - 12 * SQUASH - 6), 2.0, 6.0, Color("#0F1720"), col, 1.2)
-		_draw_3d_sphere(Vector2(sx, bob - 4 - 12 * SQUASH - 12), 2.5, col)
-	# Drop shadow
-	draw_set_transform(Vector2(0, bob + 8), 0.0, Vector2(1.0, 0.3))
-	draw_circle(Vector2.ZERO, 22, Color(0, 0, 0, 0.35))
-	draw_set_transform(Vector2.ZERO, 0.0, Vector2.ONE)
-
-func _draw_selection(col: Color, bob: float) -> void:
-	# 3D octagonal prism with crosshair target
-	var marked = type_data.get("marked", false)
-	var outline_col = Color("#FFD700") if marked else col
-	# Build octagonal top points (in local coords)
-	var top_pts = PackedVector2Array()
-	for i in range(8):
-		var a = i * TAU / 8.0
-		top_pts.append(Vector2(cos(a) * 12, sin(a) * 12 * SQUASH))
-	# Translate to bob position
-	draw_set_transform(Vector2(0, bob - 3), 0.0, Vector2.ONE)
-	# Draw extruded side panels (8 faces)
-	for i in range(8):
-		var next_i = (i + 1) % 8
-		var t1 = top_pts[i]
-		var t2 = top_pts[next_i]
-		var b1 = t1 + Vector2(0, 7)
-		var b2 = t2 + Vector2(0, 7)
-		var mid_angle = i * TAU / 8.0 + (TAU / 16.0)
-		var l_dot = cos(mid_angle - 2.2)
-		var shade_mix = lerp(0.1, 0.5, (l_dot + 1.0) / 2.0)
-		var panel = PackedVector2Array([t1, t2, b2, b1])
-		draw_colored_polygon(panel, Color("#0D131A"))
-		draw_colored_polygon(panel, Color(outline_col, shade_mix * 0.4))
-		draw_polyline(PackedVector2Array([t1, t2, b2, b1]), Color(outline_col, 0.4), 1.0)
-	# Top face
-	draw_colored_polygon(top_pts, Color("#1B2A3A"))
-	var outline_loop = top_pts.duplicate()
-	outline_loop.append(top_pts[0])
-	draw_polyline(outline_loop, outline_col, 1.5)
-	# Top crosshair
-	draw_line(Vector2(-6, 0), Vector2(6, 0), Color(outline_col, 0.7), 1.5)
-	draw_line(Vector2(0, -6 * SQUASH), Vector2(0, 6 * SQUASH), Color(outline_col, 0.7), 1.5)
-	draw_circle(Vector2.ZERO, 2.5, Color(outline_col, 0.9))
-	draw_set_transform(Vector2.ZERO, 0.0, Vector2.ONE)
-	# Drop shadow
-	draw_set_transform(Vector2(0, bob + 5), 0.0, Vector2(1.0, 0.3))
-	draw_circle(Vector2.ZERO, 13, Color(0, 0, 0, 0.25))
-	draw_set_transform(Vector2.ZERO, 0.0, Vector2.ONE)
 
 func _draw_insertion(col: Color, bob: float) -> void:
 	# 3D triangular wedge pointing right (insertion direction)
