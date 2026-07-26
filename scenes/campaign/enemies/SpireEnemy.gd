@@ -4,6 +4,7 @@ class_name SpireEnemy
 var variant: String = ""
 var pack: String = "enemy_pack1"
 var current_state: String = "idle"
+var current_direction: String = "down"
 
 var _sprite: AnimatedSprite2D
 
@@ -19,34 +20,32 @@ func setup(p_variant: String, p_pack: String = "enemy_pack1") -> void:
 	_reload_frames()
 
 func _reload_frames() -> void:
-	var dir_path = "res://assets/enemies/imported/" + pack + "/" + variant
+	var base_path = "res://assets/enemies/imported/" + pack + "/" + variant
 	var sf = SpriteFrames.new()
-	sf.remove_animation("idle")
-	sf.remove_animation("move")
-	sf.remove_animation("death")
-	sf.add_animation("idle")
-	sf.add_animation("move")
-	sf.add_animation("death")
-	sf.set_animation_loop("idle", true)
-	sf.set_animation_loop("move", true)
-	sf.set_animation_loop("death", false)
-
 	for state in ["idle", "move", "death"]:
-		var state_dir = dir_path + "/" + state
-		if not DirAccess.open(state_dir):
-			continue
-		var frames = _load_dir_frames(state_dir)
-		# Slow FPS so wing flaps don't look like rotation
-		var fps = 5.0
-		if state == "move":
-			fps = 7.0
-		sf.set_animation_speed(state, fps)
-		for f in frames:
-			sf.add_frame(state, load(state_dir + "/" + f))
+		for dir in ["down", "up", "right"]:
+			var anim_name = "%s_%s" % [state, dir]
+			sf.remove_animation(anim_name)
+			sf.add_animation(anim_name)
+			sf.set_animation_loop(anim_name, state != "death")
+			sf.set_animation_speed(anim_name, 5.0 if state != "move" else 7.0)
+			var sub_dir = base_path + "/" + state + "_" + dir
+			var dir_access = DirAccess.open(sub_dir)
+			if not dir_access:
+				continue
+			var frames = _load_dir_frames(sub_dir)
+			for f in frames:
+				sf.add_frame(anim_name, load(sub_dir + "/" + f))
 
 	_sprite.sprite_frames = sf
-	if sf.has_animation("idle"):
-		_sprite.play("idle")
+	_play_current()
+
+func _play_current() -> void:
+	if not _sprite or not _sprite.sprite_frames:
+		return
+	var anim_name = "%s_%s" % [current_state, current_direction]
+	if _sprite.sprite_frames.has_animation(anim_name):
+		_sprite.play(anim_name)
 
 func _load_dir_frames(dir_path: String) -> Array[String]:
 	var dir = DirAccess.open(dir_path)
@@ -71,5 +70,14 @@ func set_state(state: String) -> void:
 	if not _sprite or not _sprite.sprite_frames:
 		return
 	current_state = state
-	if _sprite.sprite_frames.has_animation(state):
-		_sprite.play(state)
+	_play_current()
+
+func set_direction(direction: String) -> void:
+	if direction == current_direction:
+		return
+	current_direction = direction
+	_play_current()
+
+func set_flip_h(flipped: bool) -> void:
+	if _sprite:
+		_sprite.flip_h = flipped

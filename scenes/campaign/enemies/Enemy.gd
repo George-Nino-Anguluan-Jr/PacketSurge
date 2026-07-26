@@ -197,10 +197,14 @@ func _physics_process(delta: float) -> void:
 
 	# Update spire animation state based on movement
 	if _spire:
-		# If enemy is still pathing toward a waypoint, it's moving.
-		# Use state-based check (more reliable than pixel thresholds for slow enemies).
 		var is_moving = current_waypoint < waypoints.size() and not is_dead
 		_spire.set_state("move" if is_moving else "idle")
+		# Update direction based on actual movement delta
+		var move_delta = position - _last_position
+		if move_delta.length() > 0.5:
+			var dir_str = _dir_from_velocity(move_delta)
+			_spire.set_direction(dir_str)
+			_spire.set_flip_h(move_delta.x < 0)
 		_last_position = position
 
 	_mobile_redraw_skip += 1
@@ -279,6 +283,14 @@ func _is_lowest_hp_enemy() -> bool:
 			is_lowest = false
 			break
 	return is_lowest
+
+func _dir_from_velocity(vel: Vector2) -> String:
+	# Map a 2D movement vector to one of 3 sprite directions: down, up, right
+	# down = facing the camera (positive y in Godot 2D = downward on screen)
+	if abs(vel.y) > abs(vel.x):
+		return "down" if vel.y > 0 else "up"
+	else:
+		return "right"
 
 func _move_toward_waypoint(delta: float) -> void:
 	var target    = waypoints[current_waypoint]
