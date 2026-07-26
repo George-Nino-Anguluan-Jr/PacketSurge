@@ -113,6 +113,8 @@ func _instantiate_tower_model(def: Dictionary) -> void:
 		data.attack_range = def.get("attack_range", 150.0)
 		data.color = tower_color
 		data.icon_text = icon_text
+		data.spire_variant = def.get("spire_variant", "")
+		data.spire_base_h  = def.get("spire_base_h", 0)
 		
 		# Initialize without cell and enemy layer
 		tower_instance.initialize(data, Vector2i.ZERO, null)

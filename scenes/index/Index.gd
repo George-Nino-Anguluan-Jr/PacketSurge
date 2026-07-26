@@ -121,7 +121,7 @@ func _collect_towers() -> Array:
 		result.append({
 			"id":               tower_id,
 			"unlocked_by":      lesson_id,
-			"name":             intro.get("title", def.get("tower_name", tower_id)),
+			"name":             def.get("tower_name", tower_id),
 			"tagline":          intro.get("tagline", ""),
 			"mechanic":         intro.get("mechanic", ""),
 			"description":      def.get("description", intro.get("mechanic", "")),
@@ -131,8 +131,8 @@ func _collect_towers() -> Array:
 			"speed":            float(def.get("attack_speed", 0.0)),
 			"range":            float(def.get("attack_range", 0.0)),
 			"time_complexity":  def.get("time_complexity", ""),
-			"color":            intro.get("color", def.get("color", C_ACCENT)),
-			"icon":             intro.get("icon", def.get("icon_text", "")),
+			"color":            def.get("color", C_ACCENT),
+			"icon":             def.get("icon_text", ""),
 			"ability":          intro.get("ability", ""),
 			"strong":           intro.get("strong", []),
 			"weak":             intro.get("weak", []),
@@ -148,6 +148,7 @@ func _collect_enemies() -> Array:
 		# Real runtime stats come from Enemy.gd defaults; we expose
 		# a small health/speed/reward from the intro registry for display.
 		var defaults = _enemy_default_stats(enemy_id)
+		var edef = GameManager.ENEMY_DEFINITIONS.get(enemy_id, {})
 		result.append({
 			"id":          enemy_id,
 			"name":        intro.get("title", enemy_id),
@@ -156,7 +157,7 @@ func _collect_enemies() -> Array:
 			"special":     intro.get("special", ""),
 			"lesson":      intro.get("lesson", ""),
 			"threat":      intro.get("threat", "Medium"),
-			"color":       intro.get("color", C_RED),
+			"color":       edef.get("color", C_RED),
 			"icon":        intro.get("icon", ""),
 			"health":      defaults.health,
 			"speed":       defaults.speed,
@@ -623,27 +624,7 @@ func _threat_color(threat: String) -> Color:
 		_:         return C_TEXT
 
 func _lesson_display_name(lesson_id: String) -> String:
-	var names: Dictionary = {
-		"py_variables":    "Variables",
-		"py_lists":        "Lists",
-		"py_loops":        "Loops",
-		"py_conditions":   "Conditions",
-		"py_functions":    "Functions",
-		"ds_arrays":       "Arrays",
-		"ds_stacks":       "Stacks",
-		"ds_queues":       "Queues",
-		"ds_linked_lists": "Linked Lists",
-		"sort_bubble":     "Bubble Sort",
-		"sort_selection":  "Selection Sort",
-		"sort_insertion":  "Insertion Sort",
-		"sort_quick":      "Quick Sort",
-		"sort_merge":      "Merge Sort",
-		"sort_counting":   "Counting Sort",
-		"sort_radix":      "Radix Sort",
-		"search_linear":   "Linear Search",
-		"search_binary":   "Binary Search",
-	}
-	return names.get(lesson_id, lesson_id)
+	return GameManager.LESSON_NAMES.get(lesson_id, lesson_id)
 
 # ─── TOP-LEVEL STYLES ──────────────────────────────────
 func _apply_styles() -> void:

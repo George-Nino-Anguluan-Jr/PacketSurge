@@ -279,16 +279,7 @@ func _on_topic_mastered(_topic_id: String) -> void:
 
 # ─── HELPERS ───────────────────────────────────────────
 func _get_lesson_name(topic_id: String) -> String:
-	var names = {
-		"py_variables":    "Variables",
-		"py_lists":        "Lists",
-		"py_loops":        "Loops",
-		"py_conditions":   "Conditions",
-		"py_functions":    "Functions",
-		"ds_arrays":       "Arrays",
-		"ds_stacks":       "Stacks",
-	}
-	return names.get(topic_id, topic_id)
+	return GameManager.LESSON_NAMES.get(topic_id, topic_id)
 
 # ─── STYLES ────────────────────────────────────────────
 func _apply_styles() -> void:

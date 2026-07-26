@@ -38,100 +38,6 @@ func _process(_delta: float) -> void:
 				card.global_position = slot.global_position
 
 # ─── TOWER DEFINITIONS ─────────────────────────────────
-const TOWER_DEFINITIONS = {
-	"tower_array": {
-		"tower_name":  "Array Tower",
-		"description": "Fast. O(1) access.",
-		"ram_cost":    40,
-		"color":       Color("#00D4FF"),
-		"icon_text":   "[ ]",
-	},
-	"tower_stack": {
-		"tower_name":  "Stack Tower",
-		"description": "High damage. LIFO.",
-		"ram_cost":    60,
-		"color":       Color("#FF6B35"),
-		"icon_text":   "↑↓",
-	},
-	"tower_queue": {
-		"tower_name":  "Queue Tower",
-		"description": "Pierces 2. FIFO.",
-		"ram_cost":    60,
-		"color":       Color("#9B59B6"),
-		"icon_text":   "→",
-	},
-	"tower_linked_list": {
-		"tower_name":  "Linked Tower",
-		"description": "Chain hits 3.",
-		"ram_cost":    80,
-		"color":       Color("#00FF88"),
-		"icon_text":   "→→",
-	},
-	"tower_bubble": {
-		"tower_name":  "Bubble Tower",
-		"description": "AoE all enemies.",
-		"ram_cost":    70,
-		"color":       Color("#FFB800"),
-		"icon_text":   "↑↑",
-	},
-	"tower_selection": {
-		"tower_name":  "Selection Tower",
-		"description": "Targets lowest HP.",
-		"ram_cost":    90,
-		"color":       Color("#E74C3C"),
-		"icon_text":   "→↓",
-	},
-	"tower_insertion": {
-		"tower_name":  "Insertion Tower",
-		"description": "Damage over time.",
-		"ram_cost":    100,
-		"color":       Color("#1ABC9C"),
-		"icon_text":   "←↑",
-	},
-	"tower_quick": {
-		"tower_name":  "Quick Tower",
-		"description": "Splits shot to 2.",
-		"ram_cost":    130,
-		"color":       Color("#E91E63"),
-		"icon_text":   "⚡",
-	},
-	"tower_merge": {
-		"tower_name":  "Merge Tower",
-		"description": "Guaranteed AoE.",
-		"ram_cost":    140,
-		"color":       Color("#3F51B5"),
-		"icon_text":   "⊕",
-	},
-	"tower_counting": {
-		"tower_name":  "Count Tower",
-		"description": "Stronger in groups.",
-		"ram_cost":    110,
-		"color":       Color("#009688"),
-		"icon_text":   "#",
-	},
-	"tower_radix": {
-		"tower_name":  "Radix Tower",
-		"description": "Rapid multi-pass.",
-		"ram_cost":    150,
-		"color":       Color("#FF5722"),
-		"icon_text":   "0→9",
-	},
-	"tower_linear": {
-		"tower_name":  "Linear Tower",
-		"description": "Wide scan range.",
-		"ram_cost":    80,
-		"color":       Color("#607D8B"),
-		"icon_text":   "→?",
-	},
-	"tower_binary": {
-		"tower_name":  "Binary Tower",
-		"description": "Precision sniper.",
-		"ram_cost":    200,
-		"color":       Color("#8BC34A"),
-		"icon_text":   "½",
-	},
-}
-
 # ─── PRELOADS ──────────────────────────────────────────
 const ENEMY_SCENE = preload("res://scenes/campaign/enemies/Enemy.tscn")
 
@@ -247,7 +153,7 @@ func _add_stat(
 # ─── DETERMINE UNLOCKED TOWERS ─────────────────────────
 func _determine_unlocked_towers() -> void:
 	available_towers = []
-	for t in TOWER_DEFINITIONS.keys():
+	for t in GameManager.TOWER_DEFINITIONS.keys():
 		if ProgressManager.is_tower_unlocked(t):
 			available_towers.append(t)
 
@@ -304,7 +210,7 @@ func _build_tower_cards() -> void:
 
 	for i in range(available_towers.size()):
 		var tower_id = available_towers[i]
-		var def = TOWER_DEFINITIONS[tower_id]
+		var def = GameManager.TOWER_DEFINITIONS[tower_id]
 		var is_req = tower_id in required
 
 		var card = card_scene.instantiate()
@@ -582,7 +488,8 @@ func _make_enemy_preview_row(enemy_types: Array) -> Control:
 
 	for enemy_id in enemy_types:
 		var intro = EnemyIntroData.get_intro(enemy_id)
-		var tint: Color = intro.get("color", Color("#FF3366"))
+		var edef = GameManager.ENEMY_DEFINITIONS.get(enemy_id, {})
+		var tint: Color = edef.get("color", Color("#FF3366"))
 		row.add_child(_make_enemy_preview_cell(enemy_id, tint, intro))
 
 	return row

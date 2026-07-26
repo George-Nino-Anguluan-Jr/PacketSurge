@@ -50,6 +50,12 @@ var _selected: bool = false
 
 @onready var sprite: Sprite2D = $TowerSprite
 
+# ─── SPRITE MODE (Spire Tower Pack) ─────────────────────
+const _SpireTower = preload("res://scenes/campaign/towers/SpireTower.gd")
+var _spire = null
+var spire_variant: String = ""
+var spire_base_h: int = 0
+
 func _ready() -> void:
 	# Hide sprite for icon rendering if tower is not fully initialized
 	if tower_id == "":
@@ -64,6 +70,8 @@ func initialize(data: TowerData, cell: Vector2i, e_layer: Node2D) -> void:
 	ram_cost      = data.ram_cost
 	tower_color   = data.color
 	icon_text     = data.icon_text
+	spire_variant = data.spire_variant
+	spire_base_h  = data.spire_base_h
 	grid_cell     = cell
 	enemy_layer   = e_layer
 	current_level = 1
@@ -73,21 +81,8 @@ func initialize(data: TowerData, cell: Vector2i, e_layer: Node2D) -> void:
 	queue_redraw()
 
 func get_ability_name() -> String:
-	match tower_id:
-		"tower_array":      return "O(1) Burst"
-		"tower_stack":      return "Stack Pop"
-		"tower_queue":      return "FIFO Pierce"
-		"tower_linked_list":return "Chain Link"
-		"tower_bubble":     return "AoE Pulse"
-		"tower_selection":  return "Find Weakest"
-		"tower_insertion":  return "Insert DOT"
-		"tower_quick":      return "Quick Split"
-		"tower_merge":      return "Merge Blast"
-		"tower_counting":   return "Count Barrage"
-		"tower_radix":      return "Radix Volley"
-		"tower_linear":     return "Linear Sweep"
-		"tower_binary":     return "Binary Snipe"
-		_:                  return "Special"
+	var def = GameManager.TOWER_DEFINITIONS.get(tower_id, {})
+	return def.get("ability_name", "Special")
 
 func get_ability_cost() -> int:
 	return ram_cost * 2
@@ -189,6 +184,9 @@ func upgrade() -> int:
 			damage *= 1.4
 			attack_range *= 1.1
 	
+	if _spire:
+		_spire.set_level(current_level)
+
 	# Emit upgrade signal
 	SignalBus.tower_upgraded.emit(tower_id, current_level)
 	
@@ -210,10 +208,16 @@ func _animate_upgrade() -> void:
 	queue_redraw()
 
 func _setup_sprite() -> void:
-	if sprite:
-		sprite.visible = false
-	elif has_node("TowerSprite"):
-		get_node("TowerSprite").visible = false
+	if spire_variant != "":
+		if not _spire:
+			_spire = _SpireTower.new()
+			add_child(_spire)
+		_spire.setup(spire_variant)
+		_spire.set_level(current_level)
+		if sprite:
+			sprite.visible = false
+	elif sprite:
+		sprite.visible = true
 
 func _animate_placement() -> void:
 	# Keep placement animation by tweening a simple scaling effect drawn in _draw
@@ -251,6 +255,9 @@ func _process(delta: float) -> void:
 
 	if _shoot_flash > 0:
 		_shoot_flash -= delta * 4.0
+
+	if _spire:
+		_spire.aim(_turret_angle)
 
 	# Throttle redraws to every other frame on mobile for performance
 	_mobile_redraw_skip += 1
@@ -363,6 +370,7 @@ func _attack() -> void:
 	SoundManager.play_tower_attack(tower_id)
 	_flash_targets.clear()
 	_recoil = 1.0
+
 	match tower_id:
 		"tower_array":        _attack_array()
 		"tower_stack":        _attack_stack()
@@ -381,6 +389,20 @@ func _attack() -> void:
 
 # ─── ARRAY — fast single target, closest enemy (O(1) access) ──
 func _attack_array() -> void:
+	if _spire:
+		if enemy_layer == null:
+			return
+		var targets: Array[Node] = []
+		for enemy in enemy_layer.get_children():
+			if enemy.has_method("take_damage") and position.distance_to(enemy.position) <= attack_range + ENEMY_RADIUS * 2:
+				targets.append(enemy)
+		if targets.is_empty():
+			return
+		current_target = targets[0]
+		for i in range(min(3, targets.size())):
+			_spire.fire(targets[i], damage * 0.4)
+		return
+
 	if enemy_layer == null:
 		return
 	var targets: Array[Node] = []
@@ -414,6 +436,9 @@ func _attack_stack() -> void:
 	var target = _entry_order[_entry_order.size() - 1]
 	if is_instance_valid(target):
 		current_target = target
+		if _spire:
+			_spire.fire(target, damage * 1.4)
+			return
 		var spawn_origin = position + Vector2(0, -14).rotated(_turret_angle)
 		var p = {
 			"pos": spawn_origin,
@@ -884,6 +909,22 @@ func _get_lowest_hp_enemy() -> Node:
 const SQUASH: float = 0.65  # Perspective squashing ratio to simulate an angled 3D camera lookup
 
 func _draw() -> void:
+	if _spire:
+		if current_level > 1:
+			draw_string(
+				ThemeDB.fallback_font,
+				Vector2(10, -spire_base_h * 0.5 * 0.5 - 14),
+				"Lv" + str(current_level),
+				HORIZONTAL_ALIGNMENT_LEFT, -1, 9,
+				Color("#FFB800")
+			)
+		if _selected:
+			draw_circle(Vector2.ZERO, attack_range + ENEMY_RADIUS, Color(tower_color, 0.06))
+			draw_arc(Vector2.ZERO, attack_range + ENEMY_RADIUS, 0, TAU, 64, Color(tower_color, 0.25), 1.5)
+			var label = "Range: " + str(attack_range)
+			draw_string(ThemeDB.fallback_font, Vector2(0, -attack_range - ENEMY_RADIUS - 14), label, HORIZONTAL_ALIGNMENT_CENTER, -1, 10, Color(tower_color, 0.7))
+		return
+
 	# 3D Depth Bases are drawn at ground level
 	_draw_3d_base_plates(tower_color)
 	

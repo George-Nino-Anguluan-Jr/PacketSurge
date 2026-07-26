@@ -124,56 +124,19 @@ func _hide_toast() -> void:
 			_show_toast(next["message"], next["duration"])
 	)
 
-const TOWER_NAMES = {
-	"tower_array":      "Array Tower",
-	"tower_stack":      "Stack Tower",
-	"tower_queue":      "Queue Tower",
-	"tower_linked_list":"Linked Tower",
-	"tower_bubble":     "Bubble Tower",
-	"tower_selection":  "Selection Tower",
-	"tower_insertion":  "Insertion Tower",
-	"tower_quick":      "Quick Tower",
-	"tower_merge":      "Merge Tower",
-	"tower_counting":   "Count Tower",
-	"tower_radix":      "Radix Tower",
-	"tower_linear":     "Linear Tower",
-	"tower_binary":     "Binary Tower",
-}
-
-const LESSON_NAMES = {
-	"py_variables":   "Python Variables",
-	"py_lists":       "Python Lists",
-	"py_loops":       "Python Loops",
-	"py_conditions":  "Python Conditions",
-	"py_functions":   "Python Functions",
-	"ds_arrays":      "Arrays (DS)",
-	"ds_stacks":      "Stacks (DS)",
-	"ds_queues":      "Queues (DS)",
-	"ds_linked_lists":"Linked Lists (DS)",
-	"sort_bubble":    "Bubble Sort",
-	"sort_selection": "Selection Sort",
-	"sort_insertion": "Insertion Sort",
-	"sort_quick":     "Quick Sort",
-	"sort_merge":     "Merge Sort",
-	"sort_counting":  "Counting Sort",
-	"sort_radix":     "Radix Sort",
-	"search_linear":  "Linear Search",
-	"search_binary":  "Binary Search",
-}
-
 func _on_tower_unlocked(tower_id: String) -> void:
-	var name = TOWER_NAMES.get(tower_id, tower_id)
+	var name = GameManager.TOWER_DEFINITIONS.get(tower_id, {}).get("tower_name", tower_id)
 	show_message(name + " unlocked! Equip it in Tower Select.", 3.0, "🔓", "#00FF88")
 
 func _on_lesson_unlocked(lesson_id: String) -> void:
-	var name = LESSON_NAMES.get(lesson_id, lesson_id)
+	var name = GameManager.LESSON_NAMES.get(lesson_id, lesson_id)
 	show_message("New lesson: " + name, 3.0, "📘", "#00D4FF")
 
 func _on_level_unlocked(level_number: int) -> void:
 	show_message("Campaign Level " + str(level_number) + " unlocked!", 3.0, "🏰", "#FFB800")
 
 func _on_topic_mastered(topic_id: String) -> void:
-	var name = LESSON_NAMES.get(topic_id, topic_id)
+	var name = GameManager.LESSON_NAMES.get(topic_id, topic_id)
 	show_message("Mastered: " + name + "!", 3.0, "🎉", "#00FF88")
 
 func _on_lesson_completed_redirect(lesson_id: String) -> void:
@@ -182,7 +145,7 @@ func _on_lesson_completed_redirect(lesson_id: String) -> void:
 		return
 	if chain.get("type") in ["both", "tower"]:
 		var tower_id = chain["id"]
-		var tower_name = TOWER_NAMES.get(tower_id, tower_id)
+		var tower_name = GameManager.TOWER_DEFINITIONS.get(tower_id, {}).get("tower_name", tower_id)
 		var level_id = chain.get("level_id", 0)
 		if level_id > 0 and ProgressManager.is_level_unlocked(level_id):
 			show_redirect(
@@ -196,7 +159,7 @@ func _on_level_complete_redirect(level_number: int, _score: int, _stars: int) ->
 	var next_lesson = ProgressManager.LEVEL_UNLOCKS_LESSON.get(level_number)
 	if not next_lesson:
 		return
-	var lesson_name = LESSON_NAMES.get(next_lesson, next_lesson)
+	var lesson_name = GameManager.LESSON_NAMES.get(next_lesson, next_lesson)
 	if ProgressManager.get_topic_state(next_lesson) == "unlocked":
 		show_redirect(
 			"Level " + str(level_number) + " complete!\nNew lesson: " + lesson_name + ". Learn now?",
