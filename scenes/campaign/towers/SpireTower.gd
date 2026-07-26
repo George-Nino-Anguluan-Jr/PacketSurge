@@ -17,7 +17,7 @@ func setup(v: String) -> void:
 
 	_weapon = AnimatedSprite2D.new()
 	_weapon.centered = true
-	_weapon.scale = Vector2(0.5, 0.5)
+	_weapon.scale = Vector2(0.6, 0.6)
 	add_child(_weapon)
 
 	_update_visuals()
@@ -35,7 +35,7 @@ func _projectile_dir(level: int) -> String:
 	return _base_path() + "/projectiles/L" + str(level) + "/"
 
 func _impact_dir(level: int) -> String:
-	if variant == "tower_02":
+	if variant in ["tower_02", "tower_03", "tower_04"]:
 		return _base_path() + "/impact/L" + str(level) + "/"
 	return _base_path() + "/impact/"
 
@@ -72,7 +72,10 @@ func _load_weapon_frames() -> void:
 	sf.add_animation("attack")
 	sf.set_animation_loop("idle", true)
 	sf.set_animation_loop("attack", false)
-	sf.set_animation_speed("attack", 12.0)
+	var anim_fps = 12.0
+	if files.size() > 0:
+		anim_fps = files.size() / 0.35
+	sf.set_animation_speed("attack", anim_fps)
 
 	var first = files[0]
 	if ResourceLoader.exists(dir_path + first):
@@ -107,9 +110,9 @@ func fire(target: Node, damage: float) -> void:
 
 	var proj = AnimatedSprite2D.new()
 	proj.centered = true
-	proj.scale = Vector2(0.5, 0.5)
+	proj.scale = Vector2(1.5, 1.5)
 	var pdir = _projectile_dir(current_level)
-	var sf = _load_sprite_frames_from(pdir)
+	var sf = _load_sprite_frames_from(pdir, 15.0)
 	if sf:
 		proj.sprite_frames = sf
 		proj.play("play")
@@ -140,7 +143,7 @@ func fire(target: Node, damage: float) -> void:
 	, 0.0, 1.0, travel_time)
 	tw.tween_callback(func(): _on_hit(proj, target, damage))
 
-func _load_sprite_frames_from(dir_path: String) -> SpriteFrames:
+func _load_sprite_frames_from(dir_path: String, speed: float = 10.0) -> SpriteFrames:
 	var dir = DirAccess.open(dir_path)
 	if not dir:
 		return null
@@ -161,7 +164,7 @@ func _load_sprite_frames_from(dir_path: String) -> SpriteFrames:
 	sf.remove_animation("default")
 	sf.add_animation("play")
 	sf.set_animation_loop("play", true)
-	sf.set_animation_speed("play", 10.0)
+	sf.set_animation_speed("play", speed)
 	for file in files:
 		if ResourceLoader.exists(dir_path + file):
 			sf.add_frame("play", load(dir_path + file))
@@ -176,7 +179,7 @@ func _on_hit(proj: AnimatedSprite2D, target: Node, dmg: float) -> void:
 		var impact = AnimatedSprite2D.new()
 		impact.centered = true
 		impact.z_index = 5
-		impact.scale = Vector2(1.5, 1.5)
+		impact.scale = Vector2(1.0, 1.0)
 		var idir = _impact_dir(current_level)
 		var sf = _load_sprite_frames_from(idir)
 		if sf:
@@ -186,7 +189,7 @@ func _on_hit(proj: AnimatedSprite2D, target: Node, dmg: float) -> void:
 			impact.animation_finished.connect(func():
 				if is_instance_valid(impact): impact.queue_free()
 			)
-		impact.global_position = hit
 		if get_parent():
 			get_parent().add_child(impact)
+		impact.global_position = hit
 		proj.queue_free()

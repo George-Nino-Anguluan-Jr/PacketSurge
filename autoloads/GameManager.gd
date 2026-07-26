@@ -143,7 +143,7 @@ const LEVEL_CONFIGS = {
 		"name":        "Bubble Protocol",
 		"concept":     "Bubble Sort",
 		"concept_desc":"Bubble Sort compares adjacent elements repeatedly — O(n²). Your Bubble Tower hits ALL enemies in range simultaneously, like comparing every pair.",
-		"enemy_tip":   "Linked Drain packets share damage with a partner. Linked Tower's chain damage hits both at once!",
+		"enemy_tip":   "Linked Drain packets share damage with a partner. Hash Tower's random bursts can catch both quickly!",
 		"waves":       5,
 		"start_ram":   225,
 		"tower_slots": 4,
@@ -467,6 +467,8 @@ const TOWER_DEFINITIONS = {
 		"color":       Color("#9B59B6"),
 		"icon_text":   "→",
 		"ability_name":"FIFO Pierce",
+		"spire_variant":"tower_03",
+		"spire_base_h": 128,
 	},
 	"tower_linked_list": {
 		"tower_id":    "tower_linked_list",
@@ -481,6 +483,8 @@ const TOWER_DEFINITIONS = {
 		"color":       Color("#00FF88"),
 		"icon_text":   "→→",
 		"ability_name":"Chain Link",
+		"spire_variant":"tower_04",
+		"spire_base_h": 128,
 	},
 	"tower_bubble": {
 		"tower_id":    "tower_bubble",
@@ -608,6 +612,7 @@ const TOWER_DEFINITIONS = {
 		"icon_text":   "½",
 		"ability_name":"Binary Snipe",
 	},
+
 }
 
 const ENEMY_DEFINITIONS = {
@@ -633,10 +638,10 @@ const LESSON_NAMES = {
 	"py_loops":       "Python Loops",
 	"py_conditions":  "Python Conditions",
 	"py_functions":   "Python Functions",
-	"ds_arrays":      "Arrays (DS)",
-	"ds_stacks":      "Stacks (DS)",
-	"ds_queues":      "Queues (DS)",
-	"ds_linked_lists":"Linked Lists (DS)",
+	"ds_arrays":      "Arrays",
+	"ds_stacks":      "Stacks",
+	"ds_queues":      "Queues",
+	"ds_linked_lists":"Linked Lists",
 	"sort_bubble":    "Bubble Sort",
 	"sort_selection": "Selection Sort",
 	"sort_insertion": "Insertion Sort",
