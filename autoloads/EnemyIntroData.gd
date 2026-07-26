@@ -4,7 +4,6 @@ var enemy_intros: Dictionary = {
 	"basic_packet": {
 		"title":    "Basic Packet",
 		"tagline":  "The standard network packet — no special abilities.",
-		"color":    Color("#FF3366"),
 		"icon":     "[ ]",
 		"threat":   "Low",
 		"special":  "No special ability — pure data, the most common enemy in early waves.",
@@ -13,7 +12,6 @@ var enemy_intros: Dictionary = {
 	"indexed_packet": {
 		"title":    "Indexed Packet",
 		"tagline":  "Resistant to single hits. Array Tower's fast attack excels here.",
-		"color":    Color("#00D4FF"),
 		"icon":     "[0]",
 		"threat":   "Low",
 		"special":  "50% damage resistance. Quick, repeated hits (Array Tower) bypass it.",
@@ -22,7 +20,6 @@ var enemy_intros: Dictionary = {
 	"overflow_packet": {
 		"title":    "Overflow Packet",
 		"tagline":  "Grows stronger as enemies behind it die. Kill front-to-back.",
-		"color":    Color("#8E44AD"),
 		"icon":     "↑↓",
 		"threat":   "High",
 		"special":  "Gains HP when enemies behind it die. Must be killed LIFO.",
@@ -31,7 +28,6 @@ var enemy_intros: Dictionary = {
 	"queue_jumper": {
 		"title":    "Queue Jumper",
 		"tagline":  "Speeds up as enemies ahead of it die.",
-		"color":    Color("#FF6B35"),
 		"icon":     "▶▶",
 		"threat":   "Medium",
 		"special":  "Speed scales with the number of enemies ahead — near the front = fast.",
@@ -40,7 +36,6 @@ var enemy_intros: Dictionary = {
 	"linked_drain": {
 		"title":    "Linked Drain",
 		"tagline":  "Linked pair — damage is split between partners.",
-		"color":    Color("#2ECC71"),
 		"icon":     "→→",
 		"threat":   "Medium",
 		"special":  "Spawns as a linked pair connected by a line. 50/50 damage split with partner.",
@@ -49,7 +44,6 @@ var enemy_intros: Dictionary = {
 	"bubble_shield": {
 		"title":    "Bubble Shield",
 		"tagline":  "Shield absorbs the first 3 hits. Pop it first.",
-		"color":    Color("#95A5A6"),
 		"icon":     "⭕",
 		"threat":   "Medium",
 		"special":  "Shield blocks 3 hits before HP is exposed. Shield slowly regenerates.",
@@ -58,7 +52,6 @@ var enemy_intros: Dictionary = {
 	"pivot_splitter": {
 		"title":    "Pivot Splitter",
 		"tagline":  "Boss — splits into 2 smaller enemies on death.",
-		"color":    Color("#E74C3C"),
 		"icon":     "⚡",
 		"threat":   "Extreme",
 		"special":  "Massive HP boss. On death, splits into 2 weaker basic packets.",
@@ -67,7 +60,6 @@ var enemy_intros: Dictionary = {
 	"selection_mark": {
 		"title":    "Selection Mark",
 		"tagline":  "Nearly invulnerable unless it's the lowest-HP enemy on screen.",
-		"color":    Color("#E74C3C"),
 		"icon":     "◎",
 		"threat":   "High",
 		"special":  "75% damage resistance unless it has the lowest HP in range.",
@@ -76,7 +68,6 @@ var enemy_intros: Dictionary = {
 	"insertion_stack": {
 		"title":    "Insertion Stack",
 		"tagline":  "Takes 50% extra damage from damage-over-time effects.",
-		"color":    Color("#1ABC9C"),
 		"icon":     "◀|",
 		"threat":   "Medium",
 		"special":  "1.5x damage from any DoT source. Direct hits are normal.",
@@ -85,7 +76,6 @@ var enemy_intros: Dictionary = {
 	"merge_twin": {
 		"title":    "Merge Twin",
 		"tagline":  "Pair that absorbs its partner's HP on death.",
-		"color":    Color("#3F51B5"),
 		"icon":     "⊕",
 		"threat":   "High",
 		"special":  "Spawns as a pair. If one dies, the other gains bonus HP & speed.",
@@ -94,7 +84,6 @@ var enemy_intros: Dictionary = {
 	"count_meter": {
 		"title":    "Count Meter",
 		"tagline":  "Resists damage until a counter fills.",
-		"color":    Color("#009688"),
 		"icon":     "###",
 		"threat":   "Medium",
 		"special":  "80% damage resistance until 5 hits land — then the counter resets.",
@@ -103,7 +92,6 @@ var enemy_intros: Dictionary = {
 	"radix_digit": {
 		"title":    "Radix Digit",
 		"tagline":  "Three segmented HP bars — must be depleted in order.",
-		"color":    Color("#FF5722"),
 		"icon":     "1→9",
 		"threat":   "High",
 		"special":  "HP split across 3 segments (1s, 10s, 100s) — must deplete units first.",
@@ -112,7 +100,6 @@ var enemy_intros: Dictionary = {
 	"scan_wave": {
 		"title":    "Scan Wave",
 		"tagline":  "Only vulnerable at the extreme ends of its oscillation.",
-		"color":    Color("#607D8B"),
 		"icon":     "→?",
 		"threat":   "Medium",
 		"special":  "Oscillates while moving. 90% damage resistance between scan extremes.",
@@ -121,7 +108,6 @@ var enemy_intros: Dictionary = {
 	"binary_mask": {
 		"title":    "Binary Mask",
 		"tagline":  "Alternates vulnerable half every few seconds.",
-		"color":    Color("#8BC34A"),
 		"icon":     "½",
 		"threat":   "Extreme",
 		"special":  "Only the highlighted half takes full damage. Switches every 2-3 seconds.",
@@ -135,10 +121,6 @@ func get_intro(enemy_id: String) -> Dictionary:
 func get_enemy_name(enemy_id: String) -> String:
 	var d = enemy_intros.get(enemy_id, {})
 	return d.get("title", enemy_id)
-
-func get_color(enemy_id: String) -> Color:
-	var d = enemy_intros.get(enemy_id, {})
-	return d.get("color", Color.WHITE)
 
 func get_threat(enemy_id: String) -> String:
 	var d = enemy_intros.get(enemy_id, {})

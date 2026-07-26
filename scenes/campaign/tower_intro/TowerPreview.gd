@@ -54,9 +54,10 @@ func setup(t_id: String) -> void:
 		_ready()
 	tower_id = t_id
 	var data = TowerIntroData.get_intro(t_id)
-	tower_color = data.get("color", Color("#00D4FF"))
-	tower_icon = data.get("icon", "[ ]")
-	tower_name = data.get("title", "Tower")
+	var def = GameManager.TOWER_DEFINITIONS.get(t_id, {})
+	tower_color = def.get("color", Color("#00D4FF"))
+	tower_icon = def.get("icon_text", "[ ]")
+	tower_name = def.get("tower_name", "Tower")
 
 	var raw_strong = data.get("strong", [])
 	var raw_weak = data.get("weak", [])

@@ -121,178 +121,6 @@ const CHALLENGES = {
 }
 
 # ─── TOWER DEFINITIONS ─────────────────────────────────
-const TOWER_DEFINITIONS = {
-		"tower_array": {
-		"tower_id":       "tower_array",
-		"tower_name":     "Array Tower",
-		"description":    "Fast attack. O(1) access speed.",
-		"data_structure": "Array",
-		"ram_cost":       40,
-		"damage":         18.0,
-		"attack_speed":   2.0,
-		"attack_range":   140.0,
-		"time_complexity":"O(1)",
-		"color":          Color("#00D4FF"),
-		"icon_text":      "[ ]",
-	},
-	"tower_stack": {
-		"tower_id":       "tower_stack",
-		"tower_name":     "Stack Tower",
-		"description":    "Hits most recent enemy. LIFO.",
-		"data_structure": "Stack",
-		"ram_cost":       60,
-		"damage":         28.0,
-		"attack_speed":   1.2,
-		"attack_range":   130.0,
-		"time_complexity":"O(1)",
-		"color":          Color("#FF6B35"),
-		"icon_text":      "↑↓",
-	},
-	"tower_queue": {
-		"tower_id":       "tower_queue",
-		"tower_name":     "Queue Tower",
-		"description":    "Pierces 2 enemies. FIFO.",
-		"data_structure": "Queue",
-		"ram_cost":       60,
-		"damage":         22.0,
-		"attack_speed":   1.6,
-		"attack_range":   160.0,
-		"time_complexity":"O(1)",
-		"color":          Color("#9B59B6"),
-		"icon_text":      "→",
-	},
-	"tower_linked_list": {
-		"tower_id":       "tower_linked_list",
-		"tower_name":     "Linked Tower",
-		"description":    "Chain damage 3 enemies.",
-		"data_structure": "Linked List",
-		"ram_cost":       80,
-		"damage":         20.0,
-		"attack_speed":   1.3,
-		"attack_range":   150.0,
-		"time_complexity":"O(n)",
-		"color":          Color("#00FF88"),
-		"icon_text":      "→→",
-	},
-	"tower_bubble": {
-		"tower_id":       "tower_bubble",
-		"tower_name":     "Bubble Tower",
-		"description":    "AoE — hits all in range.",
-		"data_structure": "Bubble Sort",
-		"ram_cost":       70,
-		"damage":         16.0,
-		"attack_speed":   1.5,
-		"attack_range":   130.0,
-		"time_complexity":"O(n²)",
-		"color":          Color("#FFB800"),
-		"icon_text":      "↑↑",
-	},
-	"tower_selection": {
-		"tower_id":       "tower_selection",
-		"tower_name":     "Selection Tower",
-		"description":    "Targets lowest HP enemy.",
-		"data_structure": "Selection Sort",
-		"ram_cost":       90,
-		"damage":         24.0,
-		"attack_speed":   1.0,
-		"attack_range":   170.0,
-		"time_complexity":"O(n²)",
-		"color":          Color("#E74C3C"),
-		"icon_text":      "→↓",
-	},
-	"tower_insertion": {
-		"tower_id":       "tower_insertion",
-		"tower_name":     "Insertion Tower",
-		"description":    "Damage over time stacking.",
-		"data_structure": "Insertion Sort",
-		"ram_cost":       100,
-		"damage":         18.0,
-		"attack_speed":   1.4,
-		"attack_range":   140.0,
-		"time_complexity":"O(n)",
-		"color":          Color("#1ABC9C"),
-		"icon_text":      "←↑",
-	},
-	"tower_quick": {
-		"tower_id":       "tower_quick",
-		"tower_name":     "Quick Tower",
-		"description":    "Splits shot hits 2 enemies.",
-		"data_structure": "Quick Sort",
-		"ram_cost":       130,
-		"damage":         22.0,
-		"attack_speed":   1.8,
-		"attack_range":   155.0,
-		"time_complexity":"O(n log n)",
-		"color":          Color("#E91E63"),
-		"icon_text":      "⚡",
-	},
-	"tower_merge": {
-		"tower_id":       "tower_merge",
-		"tower_name":     "Merge Tower",
-		"description":    "Guaranteed AoE damage.",
-		"data_structure": "Merge Sort",
-		"ram_cost":       140,
-		"damage":         20.0,
-		"attack_speed":   1.4,
-		"attack_range":   160.0,
-		"time_complexity":"O(n log n)",
-		"color":          Color("#3F51B5"),
-		"icon_text":      "⊕",
-	},
-	"tower_counting": {
-		"tower_id":       "tower_counting",
-		"tower_name":     "Count Tower",
-		"description":    "Stronger vs groups.",
-		"data_structure": "Counting Sort",
-		"ram_cost":       110,
-		"damage":         14.0,
-		"attack_speed":   2.2,
-		"attack_range":   130.0,
-		"time_complexity":"O(n+k)",
-		"color":          Color("#009688"),
-		"icon_text":      "#",
-	},
-	"tower_radix": {
-		"tower_id":       "tower_radix",
-		"tower_name":     "Radix Tower",
-		"description":    "Rapid multi-pass bursts.",
-		"data_structure": "Radix Sort",
-		"ram_cost":       150,
-		"damage":         12.0,
-		"attack_speed":   3.0,
-		"attack_range":   145.0,
-		"time_complexity":"O(d×n)",
-		"color":          Color("#FF5722"),
-		"icon_text":      "0→9",
-	},
-	"tower_linear": {
-		"tower_id":       "tower_linear",
-		"tower_name":     "Linear Tower",
-		"description":    "Wide scan, guaranteed hit.",
-		"data_structure": "Linear Search",
-		"ram_cost":       80,
-		"damage":         16.0,
-		"attack_speed":   1.0,
-		"attack_range":   200.0,
-		"time_complexity":"O(n)",
-		"color":          Color("#607D8B"),
-		"icon_text":      "→?",
-	},
-	"tower_binary": {
-		"tower_id":       "tower_binary",
-		"tower_name":     "Binary Tower",
-		"description":    "Precision sniper. O(log n).",
-		"data_structure": "Binary Search",
-		"ram_cost":       200,
-		"damage":         80.0,
-		"attack_speed":   0.5,
-		"attack_range":   250.0,
-		"time_complexity":"O(log n)",
-		"color":          Color("#8BC34A"),
-		"icon_text":      "½",
-	},
-}
-
 # ─── READY ─────────────────────────────────────────────
 func _ready() -> void:
 	level_number     = GameManager.current_level
@@ -633,7 +461,7 @@ func _create_overlay_menu() -> void:
 
 func _on_overlay_tower_selected(tower_id: String) -> void:
 	overlay_menu.visible = false
-	var def = TOWER_DEFINITIONS[tower_id]
+	var def = GameManager.TOWER_DEFINITIONS[tower_id]
 	if not ram_manager.can_afford(def["ram_cost"]):
 		_flash_ram_label(false)
 		_play_feedback(false)
@@ -648,6 +476,8 @@ func _on_overlay_tower_selected(tower_id: String) -> void:
 	selected_tower_data.attack_range = def["attack_range"]
 	selected_tower_data.color        = def["color"]
 	selected_tower_data.icon_text    = def["icon_text"]
+	selected_tower_data.spire_variant = def.get("spire_variant", "")
+	selected_tower_data.spire_base_h  = def.get("spire_base_h", 0)
 	
 	_place_tower(current_clicked_cell)
 
@@ -832,9 +662,9 @@ func _show_placement_radial(cell: Vector2i) -> void:
 	
 	for i in range(num_options):
 		var tower_id = equipped[i]
-		if not TOWER_DEFINITIONS.has(tower_id):
+		if not GameManager.TOWER_DEFINITIONS.has(tower_id):
 			continue
-		var def = TOWER_DEFINITIONS[tower_id]
+		var def = GameManager.TOWER_DEFINITIONS[tower_id]
 		
 		# Compute angle position
 		var angle = -PI/2 + (i * 2.0 * PI / num_options)
@@ -884,6 +714,8 @@ func _show_placement_radial(cell: Vector2i) -> void:
 		dummy_data.attack_range = def["attack_range"]
 		dummy_data.color = def["color"]
 		dummy_data.icon_text = def["icon_text"]
+		dummy_data.spire_variant = def.get("spire_variant", "")
+		dummy_data.spire_base_h  = def.get("spire_base_h", 0)
 		
 		visual_tower.initialize(dummy_data, Vector2i(-1, -1), null)
 		visual_tower.position = Vector2(btn_size / 2.0, btn_size / 2.0)
@@ -967,7 +799,7 @@ func _place_tower(cell: Vector2i) -> void:
 
 # ─── TOWER SELECTION ───────────────────────────────────
 func _on_tower_selected(tower_id: String) -> void:
-	var def = TOWER_DEFINITIONS[tower_id]
+	var def = GameManager.TOWER_DEFINITIONS[tower_id]
 	selected_tower_data              = TowerData.new()
 	selected_tower_data.tower_id     = def["tower_id"]
 	selected_tower_data.tower_name   = def["tower_name"]
@@ -977,6 +809,8 @@ func _on_tower_selected(tower_id: String) -> void:
 	selected_tower_data.attack_range = def["attack_range"]
 	selected_tower_data.color        = def["color"]
 	selected_tower_data.icon_text    = def["icon_text"]
+	selected_tower_data.spire_variant = def.get("spire_variant", "")
+	selected_tower_data.spire_base_h  = def.get("spire_base_h", 0)
 	grid_system.is_placing_tower     = true
 	_spawn_floating_text("Click to place " + def["tower_name"] + " (" + str(def["ram_cost"]) + "⚡)",
 		Vector2(get_viewport_rect().size.x / 2, 36), Color("#00D4FF"), 11)

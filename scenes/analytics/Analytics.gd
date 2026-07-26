@@ -364,26 +364,17 @@ func _make_lesson_breakdown() -> VBoxContainer:
 	layout.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	layout.add_theme_constant_override("separation", 8)
 
-	var topics = {
-		"py_variables":    "Variables",
-		"py_lists":        "Lists",
-		"py_loops":        "Loops",
-		"py_conditions":   "Conditions",
-		"py_functions":    "Functions",
-		"ds_arrays":       "Arrays",
-		"ds_stacks":       "Stacks",
-		"ds_queues":       "Queues",
-		"ds_linked_lists": "Linked Lists",
-		"sort_bubble":     "Bubble Sort",
-		"sort_selection":  "Selection Sort",
-		"sort_insertion":  "Insertion Sort",
-	}
+	var topic_ids = [
+		"py_variables", "py_lists", "py_loops", "py_conditions", "py_functions",
+		"ds_arrays", "ds_stacks", "ds_queues", "ds_linked_lists",
+		"sort_bubble", "sort_selection", "sort_insertion",
+	]
 
-	for topic_id in topics:
+	for topic_id in topic_ids:
 		var state    = ProgressManager.topic_states.get(topic_id, "locked")
 		var time     = float(ProgressManager.time_spent.get(topic_id, 0.0))
 		var row      = _make_lesson_row(
-			topics[topic_id], state, time
+			GameManager.LESSON_NAMES.get(topic_id, topic_id), state, time
 		)
 		layout.add_child(row)
 

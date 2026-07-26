@@ -22,3 +22,7 @@ extends Resource
 # Visual
 @export var color: Color             = Color("#00D4FF")
 @export var icon_text: String        = "[ ]"
+
+# Spire sprite config (empty = procedural drawing)
+@export var spire_variant: String    = ""
+@export var spire_base_h: int        = 0

@@ -51,18 +51,21 @@ func show_for(t_id: String) -> void:
 	if data.is_empty():
 		return
 
-	icon_label.text = data.get("icon", "")
-	title_label.text = data.get("title", t_id)
+	var def = GameManager.TOWER_DEFINITIONS.get(t_id, {})
+	icon_label.text = def.get("icon_text", "")
+	title_label.text = def.get("tower_name", t_id)
 	tagline_label.text = data.get("tagline", "")
 
-	var col: Color = data.get("color", Color("#00D4FF"))
+	var col: Color = def.get("color", Color("#00D4FF"))
 	title_label.add_theme_color_override("font_color", col)
 	tagline_label.add_theme_color_override("font_color", col)
 
 	mechanic_label.text = "?  " + data.get("mechanic", "")
 	targeting_label.text = "?  " + data.get("targeting", "")
 	shooting_label.text = "?  " + data.get("shooting", "")
-	ability_label.text = "?  " + data.get("ability", "")
+	var a_name = def.get("ability_name", "")
+	var a_desc = data.get("ability", "")
+	ability_label.text = "?  " + (a_name + " — " + a_desc if a_name != "" else a_desc)
 
 	_populate_enemy_list(strong_container, data.get("strong", []), "Strong Against", Color("#00FF88"))
 	_populate_enemy_list(weak_container, data.get("weak", []), "Weak Against", Color("#FF3366"))

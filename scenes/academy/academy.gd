@@ -189,27 +189,7 @@ func _build_sidebar() -> void:
 
 
 func _get_topic_display_name(topic_id: String) -> String:
-	var names = {
-		"py_variables":    "Variables",
-		"py_lists":        "Lists",
-		"py_loops":        "Loops",
-		"py_conditions":   "Conditions",
-		"py_functions":    "Functions",
-		"ds_arrays":       "Arrays",
-		"ds_stacks":       "Stacks",
-		"ds_queues":       "Queues",
-		"ds_linked_lists": "Linked Lists",
-		"sort_bubble":     "Bubble Sort",
-		"sort_selection":  "Selection Sort",
-		"sort_insertion":  "Insertion Sort",
-		"sort_quick":      "Quick Sort",
-		"sort_merge":      "Merge Sort",
-		"sort_counting":   "Counting Sort",
-		"sort_radix":      "Radix Sort",
-		"search_linear":   "Linear Search",
-		"search_binary":   "Binary Search",
-	}
-	return names.get(topic_id, topic_id)
+	return GameManager.LESSON_NAMES.get(topic_id, topic_id)
 
 # ─── TOPIC BUTTON STYLES ───────────────────────────────
 func _style_topic_button(btn: Button, state: String) -> void:
