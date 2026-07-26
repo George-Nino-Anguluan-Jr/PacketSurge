@@ -604,13 +604,9 @@ func _draw() -> void:
 	# For spire-mapped enemies, skip procedural body drawing (the spire sprite is shown instead)
 	if not _spire:
 		match enemy_type:
-			"basic_packet":      _draw_basic(col, bob)
-			"queue_jumper":      _draw_queue_jumper(col, bob)
 			"overflow_packet":   _draw_overflow(col, bob)
-			"linked_drain":      _draw_linked(col, bob)
 			"bubble_shield":     _draw_bubble(col, bob)
 			"pivot_splitter":    _draw_pivot(col, bob)
-			"indexed_packet":    _draw_indexed(col, bob)
 			"selection_mark":    _draw_selection(col, bob)
 			"insertion_stack":   _draw_insertion(col, bob)
 			"merge_twin":        _draw_merge(col, bob)
@@ -618,7 +614,6 @@ func _draw() -> void:
 			"radix_digit":       _draw_radix(col, bob)
 			"scan_wave":         _draw_scan(col, bob)
 			"binary_mask":       _draw_binary(col, bob)
-			_:                   _draw_basic(col, bob)
 	else:
 		# Damage flash overlay for spire enemies
 		if flash:
@@ -719,43 +714,6 @@ func _draw_type_overlay(bob: float) -> void:
 			else:
 				draw_arc(Vector2(0, 0 + bob), 18, 0, TAU, 16, Color("#FF3366", 0.3), 1.0)
 
-func _draw_basic(col: Color, bob: float) -> void:
-	# 3D data packet cube
-	_draw_3d_box(Vector2(0, bob - 4), Vector2(13, 13), 8.0, Color("#15202E"), col, 1.5)
-	# Top face circuit lines
-	draw_line(Vector2(-7, bob - 4 - 8 * SQUASH + 2), Vector2(7, bob - 4 - 8 * SQUASH + 2), Color(col, 0.6), 1.0)
-	draw_circle(Vector2(0, bob - 4 - 8 * SQUASH), 2.0, Color(col, 0.7))
-	# Drop shadow
-	draw_set_transform(Vector2(0, bob + 4), 0.0, Vector2(1.0, 0.35))
-	draw_circle(Vector2.ZERO, 12, Color(0, 0, 0, 0.25))
-	draw_set_transform(Vector2.ZERO, 0.0, Vector2.ONE)
-
-func _draw_queue_jumper(col: Color, bob: float) -> void:
-	# 3D arrow/wedge (pointing right = motion direction)
-	var ahead = _count_enemies_ahead()
-	var scale = 0.85 + (1.0 - float(ahead) / 10.0) * 0.3
-	var w = 12.0 * scale
-	var h = 8.0 * scale
-	# Body: 3D extruded arrow shape using diamond prism
-	var tip = Vector2(w * 1.1, bob)
-	var top = Vector2(-w * 0.6, bob - h)
-	var bot = Vector2(-w * 0.6, bob + h)
-	var back = Vector2(-w * 0.9, bob)
-	# Draw extruded arrow as 3D box on its side
-	_draw_3d_box(Vector2(0, bob - 1), Vector2(w, h), 7.0, Color("#15202E"), col, 1.5)
-	# Tip cone
-	_draw_3d_hexagon(Vector2(w + 4, bob), 6.0, 5.0, Color("#15202E"), col, 1.3)
-	# Speed lines (more when faster)
-	var trail_count = max(1, 5 - int(ahead / 2))
-	for i in range(trail_count):
-		var tx = -w * 0.9 - 6 - i * 4
-		draw_line(Vector2(tx, bob - 3), Vector2(tx - 4, bob), Color(col, 0.5 - i * 0.07), 1.5)
-		draw_line(Vector2(tx - 4, bob), Vector2(tx, bob + 3), Color(col, 0.5 - i * 0.07), 1.5)
-	# Drop shadow
-	draw_set_transform(Vector2(0, bob + 8), 0.0, Vector2(1.0, 0.3))
-	draw_circle(Vector2.ZERO, 14, Color(0, 0, 0, 0.25))
-	draw_set_transform(Vector2.ZERO, 0.0, Vector2.ONE)
-
 func _draw_overflow(col: Color, bob: float) -> void:
 	# 3D stacked cubes — grows with layers
 	var layers = type_data.get("layers", 0)
@@ -776,20 +734,6 @@ func _draw_overflow(col: Color, bob: float) -> void:
 	# Drop shadow
 	draw_set_transform(Vector2(0, bob + 6), 0.0, Vector2(1.0, 0.3))
 	draw_circle(Vector2.ZERO, 14, Color(0, 0, 0, 0.3))
-	draw_set_transform(Vector2.ZERO, 0.0, Vector2.ONE)
-
-func _draw_linked(col: Color, bob: float) -> void:
-	# 3D hexagonal prism (linked list node)
-	_draw_3d_hexagon(Vector2(0, bob - 2), 12.0, 7.0, Color("#15202E"), col, 1.5)
-	# Top face connector dots
-	for i in range(6):
-		var a = i * PI / 3.0
-		var px = cos(a) * 8
-		var py = bob - 2 + sin(a) * 8 * SQUASH
-		draw_circle(Vector2(px, py - 7 * SQUASH), 1.2, Color("#00FF88", 0.8))
-	# Drop shadow
-	draw_set_transform(Vector2(0, bob + 5), 0.0, Vector2(1.0, 0.3))
-	draw_circle(Vector2.ZERO, 12, Color(0, 0, 0, 0.25))
 	draw_set_transform(Vector2.ZERO, 0.0, Vector2.ONE)
 
 func _draw_bubble(col: Color, bob: float) -> void:
@@ -835,25 +779,6 @@ func _draw_pivot(col: Color, bob: float) -> void:
 	# Drop shadow
 	draw_set_transform(Vector2(0, bob + 8), 0.0, Vector2(1.0, 0.3))
 	draw_circle(Vector2.ZERO, 22, Color(0, 0, 0, 0.35))
-	draw_set_transform(Vector2.ZERO, 0.0, Vector2.ONE)
-
-func _draw_indexed(col: Color, bob: float) -> void:
-	# 3D data packet with bracket frame and number tile on top
-	# Outer bracket frame (3D box, narrow)
-	_draw_3d_box(Vector2(0, bob - 2), Vector2(13, 13), 8.0, Color("#15202E"), col, 1.5)
-	# Index number tile on top (smaller 3D box)
-	var idx = type_data.get("index", 0)
-	var tile_y = bob - 2 - 8 * SQUASH - 4
-	_draw_3d_box(Vector2(0, tile_y), Vector2(7, 7), 3.0, Color("#0F1A2E"), Color("#FFFFFF", 0.9), 1.2)
-	# Bracket corners (drawn as short cylinder posts on each corner)
-	var corners = [Vector2(-11, -11), Vector2(11, -11), Vector2(-11, 11), Vector2(11, 11)]
-	for c in corners:
-		draw_line(Vector2(c.x * 0.4, bob - 2 + c.y * 0.4 - 8 * SQUASH),
-			Vector2(c.x * 0.4 + c.x * 0.3, bob - 2 + c.y * 0.4 - 8 * SQUASH),
-			col, 1.5)
-	# Drop shadow
-	draw_set_transform(Vector2(0, bob + 6), 0.0, Vector2(1.0, 0.3))
-	draw_circle(Vector2.ZERO, 13, Color(0, 0, 0, 0.25))
 	draw_set_transform(Vector2.ZERO, 0.0, Vector2.ONE)
 
 func _draw_selection(col: Color, bob: float) -> void:
