@@ -11,81 +11,111 @@ category = "data_structures"
 icon_text = "↑↓"
 prerequisites = Array[String](["ds_arrays"])
 visualization_scene = ExtResource("2_t55l4")
-concept_text = "A stack follows Last In First Out (LIFO).
-The last item added is the first item removed.
+concept_text = "A stack is a list where you can only add or remove from ONE END — the top. Think of a stack of plates: you put a new plate on top, and you take a plate from the top. You can't grab a plate from the middle without disturbing the others.
 
-Think of a stack of plates — you add to the top and remove from the top.
+This rule is called LIFO: Last In, First Out. The last item you added is the first one you can remove.
 
-Two main operations:
-    push  — add an item to the top
-    pop   — remove the top item
+In Python, you use a list with two operations:
+- push (= append): add an item to the top
+- pop: remove the top item and give it back to you
 
-In Python:
-    stack = []
-    stack.append(\"A\")     # push A
-    stack.append(\"B\")     # push B
-    print(stack.pop())    # pop → B (last in, first out)
-    print(stack.pop())    # pop → A
+    stack = []             # start with an empty stack
+    stack.append(\"A\")     # push A — stack is now [\"A\"]
+    stack.append(\"B\")     # push B — stack is now [\"A\", \"B\"]
+    stack.append(\"C\")     # push C — stack is now [\"A\", \"B\", \"C\"]
 
-All operations are fast (O(1))."
-real_world_example = "Think of a browser's back button.
-Each page you visit gets pushed onto a stack.
-Clicking Back pops the most recent page.
+    print(stack.pop())    # pop → \"C\" (the last one in is the first one out)
+    print(stack.pop())    # pop → \"B\"
+    print(stack.pop())    # pop → \"A\"
 
-    history = []
-    history.append(\"Home\")      # push
-    history.append(\"About\")     # push
-    history.append(\"Contact\")   # push
+You can also peek at the top without removing it using the last item:
 
-    print(history.pop())        # → Contact
-    print(history.pop())        # → About
-    print(history.pop())        # → Home
+    top = stack[-1]        # the last item is the top of the stack
 
-The most recent page is always returned first."
-guided_example = "Let's use a stack to track game actions.
+All operations (push, pop, peek) are FAST (O(1)) — they always touch just the top of the stack, no matter how big the stack is."
 
-Step 1 — Create empty stack:
+real_world_example = "A stack of plates in a cafeteria is the perfect example. When you wash a plate, you put it on top of the stack. When someone needs a plate, they take one from the top. You can't take a plate from the middle — you'd have to lift the plates above it first, which is awkward and might cause a crash.
+
+Same with a stack of books on a desk. You add to the top, take from the top. Easy.
+
+Another real-life example: the BACK button on your web browser. Every page you visit gets pushed onto a stack. When you click Back, the most recent page is popped off. That's why Back takes you to the PREVIOUS page, not a random one.
+
+    history = []                       # empty stack
+    history.append(\"Home\")            # visit Home
+    history.append(\"About\")           # visit About
+    history.append(\"Contact\")         # visit Contact
+
+    history.pop()    # Back → \"Contact\" (most recent)
+    history.pop()    # Back → \"About\"
+    history.pop()    # Back → \"Home\"
+
+A third example: undo in a program. Every action you take is pushed onto a stack. When you press Ctrl+Z, the most recent action is popped and undone. The order is LIFO — last action first, going back through history.
+
+    actions = [\"typed 'h'\", \"typed 'e'\", \"typed 'l'\", \"typed 'l'\", \"typed 'o'\"]
+    actions.pop()    # undo: remove \"typed 'o'\"
+    actions.pop()    # undo: remove \"typed 'l'\"
+    # now you have \"h\", \"e\", \"l\" — the word \"hel\""
+
+guided_example = "Let's use a stack to track a player's recent game actions, one step at a time.
+
+Step 1 — Start with an empty stack.
+
     actions = []
 
-Step 2 — Player performs actions:
-    actions.append(\"jump\")
-    actions.append(\"shoot\")
-    actions.append(\"dodge\")
+A stack is just a list. We'll use it like a stack by only ever adding to or removing from the end.
 
-Step 3 — Look at the top (peek):
-    print(actions[-1])      # dodge
+Step 2 — Player performs three actions.
 
-Step 4 — Undo the last action:
+    actions.append(\"jump\")     # pushed to top
+    actions.append(\"shoot\")    # pushed to top
+    actions.append(\"dodge\")    # pushed to top
+
+Each append() adds to the END of the list. The end is our \"top\". So after these three lines, the top of the stack is \"dodge\".
+
+Step 3 — Peek at the top without removing it.
+
+    print(actions[-1])    # shows: dodge
+
+The [-1] means \"last item\". That's the top. We can look at it without removing it.
+
+Step 4 — Undo the last action (pop from the top).
+
     last = actions.pop()
-    print(\"Undid:\", last)   # Undid: dodge
-    print(actions)           # [\"jump\", \"shoot\"]
+    print(\"Undid:\", last)    # shows: Undid: dodge
+    print(actions)            # shows: [\"jump\", \"shoot\"]
 
-Step 5 — Undo again:
+pop() removed the LAST item (\"dodge\") and gave it back. The stack is now shorter.
+
+Step 5 — Undo again.
+
     last = actions.pop()
-    print(\"Undid:\", last)   # Undid: shoot"
-recap_text = "- Stacks use LIFO: Last In, First Out
-- push (= append) adds to the top — O(1)
-- pop removes from the top — O(1)
-- peek (= [-1]) views the top — O(1)
-- In Python: use a list with append() and pop()
-- Real uses: undo systems, browser history, call stack"
-challenge_instruction = "Arrange the blocks to push three items onto a stack and pop and print the last one."
-challenge_blocks = Array[String](["stack = []", "stack.append(\"x\")", "stack.append(\"y\")", "stack.append(\"z\")", "print(stack.pop())", "stack.push(\"x\")", "print(stack[0])"])
-correct_sequence = Array[String](["stack = []", "stack.append(\"x\")", "stack.append(\"y\")", "stack.append(\"z\")", "print(stack.pop())"])
-code_template = "stack = []
-stack.append(\"___\")
-stack.append(\"middle\")
-stack.append(\"last\")
+    print(\"Undid:\", last)    # shows: Undid: shoot
+    print(actions)            # shows: [\"jump\"]
+
+pop() removed \"shoot\". Only \"jump\" is left.
+
+That's the whole pattern! append() to push, pop() to remove from the top. The LIFO order means the most recent action comes off first."
+
+recap_text = "- A stack is a list where you can only touch the TOP
+- LIFO: Last In, First Out (the most recent is removed first)
+- push (append) adds to the top
+- pop removes from the top and returns it
+- You can peek at the top with the last item (stack[-1])
+- All operations are FAST (O(1)) — always touch the top
+- Think of a stack of plates: add to the top, take from the top
+- Used in: undo systems, browser Back button, function call stack
+- You can never grab an item from the middle without removing the ones above it first"
+
+challenge_instruction = "Drag the blocks to push two items onto a stack and pop one to see it."
+challenge_blocks = Array[String](["stack = []", "stack.append(\"x\")", "print(stack.pop())"])
+correct_sequence = Array[String](["stack = []", "stack.append(\"x\")", "print(stack.pop())"])
+challenge_hint = "Start with an empty list. Use append() to push. Use pop() (with empty parentheses) to remove and return the top. Print what pop() gives you."
+code_template = "stack = [\"___\"]
 print(stack.pop())"
-challenge_code = "stack = []
-stack.append(\"first\")
-stack.append(\"middle\")
-stack.append(\"last\")
+challenge_code = "stack = [\"apple\"]
 print(stack.pop())"
-expected_output = "last"
-challenge_hint = "Use a list as a stack. append() adds to the top. pop() removes and returns the top item."
+expected_output = "apple"
 practice_question = "What will this code print?    s = []    s.append(1)    s.append(2)    print(s.pop())"
 practice_options = Array[String](["1", "2", "[1, 2]", "Nothing"])
 practice_correct_index = 1
-practice_explanation = "Items are pushed in order: 1 then 2. The stack is [1, 2] with 2 on top. pop() removes and returns the top item, so it prints 2."
-
+practice_explanation = "First, s.append(1) makes s = [1]. Then s.append(2) makes s = [1, 2] (2 is on top). pop() removes and returns the top, which is 2. So it prints 2. LIFO in action: 2 went in last, so 2 comes out first."

@@ -11,86 +11,121 @@ category = "data_structures"
 icon_text = "←↑"
 prerequisites = Array[String](["sort_selection"])
 visualization_scene = ExtResource("2_h3kw3")
-concept_text = "Insertion Sort builds a sorted list one item at a time.
-It takes each new element and inserts it into its correct position among already-sorted elements.
+concept_text = "Insertion Sort builds a sorted list one item at a time. For each new item, it slides into its correct position among the already-sorted items.
 
-Like sorting playing cards — pick up one card and slide it into the right spot.
+Think of how you sort playing cards in your hand. You pick up cards one at a time. As you pick up each new card, you slide it into the right spot among the cards you're already holding.
 
-How it works:
-    arr = [12, 11, 13, 5]
-    Take 11 → compare with 12 → 11 < 12 → insert before 12
-    [11, 12, 13, 5]
-    Take 13 → compare with 12 → 13 > 12 → stays
-    [11, 12, 13, 5]
-    Take 5 → compare with 13, 12, 11 → slide and insert at front
-    [5, 11, 12, 13]
+Imagine sorting [12, 11, 13, 5, 6]:
 
-Time: O(n²) average/worst, O(n) best (nearly sorted)
-Space: O(1) — sorts in place"
-real_world_example = "Think of sorting cards dealt to you one at a time.
+Step 1: Start with just [12]. (One item is always sorted.)
 
-    Dealt: 7, then 3, then 9, then 1, then 5
+Step 2: Take 11. Compare with 12 — 11 < 12, so insert BEFORE 12. → [11, 12, 13, 5, 6]
 
-    Card 7:  [7]
-    Card 3:  3 < 7 → [3, 7]
-    Card 9:  9 > 7 → [3, 7, 9]
-    Card 1:  1 < everything → [1, 3, 7, 9]
-    Card 5:  between 3 and 7 → [1, 3, 5, 7, 9]
+Step 3: Take 13. Compare with 12 — 13 > 12, already in place. → [11, 12, 13, 5, 6]
 
-Each new card is inserted into its correct position among the cards you already hold."
-guided_example = "Let's trace Insertion Sort on [12, 11, 13, 5, 6].
+Step 4: Take 5. Compare with 13, 12, 11 — 5 is smaller than all of them. Slide 13, 12, 11 to the right, insert 5 at the start. → [5, 11, 12, 13, 6]
 
-Step 1 — key = 11 (index 1):
-    11 < 12 → shift 12 right
+Step 5: Take 6. Compare with 13, 12, 11 — bigger than those. Compare with 5 — 6 > 5, stop here. Insert 6 after 5. → [5, 6, 11, 12, 13]
+
+Sorted!
+
+The key idea: for each new item, walk LEFT through the sorted part, SHIFT bigger items to the right, and INSERT the new item in the empty spot.
+
+Performance:
+- Best case: O(n) — when data is already sorted, one pass with no shifts
+- Average/worst case: O(n²) — for random or reverse-sorted data
+- Space: O(1) — sorts in place
+- STABLE: equal elements keep their original order (important for some applications)
+- Fast for SMALL lists and NEARLY-SORTED data
+- Slower than merge sort or quicksort for large random data"
+
+real_world_example = "Think of sorting playing cards in your hand. Imagine someone deals you cards one at a time. You want your hand sorted by rank.
+
+When the first card arrives, you just hold it — one card is always sorted. When the second arrives, you compare it to the first. If it's smaller, you slide the first card right and put the new one on the left. If it's bigger, it goes on the right.
+
+When the third card arrives, you find its correct spot by comparing leftward through your hand, sliding bigger cards right as you go.
+
+Each new card = one pass of insertion sort. By the end, your hand is sorted, and you didn't have to do anything complicated — just slide cards and insert.
+
+Another example: organizing papers on your desk. You grab papers one at a time and slot each into its correct place in a growing pile. Each paper is one \"pass\". Simple, intuitive.
+
+A third example: building a sorted playlist. As you add new songs, you find the right spot in the already-sorted playlist and insert the song there. You don't restart from scratch — you just slot in the new song.
+
+Why use insertion sort? It's the BEST algorithm for small lists (under 50 items) and for nearly-sorted data. It's simple, uses almost no extra memory, and is stable. Real-world software (like Python's built-in sort) actually uses insertion sort internally for small chunks before switching to a faster algorithm."
+
+guided_example = "Let's trace Insertion Sort on [12, 11, 13, 5, 6], one step at a time.
+
+Step 1 — Start. The first item [12] is already \"sorted\" by itself.
+
+Step 2 — Take the second item, 11. We compare it with the sorted part (just 12).
+
+    Is 11 < 12? YES → shift 12 to the right
     Insert 11 at index 0
-    [11, 12, 13, 5, 6]
 
-Step 2 — key = 13 (index 2):
-    13 > 12 → no shift needed
-    [11, 12, 13, 5, 6]
+Array: [11, 12, 13, 5, 6]. Sorted part: [11, 12].
 
-Step 3 — key = 5 (index 3):
-    5 < 13 → shift 13 right
-    5 < 12 → shift 12 right
-    5 < 11 → shift 11 right
+Step 3 — Take the third item, 13. Compare with the sorted part.
+
+    Is 13 < 12? NO → no shifts needed
+    13 stays at index 2
+
+Array: [11, 12, 13, 5, 6]. Sorted part: [11, 12, 13].
+
+Step 4 — Take the fourth item, 5. Compare with the sorted part.
+
+    Is 5 < 13? YES → shift 13 to the right
+    Is 5 < 12? YES → shift 12 to the right
+    Is 5 < 11? YES → shift 11 to the right
     Insert 5 at index 0
-    [5, 11, 12, 13, 6]
 
-Step 4 — key = 6 (index 4):
-    6 < 13, 6 < 12, 6 < 11 → shift all three
-    6 > 5 → stop
+Array: [5, 11, 12, 13, 6]. Sorted part: [5, 11, 12, 13].
+
+Step 5 — Take the fifth item, 6. Compare with the sorted part.
+
+    Is 6 < 13? YES → shift 13 right
+    Is 6 < 12? YES → shift 12 right
+    Is 6 < 11? YES → shift 11 right
+    Is 6 < 5? NO → stop
     Insert 6 at index 1
-    [5, 6, 11, 12, 13] ✓ Sorted!"
-recap_text = "- Build sorted list one element at a time
-- Each element is inserted into its correct position
-- Best case O(n) — when data is nearly sorted
-- Average/worst case O(n²)
-- Space O(1) — in place
-- Stable: equal elements keep their original order
-- Best of the basic sorts for nearly sorted data"
-challenge_instruction = "Arrange the blocks to insert the second element into its correct position."
-challenge_blocks = Array[String](["arr = [8, 3, 6, 2]", "key = arr[1]", "j = 0", "while j >= 0 and arr[j] > key:", "arr[j + 1] = arr[j]", "j -= 1", "arr[j + 1] = key", "print(arr)", "key = arr[0]", "j = 1"])
-correct_sequence = Array[String](["arr = [8, 3, 6, 2]", "key = arr[1]", "j = 0", "while j >= 0 and arr[j] > key:", "arr[j + 1] = arr[j]", "j -= 1", "arr[j + 1] = key", "print(arr)"])
+
+Array: [5, 6, 11, 12, 13]. SORTED!
+
+Notice the pattern: each new item walks LEFT through the sorted part, shifting bigger items right, then drops into the empty spot."
+
+recap_text = "- Insertion Sort builds a sorted list one item at a time
+- For each new item, slide it left into its correct position among sorted items
+- Shifts (not swaps) bigger items to the right, then inserts the new item
+- Best case: O(n) when data is already sorted
+- Average/worst case: O(n²) for random or reverse-sorted data
+- Space: O(1) — sorts in place
+- STABLE: equal elements keep their original order
+- Best for SMALL lists and NEARLY-SORTED data
+- Used internally by Python's sort and other real-world libraries for small chunks
+- Easy to understand and implement
+- Slower than merge sort or quicksort for large random data"
+
+challenge_instruction = "Drag the blocks to insert the SECOND element (11) into its correct position in the sorted part [12]."
+challenge_blocks = Array[String](["arr = [8, 3, 6, 2]", "key = arr[1]", "j = 0", "while j >= 0 and arr[j] > key:", "    arr[j+1] = arr[j]", "    j -= 1", "arr[j+1] = key", "print(arr)"])
+correct_sequence = Array[String](["arr = [8, 3, 6, 2]", "key = arr[1]", "j = 0", "while j >= 0 and arr[j] > key:", "    arr[j+1] = arr[j]", "    j -= 1", "arr[j+1] = key", "print(arr)"])
+challenge_hint = "Save arr[1] as key. Walk left (j starts at 0). While j is valid AND arr[j] is bigger than key, shift arr[j] one to the right and decrease j. When the loop ends, place key at position j+1 (the empty slot)."
 code_template = "arr = [8, 3, 6, 2]
 key = arr[1]
 j = 0
 while j >= 0 and arr[j] > key:
-    arr[j + 1] = arr[j]
-    j -= 1
-arr[j + 1] = ___
+    arr[j+1] = arr[j]
+    j -= ___
+arr[j+1] = key
 print(arr)"
 challenge_code = "arr = [8, 3, 6, 2]
 key = arr[1]
 j = 0
 while j >= 0 and arr[j] > key:
-    arr[j + 1] = arr[j]
+    arr[j+1] = arr[j]
     j -= 1
-arr[j + 1] = key
+arr[j+1] = key
 print(arr)"
 expected_output = "[3, 8, 6, 2]"
-challenge_hint = "Save the element at index 1 as your key. Start j at 0 (one position behind key). While j is at least 0 AND arr[j] is larger than key, shift arr[j] one spot to the right and decrease j. After the loop, place key into the empty spot at j + 1."
-practice_question = "When does Insertion Sort perform best (O(n))?"
+practice_question = "When does Insertion Sort perform at its best (O(n))?"
 practice_options = Array[String](["Array is reverse sorted", "Array is already sorted", "Array has all duplicates", "Array has random elements"])
 practice_correct_index = 1
-practice_explanation = "When the array is already sorted, Insertion Sort runs in O(n). Each element only needs one comparison — no shifting needed since every element is already in place."
-
+practice_explanation = "When the array is already sorted, each new item is already in the right place. The inner while loop never runs (because arr[j] is never > key). So we just do n comparisons and no shifts. That's O(n) — linear time. It's the fastest case for insertion sort."

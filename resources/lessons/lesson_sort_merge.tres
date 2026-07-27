@@ -1,4 +1,4 @@
-[gd_resource type="Resource" script_class="LessonData" format=3 uid="uid://bap55j6kls830"]
+﻿[gd_resource type="Resource" script_class="LessonData" format=3 uid="uid://bap55j6kls830"]
 
 [ext_resource type="Script" uid="uid://ciet8k3fqk8tr" path="res://scripts/data/LessonData.gd" id="1_ri56b"]
 [ext_resource type="PackedScene" path="res://scenes/academy/visualizations/VizMergeSort.tscn" id="2_mr84h"]
@@ -11,63 +11,126 @@ category = "data_structures"
 icon_text = "⊕"
 prerequisites = Array[String](["sort_quick"])
 visualization_scene = ExtResource("2_mr84h")
-concept_text = "Merge Sort is a divide-and-conquer algorithm.
-It splits the array in half, recursively sorts each half, then merges the sorted halves together.
+concept_text = "Merge Sort is a divide-and-conquer algorithm that ALWAYS runs in O(n log n) — even in the worst case. Unlike Quick Sort, it never degrades to O(n²).
 
-Unlike Quick Sort, Merge Sort always runs in O(n log n) — even in the worst case.
+It works in two clear phases:
 
-How it works:
-    arr = [38, 27, 43, 3]
-    Split → [38, 27] and [43, 3]
-    Split → [38], [27] and [43], [3]
-    Merge [38] + [27] → [27, 38]
-    Merge [43] + [3]  → [3, 43]
-    Merge [27, 38] + [3, 43] → [3, 27, 38, 43]
+PHASE 1 — SPLIT: keep cutting the array in half until you have many tiny arrays of size 1. (A single item is always \"sorted\".)
 
-Time: O(n log n) always (best, average, worst)
-Space: O(n) — needs extra memory for merging"
-real_world_example = "Merge Sort is preferred when stability matters:
-- Sorting linked lists (it's the best choice)
-- External sorting of huge files (too big for memory)
-- Git uses merge-based algorithms to combine code
-- Database systems for reliable sorting
+PHASE 2 — MERGE: merge the tiny arrays back together in sorted order. The merge step compares the FRONTS of two sorted halves and takes the smaller one each time.
 
-It's guaranteed O(n log n) and stable — equal elements keep their original order."
-guided_example = "Let's trace Merge Sort on [38, 27, 43, 3].
+Imagine sorting [38, 27, 43, 3]:
 
-Step 1 — Split array in half:
-    [38, 27] and [43, 3]
+Phase 1 — Split:
+[38, 27, 43, 3]
+    ↓ split
+[38, 27]    [43, 3]
+    ↓ split        ↓ split
+[38]  [27]    [43]  [3]
 
-Step 2 — Split each half:
-    [38], [27] and [43], [3]
+Now we have four arrays of size 1. Each is trivially sorted.
 
-Step 3 — Merge [38] and [27]:
-    27 < 38 → [27, 38]
+Phase 2 — Merge:
+Merge [38] and [27]: compare 38 and 27, take 27 first, then 38 → [27, 38]
+Merge [43] and [3]:  compare 43 and 3, take 3 first, then 43 → [3, 43]
+Merge [27, 38] and [3, 43]:
+  Compare 27 and 3 → take 3
+  Compare 27 and 43 → take 27
+  Compare 38 and 43 → take 38
+  Then 43 → [3, 27, 38, 43]
 
-Step 4 — Merge [43] and [3]:
-    3 < 43 → [3, 43]
+Sorted!
 
-Step 5 — Merge [27, 38] and [3, 43]:
-    3 < 27 → take 3
-    27 < 43 → take 27
-    38 < 43 → take 38
-    take 43
-    Result: [3, 27, 38, 43] ✓
+Performance:
+- ALWAYS O(n log n) — best, average, and worst case
+- Space: O(n) — needs an extra array to merge into (the main downside)
+- STABLE: equal elements keep their original order
+- Easy to understand once you \"see\" the recursion
+- Used in: Python's built-in sort (Timsort is a hybrid of merge sort and insertion sort), external sorting of huge files, sorting linked lists"
 
-The key is the merge step: compare the fronts of each sorted half and take the smaller one."
-recap_text = "- Split array in half, sort each half, merge them back
-- Always O(n log n) — guaranteed
-- Space O(n) — needs extra array for merging
-- Stable: equal elements keep original order
-- Great for linked lists and huge datasets
-- Trade-off: uses more memory than Quick Sort"
-challenge_instruction = "Arrange the blocks to split an array in half and merge two sorted halves."
-challenge_blocks = Array[String](["arr = [4, 2, 7, 1]", "mid = len(arr) // 2", "left = arr[:mid]", "right = arr[mid:]", "print(left, right)", "left = arr[0]", "right = arr[1]", "mid = len(arr)"])
+real_world_example = "Imagine you have a huge stack of unsorted papers. You want to sort them by date.
+
+Step 1 — Split. You divide the stack in half. Each half is still unsorted, but smaller. You keep dividing until each stack is just ONE paper. (One paper is trivially sorted — you know its date.)
+
+Step 2 — Merge. Now you start combining stacks back together, but you MERGE them in order. You have two sorted stacks of one paper each. You compare the TOP of each stack and take the EARLIER one. Repeat until one stack is empty. Then put the rest of the other stack on top.
+
+You keep merging until all papers are in one big stack, sorted by date.
+
+Another example: combining two sorted lists of names. Say one list is [Alice, Bob, Charlie] and the other is [Anna, Brian, Dave]. To merge them sorted:
+- Compare A (Alice) and A (Anna) — Anna comes first alphabetically
+- Compare A (Alice) and B (Brian) — Alice comes first
+- Compare B (Bob) and B (Brian) — Brian
+- Compare B (Bob) and D (Dave) — Bob
+- Then Charlie, then Dave
+
+Result: [Anna, Alice, Brian, Bob, Charlie, Dave]
+
+That's the MERGE step of merge sort. The key insight: when you merge two SORTED lists, you only need to compare the FRONTS — you never have to look inside either list.
+
+A third example: how Python's built-in sort() works. It's called Timsort, and it's a hybrid of merge sort and insertion sort. For real-world data (which is often already partly sorted), Timsort is extremely fast — usually faster than Quick Sort in practice.
+
+Why use merge sort? Because it's RELIABLE — it always runs in O(n log n), no matter what the input looks like. The downside is it needs O(n) extra memory."
+
+guided_example = "Let's trace Merge Sort on [38, 27, 43, 3], level by level.
+
+PHASE 1 — SPLIT (top-down)
+
+Start:  [38, 27, 43, 3]      (4 items)
+         ↓ split into halves
+Level 1: [38, 27]  [43, 3]   (2 + 2 items)
+         ↓          ↓
+Level 2: [38] [27] [43] [3]   (1 + 1 + 1 + 1 items)
+
+Now we have 4 arrays of size 1. Each is trivially sorted.
+
+PHASE 2 — MERGE (bottom-up)
+
+Merge [38] and [27]:
+- Compare 38 and 27. 27 is smaller, take it.
+- 38 is left, take it.
+- Result: [27, 38]
+
+Merge [43] and [3]:
+- Compare 43 and 3. 3 is smaller, take it.
+- 43 is left, take it.
+- Result: [3, 43]
+
+Merge [27, 38] and [3, 43]:
+- Compare 27 and 3. 3 is smaller, take it. → [3]
+- Compare 27 and 43. 27 is smaller, take it. → [3, 27]
+- Compare 38 and 43. 38 is smaller, take it. → [3, 27, 38]
+- 43 is left, take it. → [3, 27, 38, 43]
+
+Final result: [3, 27, 38, 43]. SORTED!
+
+The KEY TRICK is the merge step. To merge two SORTED arrays:
+1. Compare the front of each.
+2. Take the smaller one.
+3. Repeat until one array is empty.
+4. Append the rest of the other array.
+
+This is always O(n) per merge, where n is the total size of the two arrays being merged. With log n levels, total work is O(n log n)."
+
+recap_text = "- Merge Sort uses divide-and-conquer: split, recurse, merge
+- PHASE 1: split the array in half until you have arrays of size 1
+- PHASE 2: merge the small arrays back together in sorted order
+- The merge step: compare fronts of two sorted halves, take the smaller
+- ALWAYS O(n log n) — best, average, AND worst case
+- Space: O(n) — needs an extra array (main downside)
+- STABLE: equal elements keep their original order
+- Great for: linked lists (no extra memory needed), external sorting of huge files
+- Python's built-in sort is a hybrid of merge sort and insertion sort (Timsort)
+- Recursive — each level splits the array in half
+- The merge step is the heart of the algorithm"
+
+challenge_instruction = "Drag the blocks to split an array in half and print the two halves."
+challenge_blocks = Array[String](["arr = [4, 2, 7, 1]", "mid = len(arr) // 2", "left = arr[:mid]", "right = arr[mid:]", "print(left, right)"])
 correct_sequence = Array[String](["arr = [4, 2, 7, 1]", "mid = len(arr) // 2", "left = arr[:mid]", "right = arr[mid:]", "print(left, right)"])
+challenge_hint = "mid is the length divided by 2 (integer division). left is the slice from the start to mid. right is the slice from mid to the end. Print both."
 code_template = "arr = [6, 3, 9, 1]
 mid = len(arr) // ___
 left = arr[:mid]
-right = arr[mid:]
+right = arr[___:]
 print(left, right)"
 challenge_code = "arr = [6, 3, 9, 1]
 mid = len(arr) // 2
@@ -75,9 +138,7 @@ left = arr[:mid]
 right = arr[mid:]
 print(left, right)"
 expected_output = "[6, 3] [9, 1]"
-challenge_hint = "Find the middle index by dividing the array length by 2 (mid = len(arr) // 2). Slice from the start up to mid for the left half. Slice from mid to the end for the right half. Print both halves to see the split."
 practice_question = "What is the worst-case time complexity of Merge Sort?"
 practice_options = Array[String](["O(n²)", "O(n)", "O(n log n)", "O(log n)"])
 practice_correct_index = 2
-practice_explanation = "Merge Sort always runs in O(n log n) regardless of input. It always divides the array in half (log n levels) and does O(n) merge work per level — unlike Quick Sort which can degrade to O(n²)."
-
+practice_explanation = "Merge Sort always runs in O(n log n) regardless of input. Each level does O(n) work for merging, and there are log n levels because the array splits in half each time. Unlike Quick Sort, it NEVER degrades to O(n²). The trade-off is the O(n) extra memory it needs."

@@ -1,4 +1,4 @@
-[gd_resource type="Resource" script_class="LessonData" format=3 uid="uid://c83nfhavopace"]
+﻿[gd_resource type="Resource" script_class="LessonData" format=3 uid="uid://c83nfhavopace"]
 
 [ext_resource type="Script" uid="uid://ciet8k3fqk8tr" path="res://scripts/data/LessonData.gd" id="1_0x24s"]
 [ext_resource type="PackedScene" path="res://scenes/academy/visualizations/VizCountingSort.tscn" id="2_ct84h"]
@@ -11,74 +11,143 @@ category = "data_structures"
 icon_text = "#"
 prerequisites = Array[String](["sort_merge"])
 visualization_scene = ExtResource("2_ct84h")
-concept_text = "Counting Sort is different from other sorts — it doesn't compare elements.
-Instead, it counts how many times each value appears, then uses those counts to place elements in order.
+concept_text = "Counting Sort is COMPLETELY different from the other sorting algorithms. It doesn't compare elements at all — it just COUNTS how many times each value appears, then uses those counts to rebuild a sorted array.
 
-This only works for numbers with a small range (like scores 0-100).
+This is blazing fast — but only works for INTEGERS with a SMALL RANGE (like exam scores 0-100, or ages 0-150).
 
-How it works:
-    arr = [4, 2, 2, 8, 3, 3, 1]
+Imagine sorting exam scores: [4, 2, 2, 8, 3, 3, 1]
 
-    Step 1: Count occurrences
-    count[1]=1, count[2]=2, count[3]=2, count[4]=1, count[8]=1
+Step 1 — Find the maximum value: max = 8.
 
-    Step 2: Build result from counts
-    [1, 2, 2, 3, 3, 4, 8]
+Step 2 — Create a count array of size 9 (indices 0 through 8), all zeros:
+[0, 0, 0, 0, 0, 0, 0, 0, 0]
 
-Time: O(n + k) where k is the range of values
-Space: O(k) — needs a count array"
-real_world_example = "Counting Sort is used when values have a small range:
-- Sorting exam scores (0-100 range, thousands of students)
-- Sorting age groups in census data
-- Sorting pixel colors in images (0-255)
-- As a helper inside Radix Sort
+Step 3 — Go through each number and increment the matching slot:
+- 4 → count[4] = 1
+- 2 → count[2] = 1
+- 2 → count[2] = 2
+- 8 → count[8] = 1
+- 3 → count[3] = 1
+- 3 → count[3] = 2
+- 1 → count[1] = 1
 
-It's incredibly fast when the value range is small — faster than any comparison sort."
-guided_example = "Let's trace Counting Sort on [4, 2, 2, 8, 3, 3, 1].
+Final counts: [0, 1, 2, 2, 1, 0, 0, 0, 1]
+(read as: 0 appears 0 times, 1 appears 1 time, 2 appears 2 times, 3 appears 2 times, ...)
 
-Step 1 — Find the maximum value: max = 8
+Step 4 — Build the result by reading the counts in order:
+- 1 appears 1 time → [1]
+- 2 appears 2 times → [1, 2, 2]
+- 3 appears 2 times → [1, 2, 2, 3, 3]
+- 4 appears 1 time → [1, 2, 2, 3, 3, 4]
+- 8 appears 1 time → [1, 2, 2, 3, 3, 4, 8]
 
-Step 2 — Create a count array of size 9 (0 through 8):
+Sorted! No comparisons were ever made.
+
+Performance:
+- Time: O(n + k) where n is the number of items and k is the range of values
+- Space: O(k) for the count array
+- SUPER FAST when k is small (e.g. sorting 1 million exam scores: 1 million + 100 = fast!)
+- USELESS when k is huge (e.g. sorting 1 million unique 32-bit integers: need 4 billion count slots)
+- Stable if implemented carefully
+- Used in: sorting ages, scores, pixel values, ages in census data, as a building block in Radix Sort"
+
+real_world_example = "Imagine a teacher has 200 exam papers to sort by score (0-100). Instead of comparing each paper to others (slow), the teacher makes 101 stacks — one for each possible score (0, 1, 2, ..., 100). 
+
+For each paper, the teacher looks at the score and puts the paper on the corresponding stack. Stack 0 holds papers that scored 0, stack 1 holds papers that scored 1, etc.
+
+Once all papers are in stacks, the teacher just picks up stack 0, then stack 1, then stack 2, ... all the way to stack 100. The papers come out in order!
+
+This is exactly what Counting Sort does:
+- The \"stacks\" are the count array
+- \"Putting a paper on a stack\" = incrementing count[score]
+- \"Picking up stacks in order\" = reading the counts in order
+
+Why is this fast? Because the teacher never has to COMPARE two papers. They just look at the score and put the paper in the right stack. Each paper is handled in O(1) time, so the whole thing is O(n) where n is the number of papers.
+
+This is much faster than Bubble Sort or Selection Sort when the range of values (k) is small. For 1 million exam scores, Counting Sort takes about 1 million + 100 = 1,000,100 operations. Bubble Sort would take about 1 trillion operations. The difference is HUGE.
+
+Another example: sorting the AGES of everyone in a city. Ages range from 0 to maybe 120. You make 121 stacks (one per age), put each person in their age stack, then pick up stacks in order. Done in one pass.
+
+A third example: in image processing, each pixel has a value 0-255. To histogram or sort pixel values, Counting Sort is perfect because the range is tiny (256 buckets) but you might have millions of pixels."
+
+guided_example = "Let's trace Counting Sort on [4, 2, 2, 8, 3, 3, 1], step by step.
+
+Step 1 — Find the maximum value.
+
+    max_val = 8
+
+We need to know the range. The largest value in our array is 8.
+
+Step 2 — Create a count array of size max_val + 1 (so indices 0 through 8).
+
     count = [0, 0, 0, 0, 0, 0, 0, 0, 0]
 
-Step 3 — Count each value:
-    4 → count[4] = 1
-    2 → count[2] = 1, then count[2] = 2
-    8 → count[8] = 1
-    3 → count[3] = 1, then count[3] = 2
-    1 → count[1] = 1
+Nine zeros — one for each possible value (0 to 8).
 
-Step 4 — Build result:
-    1 appears 1x → [1]
-    2 appears 2x → [1, 2, 2]
-    3 appears 2x → [1, 2, 2, 3, 3]
-    4 appears 1x → [1, 2, 2, 3, 3, 4]
-    8 appears 1x → [1, 2, 2, 3, 3, 4, 8] ✓ Sorted!"
-recap_text = "- Count occurrences of each value, then rebuild sorted array
-- No comparisons — uses counting instead
-- Time: O(n + k) where k is the value range
+Step 3 — Go through each number in the input and increment its count.
+
+For each number, do count[number] += 1.
+
+- 4 → count[4] = 1
+- 2 → count[2] = 1
+- 2 → count[2] = 2 (incremented again)
+- 8 → count[8] = 1
+- 3 → count[3] = 1
+- 3 → count[3] = 2 (incremented again)
+- 1 → count[1] = 1
+
+Final counts: [0, 1, 2, 2, 1, 0, 0, 0, 1]
+
+Read this as: \"0 appeared 0 times, 1 appeared 1 time, 2 appeared 2 times, 3 appeared 2 times, 4 appeared 1 time, 5-7 appeared 0 times, 8 appeared 1 time.\"
+
+Step 4 — Build the result by reading the counts in order, from 0 to max_val.
+
+For each value v from 0 to max_val:
+- If count[v] > 0, add v to the result that many times.
+
+- 0 appears 0 times → add nothing
+- 1 appears 1 time → result: [1]
+- 2 appears 2 times → result: [1, 2, 2]
+- 3 appears 2 times → result: [1, 2, 2, 3, 3]
+- 4 appears 1 time → result: [1, 2, 2, 3, 3, 4]
+- 5, 6, 7 appear 0 times → add nothing
+- 8 appears 1 time → result: [1, 2, 2, 3, 3, 4, 8]
+
+Final: [1, 2, 2, 3, 3, 4, 8]. SORTED!
+
+Notice: no comparisons were made. We just counted and rebuilt. That's the magic of Counting Sort."
+
+recap_text = "- Counting Sort doesn't compare elements — it COUNTS them
+- Step 1: find the maximum value (to know the range)
+- Step 2: create a count array of size max+1, all zeros
+- Step 3: increment count[value] for each element
+- Step 4: rebuild the sorted array from the counts
+- Time: O(n + k) where n is elements, k is the value range
 - Space: O(k) for the count array
-- Only works for integers with a small range
-- Much faster than O(n log n) sorts when k is small"
-challenge_instruction = "Arrange the blocks to count occurrences of each value and build the sorted result."
-challenge_blocks = Array[String](["arr = [3, 1, 2, 1]", "count = [0, 0, 0, 0]", "for num in arr:", "count[num] += 1", "print(count)", "count[num] -= 1", "for num in range(len(arr)):"])
-correct_sequence = Array[String](["arr = [3, 1, 2, 1]", "count = [0, 0, 0, 0]", "for num in arr:", "count[num] += 1", "print(count)"])
+- SUPER FAST when k is small (like 0-100 or 0-255)
+- USELESS when k is huge (like millions of unique values)
+- STABLE if implemented carefully
+- Only works for INTEGERS with a small range
+- Used in: sorting exam scores, ages, pixel values, census data
+- Also a building block for Radix Sort
+- Not a comparison sort — completely different approach"
+
+challenge_instruction = "Drag the blocks to count occurrences of each value in [3, 1, 2, 1] and print the count array."
+challenge_blocks = Array[String](["arr = [3, 1, 2, 1]", "count = [0, 0, 0, 0]", "for num in arr:", "    count[num] += 1", "print(count)"])
+correct_sequence = Array[String](["arr = [3, 1, 2, 1]", "count = [0, 0, 0, 0]", "for num in arr:", "    count[num] += 1", "print(count)"])
+challenge_hint = "Create a count array with 4 zeros (since the values 0-3 are possible). Loop through arr. For each number, increment the matching slot in count by 1. Print count to see the tallies."
 code_template = "arr = [2, 0, 1, 2]
-max_val = 2
 count = [0, 0, 0]
 for num in arr:
     count[num] += ___
 print(count)"
 challenge_code = "arr = [2, 0, 1, 2]
-max_val = 2
 count = [0, 0, 0]
 for num in arr:
     count[num] += 1
 print(count)"
 expected_output = "[1, 1, 2]"
-challenge_hint = "Create a count array with enough slots for all possible values (0 to max_val). Then loop through the input array — for each number, increment its matching slot in the count array by 1. Print the count array to see the tallies."
-practice_question = "What does the 'k' in O(n + k) represent?"
-practice_options = Array[String](["The number of elements", "The range of possible values", "The number of passes", "The size of the count array"])
+practice_question = "What does the 'k' in O(n + k) mean?"
+practice_options = Array[String](["The number of elements to sort", "The range of possible values (max - min + 1)", "The number of comparisons", "The number of passes through the data"])
 practice_correct_index = 1
-practice_explanation = "In O(n + k), n is the number of elements and k is the range of possible values (max - min + 1). Counting Sort is fast when k is small — it becomes slow if the range is huge (like 0 to 1 million)."
-
+practice_explanation = "In O(n + k), n is the number of elements and k is the RANGE of possible values. For example, if you're sorting scores from 0-100, k = 101. If sorting ages 0-120, k = 121. Counting Sort is fast when k is small (like 100 or 256) but becomes slow when k is huge (like millions of unique values)."

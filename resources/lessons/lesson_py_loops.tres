@@ -11,68 +11,116 @@ category = "python"
 icon_text = "↺"
 prerequisites = Array[String](["py_lists"])
 visualization_scene = ExtResource("2_24ibr")
-concept_text = "A loop lets you run the same code multiple times.
-Instead of repeating yourself, write the code once inside a loop.
+concept_text = "A loop runs the same block of code multiple times. Instead of writing the same code over and over, you write it ONCE inside a loop and let the loop repeat it for you.
 
-For loop — repeats for each item:
+There are two main kinds:
+
+1) for loop — repeats a specific number of times, or once for each item in a list:
+
     for i in range(5):
         print(i)
-    # Prints: 0 1 2 3 4
 
-While loop — repeats while a condition is true:
+This prints 0, 1, 2, 3, 4. range(5) means \"the numbers 0 through 4\". The variable i takes each value in turn, and the print(i) line runs once for each.
+
+2) while loop — repeats as long as a condition is true:
+
     count = 1
     while count <= 3:
         print(count)
         count = count + 1
-    # Prints: 1 2 3
 
-Loops save time and make your code shorter."
-real_world_example = "Imagine printing tickets for 5 guests.
-Without a loop, you'd write print(\"ticket\") five times.
-With a loop:
+This prints 1, 2, 3. As soon as count becomes 4, the condition (count <= 3) is false, and the loop stops.
 
-    for guest in range(5):
-        print(\"Ticket printed\")
+CRITICAL RULE: the code inside the loop must be INDENTED (4 spaces). Python uses indentation to know which lines belong to the loop. The line that ends with a colon (:) starts a new block."
 
-    # Output:
-    # Ticket printed
-    # Ticket printed
-    # Ticket printed
-    # Ticket printed
-    # Ticket printed
+real_world_example = "Imagine you're a teacher with 30 students, and you need to hand each one a permission slip. You have two options:
 
-The loop handles the repetition for you."
-guided_example = "Let's count even numbers from 2 to 10.
+Without a loop: write \"give slip to student 1\", \"give slip to student 2\", \"give slip to student 3\"... 30 times. Exhausting.
 
-Step 1 — Use range with step:
+With a loop: write \"for each student, give them a slip\" — once. Then the loop does it 30 times for you.
+
+    for student in range(30):
+        print(\"Give slip to student\", student)
+
+Another everyday example: brushing your teeth. You brush the TOP of your teeth, then the BOTTOM, then the FRONT, then rinse. You don't say \"brush top\" 16 times — you say \"for each section, brush it\" and let the loop repeat.
+
+    for section in [\"top\", \"bottom\", \"front\"]:
+        print(\"Brushing\", section)
+
+One more: a microwave countdown. The display shows 5, 4, 3, 2, 1, 0. That's a while loop: \"while the time is more than 0, show the time and subtract 1\"."
+
+guided_example = "Let's count from 1 to 5, then count even numbers. We'll go slow.
+
+Step 1 — A simple for loop with range.
+
+    for i in range(5):
+        print(i)
+
+Output:
+    0
+    1
+    2
+    3
+    4
+
+range(5) means \"give me the numbers 0, 1, 2, 3, 4\". The variable i takes each value, one at a time. The print(i) line runs once for each. Notice the 4 spaces before print — that indentation is REQUIRED.
+
+Step 2 — A loop with a custom start and step.
+
     for num in range(2, 11, 2):
         print(num)
-    # Output: 2 4 6 8 10
 
-Step 2 — Loop through names:
+Output:
+    2
+    4
+    6
+    8
+    10
+
+range(2, 11, 2) means: start at 2, stop BEFORE 11, count by 2s. So we get 2, 4, 6, 8, 10.
+
+Step 3 — A while loop.
+
+    x = 1
+    while x <= 5:
+        print(x)
+        x = x + 1
+
+Output:
+    1
+    2
+    3
+    4
+    5
+
+The while loop checks the condition (x <= 5) BEFORE each repetition. As long as it's true, the body runs. The line x = x + 1 is essential — without it, x stays 1 forever and the loop NEVER ends (infinite loop!).
+
+Step 4 — Loop over a list of names.
+
     players = [\"Ana\", \"Bob\", \"Eve\"]
     for p in players:
         print(\"Hello,\", p)
-    # Output:
-    # Hello, Ana
-    # Hello, Bob
-    # Hello, Eve
 
-Step 3 — Use a while loop:
-    x = 1
-    while x <= 5:
-        print(x * 2)
-        x = x + 1
-    # Output: 2 4 6 8 10"
-recap_text = "- for loops iterate over items or a range of numbers
-- while loops run as long as a condition is True
-- range(n) gives numbers 0 to n-1
-- range(start, stop, step) gives custom sequences
-- Use loops to avoid repeating code
-- Indent the code inside the loop with 4 spaces"
-challenge_instruction = "Arrange the blocks to print numbers 1 to 5 using a while loop."
-challenge_blocks = Array[String](["num = 1", "while num <= 5:", "    print(num)", "    num = num + 1", "for num in range(5):", "while num > 5:"])
+Output:
+    Hello, Ana
+    Hello, Bob
+    Hello, Eve
+
+The variable p takes each name in turn. No need to use index numbers — Python handles it for you."
+
+recap_text = "- Loops run the same code multiple times automatically
+- for loops: \"do this once for each item\" (works with range or any list)
+- while loops: \"do this as long as a condition is true\"
+- range(n) gives you 0, 1, 2, ..., n-1
+- range(start, stop, step) lets you customize
+- The line ending in : starts a new block
+- Everything inside the loop must be INDENTED (4 spaces)
+- If your while loop never ends, you probably forgot to update the variable"
+
+challenge_instruction = "Drag the blocks to print numbers 1 to 5 using a while loop. Don't forget to update the counter inside!"
+challenge_blocks = Array[String](["num = 1", "while num <= 5:", "    print(num)", "    num = num + 1"])
 correct_sequence = Array[String](["num = 1", "while num <= 5:", "    print(num)", "    num = num + 1"])
+challenge_hint = "Start num at 1. The while condition checks if num is still 5 or less. Inside, print num THEN add 1 to it. The +1 is critical — without it, the loop runs forever."
 code_template = "count = ___
 while count <= 5:
     print(count)
@@ -86,9 +134,7 @@ expected_output = "1
 3
 4
 5"
-challenge_hint = "Start with count = 1. Use while count <= 5: to keep looping. Inside, print count then add 1 each time."
-practice_question = "How many times does this loop print?    for i in range(4):    print(i)"
+practice_question = "How many times does this loop run?    for i in range(4):    print(i)"
 practice_options = Array[String](["3", "4", "5", "0"])
 practice_correct_index = 1
-practice_explanation = "range(4) generates 0, 1, 2, 3 — that's 4 values. So the loop body runs 4 times. Note: range(4) gives 0 through 3, not 1 through 4."
-
+practice_explanation = "range(4) gives the numbers 0, 1, 2, 3 — that's 4 values. So the loop body runs 4 times. Common mistake: thinking range(4) means 1 to 4 (which would be 4 values too, but they're 1, 2, 3, 4 — different numbers)."
