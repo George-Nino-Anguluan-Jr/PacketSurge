@@ -76,7 +76,7 @@ func _draw_anim() -> void:
 	var total_w: float = max(0.0, n * (cell_w + gap) - gap)
 	var start_x: float = _anim_rect.position.x + (_anim_rect.size.x - total_w) * 0.5
 	draw_string(ThemeDB.fallback_font, Vector2(start_x - 70, cy - 8), "<- FRONT", HORIZONTAL_ALIGNMENT_LEFT, -1, 12, Color("#FF3366"))
-	draw_string(ThemeDB.fallback_font, Vector2(start_x + total_w - 6, cy - 8), "BACK ->", HORIZONTAL_ALIGNMENT_LEFT, -1, 12, Color("#00FF88"))
+	draw_string(ThemeDB.fallback_font, Vector2(start_x + total_w + 8, cy - 8), "BACK ->", HORIZONTAL_ALIGNMENT_LEFT, -1, 12, Color("#00FF88"))
 
 	for i in n:
 		var is_front: bool = i == 0
