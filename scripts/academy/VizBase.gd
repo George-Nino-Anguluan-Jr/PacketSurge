@@ -20,7 +20,8 @@ var _btn_reset: Button
 var current_step: int = 0
 var _animating: bool = false
 var _anim_progress: float = 0.0
-var _anim_speed: float = 1.5
+var _anim_speed: float = 0.6
+var _playing_all: bool = false
 
 # ── Override in subclass ──
 func get_steps() -> Array:
@@ -106,16 +107,26 @@ func _build_buttons() -> void:
 	_position_buttons()
 
 func _on_play() -> void:
+	# If currently playing, treat as Stop
+	if _playing_all and _animating:
+		_playing_all = false
+		_animating = false
+		_btn_play.text = "▶ Play"
+		return
 	if _animating and _anim_progress < 1.0:
 		return
 	if current_step >= get_steps().size() - 1:
 		current_step = 0
-	# Re-trigger the current step to restart the animation
 	_set_step(current_step)
+	_animating = true
+	_anim_progress = 0.0
+	_playing_all = true
+	_btn_play.text = "■ Stop"
 
 func _on_step() -> void:
 	if _animating:
 		return
+	_playing_all = false
 	if current_step < get_steps().size() - 1:
 		current_step += 1
 		_set_step(current_step)
@@ -124,7 +135,10 @@ func _on_reset() -> void:
 	current_step = 0
 	_animating = false
 	_anim_progress = 0.0
+	_playing_all = false
 	_set_step(0)
+	if _btn_play:
+		_btn_play.text = "▶ Play"
 
 func _set_step(_idx: int) -> void:
 	# Override in subclass if you need to update state per step
@@ -136,6 +150,16 @@ func _process(delta: float) -> void:
 		if _anim_progress >= 1.0:
 			_anim_progress = 1.0
 			_animating = false
+			# Auto-advance if playing through all steps
+			if _playing_all and current_step < get_steps().size() - 1:
+				current_step += 1
+				_set_step(current_step)
+				_animating = true
+				_anim_progress = 0.0
+			elif _playing_all and current_step >= get_steps().size() - 1:
+				_playing_all = false
+				if _btn_play:
+					_btn_play.text = "▶ Play"
 		queue_redraw()
 
 func _draw() -> void:

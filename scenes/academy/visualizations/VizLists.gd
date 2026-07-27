@@ -44,7 +44,7 @@ func _on_reset() -> void:
 
 func _process(delta: float) -> void:
 	if _animating:
-		_anim_progress += delta * 1.4
+		_anim_progress += delta * 0.6
 		if _anim_progress >= 1.0:
 			_anim_progress = 1.0
 			_animating = false
