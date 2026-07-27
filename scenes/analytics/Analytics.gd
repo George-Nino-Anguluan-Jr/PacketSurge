@@ -83,6 +83,10 @@ func _build_my_stats() -> void:
 	my_stats_content.add_child(_make_section_title("LESSON BREAKDOWN"))
 	my_stats_content.add_child(_make_lesson_breakdown())
 
+	# ── Campaign Time ──
+	my_stats_content.add_child(_make_section_title("CAMPAIGN LEVELS"))
+	my_stats_content.add_child(_make_campaign_breakdown())
+
 func _make_overview_cards() -> HBoxContainer:
 	var row := HBoxContainer.new()
 	row.add_theme_constant_override("separation", 12)
@@ -104,6 +108,8 @@ func _make_overview_cards() -> HBoxContainer:
 	var total_time: float = 0.0
 	for t in ProgressManager.time_spent:
 		total_time += float(ProgressManager.time_spent[t])
+	for t in ProgressManager.campaign_time:
+		total_time += float(ProgressManager.campaign_time[t])
 
 	# Campaign levels
 	var levels = ProgressManager.campaign_progress.get(
@@ -453,6 +459,92 @@ func _make_lesson_row(
 		layout.add_child(time_lbl)
 
 	card.add_child(layout)
+	return card
+
+# ─── CAMPAIGN BREAKDOWN ────────────────────────────────
+func _make_campaign_breakdown() -> VBoxContainer:
+	var layout := VBoxContainer.new()
+	layout.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	layout.add_theme_constant_override("separation", 8)
+
+	for level_num in range(1, 14):
+		var time = float(ProgressManager.campaign_time.get(str(level_num), 0.0))
+		var stars = ProgressManager.get_level_stars(level_num)
+		var cfg = GameManager.LEVEL_CONFIGS.get(level_num, {})
+		var name = cfg.get("name", "Level " + str(level_num)) if level_num <= 13 else "Level " + str(level_num)
+		layout.add_child(_make_campaign_row(level_num, name, time, stars))
+
+	return layout
+
+func _make_campaign_row(
+		level_num: int,
+		name: String,
+		time: float,
+		stars: int) -> PanelContainer:
+
+	var card  := PanelContainer.new()
+	card.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+
+	var style := StyleBoxFlat.new()
+	style.bg_color               = Color("#0A1628")
+	style.corner_radius_top_left     = 4
+	style.corner_radius_top_right    = 4
+	style.corner_radius_bottom_left  = 4
+	style.corner_radius_bottom_right = 4
+	style.border_width_left      = 1
+	style.border_width_right     = 1
+	style.border_width_top       = 1
+	style.border_width_bottom    = 1
+	style.content_margin_left    = 12
+	style.content_margin_right   = 12
+	style.content_margin_top     = 8
+	style.content_margin_bottom  = 8
+
+	match stars:
+		0: style.border_color = Color("#1A3A5A")
+		1: style.border_color = Color("#FFB800")
+		2: style.border_color = Color("#B8960F")
+		3: style.border_color = Color("#00FF88")
+	card.add_theme_stylebox_override("panel", style)
+
+	var hbox := HBoxContainer.new()
+	hbox.add_theme_constant_override("separation", 12)
+
+	var level_lbl := Label.new()
+	level_lbl.text = "Level " + str(level_num)
+	level_lbl.custom_minimum_size = Vector2(60, 0)
+	level_lbl.add_theme_font_size_override("font_size", 13)
+	level_lbl.add_theme_color_override("font_color", Color("#4A7FA5"))
+	hbox.add_child(level_lbl)
+
+	var name_lbl := Label.new()
+	name_lbl.text = name
+	name_lbl.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	name_lbl.add_theme_font_size_override("font_size", 13)
+	var unlocked = stars > 0
+	if stars == 0:
+		name_lbl.add_theme_color_override("font_color", Color("#2A3A4A"))
+	else:
+		name_lbl.add_theme_color_override("font_color", Color("#E8F4FD"))
+	hbox.add_child(name_lbl)
+
+	var stars_lbl := Label.new()
+	stars_lbl.text = "★".repeat(stars) + "☆".repeat(3 - stars)
+	stars_lbl.custom_minimum_size = Vector2(42, 0)
+	stars_lbl.add_theme_font_size_override("font_size", 11)
+	stars_lbl.add_theme_color_override("font_color", Color("#FFB800"))
+	stars_lbl.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	hbox.add_child(stars_lbl)
+
+	var time_lbl := Label.new()
+	time_lbl.text = _format_time(time) if stars > 0 else "--"
+	time_lbl.custom_minimum_size = Vector2(55, 0)
+	time_lbl.add_theme_font_size_override("font_size", 11)
+	time_lbl.add_theme_color_override("font_color", Color("#9B59B6"))
+	time_lbl.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	hbox.add_child(time_lbl)
+
+	card.add_child(hbox)
 	return card
 
 # ─── CLASS COMPARISON ──────────────────────────────────

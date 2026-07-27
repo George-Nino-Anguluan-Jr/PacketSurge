@@ -11,9 +11,6 @@ extends Control
 @onready var towers_content: VBoxContainer  = $ContentArea/TowersPanel/TowersContent
 @onready var enemies_content: VBoxContainer = $ContentArea/EnemiesPanel/EnemiesContent
 
-var path_tab: Button        = null
-var path_panel: ScrollContainer = null
-
 # ─── STATE ──────────────────────────────────────────────
 var active_tab: String   = "towers"
 var search_query: String = ""
@@ -41,11 +38,9 @@ func _ready() -> void:
 	_apply_styles()
 	_build_towers_tab()
 	_build_enemies_tab()
-	_build_path_tab()
 	_show_towers_tab()
 	ScreenManager.make_scroll_touch_friendly(towers_panel)
 	ScreenManager.make_scroll_touch_friendly(enemies_panel)
-	ScreenManager.make_scroll_touch_friendly(path_panel)
 	_apply_responsive_layout()
 	get_tree().root.size_changed.connect(_apply_responsive_layout)
 
@@ -55,20 +50,6 @@ func _setup_buttons() -> void:
 	towers_tab.pressed.connect(_show_towers_tab)
 	enemies_tab.pressed.connect(_show_enemies_tab)
 	search_field.text_changed.connect(_on_search_changed)
-
-	path_tab = Button.new()
-	path_tab.text = "📊 Path"
-	path_tab.custom_minimum_size = Vector2(80, 32)
-	path_tab.pressed.connect(_show_path_tab)
-	path_tab.add_theme_font_size_override("font_size", 12)
-	$TabBar.add_child(path_tab)
-
-	path_panel = ScrollContainer.new()
-	path_panel.name = "PathPanel"
-	path_panel.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-	path_panel.size_flags_vertical   = Control.SIZE_EXPAND_FILL
-	path_panel.visible = false
-	$ContentArea.add_child(path_panel)
 
 func _on_back_pressed() -> void:
 	GameManager.go_to("main_menu")
@@ -82,29 +63,15 @@ func _show_towers_tab() -> void:
 	active_tab            = "towers"
 	towers_panel.visible  = true
 	enemies_panel.visible = false
-	path_panel.visible    = false
 	_style_active_tab(towers_tab,  true)
 	_style_active_tab(enemies_tab, false)
-	if path_tab: _style_active_tab(path_tab, false)
 
 func _show_enemies_tab() -> void:
 	active_tab            = "enemies"
 	towers_panel.visible  = false
 	enemies_panel.visible = true
-	path_panel.visible    = false
 	_style_active_tab(towers_tab,  false)
 	_style_active_tab(enemies_tab, true)
-	if path_tab: _style_active_tab(path_tab, false)
-
-func _show_path_tab() -> void:
-	active_tab            = "path"
-	towers_panel.visible  = false
-	enemies_panel.visible = false
-	path_panel.visible    = true
-	_style_active_tab(towers_tab,  false)
-	_style_active_tab(enemies_tab, false)
-	if path_tab: _style_active_tab(path_tab, true)
-	path_panel.queue_redraw()
 
 # ─── TOWER DATA (built from PROGRESSION_CHAIN) ─────────
 # Returns an Array of Dictionaries, one per tower, in unlock order.
@@ -369,94 +336,7 @@ func _make_enemy_card(data: Dictionary) -> Control:
 	card.add_child(layout)
 	return card
 
-# ─── PATH TAB (unchanged behavior, refactored) ─────────
-func _build_path_tab() -> void:
-	for child in path_panel.get_children():
-		child.queue_free()
-	var content = VBoxContainer.new()
-	content.name = "PathContent"
-	content.add_theme_constant_override("separation", 4)
-	path_panel.add_child(content)
 
-	var title = Label.new()
-	title.text = "YOUR LEARNING PATH"
-	title.add_theme_font_size_override("font_size", 16)
-	title.add_theme_color_override("font_color", C_ACCENT)
-	title.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
-	content.add_child(title)
-
-	var groups = [
-		["Python",         ["py_variables", "py_lists", "py_loops", "py_conditions", "py_functions"]],
-		["Data Structures",["ds_arrays", "ds_stacks", "ds_queues", "ds_linked_lists"]],
-		["Sorting",        ["sort_bubble", "sort_selection", "sort_insertion",
-		                    "sort_quick", "sort_merge", "sort_counting", "sort_radix"]],
-		["Search",         ["search_linear", "search_binary"]],
-	]
-
-	for group in groups:
-		var section = VBoxContainer.new()
-		section.add_theme_constant_override("separation", 2)
-		section.add_theme_constant_override("margin_left", 16)
-		section.add_theme_constant_override("margin_right", 16)
-		content.add_child(section)
-
-		var hdr = Label.new()
-		hdr.text = "── " + group[0] + " ──"
-		hdr.add_theme_font_size_override("font_size", 11)
-		hdr.add_theme_color_override("font_color", C_MUTED)
-		hdr.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
-		section.add_child(hdr)
-
-		for lesson_id in group[1]:
-			section.add_child(_make_path_row(lesson_id))
-
-		var sep = HSeparator.new()
-		sep.add_theme_color_override("color", Color("#1A2D3D"))
-		content.add_child(sep)
-
-func _make_path_row(lesson_id: String) -> Control:
-	var state = ProgressManager.get_topic_state(lesson_id)
-	var row   = HBoxContainer.new()
-	row.add_theme_constant_override("separation", 8)
-
-	var dot = Label.new()
-	dot.custom_minimum_size = Vector2(20, 20)
-	dot.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
-	match state:
-		"mastered": dot.text = "✅"
-		"unlocked": dot.text = "🔓"
-		_:          dot.text = "🔒"
-	row.add_child(dot)
-
-	var lbl = Label.new()
-	lbl.text = _lesson_display_name(lesson_id)
-	lbl.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-	lbl.add_theme_color_override("font_color",
-		C_GREEN if state == "mastered" else
-		C_ACCENT if state == "unlocked" else C_DIM)
-	lbl.add_theme_font_size_override("font_size", 11)
-	row.add_child(lbl)
-
-	var chain = ProgressManager.PROGRESSION_CHAIN.get(lesson_id, {})
-	if chain.get("type") in ["both", "tower"]:
-		var tower_id: String = chain["id"]
-		var unlocked = ProgressManager.is_tower_unlocked(tower_id)
-		var tlabel = Label.new()
-		tlabel.text = "→ " + TowerIntroData.get_tower_name(tower_id)
-		tlabel.add_theme_font_size_override("font_size", 9)
-		tlabel.add_theme_color_override("font_color", C_GREEN if unlocked else C_DIM)
-		row.add_child(tlabel)
-
-	var lid = int(chain.get("level_id", 0))
-	if lid > 0:
-		var unlocked_lvl = ProgressManager.is_level_unlocked(lid)
-		var llbl = Label.new()
-		llbl.text = "Lv." + str(lid)
-		llbl.add_theme_font_size_override("font_size", 9)
-		llbl.add_theme_color_override("font_color", C_GOLD if unlocked_lvl else C_DIM)
-		row.add_child(llbl)
-
-	return row
 
 # ─── SEARCH ────────────────────────────────────────────
 func _on_search_changed(new_text: String) -> void:
@@ -733,4 +613,3 @@ func _apply_responsive_layout() -> void:
 		match active_tab:
 			"towers": _build_towers_tab()
 			"enemies": _build_enemies_tab()
-			"path": _build_path_tab()
