@@ -1,4 +1,4 @@
-[gd_resource type="Resource" script_class="LessonData" format=3 uid="uid://dkofpb08ix8c8"]
+﻿[gd_resource type="Resource" script_class="LessonData" format=3 uid="uid://dkofpb08ix8c8"]
 
 [ext_resource type="Script" uid="uid://ciet8k3fqk8tr" path="res://scripts/data/LessonData.gd" id="1_5ypmi"]
 [ext_resource type="PackedScene" path="res://scenes/academy/visualizations/VizLinkedLists.tscn" id="2_1p6j0"]
@@ -11,81 +11,111 @@ category = "data_structures"
 icon_text = "→→"
 prerequisites = Array[String](["ds_queues"])
 visualization_scene = ExtResource("2_1p6j0")
-concept_text = "A linked list is a chain of nodes where each node holds a value and points to the next node.
+concept_text = "A linked list is a chain of NODES, where each node holds a value AND a pointer to the next node. Unlike an array, the nodes are NOT stored in consecutive memory spots — they're scattered, but each node knows where the next one lives.
 
-Unlike arrays, nodes are not stored in consecutive memory spots.
-Each node knows where the next one is.
+Each node has two parts:
+- value: the data it stores
+- next: a pointer (or \"link\") to the next node
 
-    Node1               Node2               Node3
-    [value | next] →    [value | next] →    [value | next] → None
+Visually, it looks like a chain:
 
-Types of linked lists:
-- Singly: each node points only forward
-- Doubly: each node points forward and backward
-- Circular: last node points back to the first
+    [5 | →] → [10 | →] → [25 | →] → [42 | None]
 
-Key speeds:
-- Access: slow O(n) — must walk the chain
-- Insert at known position: fast O(1)
-- Delete at known position: fast O(1)"
-real_world_example = "Think of a treasure hunt where each clue leads to the next.
+The LAST node points to None (nothing) to mark the end of the chain.
 
-    Clue 1: \"Check the tree\" → Clue 2: \"Look under the rock\"
-    → Clue 3: \"Open the chest\" → Done
+Three types:
+- Singly linked: each node has one pointer (to the next)
+- Doubly linked: each node has TWO pointers (next AND previous)
+- Circular linked: the last node points back to the first (no end)
 
-Each clue knows only the location of the next clue.
-You must follow the chain from the start — you can't jump to Clue 3.
+The big trade-off compared to arrays:
+- ARRAY: instant access by index (O(1)), but slow insertions/deletions in the middle (O(n))
+- LINKED LIST: slow access by position (O(n) — must walk the chain), but fast insertions/deletions at known positions (O(1))
 
-Doubly linked: like a music playlist where you can skip forward or go back to the previous song.
+When is a linked list better than an array?
+- When you insert or delete a lot in the MIDDLE of the list
+- When you don't need random access by index
+- When size changes a lot (no need to resize)"
 
-Circular linked: like a board game where turns cycle from the last player back to the first."
-guided_example = "Let's build a simple chain of two nodes.
+real_world_example = "Think of a treasure hunt. Each clue tells you two things: WHERE the treasure is (the value) and WHERE the next clue is (the next pointer). You follow clue 1, which points to clue 2, which points to clue 3, which points to \"X marks the spot\" (None = end of hunt).
 
-Step 1 — Create two node values:
-    node1_val = 5
-    node2_val = 10
+    Clue 1: \"Check the old oak tree\"    →  points to Clue 2
+    Clue 2: \"Look under the rock\"         →  points to Clue 3
+    Clue 3: \"Open the wooden chest\"       →  None (end!)
 
-Step 2 — Link them (node1 → node2):
-    node1_next = \"node2\"
+You can't skip to Clue 3 directly — you have to follow the chain from the start. Each clue only knows about the next one.
 
-Step 3 — Start at the head and follow:
+Another real-life example: a train. Each car (node) is connected to the next by a coupling (pointer). The engine is the head of the list. To find a specific car, you walk from car to car — you can't jump straight to it. But if you want to add a new car in the middle, you just attach it to the right two couplings and re-route the chain — fast and easy.
+
+A third example: a music playlist. The current song points to the next song, which points to the next, and so on. To skip songs, you follow the chain. If you want to insert a new song between two existing ones, you just update two pointers — no shifting required.
+
+Why use linked lists at all? Because sometimes you need to add or remove things in the MIDDLE of a list all the time. With an array, every insert in the middle means shifting all the items after it — slow! With a linked list, you just update two pointers — instant."
+
+guided_example = "Let's trace through a tiny linked list, one step at a time.
+
+Imagine we have three nodes: node1 → node2 → node3 → None. The values are 5, 10, 25.
+
+Step 1 — Start at the head (the first node).
+
     current = \"node1\"
-    while current != None:
-        if current == \"node1\":
-            print(node1_val)
-            current = node1_next
-        elif current == \"node2\":
-            print(node2_val)
-            current = None
 
-    Output:
+The variable current is just a name for \"where we are right now\" in the chain. We start at node1.
+
+Step 2 — Look at the value of the current node.
+
+    if current == \"node1\":
+        print(5)               # value of node1
+        current = \"node2\"     # move to next node
+
+We check which node we're at, print its value, then update current to point to the next node.
+
+Step 3 — Continue to the next node.
+
+    if current == \"node2\":
+        print(10)              # value of node2
+        current = \"node3\"     # move to next node
+
+Same pattern: print, then advance.
+
+Step 4 — Continue to the last node.
+
+    if current == \"node3\":
+        print(25)              # value of node3
+        current = \"None\"      # move to next... but there is no next
+
+Step 5 — Stop when we reach None.
+
+    if current == \"None\":
+        # we're done — exit the loop
+
+Output:
     5
     10
+    25
 
-This shows the core idea: each node knows the next one.
-You walk from the head through the chain until you hit None."
-recap_text = "- Linked lists store nodes connected by pointers
-- Singly: each node has a next pointer
-- Doubly: each node has next and prev pointers
-- Access is O(n) — must follow the chain
-- Insert/delete at known position is O(1)
-- No fixed size limit — grows dynamically"
-challenge_instruction = "Arrange the blocks to create two linked nodes and print the first one's value."
-challenge_blocks = Array[String](["first = 7", "second = 3", "next_node = \"second\"", "print(first)", "print(second)", "first = 7 second = 3"])
-correct_sequence = Array[String](["first = 7", "second = 3", "next_node = \"second\"", "print(first)"])
-challenge_hint = "Create the node values with variables. The next pointer can be a string naming the next node. Print the head node's value."
+That's the whole idea: START at the head, FOLLOW the next pointers until you reach None. Each step prints one value and advances. No random access — you must walk the chain."
+
+recap_text = "- A linked list is a chain of nodes, each pointing to the next
+- Each node has two parts: value (data) and next (pointer)
+- The last node points to None (end of the chain)
+- Access by position is SLOW (O(n)) — you must walk from the head
+- Insertion/deletion at a known position is FAST (O(1)) — just update pointers
+- Three types: singly, doubly (next + prev), circular (last points to first)
+- Compared to arrays: arrays are fast by index but slow to insert in middle
+- Linked lists are slow by index but fast to insert in middle
+- Used in: music playlists, undo systems, hash table buckets, OS process lists
+- The trade-off is access speed vs insert/delete speed"
+
+challenge_instruction = "Drag the blocks to create a tiny chain of two nodes, then print the first node's value."
+challenge_blocks = Array[String](["first = 5", "print(first)"])
+correct_sequence = Array[String](["first = 5", "print(first)"])
+challenge_hint = "Create a variable to hold the first node's value, then print it. We're starting small — just the head of the chain."
 code_template = "head = ___
-tail = ___
-print(\"Head:\", head)
-print(\"Tail:\", tail)"
+print(head)"
 challenge_code = "head = 10
-tail = 20
-print(\"Head:\", head)
-print(\"Tail:\", tail)"
-expected_output = "Head: 10\nTail: 20"
-challenge_hint = "Create variables for each node's value. The first node is the head, the last is the tail."
-practice_question = "How do you access a specific item in a singly linked list?"
-practice_options = Array[String](["Directly by index, like an array", "You must follow the chain from the head", "You use a hash function", "Items are accessed randomly"])
+print(head)"
+expected_output = "10"
+practice_question = "How do you find a specific item in a singly linked list?"
+practice_options = Array[String](["Go directly by index, like an array", "Walk the chain from the head until you find it", "Use a hash function", "Items are stored randomly in memory"])
 practice_correct_index = 1
-practice_explanation = "Linked lists don't have indexes like arrays. To find an item, you must start at the head node and follow the next pointers until you find the value you're looking for. This takes O(n) time."
-
+practice_explanation = "Linked lists don't have indexes like arrays. To find an item, you start at the head and follow the next pointers, checking each value as you go, until you either find the target or reach None. This is O(n) time — the more items, the longer it takes."

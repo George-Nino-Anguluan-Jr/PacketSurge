@@ -2,6 +2,7 @@
 
 [ext_resource type="Script" uid="uid://ciet8k3fqk8tr" path="res://scripts/data/LessonData.gd" id="1_xgqti"]
 [ext_resource type="PackedScene" path="res://scenes/academy/visualizations/VizQuickSort.tscn" id="2_ql84h"]
+
 [resource]
 script = ExtResource("1_xgqti")
 lesson_id = "sort_quick"
@@ -10,62 +11,145 @@ category = "data_structures"
 icon_text = "⚡"
 prerequisites = Array[String](["sort_insertion"])
 visualization_scene = ExtResource("2_ql84h")
-concept_text = "Quick Sort picks a pivot element, then partitions the array so smaller elements go left and larger go right. Each half is then sorted the same way (recursively).
+concept_text = "Quick Sort is one of the FASTEST sorting algorithms in practice. It uses a \"divide and conquer\" strategy: pick a PIVOT, split the array into \"smaller than pivot\" and \"larger than pivot\", then recursively sort each side.
 
-How it works:
-    arr = [3, 6, 8, 10, 1, 2, 1]
-    Pick pivot (middle): 10
-    Left (smaller):  [3, 6, 8, 1, 2, 1]
-    Middle (equal):  [10]
-    Right (larger):  []
-    Recursively sort left → combine → [1, 1, 2, 3, 6, 8, 10]
+How it works on [3, 6, 8, 10, 1, 2, 1]:
 
-Time: O(n log n) average, O(n²) worst
-Space: O(log n) — recursive calls"
-real_world_example = "Quick Sort is widely used in practice:
-- Python's built-in sort() uses Timsort (hybrid with Insertion Sort)
-- Database engines use Quick Sort variants
-- Video game leaderboards sort scores
-- Operating systems sort file directories
+Step 1 — Pick a pivot. (Common choices: first, last, middle, or random.) Let's say we pick the middle: 10.
 
-It's popular because it's fast in practice and works well with CPU caching."
-guided_example = "Let's trace Quick Sort on [3, 6, 8, 10, 1, 2, 1].
+Step 2 — Partition. Move all items smaller than 10 to the LEFT, and all items larger than 10 to the RIGHT.
 
-Step 1 — Pick pivot (middle element = 10):
+Left (smaller):  [3, 6, 8, 1, 2, 1]
+Pivot:            [10]
+Right (larger):  []
 
-Step 2 — Partition:
-    Left (x < 10):  [3, 6, 8, 1, 2, 1]
-    Middle (x == 10): [10]
-    Right (x > 10): []
+Step 3 — Recursively sort the LEFT and RIGHT sides.
 
-Step 3 — Recursively sort left [3, 6, 8, 1, 2, 1]:
-    Pivot = 8
-    Left: [3, 6, 1, 2, 1]
-    Middle: [8]
-    Right: []
+Sort left [3, 6, 8, 1, 2, 1]:
+- Pick pivot: 8
+- Left:  [3, 6, 1, 2, 1]
+- Pivot: [8]
+- Right: []
 
-Step 4 — Keep dividing until single elements:
-    Eventually: [1, 1, 2, 3, 6, 8] + [10] = [1, 1, 2, 3, 6, 8, 10] ✓
+Sort [3, 6, 1, 2, 1]:
+- Pick pivot: 1
+- Left:  []
+- Pivot: [1]
+- Right: [3, 6, 2]
 
-The array is sorted by repeatedly picking pivots and partitioning."
-recap_text = "- Pick a pivot, partition into smaller/larger/equal
-- Recursively sort each half
-- Time: O(n log n) average, O(n²) worst (bad pivot choices)
-- Space: O(log n) for recursion
-- Very fast in practice — widely used
-- Not stable: equal elements may swap order"
-challenge_instruction = "Arrange the blocks to pick a pivot and partition the array into smaller and larger halves."
-challenge_blocks = Array[String](["pivot = arr[len(arr) // 2]", "left = []", "right = []", "for x in arr:", "if x < pivot: left.append(x)", "if x > pivot: right.append(x)", "print(left, pivot, right)", "arr = [8, 1, 5, 2]", "if x == pivot:"])
-correct_sequence = Array[String](["arr = [8, 1, 5, 2]", "pivot = arr[len(arr) // 2]", "left = []", "right = []", "for x in arr:", "if x < pivot: left.append(x)", "if x > pivot: right.append(x)", "print(left, pivot, right)"])
+And so on, until each piece has just one item (which is trivially sorted).
+
+Step 4 — Combine everything back together.
+
+Final: [1, 1, 2, 3, 6, 8, 10]
+
+Performance:
+- Average case: O(n log n) — FAST
+- Worst case: O(n²) — rare, happens with bad pivot choices (eg always picking smallest/largest)
+- Space: O(log n) for the recursion stack
+- NOT stable: equal elements may swap order
+- Used in MANY real-world libraries (under the name \"introsort\" combined with heapsort)
+- One of the most commonly used sorts in practice"
+
+real_world_example = "Imagine organizing a bookshelf full of mixed books. You want to sort them by height.
+
+Step 1: Pick a book to use as a reference (the pivot). Say you pick a book in the middle.
+
+Step 2: Walk down the shelf. Put every book SHORTER than the pivot on the LEFT, and every book TALLER on the RIGHT. The pivot goes in the middle.
+
+Now you have two smaller piles (left and right of the pivot). Each is still messy, but smaller.
+
+Step 3: Repeat the process on each pile. Pick a pivot in each, split into smaller/taller, recurse.
+
+Eventually, you have piles of just one book each. One book is always \"sorted\". Combine everything back together, and the whole shelf is sorted by height.
+
+Another example: a tournament bracket. You start with 8 teams. Each game, two teams play, and the winner moves on. After 3 rounds (log₂(8) = 3), you have a single champion. Quick Sort does something similar with numbers — at each level, it groups them by \"smaller than pivot\" and \"larger than pivot\", then recurses on each group.
+
+A third example: how some card games work. You split the deck into \"red cards\" and \"black cards\" (partition by a property), then sort each pile separately, then combine.
+
+Why use Quick Sort? Because it's FAST in practice. On average, it does n log n work. For 1 million items, that's about 20 million operations — fast. The worst case (n²) is rare if you pick pivots wisely (like random or median-of-three)."
+
+guided_example = "Let's trace Quick Sort on [3, 6, 8, 10, 1, 2, 1], step by step. This is recursive, so we'll go level by level.
+
+Level 1 — Sort the whole array.
+
+Pick a pivot. Let's pick the middle: arr[3] = 10.
+
+Partition: put everything smaller than 10 on the left, everything larger on the right.
+
+Smaller: [3, 6, 8, 1, 2, 1]   (6 items, all less than 10)
+Pivot:    [10]
+Larger:   []                     (nothing greater than 10)
+
+Array: [3, 6, 8, 1, 2, 1, 10]
+
+The 10 is now in its final position. We never touch it again.
+
+Level 2 — Recursively sort the smaller part [3, 6, 8, 1, 2, 1].
+
+Pick a pivot. Middle of this sub-array: arr[2] = 8 (well, the 3rd item in this part).
+
+Partition:
+Smaller: [3, 6, 1, 2, 1]   (all less than 8)
+Pivot:    [8]
+Larger:   []
+
+Array: [3, 6, 1, 2, 1, 8, 10]
+
+Level 3 — Sort [3, 6, 1, 2, 1].
+
+Pick pivot: 1 (the middle).
+
+Partition:
+Smaller: []
+Pivot:    [1]
+Larger:   [3, 6, 2]
+
+Array: [1, 3, 6, 2, 8, 10]
+
+Level 4 — Sort the right sub-array [3, 6, 2].
+
+Pick pivot: 3.
+
+Partition:
+Smaller: [2]
+Pivot:    [3]
+Larger:   [6]
+
+Array: [1, 2, 3, 6, 8, 10]
+
+Level 5 — Sort [6]. Already a single item, so it's \"sorted\".
+
+Final: [1, 2, 3, 6, 8, 10]. SORTED!
+
+The key insight: at each level, the pivot ends up in its FINAL position. Then we recursively sort the two sides. The total work is roughly n log n because the array gets cut roughly in half at each level."
+
+recap_text = "- Quick Sort uses divide-and-conquer: pick pivot, partition, recurse
+- PIVOT choice matters — random or \"median of three\" avoids worst case
+- Partition: smaller items go left, larger items go right
+- After partition, the pivot is in its final position
+- Recursively sort the left and right halves
+- Average: O(n log n) — very fast
+- Worst: O(n²) — rare with good pivot choice
+- Space: O(log n) for the recursion stack
+- NOT stable: equal elements may change order
+- One of the fastest sorts in practice
+- Used in: many real-world libraries (often as part of \"introsort\")
+- Recursive — each level splits the array roughly in half"
+
+challenge_instruction = "Drag the blocks to pick the middle element as pivot and partition the array into smaller and larger halves."
+challenge_blocks = Array[String](["arr = [8, 1, 5, 2]", "pivot = arr[len(arr) // 2]", "left = []", "right = []", "for x in arr:", "    if x < pivot: left.append(x)", "    if x > pivot: right.append(x)", "print(left, pivot, right)"])
+correct_sequence = Array[String](["arr = [8, 1, 5, 2]", "pivot = arr[len(arr) // 2]", "left = []", "right = []", "for x in arr:", "    if x < pivot: left.append(x)", "    if x > pivot: right.append(x)", "print(left, pivot, right)"])
+challenge_hint = "Pick the middle element as pivot using arr[len(arr) // 2]. Create empty left and right lists. Loop through every item: if smaller than pivot, add to left; if larger, add to right. Print left, pivot, right."
 code_template = "arr = [8, 1, 5, 2]
-pivot = arr[len(arr) // 2]
+pivot = arr[len(arr) // ___]
 left = []
 right = []
 for x in arr:
     if x < pivot:
-        left.append(___)
+        left.append(x)
     elif x > pivot:
-        right.append(x)
+        right.append(___)
 print(left, pivot, right)"
 challenge_code = "arr = [8, 1, 5, 2]
 pivot = arr[len(arr) // 2]
@@ -78,9 +162,7 @@ for x in arr:
         right.append(x)
 print(left, pivot, right)"
 expected_output = "[1, 2] 5 [8]"
-challenge_hint = "Pick the middle element as pivot using arr[len(arr) // 2]. Create empty left and right lists. Loop through every element in arr: if it's smaller than pivot, add it to left; if it's larger, add it to right. Print left, pivot, and right to see the partition."
 practice_question = "What is the average time complexity of Quick Sort?"
 practice_options = Array[String](["O(n²)", "O(n log n)", "O(log n)", "O(n)"])
 practice_correct_index = 1
-practice_explanation = "Quick Sort averages O(n log n). Each partition roughly halves the array, doing O(n) work per level. The worst case O(n²) happens when the pivot is always the smallest or largest element."
-
+practice_explanation = "Quick Sort averages O(n log n). At each level, we do O(n) work to partition the array. We have about log n levels because the array gets cut roughly in half each time. Multiply: O(n) × O(log n) = O(n log n). The worst case O(n²) happens with bad pivot choices (e.g. always picking the smallest or largest element)."

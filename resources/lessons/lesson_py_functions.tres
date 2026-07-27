@@ -11,26 +11,45 @@ category = "python"
 icon_text = "f()"
 prerequisites = Array[String](["py_conditions"])
 visualization_scene = ExtResource("2_384g4")
-concept_text = "A function is a reusable block of code.
-Define it once with def, then call it by name whenever needed.
+concept_text = "A function is a reusable chunk of code. You DEFINE it once (write the recipe), then CALL it whenever you want to use it (cook the recipe).
 
-    def function_name(parameters):
-        code to run
-        return result
+You define a function with def (short for \"define\"):
 
-Example:
     def greet(name):
         return \"Hi, \" + name
 
-    print(greet(\"Luna\"))   # Hi, Luna
-    print(greet(\"Max\"))    # Hi, Max
+This creates a function called greet. The name in parentheses (name) is a PARAMETER — it's the input the function will receive.
 
-Benefits:
-- Write once, use many times
-- Keep code organized
-- Easier to fix and update"
-real_world_example = "Think of a vending machine.
-You select a button (input), the machine does its work, and gives you a snack (output).
+The return keyword is how the function sends a result back to whoever called it.
+
+To USE the function, you CALL it by writing its name and giving it an actual value:
+
+    print(greet(\"Luna\"))    # shows: Hi, Luna
+    print(greet(\"Max\"))     # shows: Hi, Max
+
+Why bother with functions? Three big reasons:
+1. Write once, use many times. No copy-pasting.
+2. Easier to fix bugs. Fix it once, every caller benefits.
+3. Makes code easier to read. greet(\"Luna\") is clearer than the three lines it replaces.
+
+You can have multiple parameters, separated by commas:
+
+    def add(a, b):
+        return a + b
+
+    print(add(3, 4))    # shows: 7"
+
+real_world_example = "A function is like a recipe. The recipe itself isn't food — it's the INSTRUCTIONS for making food. When you actually want cookies, you \"call\" the recipe with ingredients, and out come cookies.
+
+    def make_cookies(flavor):
+        return flavor + \" cookies ready!\"
+
+    print(make_cookies(\"Chocolate\"))    # Chocolate cookies ready!
+    print(make_cookies(\"Oatmeal\"))      # Oatmeal cookies ready!
+
+Same recipe, different results. The function (recipe) stays the same; only the input (flavor) changes.
+
+Another example: a vending machine. You press a button (call the function with an input), the machine does its thing, and out comes a snack (the return value).
 
     def vending(choice):
         if choice == 1:
@@ -40,46 +59,82 @@ You select a button (input), the machine does its work, and gives you a snack (o
         else:
             return \"Water\"
 
-    print(vending(1))   # Chips
-    print(vending(3))   # Water"
-guided_example = "Let's build a function that doubles a number.
+    print(vending(1))    # Chips
+    print(vending(2))    # Chocolate
+    print(vending(5))    # Water
 
-Step 1 — Define the function:
+You don't have to know HOW the vending machine works inside. You just press a button and get a snack. That's the magic of functions: you can use them without understanding every detail of how they work inside.
+
+One more: a calculator function for doubling numbers:
+
     def double(n):
         return n * 2
 
-Step 2 — Call it with different values:
-    print(double(4))   # 8
-    print(double(10))  # 20
-    print(double(0))   # 0
+    print(double(4))     # 8
+    print(double(10))    # 20
 
-Step 3 — Use it in a program:
+Same function, different inputs, different results. The function doesn't care what number you pass — it always doubles it."
+
+guided_example = "Let's build a function that doubles a number, one tiny step at a time.
+
+Step 1 — Define the function. This just tells Python: \"here's a function I'm going to use later\".
+
+    def double(n):
+        return n * 2
+
+Read this as: \"define a function called double. It takes one input, which we'll call n. It returns n multiplied by 2.\" Nothing happens yet — the function is defined but not called.
+
+Step 2 — Call it with the number 4.
+
+    print(double(4))    # shows: 8
+
+When Python sees double(4), it runs the function with n = 4, which returns 4 * 2 = 8. The print() then displays 8.
+
+Step 3 — Call it with a different number.
+
+    print(double(10))   # shows: 20
+
+Same function, n = 10, returns 10 * 2 = 20.
+
+Step 4 — Call it with 0.
+
+    print(double(0))    # shows: 0
+
+Yep, 0 * 2 = 0. Works with any number.
+
+Step 5 — Use the result in a calculation.
+
     score = 50
-    bonus = double(score)
-    print(\"Total:\", bonus)   # Total: 100
+    bonus = double(score)         # bonus = 100
+    print(\"Score:\", score)        # Score: 50
+    print(\"With bonus:\", bonus)   # With bonus: 100
 
-The function works with any number you give it."
-recap_text = "- def creates a function
-- Functions take inputs called parameters
+Notice: the function can take a VARIABLE as input, not just a number. score was 50, so double(50) returned 100, and we stored that in bonus.
+
+That's the whole pattern: define with def, call by name with inputs, get the return value."
+
+recap_text = "- A function is a reusable chunk of code
+- Define with def: def my_function(input):
+- The input in parentheses is a PARAMETER
 - return sends a result back to the caller
-- Call a function with name(arguments)
-- Functions help avoid repeating code
-- Code inside a function must be indented"
-challenge_instruction = "Arrange the blocks to define a function that multiplies two numbers and call it."
-challenge_blocks = Array[String](["def multiply(a, b):", "    return a * b", "print(multiply(4, 5))", "print multiply(4, 5)", "def multiply(a, b)", "    return a + b"])
-correct_sequence = Array[String](["def multiply(a, b):", "    return a * b", "print(multiply(4, 5))"])
-code_template = "def multiply(a, b):
+- Call the function by writing its name with actual values: my_function(5)
+- You can call a function as many times as you want
+- You can pass variables as arguments, not just literal values
+- Functions make code shorter, easier to fix, and easier to read
+- Indent the function body (4 spaces) just like loops and conditions"
+
+challenge_instruction = "Drag the blocks to define a function that adds two numbers and call it with (3, 4)."
+challenge_blocks = Array[String](["def add(a, b):", "    return a + b", "print(add(3, 4))"])
+correct_sequence = Array[String](["def add(a, b):", "    return a + b", "print(add(3, 4))"])
+challenge_hint = "def line has the function name and parameters in parentheses, ending with a colon. The body is indented. The return line sends back a result. The print line CALLS the function with actual values."
+code_template = "def add(a, b):
     return a ___ b
-result = multiply(___, ___)
-print(result)"
-challenge_code = "def multiply(a, b):
-    return a * b
-result = multiply(3, 7)
-print(result)"
-expected_output = "21"
-challenge_hint = "Start with def function_name(parameters): then indent the body. Use return to send the result. Call it with print(function_name(values))."
-practice_question = "What is the output of this code?    def square(x):    return x * x    print(square(5))"
+print(add(3, ___))"
+challenge_code = "def add(a, b):
+    return a + b
+print(add(3, 4))"
+expected_output = "7"
+practice_question = "What does this print?    def square(x):    return x * x    print(square(5))"
 practice_options = Array[String](["10", "25", "5", "square(5)"])
 practice_correct_index = 1
-practice_explanation = "The function square(x) returns x * x. When called with square(5), it computes 5 * 5 = 25."
-
+practice_explanation = "square(5) means: call the function with x = 5. Inside, return x * x means return 5 * 5 = 25. So print(square(5)) displays 25. The function name is just a label — what gets printed is the return value."

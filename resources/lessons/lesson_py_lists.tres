@@ -8,65 +8,111 @@ script = ExtResource("1_6cnu5")
 lesson_id = "py_lists"
 title = "Lists"
 category = "python"
+icon_text = "[ ]"
 prerequisites = Array[String](["py_variables"])
 visualization_scene = ExtResource("2_ontg8")
-concept_text = "A list stores multiple items in a single variable.
-Items are ordered and each has a position number (index).
+concept_text = "A list holds MANY values in a single variable, in order. Think of it as a row of boxes, all glued together, with numbered positions.
 
-Create a list with square brackets:
-    colors = [\"red\", \"green\", \"blue\"]
+You make a list with square brackets [ ] and commas between items:
 
-Indexes start at 0:
-    colors[0] → \"red\"
-    colors[1] → \"green\"
-    colors[2] → \"blue\"
+    fruits = [\"apple\", \"banana\", \"cherry\"]
 
-Lists are flexible — you can add, remove, or change items."
-real_world_example = "Think of a shopping list on your fridge.
-You write items in order, cross them off, and add new ones.
+This creates one variable called `fruits` that holds three things.
+
+Each item has a position number called an INDEX. CRUCIAL RULE: the first item is at index 0, NOT 1. The second is at index 1. The third is at index 2.
+
+    fruits[0]    # \"apple\"   (the first one)
+    fruits[1]    # \"banana\"  (the second)
+    fruits[2]    # \"cherry\"  (the third)
+
+Yes, this is weird at first. Almost every programming language starts counting at 0. You'll get used to it.
+
+You can change any item by assigning to its index:
+
+    fruits[1] = \"blueberry\"     # banana becomes blueberry
+
+You can add items with append() and remove items with remove():
+
+    fruits.append(\"date\")        # adds to the end
+    fruits.remove(\"apple\")        # removes the first \"apple\"
+
+And you can count how many items are in a list with len():
+
+    len(fruits)     # returns the number of items"
+real_world_example = "A shopping list on your fridge is a perfect list. You write items down one after another, and the order matters (eggs before bread if you only have one arm free).
 
     shopping = [\"milk\", \"eggs\", \"bread\"]
-    print(shopping[0])  # milk
+
+You can grab the FIRST item: shopping[0] = \"milk\".
+You can grab the THIRD item: shopping[2] = \"bread\".
+
+If you remember you also need butter, you ADD it to the end of the list:
 
     shopping.append(\"butter\")
-    print(shopping)     # [\"milk\", \"eggs\", \"bread\", \"butter\"]
+    # now: [\"milk\", \"eggs\", \"bread\", \"butter\"]
+
+If you decide you don't need eggs anymore, you REMOVE them:
 
     shopping.remove(\"eggs\")
-    print(shopping)     # [\"milk\", \"bread\", \"butter\"]"
-guided_example = "Let's manage a game inventory.
+    # now: [\"milk\", \"bread\", \"butter\"]
 
-Step 1 — Create the inventory:
+You can also count how many items are on your list — just look at it and count. Python does the same with len(shopping), which gives you 3.
+
+Another example: a playlist of songs. The first song is index 0. You can skip to the third song (index 2), add new songs (append), or remove songs you don't like (remove). Same idea."
+guided_example = "Let's build a small game inventory, one line at a time.
+
+Step 1 — Create the inventory. We start with three items.
+
     inventory = [\"sword\", \"shield\", \"potion\"]
 
-Step 2 — Check the first item:
-    print(inventory[0])   # sword
+Read this as: \"inventory is a list that contains three strings, in this order.\" The square brackets [ ] mark the start and end of the list. Commas separate each item.
 
-Step 3 — Add a new item:
+Step 2 — Look at the first item. The first item is at index 0.
+
+    print(inventory[0])    # shows: sword
+
+Yes, ZERO — not one. This trips up everyone at first. The first item is always at index 0.
+
+Step 3 — Add a new item. We use append() to add it to the END of the list.
+
     inventory.append(\"ring\")
-    print(inventory)      # [\"sword\", \"shield\", \"potion\", \"ring\"]
+    print(inventory)        # shows: [\"sword\", \"shield\", \"potion\", \"ring\"]
 
-Step 4 — Replace an item:
+append() always adds to the end. The list grew from 3 items to 4.
+
+Step 4 — Replace an item. Let's say the player upgraded their shield to armor.
+
     inventory[1] = \"armor\"
-    print(inventory[1])   # armor
+    print(inventory[1])    # shows: armor
 
-Step 5 — Count items:
-    print(len(inventory)) # 4"
-recap_text = "- Lists hold multiple values in one variable
-- Use [] brackets: items = [\"a\", \"b\", \"c\"]
-- Index starts at 0: items[0] is the first item
+We didn't add or remove — we just REPLACED position 1 (which was \"shield\") with \"armor\".
+
+Step 5 — Count the items. len() tells you how many.
+
+    print(len(inventory))    # shows: 4
+
+Four items: sword, armor, potion, ring.
+
+That's it! You learned the four most common list operations: create, read by index, append, and count."
+recap_text = "- A list holds many values in order, in one variable
+- Create with square brackets: items = [\"a\", \"b\", \"c\"]
+- Commas separate the items
+- Index starts at 0: items[0] is the FIRST item
+- Use items[i] to read or change the item at position i
 - append() adds to the end
-- remove() deletes an item
-- len() counts the items
-- You can change any item by assigning to its index"
-challenge_instruction = "Arrange the blocks to create a list of power-ups and print the second one."
-challenge_blocks = Array[String](["powerups = [\"mushroom\", \"star\", \"flower\"]", "print(powerups[1])", "powerups = \"mushroom\", \"star\", \"flower\"", "print(powerups[2])", "list powerups = [\"mushroom\", \"star\", \"flower\"]"])
-correct_sequence = Array[String](["powerups = [\"mushroom\", \"star\", \"flower\"]", "print(powerups[1])"])
-code_template = "items = [\"___\", \"bow\", \"arrow\"]\nprint(items[0])"
-challenge_code = "items = [\"sword\", \"bow\", \"arrow\"]\nprint(items[0])"
-expected_output = "sword"
-challenge_hint = "Use square brackets [ ] for lists. Index 1 gives the second item. Remember: lists start counting at 0!"
+- remove() deletes the first matching item
+- len() returns how many items are in the list
+- Lists can grow and shrink as your program runs"
+challenge_instruction = "Drag the blocks to create a list of snacks and print the second one. (Remember: index starts at 0!)"
+challenge_blocks = Array[String](["snacks = [\"chips\", \"fruit\", \"nuts\"]", "print(snacks[1])"])
+correct_sequence = Array[String](["snacks = [\"chips\", \"fruit\", \"nuts\"]", "print(snacks[1])"])
+challenge_hint = "Index 0 is the first item. Index 1 is the second item. So to print the second one, use snacks[1]."
+code_template = "snacks = [\"___\", \"fruit\", \"nuts\"]
+print(snacks[1])"
+challenge_code = "snacks = [\"chips\", \"fruit\", \"nuts\"]
+print(snacks[1])"
+expected_output = "fruit"
 practice_question = "What does len() tell you about a list?"
-practice_options = Array[String](["The number of items in the list", "The last item in the list", "The first item in the list", "The total size of the list in memory"])
+practice_options = Array[String](["The number of items in the list", "The last item in the list", "The first item in the list", "The total size in memory (in bytes)"])
 practice_correct_index = 0
-practice_explanation = "len() returns the number of items (length) of the list. For example, len([10, 20, 30]) returns 3."
-
+practice_explanation = "len() returns the number of items. For [10, 20, 30] it returns 3. It's like asking \"how long is this list?\" — it counts the items."

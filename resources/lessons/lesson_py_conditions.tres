@@ -11,88 +11,127 @@ category = "python"
 icon_text = "?"
 prerequisites = Array[String](["py_loops"])
 visualization_scene = ExtResource("2_iddpb")
-concept_text = "Conditions let your code make decisions.
-Check if something is True or False and run different code.
+concept_text = "Conditions let your code make DECISIONS. The program checks if something is true or false, then runs different code based on the answer.
 
-Python uses if, elif, and else:
-    age = 18
+The three keywords are: if, elif (else if), and else.
+
     if age >= 18:
         print(\"Adult\")
     else:
         print(\"Minor\")
-    # Output: Adult
 
-Comparison operators:
-    ==  equal to
-    !=  not equal
-    >   greater than
-    <   less than
-    >=  greater or equal
-    <=  less or equal"
-real_world_example = "A traffic light system decides what to do:
+How to read this: \"IF age is 18 or more, print 'Adult'. OTHERWISE (else), print 'Minor'.\"
 
-    light_color = \"red\"
+The double equals == is how you CHECK if two things are equal. A single = is for assigning. Don't mix them up:
+- x = 5   means \"put 5 in x\" (assignment)
+- x == 5  means \"is x equal to 5?\" (comparison, returns True or False)
 
-    if light_color == \"green\":
+Comparison operators you'll use a lot:
+- ==   equal to
+- !=   not equal to
+- >    greater than
+- <    less than
+- >=   greater than or equal to
+- <=   less than or equal to
+
+You can chain checks with elif (short for \"else if\"). Python checks them in order, top to bottom. The FIRST one that's true wins, and the rest are skipped."
+
+real_world_example = "A traffic light is a real-life condition. The light is either red, yellow, or green — and your action depends on which one is showing:
+
+    light = \"red\"
+
+    if light == \"green\":
         print(\"Go!\")
-    elif light_color == \"yellow\":
+    elif light == \"yellow\":
         print(\"Slow down\")
     else:
         print(\"Stop\")
 
-    # Output: Stop
+Output: Stop
 
-The program checks each condition from top to bottom.
-The first matching condition runs, and the rest are skipped."
-guided_example = "Let's write a temperature guide.
+Another example: deciding what to wear based on the temperature.
 
-Step 1 — Set temperature:
     temp = 30
 
-Step 2 — Add conditions:
-    if temp > 35:
-        print(\"Very hot!\")
-    elif temp > 25:
-        print(\"Warm\")
-    elif temp > 15:
-        print(\"Cool\")
+    if temp > 30:
+        print(\"T-shirt and shorts\")
+    elif temp > 20:
+        print(\"T-shirt and jeans\")
+    elif temp > 10:
+        print(\"Sweater\")
     else:
-        print(\"Cold\")
+        print(\"Heavy coat\")
 
-    # Output: Warm
+Output: T-shirt and jeans
 
-Step 3 — Test with different values:
-    temp = 10  → \"Cold\"
-    temp = 40  → \"Very hot!\"
-    temp = 20  → \"Cool\""
-recap_text = "- if runs code when a condition is True
-- elif checks another condition if previous ones were False
-- else catches everything that didn't match
-- Use == to compare values
-- Use >, <, >=, <= for number comparisons
-- Conditions are checked top to bottom
-- Indent the code inside each condition"
-challenge_instruction = "Arrange the blocks to check if a number is positive, negative, or zero."
-challenge_blocks = Array[String](["number = -5", "if number > 0:", "    print(\"Positive\")", "elif number < 0:", "    print(\"Negative\")", "else:", "    print(\"Zero\")", "if number > 0", "    print \"Positive\""])
-correct_sequence = Array[String](["number = -5", "if number > 0:", "    print(\"Positive\")", "elif number < 0:", "    print(\"Negative\")", "else:", "    print(\"Zero\")"])
-code_template = "num = ___
+Notice how Python checks each condition from top to bottom. Once one matches, the others are ignored. This is why the order matters — the most specific check should usually go first.
+
+A third example: a video game checking if the player can open a locked door. They need a key AND their health must be above 0. Conditions can be combined (we'll see that in a later lesson), but for now, simple if/elif/else covers most decisions."
+
+guided_example = "Let's build a simple temperature advisor, one step at a time.
+
+Step 1 — Set a temperature.
+
+    temp = 30
+
+Just a number. We can change it later to test different scenarios.
+
+Step 2 — Add the first check. Is it very hot?
+
+    if temp > 35:
+        print(\"Very hot! Stay inside.\")
+
+If temp is 30, this condition is FALSE (30 is not > 35), so this print is skipped. The program moves on.
+
+Step 3 — Add an elif. Is it warm?
+
+    elif temp > 25:
+        print(\"Warm. T-shirt weather.\")
+
+Now Python checks: is 30 > 25? YES. So this print runs: \"Warm. T-shirt weather.\"
+
+Step 4 — Add another elif. Is it cool?
+
+    elif temp > 15:
+        print(\"Cool. Light jacket.\")
+
+Skipped, because the previous condition (temp > 25) was true.
+
+Step 5 — Add an else. Catch everything else.
+
+    else:
+        print(\"Cold. Heavy coat.\")
+
+Step 6 — Test with different values. Change temp = 30 to other numbers and see what happens:
+
+    temp = 40   → \"Very hot! Stay inside.\"
+    temp = 20   → \"Cool. Light jacket.\"
+    temp = 5    → \"Cold. Heavy coat.\"
+
+That's the whole pattern! A chain of if/elif/else that checks one thing at a time, top to bottom, and runs the FIRST match. The else at the end is the \"if nothing else matched, do this\" safety net."
+
+recap_text = "- if checks ONE condition and runs code if it's true
+- elif (else if) checks another condition if the previous ones were false
+- else runs when nothing else matched (the \"default\" case)
+- Use == to compare two values (double equals!)
+- Use = to assign a value to a variable (single equals!)
+- Other comparisons: !=, >, <, >=, <=
+- Conditions are checked top to bottom — the first match wins
+- Always end the if/elif/else line with a colon :
+- Indent the body of each branch (4 spaces)"
+
+challenge_instruction = "Drag the blocks to check if a number is positive, negative, or zero. (Hint: positive means > 0, negative means < 0.)"
+challenge_blocks = Array[String](["if num > 0:", "    print(\"positive\")", "else:", "    print(\"zero or negative\")"])
+correct_sequence = Array[String](["if num > 0:", "    print(\"positive\")", "else:", "    print(\"zero or negative\")"])
+challenge_hint = "The if line ends with a colon. The print line is indented (4 spaces) to show it belongs inside the if. The else line also ends with a colon and its body is also indented."
+code_template = "num = 5
 if num > 0:
-    print(\"___\")
-elif num < 0:
-    print(\"Negative\")
-else:
     print(\"___\")"
-challenge_code = "num = 7
+challenge_code = "num = 5
 if num > 0:
-    print(\"Positive\")
-elif num < 0:
-    print(\"Negative\")
-else:
-    print(\"Zero\")"
-expected_output = "Positive"
-challenge_hint = "Start with a number. Use if/elif/else to check if it's above, below, or equal to zero. Don't forget the colons :"
-practice_question = "What does this code print?    x = 7    if x > 10: print(\"Big\")    else: print(\"Small\")"
+    print(\"positive\")"
+expected_output = "positive"
+practice_question = "What does this print?    x = 7    if x > 10: print(\"Big\")    else: print(\"Small\")"
 practice_options = Array[String](["Big", "Small", "7", "Nothing"])
 practice_correct_index = 1
-practice_explanation = "Since 7 is NOT greater than 10, the if condition is False. The else block runs instead and prints \"Small\"."
-
+practice_explanation = "7 is NOT greater than 10, so the if condition is False. The else branch runs instead, printing \"Small\". Note: the value 7 itself is never printed — only the words based on the comparison."

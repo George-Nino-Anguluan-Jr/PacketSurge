@@ -1,4 +1,4 @@
-[gd_resource type="Resource" script_class="LessonData" format=3 uid="uid://djadipn5esgie"]
+﻿[gd_resource type="Resource" script_class="LessonData" format=3 uid="uid://djadipn5esgie"]
 
 [ext_resource type="Script" uid="uid://ciet8k3fqk8tr" path="res://scripts/data/LessonData.gd" id="1_xk5ya"]
 [ext_resource type="PackedScene" path="res://scenes/academy/visualizations/VizBinarySearch.tscn" id="2_bn84h"]
@@ -11,79 +11,138 @@ category = "data_structures"
 icon_text = "½"
 prerequisites = Array[String](["search_linear"])
 visualization_scene = ExtResource("2_bn84h")
-concept_text = "Binary Search is a fast search that works ONLY on sorted arrays.
-It repeatedly cuts the search range in half by comparing the target to the middle element.
+concept_text = "Binary Search is a BLAZING FAST search — but it only works on SORTED arrays. It repeatedly cuts the search range in HALF by comparing the target to the MIDDLE element.
 
-How it works on [1, 3, 5, 7, 9, 11, 13], target=7:
+How it works on [1, 3, 5, 7, 9, 11, 13], target = 7:
 
-    left=0, right=6 → mid=3 → arr[3]=7 == target! Found!
+Step 1 — left = 0, right = 6. Mid = (0+6)//2 = 3. arr[3] = 7. EQUAL! Found at index 3!
 
-Searching 1 billion items takes only ~30 steps (O(log n)).
+Done in ONE step.
 
-How it works on [1, 3, 5, 7, 9, 11, 13], target=6:
+How it works on [1, 3, 5, 7, 9, 11, 13], target = 6:
 
-    left=0, right=6 → mid=3 → arr[3]=7 > 6 → right=2
-    left=0, right=2 → mid=1 → arr[1]=3 < 6 → left=2
-    left=2, right=2 → mid=2 → arr[2]=5 < 6 → left=3
-    left=3 > right=2 → not found! return -1
+Step 1 — left = 0, right = 6. Mid = 3. arr[3] = 7. 7 > 6, so target is in the LEFT half. New right = 2.
 
-Time: O(log n) — extremely fast
-Space: O(1) — iterative version needs no extra memory"
-real_world_example = "Binary Search is everywhere in computing:
-- Dictionary lookups (alphabetical = sorted)
-- Git bisect finds which commit introduced a bug
-- Database indexes find records instantly
-- Autocomplete searches sorted word lists
-- Python's bisect module implements Binary Search
+Step 2 — left = 0, right = 2. Mid = 1. arr[1] = 3. 3 < 6, so target is in the RIGHT half. New left = 2.
 
-Any time data is sorted, Binary Search is the go-to method."
-guided_example = "Let's search for target=23 in [2, 5, 8, 12, 16, 23, 38, 56].
+Step 3 — left = 2, right = 2. Mid = 2. arr[2] = 5. 5 < 6, so target is in the right. New left = 3.
 
-Step 1 — Set pointers:
-    left = 0 (index of first element)
-    right = 7 (index of last element)
+Step 4 — left = 3, right = 2. left > right. NOT FOUND.
 
-Step 2 — Calculate mid:
+Four steps. Not bad.
+
+The magic: every comparison CUTS the search space in half. For 1 million items, you need only about 20 steps (because log₂(1,000,000) ≈ 20). Compare to linear search, which might need 1 million steps.
+
+Performance:
+- Time: O(log n) — EXTREMELY fast
+- Space: O(1) — no extra memory
+- ONLY works on SORTED data — if the data isn't sorted, you MUST sort it first
+- Best case: O(1) — target is the middle element
+- Average and worst case: O(log n)
+- Used in: dictionaries, phone books, sorted databases, git bisect, basically anywhere you search sorted data"
+
+real_world_example = "Imagine you're looking up a word in a DICTIONARY. You don't start at page 1 and flip every page. Instead:
+
+1. Open the dictionary roughly in the MIDDLE.
+2. See what letter is on that page (say, \"M\").
+3. If your word starts with \"M\" or later, ignore the LEFT half. If earlier, ignore the RIGHT half.
+4. Repeat with the remaining half — open it in the middle, see the letter, ignore half, repeat.
+
+Within 5-10 \"openings\" of the dictionary, you can find any word, even in a 1000-page dictionary. That's binary search.
+
+The dictionary is SORTED alphabetically — that's the key. If the dictionary were random, you'd have to flip every page (linear search).
+
+Another example: looking up a name in a phone book (back when those existed). Same approach — open in the middle, compare the first letter, ignore half, repeat.
+
+A third example: Git's \"bisect\" command. It finds which commit introduced a bug by binary searching through the commit history. You mark a \"good\" commit and a \"bad\" commit, and git checks out the middle commit. You tell it whether that commit is good or bad, and it cuts the range in half. After about log₂(N) steps, it finds the exact commit.
+
+A fourth example: looking up a word in a sorted word list for autocomplete. Your phone's autocomplete uses binary search to find the first word that starts with your prefix, then shows the next few words.
+
+Why is binary search so fast? Because each step ELIMINATES half the remaining data. For 1 million items, you need only ~20 steps. For 1 billion items, you need only ~30 steps. This is incredibly efficient.
+
+The trade-off: your data MUST be sorted first. If you sort once and then search many times, the sort cost is worth it. If you only search once, linear search might be faster overall."
+
+guided_example = "Let's search for 23 in [2, 5, 8, 12, 16, 23, 38, 56], step by step.
+
+Step 1 — Set the pointers.
+
+    left = 0        # index of first element
+    right = 7       # index of last element
+
+We're searching the entire array: indices 0 through 7.
+
+Step 2 — Calculate the middle.
+
     mid = (0 + 7) // 2 = 3
     arr[3] = 12
 
-Step 3 — Compare:
-    12 < 23 → target is in right half
-    left = mid + 1 = 4
+The middle is index 3, which holds 12.
 
-Step 4 — New mid:
+Step 3 — Compare.
+
+    Is 12 < 23? YES → target is in the RIGHT half.
+    New left = mid + 1 = 4.
+
+We ignore everything from index 0 to 3. Only indices 4-7 remain.
+
+Step 4 — New middle.
+
+    left = 4, right = 7
     mid = (4 + 7) // 2 = 5
-    arr[5] = 23 == target! Found at index 5!
+    arr[5] = 23
 
-Only 3 steps to find 23 in an 8-element array.
-With linear search, it would take 6 steps."
-recap_text = "- Works ONLY on sorted arrays
-- Repeatedly halves the search range
-- Time: O(log n) — extremely fast
+Step 5 — Compare.
+
+    Is 23 == 23? YES! FOUND at index 5!
+
+We found it in just 2 steps. With linear search, it would have taken 6 steps (checks 2, 5, 8, 12, 16, 23).
+
+What if the target is NOT in the array? Say we search for 99:
+
+Step 1 — left=0, right=7, mid=3, arr[3]=12. 12 < 99 → left = 4.
+Step 2 — left=4, right=7, mid=5, arr[5]=23. 23 < 99 → left = 6.
+Step 3 — left=6, right=7, mid=6, arr[6]=38. 38 < 99 → left = 7.
+Step 4 — left=7, right=7, mid=7, arr[7]=56. 56 < 99 → left = 8.
+Step 5 — left=8, right=7. left > right. STOP. Not found.
+
+Five steps. Even for \"not found\", we did way fewer checks than a linear search would have (which would have done all 8)."
+
+recap_text = "- Binary Search works ONLY on sorted arrays
+- Repeatedly cuts the search range in HALF
+- Compare target to the MIDDLE element:
+  - If equal: found!
+  - If smaller: target is in the LEFT half (move right pointer)
+  - If larger: target is in the RIGHT half (move left pointer)
+- Time: O(log n) — extremely fast (1 billion items in ~30 steps)
 - Space: O(1) — no extra memory
-- 1 billion items → ~30 steps
-- Trade-off: array must be sorted first
-- Much faster than Linear Search for large data"
-challenge_instruction = "Arrange the blocks to perform Binary Search on a sorted array."
-challenge_blocks = Array[String](["arr = [1, 3, 5, 7, 9]", "target = 7", "left = 0", "right = len(arr) - 1", "while left <= right:", "mid = (left + right) // 2", "if arr[mid] == target: print(mid); left = right + 1", "elif arr[mid] < target: left = mid + 1", "else: right = mid - 1", "if arr[mid] > target:", "left = 0; right = 0"])
-correct_sequence = Array[String](["arr = [1, 3, 5, 7, 9]", "target = 7", "left = 0", "right = len(arr) - 1", "while left <= right:", "mid = (left + right) // 2", "if arr[mid] == target: print(mid); left = right + 1", "elif arr[mid] < target: left = mid + 1", "else: right = mid - 1"])
+- Best case: O(1) — target is the middle
+- Worst case: O(log n) — target is at one end or not in list
+- REQUIRES sorted data — sort first if needed
+- Used in: dictionaries, sorted databases, git bisect, autocomplete, search engines
+- The classic example of \"divide and conquer\" search
+- If you can't sort the data, you must use Linear Search instead"
+
+challenge_instruction = "Drag the blocks to perform Binary Search on a sorted array. We're searching for 7 in [1, 3, 5, 7, 9]."
+challenge_blocks = Array[String](["arr = [1, 3, 5, 7, 9]", "target = 7", "left = 0", "right = 4", "while left <= right:", "    mid = (left + right) // 2", "    if arr[mid] == target: print(mid); left = right + 1", "    elif arr[mid] < target: left = mid + 1", "    else: right = mid - 1"])
+correct_sequence = Array[String](["arr = [1, 3, 5, 7, 9]", "target = 7", "left = 0", "right = 4", "while left <= right:", "    mid = (left + right) // 2", "    if arr[mid] == target: print(mid); left = right + 1", "    elif arr[mid] < target: left = mid + 1", "    else: right = mid - 1"])
+challenge_hint = "Set left=0, right=len-1. Loop while left <= right. Calculate mid = (left+right)//2. If arr[mid]==target, print mid and exit. If arr[mid]<target, search the right half (left=mid+1). If arr[mid]>target, search the left half (right=mid-1)."
 code_template = "arr = [1, 3, 5, 7, 9]
-target = ___
+target = 7
 left = 0
-right = len(arr) - 1
+right = 4
 while left <= right:
     mid = (left + right) // 2
     if arr[mid] == target:
-        print(mid)
+        print(___)
         left = right + 1
     elif arr[mid] < target:
-        left = mid + 1
+        left = mid + ___
     else:
         right = mid - 1"
 challenge_code = "arr = [1, 3, 5, 7, 9]
 target = 7
 left = 0
-right = len(arr) - 1
+right = 4
 while left <= right:
     mid = (left + right) // 2
     if arr[mid] == target:
@@ -94,9 +153,7 @@ while left <= right:
     else:
         right = mid - 1"
 expected_output = "3"
-challenge_hint = "Set left=0, right=len(arr)-1. Loop while left <= right. Calculate mid = (left+right)//2. If found, print and exit. If target > arr[mid], search right half. If target < arr[mid], search left half."
-practice_question = "What is the key requirement for Binary Search to work?"
+practice_question = "What is the key REQUIREMENT for Binary Search to work?"
 practice_options = Array[String](["Array must have an even number of elements", "Array must be sorted", "Array must contain only integers", "Array must have no duplicates"])
 practice_correct_index = 1
-practice_explanation = "Binary Search REQUIRES a sorted array. Without sorting, dividing the search space in half doesn't work — you have no way to know which half contains the target."
-
+practice_explanation = "Binary Search REQUIRES a sorted array. The whole algorithm depends on the ability to know which half of the array contains the target by comparing to the middle element. Without sorting, you'd have no way to know which half to discard. If your data isn't sorted, you must either sort it first (one-time cost) or use Linear Search."

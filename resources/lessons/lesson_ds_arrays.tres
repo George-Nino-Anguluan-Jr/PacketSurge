@@ -10,78 +10,118 @@ title = "Arrays"
 category = "data_structures"
 prerequisites = Array[String](["py_functions"])
 visualization_scene = ExtResource("2_qsa84")
-concept_text = "An array stores multiple items in a fixed-size sequence.
-Each item has a numbered position called an index, starting at 0.
+concept_text = "An array is a fixed-size row of slots, each holding one value. Each slot has a numbered position called an INDEX, starting at 0.
 
-In Python, we use lists to work like arrays:
-    scores = [0, 0, 0, 0]   # array with 4 slots
+In Python, you use a LIST to work like an array:
 
-Access any item instantly by its index:
-    print(scores[0])   # first item
-    scores[2] = 95     # change the third item
+    scores = [0, 0, 0, 0]      # array with 4 slots, all zero
 
-Key speeds:
-- Access by index: fast (O(1))
-- Search without index: slow (O(n))
-- Insert/delete in middle: slow (O(n))"
-real_world_example = "Think of a parking lot with numbered spots.
-Spot 3 is always the third spot from the start.
-You can go straight to spot 3 without checking spots 1 and 2.
+To get a value, you ask for it BY ITS POSITION:
 
-    parking = [\"\", \"\", \"\", \"\", \"\"]
-    parking[0] = \"Car A\"
-    parking[3] = \"Car B\"
-    print(parking[0])   # Car A — instant!
-    print(parking[3])   # Car B — instant!
+    scores[0]    # first slot (instant!)
+    scores[2]    # third slot (also instant!)
 
-Finding a specific car without knowing its spot:
-    for car in parking:
-        if car == \"Car B\":
-            print(\"Found!\")   # must check each one"
-guided_example = "Let's track daily temperatures.
+To put a value in a slot, assign to that position:
 
-Step 1 — Create an array of 7 slots (one per day):
+    scores[2] = 95
+
+Why is this useful? Three big reasons:
+1. INSTANT access by index (computer scientists call this O(1), meaning \"constant time\"). It doesn't matter if the array has 10 items or 10 million — getting scores[5] takes the same amount of time.
+2. Useful for data that has a known order or position (like days of the week, scores for 30 players, pixels in an image).
+3. The foundation for many other data structures.
+
+The downside: searching for a value WITHOUT knowing its position means checking each slot one by one. For a small array, that's fine. For a huge one, it can be slow.
+
+    scores = [72, 75, 68, 70]
+    # To find 70, you must check scores[0]=72, scores[1]=75, scores[2]=68, scores[3]=70
+    # That's 4 checks. For 1 million items, that's 1 million checks."
+
+real_world_example = "A parking lot is a great example of an array. Each spot has a number, and you can go directly to spot 5 without checking spots 1, 2, 3, and 4 first. The spots are FIXED in size (the lot has exactly 50 spots) and ORDERED (spot 1, 2, 3, ...).
+
+    parking = [\"\", \"\", \"\", \"\", \"\"]    # 5 empty spots
+    parking[0] = \"Car A\"                 # spot 0
+    parking[3] = \"Car B\"                 # spot 3
+
+When you want to find Car B, you don't have to look at every spot. You go straight to spot 3. That's instant access.
+
+Another example: a row of mailboxes in an apartment building. Mailbox 0, mailbox 1, mailbox 2, and so on. If you know the number, you walk directly to that mailbox. If you DON'T know the number and you want to find a specific letter, you have to check each mailbox one by one.
+
+    for box in parking:
+        if box == \"Car B\":
+            print(\"Found it!\")
+
+A third example: days of the week. There are exactly 7, and you know their order:
+
+    days = [\"Mon\", \"Tue\", \"Wed\", \"Thu\", \"Fri\", \"Sat\", \"Sun\"]
+    print(days[0])    # Mon (the first day)
+    print(days[6])    # Sun (the last day)
+
+To find \"Wed\", you'd loop through (Mon, Tue, Wed...) until you find it. But if you already know its position (days[2]), you can grab it directly."
+
+guided_example = "Let's track the temperature for each day of the week, one step at a time.
+
+Step 1 — Create an array with 7 slots (one per day).
+
     temps = [0, 0, 0, 0, 0, 0, 0]
 
-Step 2 — Fill in temperatures:
-    temps[0] = 72
-    temps[1] = 75
-    temps[2] = 68
-    temps[3] = 70
-    temps[4] = 73
+All zeros for now. We have 7 slots, indices 0 through 6.
 
-Step 3 — Read Wednesday's temp (index 2):
-    print(temps[2])   # 68 — O(1) instant access
+Step 2 — Fill in some temperatures.
 
-Step 4 — Find the highest temp:
+    temps[0] = 72    # Monday
+    temps[1] = 75    # Tuesday
+    temps[2] = 68    # Wednesday
+    temps[3] = 70    # Thursday
+    temps[4] = 73    # Friday
+
+Notice we used slot 0 for Monday, slot 1 for Tuesday, etc. The slot number (index) is the position from the start.
+
+Step 3 — Read Wednesday's temperature.
+
+    print(temps[2])    # shows: 68
+
+Direct access! We didn't have to look at slots 0, 1, then 2. We just said \"give me slot 2\" and Python gave us 68.
+
+Step 4 — Find the highest temperature.
+
     highest = temps[0]
     for t in temps:
         if t > highest:
             highest = t
-    print(highest)    # 75 — O(n) checks all
+    print(highest)    # shows: 75
 
-Step 5 — Update a value:
-    temps[4] = 74
-    print(temps)      # [72, 75, 68, 70, 74, 0, 0]"
-recap_text = "- Arrays store items in a fixed sequence
-- Index starts at 0
-- Access by index is O(1) — instant
-- Searching without index is O(n) — checks each item
-- Inserting/deleting needs shifting — O(n)
-- Great for: fixed-size data, fast position-based access"
-challenge_instruction = "Arrange the blocks to create an array, change the first item to 99, and print it."
-challenge_blocks = Array[String](["nums = [0, 0, 0]", "nums[0] = 99", "print(nums[0])", "nums = [0, 0, 0", "nums[0] == 99", "print(nums[1])"])
+This loops through every slot. Each time it finds a value bigger than the current highest, it updates highest. By the end, highest holds the biggest number.
+
+Step 5 — Update a value.
+
+    temps[4] = 74    # Friday changed from 73 to 74
+    print(temps)     # shows the full array with the new value
+
+Assigning to an index replaces whatever was there. The other slots don't change.
+
+That's the whole pattern! Arrays are great when you need fast access by position."
+
+recap_text = "- An array is a fixed-size row of slots, each with an index
+- In Python, a list works like an array
+- Index starts at 0: first slot is index 0, last slot is index N-1
+- Access by index is INSTANT (O(1)) — same time for 10 or 10 million items
+- Assign to an index to change a value: arr[2] = 99
+- Searching without knowing the position is SLOW (O(n)) — must check each slot
+- Great for: ordered data, fixed-size collections, fast position-based access
+- Not great for: searching unknown positions, frequent insertions in the middle"
+
+challenge_instruction = "Drag the blocks to create an array of 3 zeros, then change the FIRST one to 99 and print it."
+challenge_blocks = Array[String](["nums = [0, 0, 0]", "nums[0] = 99", "print(nums[0])"])
 correct_sequence = Array[String](["nums = [0, 0, 0]", "nums[0] = 99", "print(nums[0])"])
-challenge_hint = "Create with: nums = [0, 0, 0]. Assign with: nums[0] = 99. Print with: print(nums[0])."
+challenge_hint = "Create the array with three zeros. Assign 99 to nums[0] (the first slot). Then print nums[0] to see the new value."
 code_template = "nums = [0, 0, 0]
-nums[___] = 55
-print(nums[1])"
+nums[___] = 99
+print(nums[0])"
 challenge_code = "nums = [0, 0, 0]
-nums[1] = 55
-print(nums[1])"
-expected_output = "55"
-practice_question = "What is the index of the first item in an array?"
+nums[0] = 99
+print(nums[0])"
+expected_output = "99"
+practice_question = "What is the index of the FIRST item in an array?"
 practice_options = Array[String](["1", "0", "-1", "It depends on the array"])
 practice_correct_index = 1
-practice_explanation = "Array indexes always start at 0. The first item is at index 0, the second at index 1, and so on. This is true in Python and most programming languages."
-
+practice_explanation = "Array indexes always start at 0. The first item is at index 0, the second at index 1, and so on. This is true in Python and almost every programming language. It feels weird at first, but you'll get used to it."
