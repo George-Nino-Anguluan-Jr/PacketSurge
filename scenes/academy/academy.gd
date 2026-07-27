@@ -966,34 +966,18 @@ func _apply_styles() -> void:
 	hint_button.add_theme_color_override("font_color", Color("#FFB800"))
 	
 	# Style scrollbar in the lesson step area
-	var scroll_bar_style := StyleBoxFlat.new()
-	scroll_bar_style.bg_color = Color("#0A1628")
-	scroll_bar_style.border_color = Color("#1A2A3A")
-	scroll_bar_style.border_width_left = 1
-	scroll_bar_style.border_width_right = 1
-	scroll_bar_style.border_width_top = 1
-	scroll_bar_style.border_width_bottom = 1
-	scroll_bar_style.corner_radius_top_left = 3
-	scroll_bar_style.corner_radius_top_right = 3
-	scroll_bar_style.corner_radius_bottom_left = 3
-	scroll_bar_style.corner_radius_bottom_right = 3
 	var scroll_grabber_style := StyleBoxFlat.new()
 	scroll_grabber_style.bg_color = Color("#00D4FF")
 	scroll_grabber_style.corner_radius_top_left = 3
 	scroll_grabber_style.corner_radius_top_right = 3
 	scroll_grabber_style.corner_radius_bottom_left = 3
 	scroll_grabber_style.corner_radius_bottom_right = 3
-	scroll_area.add_theme_stylebox_override("bg", scroll_bar_style)
-	scroll_area.add_theme_stylebox_override("panel", scroll_bar_style)
 	var v_sb = scroll_area.get_v_scroll_bar()
 	if v_sb:
-		v_sb.add_theme_stylebox_override("scroll", scroll_bar_style)
-		v_sb.add_theme_stylebox_override("scroll_focus", scroll_bar_style)
 		v_sb.add_theme_stylebox_override("grabber", scroll_grabber_style)
 		v_sb.add_theme_stylebox_override("grabber_highlight", scroll_grabber_style)
 		v_sb.add_theme_stylebox_override("grabber_pressed", scroll_grabber_style)
-		v_sb.custom_minimum_size = Vector2(12, 0)
-		v_sb.size_flags_vertical = Control.SIZE_EXPAND_FILL
+		v_sb.custom_minimum_size = Vector2(8, 0)
 	
 	# Style menu button
 	var menu_style := StyleBoxFlat.new()
