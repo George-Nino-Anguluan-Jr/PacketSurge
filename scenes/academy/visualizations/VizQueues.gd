@@ -1,108 +1,111 @@
-extends Control
+extends "res://scripts/academy/VizBase.gd"
 
-var diag: Control; var anim: Control; var code_label: Label
-var play_btn: Button; var step_btn: Button; var reset_btn: Button
-var paused := false; var step_idx := 0; var progress := 0.0; var tween: Tween
+var _queue: Array = []
+var _anim_type: String = ""
+var _anim_val: String = ""
+var _dequeue_val: String = ""
 
-var steps = [
-	{"code": "queue = [] (empty)", "action": "init", "val": -1},
-	{"code": "enqueue(10) ? queue: [10]", "action": "enq", "val": 10},
-	{"code": "enqueue(20) ? queue: [10, 20]", "action": "enq", "val": 20},
-	{"code": "enqueue(30) ? queue: [10, 20, 30]", "action": "enq", "val": 30},
-	{"code": "dequeue() ? returns 10", "action": "deq", "val": 10},
-	{"code": "dequeue() ? returns 20", "action": "deq", "val": 20},
-	{"code": "enqueue(40) ? queue: [30, 40]", "action": "enq", "val": 40},
-]
+func get_steps() -> Array:
+	return [
+		{ "code": "from collections import deque; q = deque()" },
+		{ "code": "q.append(\"Alice\")" },
+		{ "code": "q.append(\"Bob\")" },
+		{ "code": "q.append(\"Charlie\")" },
+		{ "code": "print(q.popleft()) # Alice" },
+	]
 
-func _set_progress(v): progress = v; queue_redraw()
+func get_concept_title() -> String:
+	return "Concept: First In, First Out â€” like a line at a store"
 
-func _ready():
-	var ui = VizUtil.standard_ui(self, " Queue — FIFO (First In, First Out)", 100, 400)
-	diag = ui.diagram; anim = ui.anim; code_label = ui.code; var ctrl = ui.controls
-	diag.draw.connect(_draw_diag); anim.draw.connect(_draw_anim)
-	play_btn = VizUtil.make_btn("? Play", VizUtil.C_LABEL); step_btn = VizUtil.make_btn("? Step", VizUtil.C_LABEL)
-	reset_btn = VizUtil.make_btn("? Reset", Color("#FF3366"))
-	ctrl.add_child(play_btn); ctrl.add_child(step_btn); ctrl.add_child(reset_btn)
-	play_btn.pressed.connect(_on_play); step_btn.pressed.connect(_on_step); reset_btn.pressed.connect(_on_reset)
+func get_anim_title() -> String:
+	return "Animation: Enqueue customers, then dequeue"
 
-func _on_play():
-	if step_idx >= steps.size(): _on_reset(); return
-	paused = not paused; play_btn.text = "? Pause" if not paused else "? Play"
-	if not paused: _start_tween()
+func _set_step(idx: int) -> void:
+	current_step = idx
+	match idx:
+		0: _queue.clear(); _anim_type = "init"; _animating = false
+		1: _anim_type = "enq"; _anim_val = "Alice"; _anim_progress = 0.0; _animating = true
+		2: _anim_type = "enq"; _anim_val = "Bob"; _anim_progress = 0.0; _animating = true
+		3: _anim_type = "enq"; _anim_val = "Charlie"; _anim_progress = 0.0; _animating = true
+		4: _anim_type = "deq"; _dequeue_val = "Alice"; _queue.pop_front(); _anim_progress = 0.0; _animating = true
+	queue_redraw()
 
-func _on_step():
-	paused = true; play_btn.text = "? Play"
-	if tween and tween.is_running(): tween.kill(); _do_step()
+func _on_reset() -> void:
+	_queue.clear()
+	super._on_reset()
 
-func _on_reset():
-	paused = true; play_btn.text = "? Play"
-	if tween and tween.is_running(): tween.kill()
-	step_idx = 0; progress = 0.0; code_label.text = "Press ? Play or ? Step to begin"; queue_redraw()
+func _process(delta: float) -> void:
+	if _animating:
+		_anim_progress += delta * 1.5
+		if _anim_progress >= 1.0:
+			_anim_progress = 1.0
+			_animating = false
+			if _anim_type == "enq":
+				_queue.push_back(_anim_val)
+				_anim_val = ""
+		queue_redraw()
 
-func _start_tween():
-	if paused or step_idx >= steps.size(): return
-	if tween and tween.is_running(): tween.kill()
-	tween = create_tween(); tween.tween_method(_set_progress, 0.0, 1.0, 0.7).set_ease(Tween.EASE_IN_OUT)
-	tween.finished.connect(_on_tween_done, CONNECT_ONE_SHOT)
+func _draw_diagram() -> void:
+	draw_string(ThemeDB.fallback_font, Vector2(_diagram_rect.position.x + 12, _diagram_rect.position.y + 16), "First In, First Out (FIFO)", HORIZONTAL_ALIGNMENT_LEFT, -1, 14, Color("#FFB800"))
+	draw_string(ThemeDB.fallback_font, Vector2(_diagram_rect.position.x + 12, _diagram_rect.position.y + 36), "think: line at a store", HORIZONTAL_ALIGNMENT_LEFT, -1, 11, VizUtil.C_MUTED)
+	draw_string(ThemeDB.fallback_font, Vector2(_diagram_rect.position.x + 12, _diagram_rect.position.y + 56), "served first", HORIZONTAL_ALIGNMENT_LEFT, -1, 11, Color("#00FF88"))
 
-func _on_tween_done():
-	if step_idx >= steps.size(): return
-	step_idx += 1; progress = 0.0
-	if step_idx >= steps.size(): paused = true; play_btn.text = "? Play"; code_label.text = "Queue demo complete!"; queue_redraw(); return
-	code_label.text = "?  " + steps[step_idx].code; queue_redraw()
-	if not paused: _start_tween()
+func _draw_anim() -> void:
+	var cy: float = _anim_rect.position.y + _anim_rect.size.y * 0.5
+	var cell_w: float = 90.0
+	var cell_h: float = 60.0
+	var gap: float = 6.0
 
-func _do_step():
-	if step_idx >= steps.size(): paused = true; play_btn.text = "? Play"; code_label.text = "Queue demo complete!"; return
-	code_label.text = "?  " + steps[step_idx].code; progress = 1.0; step_idx += 1; queue_redraw()
+	var display: Array = _queue.duplicate() as Array
+	var incoming_val: String = ""
+	var incoming_progress: float = 0.0
+	if _anim_type == "enq" and _anim_progress < 1.0:
+		incoming_val = _anim_val
+		incoming_progress = _anim_progress
 
-func _draw_diag():
-	var f = ThemeDB.fallback_font
-	diag.draw_string(f, Vector2(16, 20), "queue = []", HORIZONTAL_ALIGNMENT_LEFT, -1, 13, VizUtil.C_LABEL)
-	diag.draw_string(f, Vector2(16, 40), "queue.append(val)   # enqueue (back)", HORIZONTAL_ALIGNMENT_LEFT, -1, 13, VizUtil.C_TEXT)
-	diag.draw_string(f, Vector2(16, 60), "val = queue.pop(0)  # dequeue (front)", HORIZONTAL_ALIGNMENT_LEFT, -1, 13, VizUtil.C_SWAP)
-	diag.draw_string(f, Vector2(16, 80), "FIFO: First In, First Out", HORIZONTAL_ALIGNMENT_LEFT, -1, 13, VizUtil.C_VAL)
+	var outgoing_val: String = ""
+	var outgoing_progress: float = 0.0
+	if _anim_type == "deq" and _anim_progress < 1.0:
+		outgoing_val = _dequeue_val
+		outgoing_progress = _anim_progress
 
-func _draw_anim():
-	var f = ThemeDB.fallback_font; var w = anim.size.x; var p = progress
-	if step_idx == 0 and p == 0.0: _draw_queue([]); return
-	var idx = min(step_idx, steps.size() - 1); var s = steps[idx]
-	var q = []
-	for j in range(1, idx + 1):
-		var sj = steps[j]
-		if sj.action == "enq": q.append(sj.val)
-		elif sj.action == "deq": q.pop_front()
-	_draw_queue(q)
-	if s.action == "enq":
-		anim.draw_string(f, Vector2(20, 20), "enqueue(" + str(s.val) + ") ? rear", HORIZONTAL_ALIGNMENT_LEFT, -1, 14, VizUtil.C_VAL)
-	elif s.action == "deq":
-		anim.draw_string(f, Vector2(20, 20), "dequeue() ? " + str(s.val) + " from front", HORIZONTAL_ALIGNMENT_LEFT, -1, 14, VizUtil.C_SWAP)
+	var n: int = display.size() + (1 if incoming_val != "" else 0)
+	if n == 0 and outgoing_val == "":
+		draw_string(ThemeDB.fallback_font, Vector2(_anim_rect.position.x + _anim_rect.size.x * 0.5 - 60, cy + 6), "(empty queue)", HORIZONTAL_ALIGNMENT_LEFT, -1, 14, VizUtil.C_MUTED)
 
-func _draw_queue(q):
-	var f = ThemeDB.fallback_font; var w = anim.size.x; var h = 400.0
-	var bw = 80.0; var bh = 50.0; var gap = 6.0
-	var total = max(q.size(), 1) * (bw + gap) - gap
-	var sx = (w - total) * 0.5; var y = h * 0.5 - bh * 0.5
-	if q.size() == 0:
-		anim.draw_rect(Rect2(sx, y, bw, bh), Color(VizUtil.C_MUTED, 0.15))
-		anim.draw_rect(Rect2(sx, y, bw, bh), VizUtil.C_MUTED, false, 1.5)
-		anim.draw_string(f, Vector2(sx + 8, y + bh * 0.5 + 6), "empty", HORIZONTAL_ALIGNMENT_LEFT, -1, 14, VizUtil.C_MUTED)
-		return
-	for i in range(q.size()):
-		var x = sx + i * (bw + gap); var col = VizUtil.C_LABEL
-		if i == 0: col = VizUtil.lerp_color(VizUtil.C_LABEL, VizUtil.C_SWAP, progress)
-		if i == q.size() - 1: col = VizUtil.lerp_color(col, VizUtil.C_VAL, progress)
-		anim.draw_rect(Rect2(x, y, bw, bh), Color(col, 0.2))
-		anim.draw_rect(Rect2(x, y, bw, bh), col, false, 2.0)
-		anim.draw_string(f, Vector2(x + bw * 0.5 - 12, y + bh * 0.5 + 6), str(q[i]), HORIZONTAL_ALIGNMENT_LEFT, -1, 14, VizUtil.C_TEXT)
-	if q.size() > 0:
-		VizUtil.draw_arrow(anim, Vector2(sx - 10, y + bh + 24), Vector2(sx - 20, y + bh + 24), VizUtil.C_SWAP)
-		anim.draw_string(f, Vector2(sx - 22, y + bh + 36), "FRONT", HORIZONTAL_ALIGNMENT_LEFT, -1, 10, VizUtil.C_SWAP)
-		var lx = sx + (q.size() - 1) * (bw + gap) + bw
-		VizUtil.draw_arrow(anim, Vector2(lx + 10, y + bh + 24), Vector2(lx + 20, y + bh + 24), VizUtil.C_VAL)
-		anim.draw_string(f, Vector2(lx + 14, y + bh + 36), "REAR", HORIZONTAL_ALIGNMENT_LEFT, -1, 10, VizUtil.C_VAL)
+	var total_w: float = max(0.0, n * (cell_w + gap) - gap)
+	var start_x: float = _anim_rect.position.x + (_anim_rect.size.x - total_w) * 0.5
+	draw_string(ThemeDB.fallback_font, Vector2(start_x - 70, cy - 8), "<- FRONT", HORIZONTAL_ALIGNMENT_LEFT, -1, 12, Color("#FF3366"))
+	draw_string(ThemeDB.fallback_font, Vector2(start_x + total_w - 6, cy - 8), "BACK ->", HORIZONTAL_ALIGNMENT_LEFT, -1, 12, Color("#00FF88"))
 
-func _notification(what):
-	if what == NOTIFICATION_RESIZED:
-		if diag: diag.queue_redraw()
-		if anim: anim.queue_redraw()
+	for i in n:
+		var is_front: bool = i == 0
+		var r := Rect2(start_x + i * (cell_w + gap), cy - cell_h * 0.5, cell_w, cell_h)
+		var val: String
+		var alpha: float = 1.0
+		var offset_x: float = 0.0
+		if incoming_val != "" and i == n - 1:
+			val = incoming_val
+			offset_x = cell_w * (1.0 - incoming_progress) * 1.3
+			alpha = incoming_progress
+		else:
+			val = display[i]
+		var bg_col: Color = Color("#0D4A6A") if not is_front else Color("#00D4FF")
+		var brd_col: Color = Color("#FF3366") if is_front else Color("#2A6A8A")
+		var val_col: Color = VizUtil.C_BG if is_front else VizUtil.C_TEXT
+		bg_col.a = clamp(alpha, 0.0, 1.0)
+		brd_col.a = clamp(alpha, 0.0, 1.0)
+		val_col.a = clamp(alpha, 0.0, 1.0)
+		draw_rect(r, bg_col, true)
+		draw_rect(r, brd_col, false, 2)
+		draw_string(ThemeDB.fallback_font, Vector2(r.position.x + offset_x + 8, r.position.y + 38), val, HORIZONTAL_ALIGNMENT_LEFT, -1, 16, val_col)
+
+	if outgoing_val != "":
+		var o_r := Rect2(start_x - cell_w * (1.0 - outgoing_progress) - cell_w, cy - cell_h * 0.5, cell_w, cell_h)
+		var o_alpha: float = 1.0 - outgoing_progress
+		var o_bg: Color = Color("#FF3366")
+		var o_col: Color = VizUtil.C_BG
+		o_bg.a = o_alpha
+		o_col.a = o_alpha
+		draw_rect(o_r, o_bg, true)
+		draw_string(ThemeDB.fallback_font, Vector2(o_r.position.x + 8, o_r.position.y + 38), outgoing_val, HORIZONTAL_ALIGNMENT_LEFT, -1, 16, o_col)

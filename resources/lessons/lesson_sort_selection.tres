@@ -1,7 +1,7 @@
 [gd_resource type="Resource" script_class="LessonData" format=3 uid="uid://b7mfo8srbw8gg"]
 
 [ext_resource type="Script" uid="uid://ciet8k3fqk8tr" path="res://scripts/data/LessonData.gd" id="1_wqrxq"]
-[ext_resource type="PackedScene" uid="uid://br2hviuvfjjba" path="res://scenes/academy/visualizations/VizSelectionSort.tscn" id="2_wjjx8"]
+[ext_resource type="PackedScene" path="res://scenes/academy/visualizations/VizSelectionSort.tscn" id="2_wjjx8"]
 
 [resource]
 script = ExtResource("1_wqrxq")
@@ -94,3 +94,4 @@ practice_question = "How many swaps does Selection Sort make for an array of 5 e
 practice_options = Array[String](["Up to 10 swaps", "Exactly 5 swaps", "At most 4 swaps", "Depends on the data"])
 practice_correct_index = 2
 practice_explanation = "Selection Sort makes at most n-1 swaps for n elements. For 5 elements that's 4 swaps — one per pass. This is less than Bubble Sort which can swap many times per pass."
+

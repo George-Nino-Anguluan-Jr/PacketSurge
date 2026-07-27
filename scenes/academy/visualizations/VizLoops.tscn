@@ -1,12 +1,13 @@
-[gd_scene format=3 uid="uid://cmwyi2allr4y0"]
+﻿[gd_scene load_steps=2 format=3 uid="uid://b2vizloops01"]
 
-[ext_resource type="Script" uid="uid://cdunnk5bin6n8" path="res://scenes/academy/visualizations/VizLoops.gd" id="1_qc072"]
+[ext_resource type="Script" path="res://scenes/academy/visualizations/VizLoops.gd" id="1_loops"]
 
-[node name="DrawSurface" type="Control" unique_id=1365553616]
+[node name="VizLoops" type="Control"]
 layout_mode = 3
 anchors_preset = 15
 anchor_right = 1.0
 anchor_bottom = 1.0
 grow_horizontal = 2
 grow_vertical = 2
-script = ExtResource("1_qc072")
+custom_minimum_size = Vector2(400, 500)
+script = ExtResource("1_loops")

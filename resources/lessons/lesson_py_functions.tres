@@ -1,7 +1,7 @@
 [gd_resource type="Resource" script_class="LessonData" format=3 uid="uid://cqsek7qtlpavv"]
 
 [ext_resource type="Script" uid="uid://ciet8k3fqk8tr" path="res://scripts/data/LessonData.gd" id="1_51rxj"]
-[ext_resource type="PackedScene" uid="uid://dtk8twss45m7q" path="res://scenes/academy/visualizations/VizFunctions.tscn" id="2_384g4"]
+[ext_resource type="PackedScene" path="res://scenes/academy/visualizations/VizFunctions.tscn" id="2_384g4"]
 
 [resource]
 script = ExtResource("1_51rxj")
@@ -82,3 +82,4 @@ practice_question = "What is the output of this code?    def square(x):    retur
 practice_options = Array[String](["10", "25", "5", "square(5)"])
 practice_correct_index = 1
 practice_explanation = "The function square(x) returns x * x. When called with square(5), it computes 5 * 5 = 25."
+

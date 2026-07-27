@@ -94,7 +94,7 @@ static func draw_arrow(canvas: Control, from: Vector2, to: Vector2, color: Color
 
 static func draw_pointer(canvas: Control, tip: Vector2, label: String, color: Color, font: Font):
 	draw_arrow(canvas, tip + Vector2(0, 28), tip, color, 6)
-	canvas.draw_string(font, Vector2(tip.x - 16, tip.y + 44), label, HORIZONTAL_ALIGNMENT_LEFT, -1, 11, color)
+	canvas.draw_string(font, Vector2(tip.x - 16, tip.y - 6), label, HORIZONTAL_ALIGNMENT_LEFT, -1, 11, color)
 
 static func draw_labeled_box(canvas: Control, r: Rect2, label: String, val: String, border: Color, font: Font):
 	canvas.draw_rect(r, Color(border, 0.1))

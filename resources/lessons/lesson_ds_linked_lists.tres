@@ -1,7 +1,7 @@
 [gd_resource type="Resource" script_class="LessonData" format=3 uid="uid://dkofpb08ix8c8"]
 
 [ext_resource type="Script" uid="uid://ciet8k3fqk8tr" path="res://scripts/data/LessonData.gd" id="1_5ypmi"]
-[ext_resource type="PackedScene" uid="uid://b4jun8j02220n" path="res://scenes/academy/visualizations/VizLinkedLists.tscn" id="2_1p6j0"]
+[ext_resource type="PackedScene" path="res://scenes/academy/visualizations/VizLinkedLists.tscn" id="2_1p6j0"]
 
 [resource]
 script = ExtResource("1_5ypmi")
@@ -88,3 +88,4 @@ practice_question = "How do you access a specific item in a singly linked list?"
 practice_options = Array[String](["Directly by index, like an array", "You must follow the chain from the head", "You use a hash function", "Items are accessed randomly"])
 practice_correct_index = 1
 practice_explanation = "Linked lists don't have indexes like arrays. To find an item, you must start at the head node and follow the next pointers until you find the value you're looking for. This takes O(n) time."
+

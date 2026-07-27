@@ -1,95 +1,80 @@
-extends Control
+extends "res://scripts/academy/VizBase.gd"
 
-var diag: Control; var anim: Control; var code_label: Label
-var play_btn: Button; var step_btn: Button; var reset_btn: Button
-var paused := false; var step_idx := 0; var progress := 0.0; var tween: Tween
+var _value: int = 0
+var _active_branch: int = -1
 
-var steps = [
-	{"code": "x = 10", "x": 10, "phase": 0},
-	{"code": "if x > 5: ? True (10>5)", "x": 10, "phase": 1},
-	{"code": "print('Big!') ? 'Big!'", "x": 10, "phase": 2},
-	{"code": "(Try x=3: x<5 ? False ? else)", "x": 3, "phase": 3},
-	{"code": "print('Small!')", "x": 3, "phase": 4},
-]
+func get_steps() -> Array:
+	return [
+		{ "code": "temp = 30" },
+		{ "code": "if temp > 35: ..." },
+		{ "code": "elif temp > 25: print(\"Warm\")" },
+		{ "code": "temp = 40 â€” Very hot!" },
+		{ "code": "temp = 10 â€” Cold" },
+	]
 
-func _set_progress(v): progress = v; queue_redraw()
+func get_concept_title() -> String:
+	return "Concept: Conditions run different code based on True/False"
 
-func _ready():
-	var ui = VizUtil.standard_ui(self, " If/Else — Conditional Logic", 100, 400)
-	diag = ui.diagram; anim = ui.anim; code_label = ui.code; var ctrl = ui.controls
-	diag.draw.connect(_draw_diag); anim.draw.connect(_draw_anim)
-	play_btn = VizUtil.make_btn("? Play", VizUtil.C_LABEL); step_btn = VizUtil.make_btn("? Step", VizUtil.C_LABEL)
-	reset_btn = VizUtil.make_btn("? Reset", Color("#FF3366"))
-	ctrl.add_child(play_btn); ctrl.add_child(step_btn); ctrl.add_child(reset_btn)
-	play_btn.pressed.connect(_on_play); step_btn.pressed.connect(_on_step); reset_btn.pressed.connect(_on_reset)
+func get_anim_title() -> String:
+	return "Animation: Test different temperatures"
 
-func _on_play():
-	if step_idx >= steps.size(): _on_reset(); return
-	paused = not paused; play_btn.text = "? Pause" if not paused else "? Play"
-	if not paused: _start_tween()
+func _set_step(idx: int) -> void:
+	current_step = idx
+	match idx:
+		0: _value = 30; _active_branch = -1
+		1: _value = 30; _active_branch = 0
+		2: _value = 30; _active_branch = 1
+		3: _value = 40; _active_branch = 0
+		4: _value = 10; _active_branch = 3
+	_anim_progress = 0.0
+	_animating = true
+	queue_redraw()
 
-func _on_step():
-	paused = true; play_btn.text = "? Play"
-	if tween and tween.is_running(): tween.kill(); _do_step()
+func _draw_diagram() -> void:
+	var cx: float = _diagram_rect.position.x + _diagram_rect.size.x * 0.2
+	var cy: float = _diagram_rect.position.y + _diagram_rect.size.y * 0.5
+	draw_string(ThemeDB.fallback_font, Vector2(cx - 30, cy + 5), "if/elif/else", HORIZONTAL_ALIGNMENT_LEFT, -1, 14, Color("#FFB800"))
+	draw_line(Vector2(cx + 50, cy), Vector2(_diagram_rect.position.x + _diagram_rect.size.x * 0.95, cy), VizUtil.C_HIGHLIGHT, 1.5)
+	draw_line(Vector2(_diagram_rect.position.x + _diagram_rect.size.x * 0.6, cy), Vector2(_diagram_rect.position.x + _diagram_rect.size.x * 0.6, _diagram_rect.position.y + _diagram_rect.size.y * 0.2), VizUtil.C_HIGHLIGHT, 1.5)
+	draw_line(Vector2(_diagram_rect.position.x + _diagram_rect.size.x * 0.6, cy), Vector2(_diagram_rect.position.x + _diagram_rect.size.x * 0.6, _diagram_rect.position.y + _diagram_rect.size.y * 0.8), VizUtil.C_HIGHLIGHT, 1.5)
+	draw_string(ThemeDB.fallback_font, Vector2(_diagram_rect.position.x + _diagram_rect.size.x * 0.62, _diagram_rect.position.y + _diagram_rect.size.y * 0.18), "True", HORIZONTAL_ALIGNMENT_LEFT, -1, 11, Color("#00FF88"))
+	draw_string(ThemeDB.fallback_font, Vector2(_diagram_rect.position.x + _diagram_rect.size.x * 0.62, _diagram_rect.position.y + _diagram_rect.size.y * 0.82), "False", HORIZONTAL_ALIGNMENT_LEFT, -1, 11, Color("#FF3366"))
 
-func _on_reset():
-	paused = true; play_btn.text = "? Play"
-	if tween and tween.is_running(): tween.kill()
-	step_idx = 0; progress = 0.0; code_label.text = "Press ? Play or ? Step to begin"; queue_redraw()
+func _draw_anim() -> void:
+	var cx: float = _anim_rect.position.x + _anim_rect.size.x * 0.18
+	var cy: float = _anim_rect.position.y + _anim_rect.size.y * 0.4
+	var dr := Rect2(cx - 60, cy - 40, 120, 80)
+	draw_rect(dr, VizUtil.C_PANEL, true)
+	draw_rect(dr, VizUtil.C_HIGHLIGHT, false, 2)
+	draw_string(ThemeDB.fallback_font, Vector2(dr.position.x + 14, dr.position.y + 26), "temp =", HORIZONTAL_ALIGNMENT_LEFT, -1, 13, VizUtil.C_MUTED)
+	draw_string(ThemeDB.fallback_font, Vector2(dr.position.x + 60, dr.position.y + 50), str(_value), HORIZONTAL_ALIGNMENT_LEFT, -1, 22, Color("#00FF88"))
 
-func _start_tween():
-	if paused or step_idx >= steps.size(): return
-	if tween and tween.is_running(): tween.kill()
-	tween = create_tween(); tween.tween_method(_set_progress, 0.0, 1.0, 0.6).set_ease(Tween.EASE_IN_OUT)
-	tween.finished.connect(_on_tween_done, CONNECT_ONE_SHOT)
+	var bx: float = _anim_rect.position.x + _anim_rect.size.x * 0.45
+	var by: float = _anim_rect.position.y + _anim_rect.size.y * 0.08
+	var bw: float = _anim_rect.size.x * 0.5
+	var bh: float = 60.0
+	var labels := ["temp > 35:  Very hot!", "temp > 25:  Warm", "temp > 15:  Cool", "else:        Cold"]
+	var match_idx: int = -1
+	if _value > 35: match_idx = 0
+	elif _value > 25: match_idx = 1
+	elif _value > 15: match_idx = 2
+	else: match_idx = 3
 
-func _on_tween_done():
-	if step_idx >= steps.size(): return
-	step_idx += 1; progress = 0.0
-	if step_idx >= steps.size(): paused = true; play_btn.text = "? Play"; code_label.text = "If/else demo complete!"; queue_redraw(); return
-	code_label.text = "?  " + steps[step_idx].code; queue_redraw()
-	if not paused: _start_tween()
-
-func _do_step():
-	if step_idx >= steps.size(): paused = true; play_btn.text = "? Play"; code_label.text = "If/else demo complete!"; return
-	code_label.text = "?  " + steps[step_idx].code; progress = 1.0; step_idx += 1; queue_redraw()
-
-func _draw_diag():
-	var f = ThemeDB.fallback_font
-	diag.draw_string(f, Vector2(16, 20), "x = 10", HORIZONTAL_ALIGNMENT_LEFT, -1, 13, VizUtil.C_LABEL)
-	diag.draw_string(f, Vector2(16, 40), "if x > 5:", HORIZONTAL_ALIGNMENT_LEFT, -1, 13, VizUtil.C_TEXT)
-	diag.draw_string(f, Vector2(16, 60), "    print('Big!')  # True branch", HORIZONTAL_ALIGNMENT_LEFT, -1, 13, VizUtil.C_SWAP)
-	diag.draw_string(f, Vector2(16, 80), "else:", HORIZONTAL_ALIGNMENT_LEFT, -1, 13, VizUtil.C_TEXT)
-	diag.draw_string(f, Vector2(16, 98), "    print('Small!')  # False branch", HORIZONTAL_ALIGNMENT_LEFT, -1, 11, VizUtil.C_MUTED)
-
-func _draw_anim():
-	var f = ThemeDB.fallback_font; var w = anim.size.x; var h = 400.0; var p = progress
-	if step_idx == 0 and p == 0.0: _draw_condition(10, 0); return
-	var idx = min(step_idx, steps.size() - 1); var s = steps[idx]
-	_draw_condition(s.x, s.phase)
-
-func _draw_condition(x_val, phase):
-	var f = ThemeDB.fallback_font; var w = anim.size.x; var h = 400.0
-	var cx = w * 0.5; var cy = h * 0.5 - 20; var r = 40.0
-	var ph_colors = [VizUtil.C_LABEL, VizUtil.C_HIGHLIGHT, VizUtil.C_VAL, VizUtil.C_SWAP, VizUtil.C_VAL]
-	var ph_labels = ["x = " + str(x_val), "x > 5? " + str(x_val > 5).to_upper(), "Big!", "x > 5? false", "Small!"]
-	var col = ph_colors[phase]
-	var dia = [Vector2(cx, cy - r), Vector2(cx + r * 1.5, cy), Vector2(cx, cy + r), Vector2(cx - r * 1.5, cy)]
-	anim.draw_colored_polygon(PackedVector2Array(dia), Color(col, 0.1))
-	for i in range(4):
-		anim.draw_line(dia[i], dia[(i + 1) % 4], col, 2.0)
-	anim.draw_string(f, Vector2(cx - 6, cy + 5), "?", HORIZONTAL_ALIGNMENT_LEFT, -1, 16, col)
-	anim.draw_string(f, Vector2(cx - 50, cy + r + 20), ph_labels[phase], HORIZONTAL_ALIGNMENT_LEFT, -1, 14, col)
-	if phase == 1 or phase == 3:
-		var arrow_col = VizUtil.C_VAL if phase == 1 else VizUtil.C_MUTED
-		if x_val > 5:
-			VizUtil.draw_arrow(anim, Vector2(cx, cy + r), Vector2(cx, cy + r + 60), arrow_col)
-			anim.draw_string(f, Vector2(cx + 8, cy + r + 24), "True", HORIZONTAL_ALIGNMENT_LEFT, -1, 12, arrow_col)
-		else:
-			VizUtil.draw_arrow(anim, Vector2(cx, cy - r), Vector2(cx, cy - r - 60), arrow_col)
-			anim.draw_string(f, Vector2(cx + 8, cy - r - 38), "False", HORIZONTAL_ALIGNMENT_LEFT, -1, 12, arrow_col)
-
-func _notification(what):
-	if what == NOTIFICATION_RESIZED:
-		if diag: diag.queue_redraw()
-		if anim: anim.queue_redraw()
+	for i in 4:
+		var r := Rect2(bx, by + i * (bh + 8), bw, bh)
+		var is_match := i == match_idx and _active_branch >= 0
+		var bg := Color("#0D2040") if is_match else VizUtil.C_PANEL
+		var border := Color("#00FF88") if is_match else Color("#2A4A6A")
+		draw_rect(r, bg, true)
+		draw_rect(r, border, false, 2)
+		draw_line(Vector2(cx + 60, cy), Vector2(r.position.x, r.position.y + r.size.y * 0.5), Color("#2A4A6A"), 1.5)
+		var alpha: float = 1.0
+		if is_match and _animating:
+			alpha = _anim_progress
+		var lbl_col: Color = Color("#00FF88") if is_match else VizUtil.C_TEXT
+		lbl_col.a = alpha
+		draw_string(ThemeDB.fallback_font, Vector2(r.position.x + 12, r.position.y + 28), labels[i], HORIZONTAL_ALIGNMENT_LEFT, -1, 14, lbl_col)
+		if is_match:
+			var taken_col: Color = Color("#00FF88")
+			taken_col.a = alpha
+			draw_string(ThemeDB.fallback_font, Vector2(r.position.x + 12, r.position.y + 50), "v  taken", HORIZONTAL_ALIGNMENT_LEFT, -1, 12, taken_col)

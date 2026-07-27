@@ -1,7 +1,7 @@
 [gd_resource type="Resource" script_class="LessonData" format=3 uid="uid://bap55j6kls830"]
 
 [ext_resource type="Script" uid="uid://ciet8k3fqk8tr" path="res://scripts/data/LessonData.gd" id="1_ri56b"]
-[ext_resource type="PackedScene" uid="uid://bq4p8v1k2nas" path="res://scenes/academy/visualizations/VizMergeSort.tscn" id="2_mr84h"]
+[ext_resource type="PackedScene" path="res://scenes/academy/visualizations/VizMergeSort.tscn" id="2_mr84h"]
 
 [resource]
 script = ExtResource("1_ri56b")
@@ -80,3 +80,4 @@ practice_question = "What is the worst-case time complexity of Merge Sort?"
 practice_options = Array[String](["O(n²)", "O(n)", "O(n log n)", "O(log n)"])
 practice_correct_index = 2
 practice_explanation = "Merge Sort always runs in O(n log n) regardless of input. It always divides the array in half (log n levels) and does O(n) merge work per level — unlike Quick Sort which can degrade to O(n²)."
+

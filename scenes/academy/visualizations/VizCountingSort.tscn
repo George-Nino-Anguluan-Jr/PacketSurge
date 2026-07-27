@@ -1,13 +1,13 @@
-[gd_scene format=3 uid="uid://dxaf2h6n4t1r"]
+﻿[gd_scene load_steps=2 format=3 uid="uid://b2vizcountingsort01"]
 
-[ext_resource type="Script" uid="uid://cw5s1d9k7n4t" path="res://scenes/academy/visualizations/VizCountingSort.gd" id="1_dgfh8"]
+[ext_resource type="Script" path="res://scenes/academy/visualizations/VizCountingSort.gd" id="1_countingsort"]
 
-[node name="DrawSurface" type="Control" unique_id=1365553616]
+[node name="VizCountingSort" type="Control"]
 layout_mode = 3
 anchors_preset = 15
 anchor_right = 1.0
 anchor_bottom = 1.0
 grow_horizontal = 2
 grow_vertical = 2
-script = ExtResource("1_dgfh8")
-
+custom_minimum_size = Vector2(400, 500)
+script = ExtResource("1_countingsort")
