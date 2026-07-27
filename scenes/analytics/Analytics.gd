@@ -334,11 +334,20 @@ func _make_time_chart() -> Control:
 
 				# Time label
 				var mins = int(time / 60)
+				var secs = int(time) % 60
 				if mins > 0:
 					chart.draw_string(
 						ThemeDB.fallback_font,
 						Vector2(x + 2, size.y - 22 - bar_h),
-						str(mins) + "m",
+						str(mins) + "m " + str(secs) + "s",
+						HORIZONTAL_ALIGNMENT_LEFT, -1, 9,
+						Color("#9B59B6")
+					)
+				else:
+					chart.draw_string(
+						ThemeDB.fallback_font,
+						Vector2(x + 2, size.y - 22 - bar_h),
+						str(secs) + "s",
 						HORIZONTAL_ALIGNMENT_LEFT, -1, 9,
 						Color("#9B59B6")
 					)
@@ -712,13 +721,15 @@ func _make_section_title(text: String) -> Label:
 
 func _format_time(seconds: float) -> String:
 	if seconds <= 0:
-		return "0m"
-	var mins = int(seconds / 60)
-	var hrs  = int(mins / 60)
-	mins     = mins % 60
+		return "0s"
+	var hrs  = int(seconds / 3600)
+	var mins = int(seconds / 60) % 60
+	var secs = int(seconds) % 60
 	if hrs > 0:
 		return str(hrs) + "h " + str(mins) + "m"
-	return str(mins) + "m"
+	if mins > 0:
+		return str(mins) + "m " + str(secs) + "s"
+	return str(secs) + "s"
 
 # ─── STYLES ────────────────────────────────────────────
 func _apply_styles() -> void:
