@@ -170,9 +170,9 @@ theme_override_constants/separation = 8
 layout_mode = 2
 size_flags_vertical = 3
 theme_override_constants/margin_left = 16
-theme_override_constants/margin_top = 16
-theme_override_constants/margin_right = 16
-theme_override_constants/margin_bottom = 16
+theme_override_constants/margin_top = 8
+theme_override_constants/margin_right = 0
+theme_override_constants/margin_bottom = 8
 
 [node name="ScrollArea" type="ScrollContainer" parent="ContentArea/LessonArea/LessonContainer/StepContainer" unique_id=1066488883]
 layout_mode = 2

@@ -641,11 +641,11 @@ const ENEMY_DEFINITIONS = {
 }
 
 const LESSON_NAMES = {
-	"py_variables":   "Python Variables",
-	"py_lists":       "Python Lists",
-	"py_loops":       "Python Loops",
-	"py_conditions":  "Python Conditions",
-	"py_functions":   "Python Functions",
+	"py_variables":   "Variables",
+	"py_lists":       "Lists",
+	"py_loops":       "Loops",
+	"py_conditions":  "Conditions",
+	"py_functions":   "Functions",
 	"ds_arrays":      "Arrays",
 	"ds_stacks":      "Stacks",
 	"ds_queues":      "Queues",
