@@ -56,6 +56,7 @@ var campaign_progress: Dictionary  = {
 	"waves_completed":     0,
 	"level_stars":        {},  # level_number → int (0-3)
 }
+var campaign_time: Dictionary      = {}  # level_number (str) → seconds (float)
 
 # ─── STARTUP ───────────────────────────────────────────
 func _ready() -> void:
@@ -217,6 +218,13 @@ func add_time_spent(topic_id: String, seconds: float) -> void:
 	time_spent[topic_id] += seconds
 	save_progress()
 
+func add_campaign_time(level_number: int, seconds: float) -> void:
+	var key = str(level_number)
+	if not campaign_time.has(key):
+		campaign_time[key] = 0.0
+	campaign_time[key] += seconds
+	save_progress()
+
 # ─── UNLOCK HELPERS ────────────────────────────────────
 func unlock_campaign_level(level_number: int) -> void:
 	var current_max = campaign_progress.get("max_level_unlocked", 0)
@@ -261,6 +269,7 @@ func save_progress() -> void:
 	var data = {
 		"topic_states":      topic_states,
 		"time_spent":        time_spent,
+		"campaign_time":     campaign_time,
 		"unlocked_towers":   unlocked_towers,
 		"new_unlocked_towers": new_unlocked_towers,
 		"campaign_progress": campaign_progress,
@@ -316,6 +325,7 @@ func load_progress() -> void:
 
 	topic_states    = parsed.get("topic_states",    {})
 	time_spent      = parsed.get("time_spent",      {})
+	campaign_time   = parsed.get("campaign_time",   {})
 
 	var loaded_towers = parsed.get("unlocked_towers", [])
 	unlocked_towers   = []
@@ -333,6 +343,7 @@ func load_progress() -> void:
 func reset_all_progress() -> void:
 	topic_states        = {}
 	time_spent          = {}
+	campaign_time       = {}
 	unlocked_towers     = []
 	new_unlocked_towers = []
 	campaign_progress   = {

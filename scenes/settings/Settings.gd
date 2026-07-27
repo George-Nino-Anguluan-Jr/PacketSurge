@@ -7,7 +7,6 @@ extends Control
 @onready var general_content: VBoxContainer = $ContentArea/GeneralPanel/GeneralContent
 
 # ─── STATE ─────────────────────────────────────────────
-var shake_enabled: bool = true
 var _last_device: String = ""
 
 # ─── READY ─────────────────────────────────────────────
@@ -54,17 +53,6 @@ func _build_general() -> void:
 	)
 
 	general_content.add_child(_make_divider())
-	general_content.add_child(_make_section_label("GAMEPLAY"))
-	general_content.add_child(
-		_make_toggle_row(
-			"Screen Shake",
-			"Shake screen when base takes damage",
-			shake_enabled,
-			_on_shake_toggled
-		)
-	)
-
-	general_content.add_child(_make_divider())
 	general_content.add_child(_make_section_label("ABOUT"))
 	general_content.add_child(_make_info_row("Version",   "v0.1.0"))
 	general_content.add_child(_make_info_row("Engine",    "Godot 4"))
@@ -77,12 +65,6 @@ func _on_effects_volume_changed(val: float) -> void:
 
 func _on_music_volume_changed(val: float) -> void:
 	SoundManager.set_music_volume(val)
-
-func _on_shake_toggled(val: bool) -> void:
-	shake_enabled = val
-	SignalBus.hud_message_requested.emit(
-		"Screen Shake " + ("ON" if val else "OFF"), 2.0
-	)
 
 # ─── TOGGLE ROW ────────────────────────────────────────
 func _make_toggle_row(

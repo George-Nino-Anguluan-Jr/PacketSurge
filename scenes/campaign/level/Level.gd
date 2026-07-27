@@ -989,6 +989,7 @@ func _on_all_waves_completed() -> void:
 	var topic_id = ProgressManager.get_topic_for_level(level_number)
 	ProgressManager.set_level_stars(level_number, stars)
 	ProgressManager.on_level_completed(level_number)
+	ProgressManager.add_campaign_time(level_number, elapsed)
 	SupabaseManager.submit_campaign_score(level_number, elapsed, score)
 	AdaptiveAI.record_level_performance(topic_id, grade, score, elapsed)
 	_show_result_panel(true)
