@@ -1,13 +1,13 @@
-[gd_scene format=3 uid="uid://bq4p8v1k2nas"]
+﻿[gd_scene load_steps=2 format=3 uid="uid://b2vizmergesort01"]
 
-[ext_resource type="Script" uid="uid://cv8r3l6m4q2s" path="res://scenes/academy/visualizations/VizMergeSort.gd" id="1_dgfh8"]
+[ext_resource type="Script" path="res://scenes/academy/visualizations/VizMergeSort.gd" id="1_mergesort"]
 
-[node name="DrawSurface" type="Control" unique_id=1365553616]
+[node name="VizMergeSort" type="Control"]
 layout_mode = 3
 anchors_preset = 15
 anchor_right = 1.0
 anchor_bottom = 1.0
 grow_horizontal = 2
 grow_vertical = 2
-script = ExtResource("1_dgfh8")
-
+custom_minimum_size = Vector2(400, 500)
+script = ExtResource("1_mergesort")

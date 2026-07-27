@@ -1,7 +1,7 @@
 [gd_resource type="Resource" script_class="LessonData" format=3 uid="uid://n6gd71iio3v1"]
 
 [ext_resource type="Script" uid="uid://b3jcovwhgerid" path="res://scripts/data/LessonData.gd" id="1_38uo3"]
-[ext_resource type="PackedScene" uid="uid://bfmvnhmt8alcr" path="res://scenes/academy/visualizations/VizVariables.tscn" id="2_3o5rh"]
+[ext_resource type="PackedScene" path="res://scenes/academy/visualizations/VizVariables.tscn" id="2_3o5rh"]
 
 [resource]
 script = ExtResource("1_38uo3")
@@ -78,3 +78,4 @@ practice_options = Array[String](["Show the number 5", "Show the letter x", "Cau
 practice_correct_index = 0
 practice_explanation = "The variable x stores the value 5. When you write print(x), Python looks up the value stored in x and prints 5. It does NOT print the letter 'x'."
 metadata/_custom_type_script = "uid://b3jcovwhgerid"
+

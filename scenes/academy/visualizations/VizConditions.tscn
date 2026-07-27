@@ -1,12 +1,13 @@
-[gd_scene format=3 uid="uid://lla8kmg1ee38"]
+﻿[gd_scene load_steps=2 format=3 uid="uid://b2vizconditions01"]
 
-[ext_resource type="Script" uid="uid://c2gs50i0babuc" path="res://scenes/academy/visualizations/VizConditions.gd" id="1_3tsrx"]
+[ext_resource type="Script" path="res://scenes/academy/visualizations/VizConditions.gd" id="1_conditions"]
 
-[node name="DrawSurface" type="Control" unique_id=1365553616]
+[node name="VizConditions" type="Control"]
 layout_mode = 3
 anchors_preset = 15
 anchor_right = 1.0
 anchor_bottom = 1.0
 grow_horizontal = 2
 grow_vertical = 2
-script = ExtResource("1_3tsrx")
+custom_minimum_size = Vector2(400, 500)
+script = ExtResource("1_conditions")

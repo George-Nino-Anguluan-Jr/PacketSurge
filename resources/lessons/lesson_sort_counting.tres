@@ -1,7 +1,7 @@
 [gd_resource type="Resource" script_class="LessonData" format=3 uid="uid://c83nfhavopace"]
 
 [ext_resource type="Script" uid="uid://ciet8k3fqk8tr" path="res://scripts/data/LessonData.gd" id="1_0x24s"]
-[ext_resource type="PackedScene" uid="uid://dxaf2h6n4t1r" path="res://scenes/academy/visualizations/VizCountingSort.tscn" id="2_ct84h"]
+[ext_resource type="PackedScene" path="res://scenes/academy/visualizations/VizCountingSort.tscn" id="2_ct84h"]
 
 [resource]
 script = ExtResource("1_0x24s")
@@ -81,3 +81,4 @@ practice_question = "What does the 'k' in O(n + k) represent?"
 practice_options = Array[String](["The number of elements", "The range of possible values", "The number of passes", "The size of the count array"])
 practice_correct_index = 1
 practice_explanation = "In O(n + k), n is the number of elements and k is the range of possible values (max - min + 1). Counting Sort is fast when k is small — it becomes slow if the range is huge (like 0 to 1 million)."
+

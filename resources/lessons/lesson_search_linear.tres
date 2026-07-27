@@ -1,7 +1,7 @@
 [gd_resource type="Resource" script_class="LessonData" format=3 uid="uid://bs1g4gull5nu0"]
 
 [ext_resource type="Script" uid="uid://ciet8k3fqk8tr" path="res://scripts/data/LessonData.gd" id="1_l7yaq"]
-[ext_resource type="PackedScene" uid="uid://bt3r6lam1n4w" path="res://scenes/academy/visualizations/VizLinearSearch.tscn" id="2_ln84h"]
+[ext_resource type="PackedScene" path="res://scenes/academy/visualizations/VizLinearSearch.tscn" id="2_ln84h"]
 
 [resource]
 script = ExtResource("1_l7yaq")
@@ -81,3 +81,4 @@ practice_question = "When is Linear Search the best choice?"
 practice_options = Array[String](["When the array is very large", "When the array is sorted", "When the array is small or unsorted", "When you need O(log n) speed"])
 practice_correct_index = 2
 practice_explanation = "Linear Search is best when the array is small (simplicity wins) or when the data is unsorted (Binary Search won't work). For large sorted arrays, Binary Search is much faster at O(log n)."
+

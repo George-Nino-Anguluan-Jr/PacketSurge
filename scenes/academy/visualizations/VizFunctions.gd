@@ -1,98 +1,79 @@
-extends Control
+extends "res://scripts/academy/VizBase.gd"
 
-var diag: Control; var anim: Control; var code_label: Label
-var play_btn: Button; var step_btn: Button; var reset_btn: Button
-var paused := false; var step_idx := 0; var progress := 0.0; var tween: Tween
+var _input_val: int = 0
+var _output_val: int = 0
+var _show_output: bool = false
 
-var steps = [
-	{"code": "def double(n): return n * 2", "caller": "", "func": "", "ret": "", "phase": 0},
-	{"code": "result = double(5)", "caller": "result =", "func": "n=5", "ret": "", "phase": 1},
-	{"code": "? inside double: n=5 ? 5*2=10", "caller": "double(5)", "func": "n=5", "ret": "", "phase": 2},
-	{"code": "? return 10", "caller": "double(5)", "func": "", "ret": "10", "phase": 3},
-	{"code": "result = 10", "caller": "result=10", "func": "", "ret": "", "phase": 4},
-]
+func get_steps() -> Array:
+	return [
+		{ "code": "def double(n): return n * 2" },
+		{ "code": "print(double(4))" },
+		{ "code": "print(double(10))" },
+		{ "code": "print(double(0))" },
+	]
 
-func _set_progress(v): progress = v; queue_redraw()
+func get_concept_title() -> String:
+	return "Concept: A function takes input, does work, returns output"
 
-func _ready():
-	var ui = VizUtil.standard_ui(self, " Functions — Reusable Code Blocks", 100, 400)
-	diag = ui.diagram; anim = ui.anim; code_label = ui.code; var ctrl = ui.controls
-	diag.draw.connect(_draw_diag); anim.draw.connect(_draw_anim)
-	play_btn = VizUtil.make_btn("? Play", VizUtil.C_LABEL); step_btn = VizUtil.make_btn("? Step", VizUtil.C_LABEL)
-	reset_btn = VizUtil.make_btn("? Reset", Color("#FF3366"))
-	ctrl.add_child(play_btn); ctrl.add_child(step_btn); ctrl.add_child(reset_btn)
-	play_btn.pressed.connect(_on_play); step_btn.pressed.connect(_on_step); reset_btn.pressed.connect(_on_reset)
+func get_anim_title() -> String:
+	return "Animation: Pass different inputs to double()"
 
-func _on_play():
-	if step_idx >= steps.size(): _on_reset(); return
-	paused = not paused; play_btn.text = "? Pause" if not paused else "? Play"
-	if not paused: _start_tween()
+func _set_step(idx: int) -> void:
+	current_step = idx
+	match idx:
+		0: _input_val = 0; _output_val = 0; _show_output = false
+		1: _input_val = 4; _output_val = 8; _show_output = true
+		2: _input_val = 10; _output_val = 20; _show_output = true
+		3: _input_val = 0; _output_val = 0; _show_output = true
+	_anim_progress = 0.0
+	_animating = true
+	queue_redraw()
 
-func _on_step():
-	paused = true; play_btn.text = "? Play"
-	if tween and tween.is_running(): tween.kill(); _do_step()
+func _draw_diagram() -> void:
+	var cy: float = _diagram_rect.position.y + _diagram_rect.size.y * 0.5
+	draw_string(ThemeDB.fallback_font, Vector2(_diagram_rect.position.x + 20, cy + 5), "input ->", HORIZONTAL_ALIGNMENT_LEFT, -1, 13, VizUtil.C_MUTED)
+	var r := Rect2(_diagram_rect.position.x + 120, cy - 25, 180, 50)
+	draw_rect(r, Color("#00D4FF"), true)
+	draw_string(ThemeDB.fallback_font, Vector2(r.position.x + 18, r.position.y + 32), "def double(n):", HORIZONTAL_ALIGNMENT_LEFT, -1, 14, VizUtil.C_BG)
+	draw_string(ThemeDB.fallback_font, Vector2(r.position.x + r.size.x + 14, cy + 5), "-> output", HORIZONTAL_ALIGNMENT_LEFT, -1, 13, VizUtil.C_MUTED)
 
-func _on_reset():
-	paused = true; play_btn.text = "? Play"
-	if tween and tween.is_running(): tween.kill()
-	step_idx = 0; progress = 0.0; code_label.text = "Press ? Play or ? Step to begin"; queue_redraw()
+func _draw_anim() -> void:
+	var in_r := Rect2(_anim_rect.position.x + _anim_rect.size.x * 0.04, _anim_rect.position.y + _anim_rect.size.y * 0.3, 110, 70)
+	draw_rect(in_r, VizUtil.C_PANEL, true)
+	draw_rect(in_r, Color("#FFB800"), false, 2.5)
+	draw_string(ThemeDB.fallback_font, Vector2(in_r.position.x + 10, in_r.position.y + 18), "input", HORIZONTAL_ALIGNMENT_LEFT, -1, 11, VizUtil.C_MUTED)
+	draw_string(ThemeDB.fallback_font, Vector2(in_r.position.x + 10, in_r.position.y + 52), str(_input_val), HORIZONTAL_ALIGNMENT_LEFT, -1, 26, Color("#FFB800"))
 
-func _start_tween():
-	if paused or step_idx >= steps.size(): return
-	if tween and tween.is_running(): tween.kill()
-	tween = create_tween(); tween.tween_method(_set_progress, 0.0, 1.0, 0.7).set_ease(Tween.EASE_IN_OUT)
-	tween.finished.connect(_on_tween_done, CONNECT_ONE_SHOT)
+	var ball_t: float = _anim_progress if _animating else 1.0
+	var a_from := Vector2(in_r.position.x + in_r.size.x, in_r.position.y + in_r.size.y * 0.5)
+	var a_to := Vector2(_anim_rect.position.x + _anim_rect.size.x * 0.4, _anim_rect.position.y + _anim_rect.size.y * 0.5)
+	draw_line(a_from, a_to, VizUtil.C_HIGHLIGHT, 2)
+	if _anim_progress < 0.5 and _show_output:
+		var p = a_from.lerp(a_to, ball_t * 2.0)
+		draw_circle(p, 6, Color("#FFB800"))
+	VizUtil.draw_arrow(self, a_from, a_to, VizUtil.C_HIGHLIGHT, 8)
 
-func _on_tween_done():
-	if step_idx >= steps.size(): return
-	step_idx += 1; progress = 0.0
-	if step_idx >= steps.size(): paused = true; play_btn.text = "? Play"; code_label.text = "Functions demo complete!"; queue_redraw(); return
-	code_label.text = "?  " + steps[step_idx].code; queue_redraw()
-	if not paused: _start_tween()
+	var fn_r := Rect2(_anim_rect.position.x + _anim_rect.size.x * 0.4, _anim_rect.position.y + _anim_rect.size.y * 0.4, _anim_rect.size.x * 0.2, _anim_rect.size.y * 0.2)
+	draw_rect(fn_r, Color("#00D4FF"), true)
+	draw_string(ThemeDB.fallback_font, Vector2(fn_r.position.x + 12, fn_r.position.y + 30), "def", HORIZONTAL_ALIGNMENT_LEFT, -1, 14, VizUtil.C_BG)
+	draw_string(ThemeDB.fallback_font, Vector2(fn_r.position.x + 12, fn_r.position.y + 55), "double(n)", HORIZONTAL_ALIGNMENT_LEFT, -1, 18, VizUtil.C_BG)
+	draw_string(ThemeDB.fallback_font, Vector2(fn_r.position.x + 12, fn_r.position.y + 80), "return n*2", HORIZONTAL_ALIGNMENT_LEFT, -1, 12, VizUtil.C_BG)
 
-func _do_step():
-	if step_idx >= steps.size(): paused = true; play_btn.text = "? Play"; code_label.text = "Functions demo complete!"; return
-	code_label.text = "?  " + steps[step_idx].code; progress = 1.0; step_idx += 1; queue_redraw()
+	var b_from := Vector2(fn_r.position.x + fn_r.size.x, fn_r.position.y + fn_r.size.y * 0.5)
+	var b_to := Vector2(_anim_rect.position.x + _anim_rect.size.x * 0.7, _anim_rect.position.y + _anim_rect.size.y * 0.5)
+	draw_line(b_from, b_to, VizUtil.C_HIGHLIGHT, 2)
+	if _anim_progress >= 0.5 and _show_output:
+		var p2 = b_from.lerp(b_to, (ball_t - 0.5) * 2.0)
+		draw_circle(p2, 6, Color("#00FF88"))
+	VizUtil.draw_arrow(self, b_from, b_to, VizUtil.C_HIGHLIGHT, 8)
 
-func _draw_diag():
-	var f = ThemeDB.fallback_font
-	diag.draw_string(f, Vector2(16, 20), "def double(n):", HORIZONTAL_ALIGNMENT_LEFT, -1, 13, VizUtil.C_LABEL)
-	diag.draw_string(f, Vector2(16, 40), "    return n * 2", HORIZONTAL_ALIGNMENT_LEFT, -1, 13, VizUtil.C_TEXT)
-	diag.draw_string(f, Vector2(16, 60), "result = double(5)  # = 10", HORIZONTAL_ALIGNMENT_LEFT, -1, 13, VizUtil.C_SWAP)
-	diag.draw_string(f, Vector2(16, 80), "print(result)  # reusability!", HORIZONTAL_ALIGNMENT_LEFT, -1, 13, VizUtil.C_VAL)
-
-func _draw_anim():
-	var f = ThemeDB.fallback_font; var w = anim.size.x; var h = 400.0; var p = progress
-	if step_idx == 0 and p == 0.0: _draw_func("", "", "", 0); return
-	var idx = min(step_idx, steps.size() - 1); var s = steps[idx]
-	_draw_func(s.caller, s.func, s.ret, s.phase)
-
-func _draw_func(caller, func_val, ret, phase):
-	var f = ThemeDB.fallback_font; var w = anim.size.x; var h = 400.0
-	var bw = 140.0; var bh = 50.0; var cx1 = w * 0.5 - bw - 30; var cx2 = w * 0.5 + 30
-	var cy = h * 0.5 - bh * 0.5
-	var caller_p = VizUtil.C_LABEL; var func_p = VizUtil.C_LABEL; var ret_p = VizUtil.C_HIGHLIGHT
-	if phase >= 1: caller_p = VizUtil.C_HIGHLIGHT
-	if phase >= 2: func_p = VizUtil.C_SWAP
-	if phase >= 3: caller_p = VizUtil.C_VAL; ret_p = VizUtil.C_VAL
-	anim.draw_rect(Rect2(cx1, cy, bw, bh), Color(caller_p, 0.15))
-	anim.draw_rect(Rect2(cx1, cy, bw, bh), caller_p, false, 2.0)
-	anim.draw_string(f, Vector2(cx1 + 10, cy + 18), "caller", HORIZONTAL_ALIGNMENT_LEFT, -1, 11, VizUtil.C_MUTED)
-	anim.draw_string(f, Vector2(cx1 + 10, cy + bh - 10), caller, HORIZONTAL_ALIGNMENT_LEFT, -1, 13, VizUtil.C_TEXT)
-	anim.draw_rect(Rect2(cx2, cy, bw, bh), Color(func_p, 0.15))
-	anim.draw_rect(Rect2(cx2, cy, bw, bh), func_p, false, 2.0)
-	anim.draw_string(f, Vector2(cx2 + 10, cy + 18), "double(n)", HORIZONTAL_ALIGNMENT_LEFT, -1, 11, VizUtil.C_MUTED)
-	anim.draw_string(f, Vector2(cx2 + 10, cy + bh - 10), func_val, HORIZONTAL_ALIGNMENT_LEFT, -1, 13, VizUtil.C_TEXT)
-	if not ret.is_empty():
-		anim.draw_rect(Rect2(cx2, cy + bh + 20, bw, bh * 0.6), Color(ret_p, 0.15))
-		anim.draw_rect(Rect2(cx2, cy + bh + 20, bw, bh * 0.6), ret_p, false, 2.0)
-		anim.draw_string(f, Vector2(cx2 + 10, cy + bh + 38), "return " + ret, HORIZONTAL_ALIGNMENT_LEFT, -1, 14, VizUtil.C_VAL)
-		VizUtil.draw_arrow(anim, Vector2(cx2, cy + bh + 28), Vector2(cx1 + bw, cy + bh + 28), VizUtil.C_VAL)
-	if phase >= 1 and phase < 3:
-		VizUtil.draw_arrow(anim, Vector2(cx1 + bw, cy + bh * 0.5), Vector2(cx2, cy + bh * 0.5), VizUtil.C_HIGHLIGHT)
-		anim.draw_string(f, Vector2((cx1+bw+cx2)*0.5 - 14, cy + bh * 0.5 - 14), "call", HORIZONTAL_ALIGNMENT_LEFT, -1, 11, VizUtil.C_HIGHLIGHT)
-
-func _notification(what):
-	if what == NOTIFICATION_RESIZED:
-		if diag: diag.queue_redraw()
-		if anim: anim.queue_redraw()
+	var out_r := Rect2(_anim_rect.position.x + _anim_rect.size.x * 0.7, _anim_rect.position.y + _anim_rect.size.y * 0.3, 130, 70)
+	draw_rect(out_r, VizUtil.C_PANEL, true)
+	draw_rect(out_r, Color("#00FF88"), false, 2.5)
+	draw_string(ThemeDB.fallback_font, Vector2(out_r.position.x + 10, out_r.position.y + 18), "return", HORIZONTAL_ALIGNMENT_LEFT, -1, 11, VizUtil.C_MUTED)
+	var output_alpha: float = 1.0
+	if _show_output and _anim_progress < 1.0:
+		output_alpha = max(0.0, (_anim_progress - 0.5) * 2.0)
+	var out_col: Color = Color("#00FF88")
+	out_col.a = output_alpha
+	draw_string(ThemeDB.fallback_font, Vector2(out_r.position.x + 10, out_r.position.y + 52), str(_output_val), HORIZONTAL_ALIGNMENT_LEFT, -1, 26, out_col)

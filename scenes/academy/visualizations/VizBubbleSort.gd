@@ -1,124 +1,85 @@
-extends Control
+extends "res://scripts/academy/VizBase.gd"
 
-var diag: Control; var anim: Control; var code_label: Label
-var play_btn: Button; var step_btn: Button; var reset_btn: Button
-var paused := false; var step_idx := 0; var progress := 0.0; var tween: Tween
+var _values_initial: Array = [5, 3, 8, 1]
+var _display: Array = [5, 3, 8, 1]
+var _j: int = -1
+var _swap: bool = false
+var _sorted_from: int = 4
 
-var steps = [
-	{"code": "arr = [5,3,8,1,2]", "arr": [5,3,8,1,2], "cmp": [-1,-1], "swp": false},
-	{"code": "Compare 5 and 3 â†’ 5>3 â†’ SWAP", "arr": [3,5,8,1,2], "cmp": [0,1], "swp": true},
-	{"code": "Compare 5 and 8 â†’ 5<8 â†’ no swap", "arr": [3,5,8,1,2], "cmp": [1,2], "swp": false},
-	{"code": "Compare 8 and 1 â†’ 8>1 â†’ SWAP", "arr": [3,5,1,8,2], "cmp": [2,3], "swp": true},
-	{"code": "Compare 8 and 2 â†’ 8>2 â†’ SWAP", "arr": [3,5,1,2,8], "cmp": [3,4], "swp": true},
-	{"code": "Pass 2: Compare 5 and 1 â†’ SWAP", "arr": [3,1,5,2,8], "cmp": [1,2], "swp": true},
-	{"code": "Pass 2: Compare 5 and 2 â†’ SWAP", "arr": [3,1,2,5,8], "cmp": [2,3], "swp": true},
-	{"code": "Pass 3: Compare 3 and 1 â†’ SWAP", "arr": [1,3,2,5,8], "cmp": [0,1], "swp": true},
-	{"code": "Pass 3: Compare 3 and 2 â†’ SWAP", "arr": [1,2,3,5,8], "cmp": [1,2], "swp": true},
-]
+func get_steps() -> Array:
+	return [
+		{ "code": "arr = [5, 3, 8, 1]" },
+		{ "code": "j=0: 5 > 3? -> swap -> [3, 5, 8, 1]" },
+		{ "code": "j=1: 5 > 8? no swap" },
+		{ "code": "j=2: 8 > 1? -> swap -> [3, 5, 1, 8]" },
+		{ "code": "Pass 2: j=0: 3 > 5? no" },
+		{ "code": "j=1: 5 > 1? -> swap -> [3, 1, 5, 8]" },
+		{ "code": "Pass 3: j=0: 3 > 1? -> swap -> [1, 3, 5, 8]" },
+		{ "code": "v sorted: [1, 3, 5, 8]" },
+	]
 
-func _set_progress(v): progress = v; queue_redraw()
+func get_concept_title() -> String:
+	return "Concept: Compare adjacent pairs â€” largest bubbles to the end each pass"
 
-func _ready():
-	var ui = VizUtil.standard_ui(self, " Bubble Sort â€” Compare & Swap Adjacent", 100, 400)
-	diag = ui.diagram; anim = ui.anim; code_label = ui.code; var ctrl = ui.controls
-	diag.draw.connect(_draw_diag); anim.draw.connect(_draw_anim)
-	play_btn = VizUtil.make_btn("â–¶ Play", VizUtil.C_LABEL); step_btn = VizUtil.make_btn("â­ Step", VizUtil.C_LABEL)
-	reset_btn = VizUtil.make_btn("â†º Reset", Color("#FF3366"))
-	ctrl.add_child(play_btn); ctrl.add_child(step_btn); ctrl.add_child(reset_btn)
-	play_btn.pressed.connect(_on_play); step_btn.pressed.connect(_on_step); reset_btn.pressed.connect(_on_reset)
+func get_anim_title() -> String:
+	return "Animation: Watch comparisons and swaps"
 
-func _on_play():
-	if step_idx >= steps.size(): _on_reset(); return
-	paused = not paused; play_btn.text = "â¸ Pause" if not paused else "â–¶ Play"
-	if not paused: _start_tween()
+func _set_step(idx: int) -> void:
+	current_step = idx
+	match idx:
+		0: _display = [5, 3, 8, 1]; _j = -1; _swap = false; _sorted_from = 4
+		1: _display = [3, 5, 8, 1]; _j = 0; _swap = true; _sorted_from = 4
+		2: _display = [3, 5, 8, 1]; _j = 1; _swap = false; _sorted_from = 4
+		3: _display = [3, 5, 1, 8]; _j = 2; _swap = true; _sorted_from = 4
+		4: _display = [3, 5, 1, 8]; _j = 0; _swap = false; _sorted_from = 3
+		5: _display = [3, 1, 5, 8]; _j = 1; _swap = true; _sorted_from = 3
+		6: _display = [1, 3, 5, 8]; _j = 0; _swap = true; _sorted_from = 2
+		7: _display = [1, 3, 5, 8]; _j = -1; _swap = false; _sorted_from = 0
+	_anim_progress = 0.0
+	_animating = true
+	queue_redraw()
 
-func _on_step():
-	paused = true; play_btn.text = "â–¶ Play"
-	if tween and tween.is_running(): tween.kill(); _do_step()
+func _on_reset() -> void:
+	_display = _values_initial.duplicate()
+	super._on_reset()
 
-func _on_reset():
-	paused = true; play_btn.text = "â–¶ Play"
-	if tween and tween.is_running(): tween.kill()
-	step_idx = 0; progress = 0.0; code_label.text = "Press â–¶ Play or â­ Step to begin"; queue_redraw()
+func _draw_diagram() -> void:
+	draw_string(ThemeDB.fallback_font, Vector2(_diagram_rect.position.x + 12, _diagram_rect.position.y + _diagram_rect.size.y * 0.5), "Compare adjacent bars  â€¢  swap if left > right", HORIZONTAL_ALIGNMENT_LEFT, -1, 12, Color("#FFB800"))
 
-func _start_tween():
-	if paused or step_idx >= steps.size(): return
-	if tween and tween.is_running(): tween.kill()
-	tween = create_tween(); tween.tween_method(_set_progress, 0.0, 1.0, 1.0).set_ease(Tween.EASE_IN_OUT)
-	tween.finished.connect(_on_tween_done, CONNECT_ONE_SHOT)
+func _draw_anim() -> void:
+	var n: int = _display.size()
+	var max_val: int = 10
+	var bar_w: float = 50.0
+	var gap: float = 8.0
+	var total_w: float = bar_w * n + gap * (n - 1)
+	var start_x: float = _anim_rect.position.x + (_anim_rect.size.x - total_w) * 0.5
+	var base_y: float = _anim_rect.position.y + _anim_rect.size.y * 0.85
+	var max_h: float = _anim_rect.size.y * 0.6
 
-func _on_tween_done():
-	if step_idx >= steps.size(): return
-	step_idx += 1; progress = 0.0
-	if step_idx >= steps.size(): paused = true; play_btn.text = "â–¶ Play"; code_label.text = "âœ… Sorted: [1, 2, 3, 5, 8]"; queue_redraw(); return
-	code_label.text = "â–¶  " + steps[step_idx].code; queue_redraw()
-	if not paused: _start_tween()
+	for i in n:
+		var v: int = _display[i]
+		var h: float = (float(v) / float(max_val)) * max_h
+		var x: float = start_x + i * (bar_w + gap)
+		var is_j: bool = i == _j
+		var is_j1: bool = i == _j + 1
+		var is_sorted: bool = i >= _sorted_from
 
-func _do_step():
-	if step_idx >= steps.size(): paused = true; play_btn.text = "â–¶ Play"; code_label.text = "âœ… Sorted: [1, 2, 3, 5, 8]"; return
-	code_label.text = "â–¶  " + steps[step_idx].code; progress = 1.0; step_idx += 1; queue_redraw()
+		var y_offset: float = 0.0
+		if is_j and _swap and _anim_progress < 1.0:
+			y_offset = -8.0 * sin(_anim_progress * PI)
+		elif is_j1 and _swap and _anim_progress < 1.0:
+			y_offset = 8.0 * sin(_anim_progress * PI)
 
-func _draw_diag():
-	var f = ThemeDB.fallback_font
-	diag.draw_string(f, Vector2(16, 20), "def bubble_sort(arr):", HORIZONTAL_ALIGNMENT_LEFT, -1, 13, VizUtil.C_LABEL)
-	diag.draw_string(f, Vector2(16, 40), "    for i in range(len(arr)-1):", HORIZONTAL_ALIGNMENT_LEFT, -1, 13, VizUtil.C_TEXT)
-	diag.draw_string(f, Vector2(16, 60), "        for j in range(len(arr)-i-1):", HORIZONTAL_ALIGNMENT_LEFT, -1, 13, VizUtil.C_TEXT)
-	diag.draw_string(f, Vector2(16, 80), "            if arr[j] > arr[j+1]: swap", HORIZONTAL_ALIGNMENT_LEFT, -1, 13, VizUtil.C_SWAP)
+		var r := Rect2(x, base_y - h + y_offset, bar_w, h)
+		var color: Color = Color("#00FF88") if is_sorted else (VizUtil.C_HIGHLIGHT if (is_j or is_j1) else Color("#0D4A6A"))
+		var border: Color = Color("#00FF88") if is_sorted else (Color("#FFB800") if (is_j or is_j1) else Color("#2A4A6A"))
+		draw_rect(r, color, true)
+		draw_rect(r, border, false, 2)
+		draw_string(ThemeDB.fallback_font, Vector2(r.position.x + bar_w * 0.5 - 4, r.position.y - 6), str(v), HORIZONTAL_ALIGNMENT_LEFT, -1, 13, Color("#00FF88") if (is_j or is_j1 or is_sorted) else VizUtil.C_TEXT)
+		draw_string(ThemeDB.fallback_font, Vector2(r.position.x + bar_w * 0.5 - 4, base_y + 16), "[" + str(i) + "]", HORIZONTAL_ALIGNMENT_LEFT, -1, 11, VizUtil.C_MUTED)
 
-func _draw_anim():
-	var f = ThemeDB.fallback_font; var w = anim.size.x; var p = progress
-	if step_idx == 0 and p == 0.0: _draw_bars(steps[0].arr, -1, -1, false, Color("#0D2040")); return
-	var idx = min(step_idx, steps.size() - 1); var s = steps[idx]; var arr = s.arr; var is_last = (idx == steps.size() - 1)
-	var colors = []
-	for i in range(arr.size()):
-		var col = VizUtil.C_LABEL
-		if i == s.cmp[0] or i == s.cmp[1]:
-			if s.swp: col = VizUtil.lerp_color(VizUtil.C_LABEL, VizUtil.C_SWAP, min(p * 2, 1.0))
-			else: col = VizUtil.lerp_color(VizUtil.C_LABEL, VizUtil.C_HIGHLIGHT, p)
-		elif is_last: col = VizUtil.lerp_color(VizUtil.C_LABEL, VizUtil.C_VAL, p)
-		colors.append(col)
-	_draw_bars(arr, s.cmp[0], s.cmp[1], s.swp, Color("#0D2040"), colors)
-	if s.cmp[0] >= 0:
-		var bw = VizUtil.BAR_W; var gap = VizUtil.BAR_GAP; var n = arr.size()
-		var total = n * (bw + gap) - gap; var sx = (w - total) * 0.5; var y = 20.0
-		var ax = sx + s.cmp[0] * (bw + gap) + bw * 0.5
-		var bx = sx + s.cmp[1] * (bw + gap) + bw * 0.5
-		var max_val = 0; for v in arr: if typeof(v) == TYPE_INT: max_val = max(max_val, abs(v))
-		if max_val == 0: max_val = 1
-		var bar_h0 = VizUtil.MIN_BAR_H + (VizUtil.MAX_BAR_H - VizUtil.MIN_BAR_H) * (float(abs(arr[s.cmp[0]])) / float(max_val))
-		var bar_h1 = VizUtil.MIN_BAR_H + (VizUtil.MAX_BAR_H - VizUtil.MIN_BAR_H) * (float(abs(arr[s.cmp[1]])) / float(max_val))
-		var top_y0 = y + VizUtil.MAX_BAR_H - bar_h0; var top_y1 = y + VizUtil.MAX_BAR_H - bar_h1
-		var ay = top_y0 - 12; var by = top_y1 - 12
-		if s.swp:
-			VizUtil.draw_arrow(anim, Vector2(ax, ay), Vector2(bx, by), VizUtil.C_SWAP)
-			if p < 0.7: anim.draw_string(f, Vector2((ax+bx)*0.5-18, ay-14), "SWAP!", HORIZONTAL_ALIGNMENT_LEFT, -1, 12, Color(VizUtil.C_SWAP.r, VizUtil.C_SWAP.g, VizUtil.C_SWAP.b, p/0.7))
-		else:
-			VizUtil.draw_arrow(anim, Vector2(ax, ay), Vector2(bx, by), VizUtil.C_HIGHLIGHT)
-			anim.draw_string(f, Vector2((ax+bx)*0.5-24, ay-14), "No swap", HORIZONTAL_ALIGNMENT_LEFT, -1, 10, Color(VizUtil.C_HIGHLIGHT.r, VizUtil.C_HIGHLIGHT.g, VizUtil.C_HIGHLIGHT.b, p))
-
-func _draw_bars(arr, c0, c1, swp, bg_col, colors = []):
-	var f = ThemeDB.fallback_font; var w = anim.size.x
-	var bw = VizUtil.BAR_W; var gap = VizUtil.BAR_GAP; var n = arr.size()
-	var total = n * (bw + gap) - gap; var sx = (w - total) * 0.5; var y = 20.0
-	var max_val = 0; for v in arr: if typeof(v) == TYPE_INT: max_val = max(max_val, abs(v))
-	if max_val == 0: max_val = 1
-	for i in range(n):
-		var val = arr[i]
-		var bar_h = VizUtil.MIN_BAR_H + (VizUtil.MAX_BAR_H - VizUtil.MIN_BAR_H) * (float(abs(val)) / float(max_val))
-		var x = sx + i * (bw + gap)
-		var by = y + VizUtil.MAX_BAR_H - bar_h
-		var col = colors[i] if colors.size() > i else VizUtil.C_LABEL
-		var dx = x
-		if swp and progress > 0.0 and progress < 1.0:
-			if i == c0: dx += (bw + gap) * progress * 0.5
-			elif i == c1: dx -= (bw + gap) * progress * 0.5
-		anim.draw_rect(Rect2(dx, by, bw, bar_h), Color(col, 0.18))
-		anim.draw_rect(Rect2(dx, by, bw, bar_h), col, false, 2.0)
-		anim.draw_string(f, Vector2(dx + 4, by - 6), "[" + str(i) + "]", HORIZONTAL_ALIGNMENT_LEFT, -1, 10, VizUtil.C_MUTED)
-		var label = str(val); var lw = label.length() * 8
-		anim.draw_string(f, Vector2(dx + bw * 0.5 - lw * 0.5, by + bar_h * 0.5 + 6), label, HORIZONTAL_ALIGNMENT_LEFT, -1, 14, VizUtil.C_TEXT)
-
-func _notification(what):
-	if what == NOTIFICATION_RESIZED:
-		if diag: diag.queue_redraw()
-		if anim: anim.queue_redraw()
+	if _j >= 0 and _anim_progress < 1.0 and not _swap:
+		var j_x: float = start_x + _j * (bar_w + gap) + bar_w * 0.5
+		var j1_x: float = start_x + (_j + 1) * (bar_w + gap) + bar_w * 0.5
+		draw_line(Vector2(j_x, base_y - max_h - 30), Vector2(j1_x, base_y - max_h - 30), VizUtil.C_WARN, 2.0)
+		draw_string(ThemeDB.fallback_font, Vector2((j_x + j1_x) * 0.5 - 22, base_y - max_h - 36), "compare", HORIZONTAL_ALIGNMENT_LEFT, -1, 12, VizUtil.C_WARN)

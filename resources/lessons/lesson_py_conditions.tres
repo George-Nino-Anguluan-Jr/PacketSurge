@@ -1,7 +1,7 @@
 [gd_resource type="Resource" script_class="LessonData" format=3 uid="uid://bfc86ytyp0sb5"]
 
 [ext_resource type="Script" uid="uid://ciet8k3fqk8tr" path="res://scripts/data/LessonData.gd" id="1_artpg"]
-[ext_resource type="PackedScene" uid="uid://lla8kmg1ee38" path="res://scenes/academy/visualizations/VizConditions.tscn" id="2_iddpb"]
+[ext_resource type="PackedScene" path="res://scenes/academy/visualizations/VizConditions.tscn" id="2_iddpb"]
 
 [resource]
 script = ExtResource("1_artpg")
@@ -95,3 +95,4 @@ practice_question = "What does this code print?    x = 7    if x > 10: print(\"B
 practice_options = Array[String](["Big", "Small", "7", "Nothing"])
 practice_correct_index = 1
 practice_explanation = "Since 7 is NOT greater than 10, the if condition is False. The else block runs instead and prints \"Small\"."
+

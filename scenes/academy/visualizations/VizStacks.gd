@@ -1,99 +1,103 @@
-extends Control
+﻿extends "res://scripts/academy/VizBase.gd"
 
-var diag: Control; var anim: Control; var code_label: Label
-var play_btn: Button; var step_btn: Button; var reset_btn: Button
-var paused := false; var step_idx := 0; var progress := 0.0; var tween: Tween
+var _stack: Array = []
+var _anim_type: String = ""
+var _anim_val: String = ""
+var _pop_val: String = ""
 
-var items = [10, 20, 30, 40, 50]; var pop_idx := 0
-var steps = [
-	{"code": "stack = [] (empty)", "action": "init", "val": -1},
-	{"code": "push(10) ? stack: [10]", "action": "push", "val": 10},
-	{"code": "push(20) ? stack: [10, 20]", "action": "push", "val": 20},
-	{"code": "push(30) ? stack: [10, 20, 30]", "action": "push", "val": 30},
-	{"code": "pop() ? returns 30", "action": "pop", "val": 30},
-	{"code": "pop() ? returns 20", "action": "pop", "val": 20},
-	{"code": "push(40) ? stack: [10, 40]", "action": "push", "val": 40},
-]
+func get_steps() -> Array:
+	return [
+		{ "code": "stack = []" },
+		{ "code": "stack.append(\"jump\")" },
+		{ "code": "stack.append(\"shoot\")" },
+		{ "code": "stack.append(\"dodge\")" },
+		{ "code": "print(stack.pop())   # dodge" },
+	]
 
-func _set_progress(v): progress = v; queue_redraw()
+func get_concept_title() -> String:
+	return "Concept: Last In, First Out — like a stack of plates"
 
-func _ready():
-	var ui = VizUtil.standard_ui(self, " Stack — LIFO (Last In, First Out)", 100, 400)
-	diag = ui.diagram; anim = ui.anim; code_label = ui.code; var ctrl = ui.controls
-	diag.draw.connect(_draw_diag); anim.draw.connect(_draw_anim)
-	play_btn = VizUtil.make_btn("? Play", VizUtil.C_LABEL); step_btn = VizUtil.make_btn("? Step", VizUtil.C_LABEL)
-	reset_btn = VizUtil.make_btn("? Reset", Color("#FF3366"))
-	ctrl.add_child(play_btn); ctrl.add_child(step_btn); ctrl.add_child(reset_btn)
-	play_btn.pressed.connect(_on_play); step_btn.pressed.connect(_on_step); reset_btn.pressed.connect(_on_reset)
+func get_anim_title() -> String:
+	return "Animation: Push items, then pop"
 
-func _on_play():
-	if step_idx >= steps.size(): _on_reset(); return
-	paused = not paused; play_btn.text = "? Pause" if not paused else "? Play"
-	if not paused: _start_tween()
+func _set_step(idx: int) -> void:
+	current_step = idx
+	match idx:
+		0: _stack.clear(); _anim_type = "init"; _animating = false
+		1: _anim_type = "push"; _anim_val = "jump"; _anim_progress = 0.0; _animating = true
+		2: _anim_type = "push"; _anim_val = "shoot"; _anim_progress = 0.0; _animating = true
+		3: _anim_type = "push"; _anim_val = "dodge"; _anim_progress = 0.0; _animating = true
+		4: _anim_type = "pop"; _pop_val = "dodge"; _stack.pop_back(); _anim_progress = 0.0; _animating = true
+	queue_redraw()
 
-func _on_step():
-	paused = true; play_btn.text = "? Play"
-	if tween and tween.is_running(): tween.kill(); _do_step()
+func _on_reset() -> void:
+	_stack.clear()
+	super._on_reset()
 
-func _on_reset():
-	paused = true; play_btn.text = "? Play"
-	if tween and tween.is_running(): tween.kill()
-	step_idx = 0; progress = 0.0; code_label.text = "Press ? Play or ? Step to begin"; queue_redraw()
+func _process(delta: float) -> void:
+	if _animating:
+		_anim_progress += delta * 1.5
+		if _anim_progress >= 1.0:
+			_anim_progress = 1.0
+			_animating = false
+			if _anim_type == "push":
+				_stack.push_back(_anim_val)
+				_anim_val = ""
+		queue_redraw()
 
-func _start_tween():
-	if paused or step_idx >= steps.size(): return
-	if tween and tween.is_running(): tween.kill()
-	tween = create_tween(); tween.tween_method(_set_progress, 0.0, 1.0, 0.7).set_ease(Tween.EASE_IN_OUT)
-	tween.finished.connect(_on_tween_done, CONNECT_ONE_SHOT)
+func _draw_diagram() -> void:
+	draw_string(ThemeDB.fallback_font, Vector2(_diagram_rect.position.x + 12, _diagram_rect.position.y + 16), "Last In, First Out (LIFO)", HORIZONTAL_ALIGNMENT_LEFT, -1, 14, Color("#FFB800"))
+	draw_string(ThemeDB.fallback_font, Vector2(_diagram_rect.position.x + 12, _diagram_rect.position.y + 36), "think: stack of plates", HORIZONTAL_ALIGNMENT_LEFT, -1, 11, VizUtil.C_MUTED)
+	for i in 3:
+		var r := Rect2(_diagram_rect.position.x + 220, _diagram_rect.position.y + 24 + i * 14, 60, 12)
+		draw_rect(r, Color("#00D4FF"), true)
+		draw_string(ThemeDB.fallback_font, Vector2(_diagram_rect.position.x + 290, _diagram_rect.position.y + 34 + i * 14), "→ " + str(["jump", "shoot", "dodge"][i]), HORIZONTAL_ALIGNMENT_LEFT, -1, 11, VizUtil.C_TEXT)
 
-func _on_tween_done():
-	if step_idx >= steps.size(): return
-	step_idx += 1; progress = 0.0
-	if step_idx >= steps.size(): paused = true; play_btn.text = "? Play"; code_label.text = "Stack demo complete!"; queue_redraw(); return
-	code_label.text = "?  " + steps[step_idx].code; queue_redraw()
-	if not paused: _start_tween()
+func _draw_anim() -> void:
+	var cx: float = _anim_rect.position.x + _anim_rect.size.x * 0.4
+	var plate_w: float = 130.0
+	var plate_h: float = 36.0
+	var display: Array = _stack.duplicate() as Array
+	if _anim_type == "push" and _anim_progress < 1.0:
+		display.push_back(_anim_val)
 
-func _do_step():
-	if step_idx >= steps.size(): paused = true; play_btn.text = "? Play"; code_label.text = "Stack demo complete!"; return
-	code_label.text = "?  " + steps[step_idx].code; progress = 1.0; step_idx += 1; queue_redraw()
+	var ground_y: float = _anim_rect.position.y + _anim_rect.size.y * 0.88
+	draw_line(Vector2(cx - plate_w * 0.6, ground_y), Vector2(cx + plate_w * 0.6, ground_y), Color("#2A4A6A"), 2)
+	draw_string(ThemeDB.fallback_font, Vector2(cx - 16, _anim_rect.position.y + _anim_rect.size.y * 0.08), "↑ TOP", HORIZONTAL_ALIGNMENT_LEFT, -1, 12, Color("#00FF88"))
 
-func _draw_diag():
-	var f = ThemeDB.fallback_font
-	diag.draw_string(f, Vector2(16, 20), "stack = []", HORIZONTAL_ALIGNMENT_LEFT, -1, 13, VizUtil.C_LABEL)
-	diag.draw_string(f, Vector2(16, 40), "stack.append(val)  # push", HORIZONTAL_ALIGNMENT_LEFT, -1, 13, VizUtil.C_TEXT)
-	diag.draw_string(f, Vector2(16, 60), "val = stack.pop()  # pop", HORIZONTAL_ALIGNMENT_LEFT, -1, 13, VizUtil.C_SWAP)
-	diag.draw_string(f, Vector2(16, 80), "LIFO: Last In, First Out", HORIZONTAL_ALIGNMENT_LEFT, -1, 13, VizUtil.C_VAL)
+	var n: int = display.size()
+	for i in n:
+		var is_top: bool = i == n - 1
+		var y: float = ground_y - (i + 1) * plate_h
+		var alpha: float = 1.0
+		var offset_y: float = 0.0
+		if _anim_type == "push" and i == n - 1:
+			offset_y = -plate_h * (1.0 - _anim_progress) * 1.5
+			alpha = _anim_progress
+		var a: float = clamp(alpha, 0.0, 1.0)
+		var p_bg: Color = Color("#00D4FF") if is_top else Color("#0D4A6A")
+		var p_brd: Color = Color("#00FF88") if is_top else Color("#2A6A8A")
+		var p_col: Color = VizUtil.C_BG if is_top else VizUtil.C_TEXT
+		p_bg.a = a
+		p_brd.a = a
+		p_col.a = a
+		var r := Rect2(cx - plate_w * 0.5, y + offset_y, plate_w, plate_h)
+		draw_rect(r, p_bg, true)
+		draw_rect(r, p_brd, false, 2)
+		draw_string(ThemeDB.fallback_font, Vector2(r.position.x + 12, r.position.y + 24), str(display[i]), HORIZONTAL_ALIGNMENT_LEFT, -1, 16, p_col)
 
-func _draw_anim():
-	var f = ThemeDB.fallback_font; var w = anim.size.x; var p = progress
-	if step_idx == 0 and p == 0.0: _draw_stack([]); return
-	var idx = min(step_idx, steps.size() - 1); var s = steps[idx]
-	var stack = []
-	for j in range(1, idx + 1):
-		var sj = steps[j]
-		if sj.action == "push": stack.append(sj.val)
-		elif sj.action == "pop": stack.pop_back()
-	_draw_stack(stack)
-	if s.action == "push":
-		anim.draw_string(f, Vector2(20, 20), "push(" + str(s.val) + ") ?", HORIZONTAL_ALIGNMENT_LEFT, -1, 14, VizUtil.C_VAL)
-	elif s.action == "pop":
-		anim.draw_string(f, Vector2(20, 20), "pop() ? " + str(s.val) + " ?", HORIZONTAL_ALIGNMENT_LEFT, -1, 14, VizUtil.C_SWAP)
-
-func _draw_stack(stack):
-	var f = ThemeDB.fallback_font; var w = anim.size.x; var h = 400.0
-	var bw = 100.0; var bh = 40.0; var sx = w * 0.5 - bw * 0.5
-	for i in range(stack.size()):
-		var by = h - 60 - (i + 1) * (bh + 6)
-		var col = VizUtil.C_LABEL
-		if i == stack.size() - 1: col = VizUtil.lerp_color(VizUtil.C_LABEL, VizUtil.C_HIGHLIGHT, progress)
-		anim.draw_rect(Rect2(sx, by, bw, bh), Color(col, 0.2))
-		anim.draw_rect(Rect2(sx, by, bw, bh), col, false, 2.0)
-		anim.draw_string(f, Vector2(sx + bw * 0.5 - 12, by + bh * 0.5 + 6), str(stack[i]), HORIZONTAL_ALIGNMENT_LEFT, -1, 14, VizUtil.C_TEXT)
-	anim.draw_string(f, Vector2(sx - 30, h - 60 - (stack.size() + 1) * (bh + 6) - 10), "TOP ?", HORIZONTAL_ALIGNMENT_LEFT, -1, 11, VizUtil.C_HIGHLIGHT)
-	anim.draw_line(Vector2(sx - 20, h - 28), Vector2(sx + bw + 20, h - 28), VizUtil.C_MUTED, 2.0)
-	anim.draw_string(f, Vector2(sx + bw * 0.5 - 16, h - 16), "BOTTOM", HORIZONTAL_ALIGNMENT_LEFT, -1, 10, VizUtil.C_MUTED)
-
-func _notification(what):
-	if what == NOTIFICATION_RESIZED:
-		if diag: diag.queue_redraw()
-		if anim: anim.queue_redraw()
+	if _anim_type == "pop":
+		var out_r := Rect2(_anim_rect.position.x + _anim_rect.size.x * 0.7, _anim_rect.position.y + _anim_rect.size.y * 0.4, 180, 70)
+		var oa := _anim_progress
+		var o_bg: Color = VizUtil.C_PANEL
+		var o_brd: Color = Color("#00FF88")
+		var o_lbl: Color = VizUtil.C_MUTED
+		var o_col: Color = Color("#00FF88")
+		o_bg.a = oa
+		o_brd.a = oa
+		o_lbl.a = oa
+		o_col.a = oa
+		draw_rect(out_r, o_bg, true)
+		draw_rect(out_r, o_brd, false, 2)
+		draw_string(ThemeDB.fallback_font, Vector2(out_r.position.x + 12, out_r.position.y + 20), "popped:", HORIZONTAL_ALIGNMENT_LEFT, -1, 12, o_lbl)
+		draw_string(ThemeDB.fallback_font, Vector2(out_r.position.x + 12, out_r.position.y + 50), "→ " + _pop_val, HORIZONTAL_ALIGNMENT_LEFT, -1, 20, o_col)

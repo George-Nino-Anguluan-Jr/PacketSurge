@@ -1,92 +1,77 @@
-extends Control
+﻿extends "res://scripts/academy/VizBase.gd"
 
-var diag: Control; var anim: Control; var code_label: Label
-var play_btn: Button; var step_btn: Button; var reset_btn: Button
-var paused := false; var step_idx := 0; var progress := 0.0; var tween: Tween
+var _counter: int = 0
+var _output_lines: Array = []
 
-var steps = [
-	{"code": "for i in range(3):", "i": -1},
-	{"code": "i = 0 ? print(i) ? 0", "i": 0},
-	{"code": "i = 1 ? print(i) ? 1", "i": 1},
-	{"code": "i = 2 ? print(i) ? 2", "i": 2},
-	{"code": "Loop complete! 0, 1, 2 printed.", "i": -2},
-]
+func get_steps() -> Array:
+	return [
+		{ "code": "i = 0  →  print(i)" },
+		{ "code": "i = 1  →  print(i)" },
+		{ "code": "i = 2  →  print(i)" },
+		{ "code": "i = 3  →  print(i)" },
+		{ "code": "i = 4  →  print(i)" },
+		{ "code": "Loop finished." },
+	]
 
-func _set_progress(v): progress = v; queue_redraw()
+func get_concept_title() -> String:
+	return "Concept: A loop runs the same code multiple times"
 
-func _ready():
-	var ui = VizUtil.standard_ui(self, " For Loop — Iterate Over Range", 100, 400)
-	diag = ui.diagram; anim = ui.anim; code_label = ui.code; var ctrl = ui.controls
-	diag.draw.connect(_draw_diag); anim.draw.connect(_draw_anim)
-	play_btn = VizUtil.make_btn("? Play", VizUtil.C_LABEL); step_btn = VizUtil.make_btn("? Step", VizUtil.C_LABEL)
-	reset_btn = VizUtil.make_btn("? Reset", Color("#FF3366"))
-	ctrl.add_child(play_btn); ctrl.add_child(step_btn); ctrl.add_child(reset_btn)
-	play_btn.pressed.connect(_on_play); step_btn.pressed.connect(_on_step); reset_btn.pressed.connect(_on_reset)
+func get_anim_title() -> String:
+	return "Animation: Loop through 5 iterations"
 
-func _on_play():
-	if step_idx >= steps.size(): _on_reset(); return
-	paused = not paused; play_btn.text = "? Pause" if not paused else "? Play"
-	if not paused: _start_tween()
+func _set_step(idx: int) -> void:
+	current_step = idx
+	_counter = idx
+	if idx < 5:
+		_output_lines.append(str(idx))
+		_anim_progress = 0.0
+		_animating = true
+	else:
+		_animating = false
+	queue_redraw()
 
-func _on_step():
-	paused = true; play_btn.text = "? Play"
-	if tween and tween.is_running(): tween.kill(); _do_step()
+func _on_reset() -> void:
+	_output_lines.clear()
+	super._on_reset()
 
-func _on_reset():
-	paused = true; play_btn.text = "? Play"
-	if tween and tween.is_running(): tween.kill()
-	step_idx = 0; progress = 0.0; code_label.text = "Press ? Play or ? Step to begin"; queue_redraw()
+func _draw_diagram() -> void:
+	draw_string(ThemeDB.fallback_font, Vector2(_diagram_rect.position.x + 12, _diagram_rect.position.y + 22), "for i in range(5):", HORIZONTAL_ALIGNMENT_LEFT, -1, 14, Color("#FFB800"))
+	draw_string(ThemeDB.fallback_font, Vector2(_diagram_rect.position.x + 28, _diagram_rect.position.y + 44), "print(i)", HORIZONTAL_ALIGNMENT_LEFT, -1, 14, VizUtil.C_TEXT)
 
-func _start_tween():
-	if paused or step_idx >= steps.size(): return
-	if tween and tween.is_running(): tween.kill()
-	tween = create_tween(); tween.tween_method(_set_progress, 0.0, 1.0, 0.6).set_ease(Tween.EASE_IN_OUT)
-	tween.finished.connect(_on_tween_done, CONNECT_ONE_SHOT)
+func _draw_anim() -> void:
+	var box_w: float = 140.0
+	var box_h: float = 100.0
+	var cx: float = _anim_rect.position.x + _anim_rect.size.x * 0.25
+	var cy: float = _anim_rect.position.y + _anim_rect.size.y * 0.4
+	var r := Rect2(cx - box_w * 0.5, cy - box_h * 0.5, box_w, box_h)
+	draw_rect(r, VizUtil.C_PANEL, true)
+	draw_rect(r, VizUtil.C_HIGHLIGHT, false, 2.5)
+	draw_string(ThemeDB.fallback_font, Vector2(r.position.x + 10, r.position.y + 22), "i =", HORIZONTAL_ALIGNMENT_LEFT, -1, 16, VizUtil.C_MUTED)
+	draw_string(ThemeDB.fallback_font, Vector2(r.position.x + 50, r.position.y + 56), str(_counter), HORIZONTAL_ALIGNMENT_LEFT, -1, 36, Color("#00FF88"))
 
-func _on_tween_done():
-	if step_idx >= steps.size(): return
-	step_idx += 1; progress = 0.0
-	if step_idx >= steps.size(): paused = true; play_btn.text = "? Play"; code_label.text = "Loop complete! 0, 1, 2 printed."; queue_redraw(); return
-	code_label.text = "?  " + steps[step_idx].code; queue_redraw()
-	if not paused: _start_tween()
+	var dot_x: float = _anim_rect.position.x + _anim_rect.size.x * 0.45
+	var dot_y: float = _anim_rect.position.y + _anim_rect.size.y * 0.2
+	draw_string(ThemeDB.fallback_font, Vector2(dot_x, dot_y - 6), "iterations", HORIZONTAL_ALIGNMENT_LEFT, -1, 11, VizUtil.C_MUTED)
+	for i in 5:
+		var filled := i < _counter
+		var dr := Rect2(dot_x + i * 26, dot_y + 6, 20, 20)
+		draw_rect(dr, Color("#00FF88") if filled else VizUtil.C_PANEL, true)
+		draw_rect(dr, Color("#00FF88") if filled else Color("#2A4A6A"), false, 1.5)
 
-func _do_step():
-	if step_idx >= steps.size(): paused = true; play_btn.text = "? Play"; code_label.text = "Loop complete! 0, 1, 2 printed."; return
-	code_label.text = "?  " + steps[step_idx].code; progress = 1.0; step_idx += 1; queue_redraw()
-
-func _draw_diag():
-	var f = ThemeDB.fallback_font
-	diag.draw_string(f, Vector2(16, 20), "for i in range(3):", HORIZONTAL_ALIGNMENT_LEFT, -1, 13, VizUtil.C_LABEL)
-	diag.draw_string(f, Vector2(16, 40), "    print(i)  # 0, 1, 2", HORIZONTAL_ALIGNMENT_LEFT, -1, 13, VizUtil.C_TEXT)
-	diag.draw_string(f, Vector2(16, 60), "for fruit in fruits:", HORIZONTAL_ALIGNMENT_LEFT, -1, 13, VizUtil.C_SWAP)
-	diag.draw_string(f, Vector2(16, 80), "    print(fruit)  # iterate elements", HORIZONTAL_ALIGNMENT_LEFT, -1, 13, VizUtil.C_TEXT)
-
-func _draw_anim():
-	var f = ThemeDB.fallback_font; var w = anim.size.x; var p = progress
-	if step_idx == 0 and p == 0.0: _draw_loop(-1); return
-	var idx = min(step_idx, steps.size() - 1); var i_val = steps[idx].i
-	_draw_loop(i_val)
-
-func _draw_loop(i_val):
-	var f = ThemeDB.fallback_font; var w = anim.size.x; var h = 400.0
-	var bw = 70.0; var bh = 50.0; var gap = 6.0
-	var vals = [0, 1, 2]
-	var total = vals.size() * (bw + gap) - gap; var sx = (w - total) * 0.5; var y = h * 0.5 - bh * 0.5
-	for i in range(vals.size()):
-		var x = sx + i * (bw + gap); var col = VizUtil.C_LABEL
-		if i == i_val: col = VizUtil.lerp_color(VizUtil.C_LABEL, VizUtil.C_HIGHLIGHT, progress)
-		elif i < i_val: col = VizUtil.C_VAL
-		anim.draw_rect(Rect2(x, y, bw, bh), Color(col, 0.15))
-		anim.draw_rect(Rect2(x, y, bw, bh), col, false, 2.0)
-		anim.draw_string(f, Vector2(x + bw * 0.5 - 12, y + bh * 0.5 + 6), "i=" + str(vals[i]), HORIZONTAL_ALIGNMENT_LEFT, -1, 14, VizUtil.C_TEXT)
-	if i_val >= 0:
-		var ax = sx + i_val * (bw + gap) + bw * 0.5
-		VizUtil.draw_arrow(anim, Vector2(ax, y + bh + 16), Vector2(ax, y + bh + 6), VizUtil.C_HIGHLIGHT)
-		anim.draw_string(f, Vector2(ax - 20, y + bh + 28), "current", HORIZONTAL_ALIGNMENT_LEFT, -1, 11, VizUtil.C_HIGHLIGHT)
-	if i_val == -2:
-		anim.draw_string(f, Vector2(w * 0.5 - 60, y - 20), "Output: 0 1 2", HORIZONTAL_ALIGNMENT_LEFT, -1, 16, VizUtil.C_VAL)
-
-func _notification(what):
-	if what == NOTIFICATION_RESIZED:
-		if diag: diag.queue_redraw()
-		if anim: anim.queue_redraw()
+	var con_x: float = _anim_rect.position.x + _anim_rect.size.x * 0.55
+	var con_y: float = _anim_rect.position.y + _anim_rect.size.y * 0.1
+	var con_w: float = _anim_rect.size.x * 0.4
+	var con_h: float = _anim_rect.size.y * 0.8
+	var con_r := Rect2(con_x, con_y, con_w, con_h)
+	draw_rect(con_r, VizUtil.C_PANEL, true)
+	draw_rect(con_r, VizUtil.C_HIGHLIGHT, false, 1.5)
+	draw_string(ThemeDB.fallback_font, Vector2(con_r.position.x + 8, con_r.position.y + 16), "output", HORIZONTAL_ALIGNMENT_LEFT, -1, 11, VizUtil.C_MUTED)
+	for i in _output_lines.size():
+		var line: String = _output_lines[i]
+		var is_new := i == _output_lines.size() - 1 and _animating
+		var alpha: float = 1.0
+		if is_new:
+			alpha = _anim_progress
+		var line_col: Color = VizUtil.C_VAL
+		line_col.a = alpha
+		draw_string(ThemeDB.fallback_font, Vector2(con_r.position.x + 12, con_r.position.y + 38 + i * 22), "> " + line, HORIZONTAL_ALIGNMENT_LEFT, -1, 16, line_col)

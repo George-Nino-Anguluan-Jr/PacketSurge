@@ -1,7 +1,7 @@
 [gd_resource type="Resource" script_class="LessonData" format=3 uid="uid://ccjgr1oo6glkq"]
 
 [ext_resource type="Script" uid="uid://ciet8k3fqk8tr" path="res://scripts/data/LessonData.gd" id="1_xgqti"]
-[ext_resource type="PackedScene" uid="uid://cd6tn5r3q7g8" path="res://scenes/academy/visualizations/VizQuickSort.tscn" id="2_ql84h"]
+[ext_resource type="PackedScene" path="res://scenes/academy/visualizations/VizQuickSort.tscn" id="2_ql84h"]
 [resource]
 script = ExtResource("1_xgqti")
 lesson_id = "sort_quick"
@@ -83,3 +83,4 @@ practice_question = "What is the average time complexity of Quick Sort?"
 practice_options = Array[String](["O(n²)", "O(n log n)", "O(log n)", "O(n)"])
 practice_correct_index = 1
 practice_explanation = "Quick Sort averages O(n log n). Each partition roughly halves the array, doing O(n) work per level. The worst case O(n²) happens when the pivot is always the smallest or largest element."
+

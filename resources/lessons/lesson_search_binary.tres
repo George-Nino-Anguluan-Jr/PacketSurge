@@ -1,7 +1,7 @@
 [gd_resource type="Resource" script_class="LessonData" format=3 uid="uid://djadipn5esgie"]
 
 [ext_resource type="Script" uid="uid://ciet8k3fqk8tr" path="res://scripts/data/LessonData.gd" id="1_xk5ya"]
-[ext_resource type="PackedScene" uid="uid://bv8s2d5f7h0g" path="res://scenes/academy/visualizations/VizBinarySearch.tscn" id="2_bn84h"]
+[ext_resource type="PackedScene" path="res://scenes/academy/visualizations/VizBinarySearch.tscn" id="2_bn84h"]
 
 [resource]
 script = ExtResource("1_xk5ya")
@@ -99,3 +99,4 @@ practice_question = "What is the key requirement for Binary Search to work?"
 practice_options = Array[String](["Array must have an even number of elements", "Array must be sorted", "Array must contain only integers", "Array must have no duplicates"])
 practice_correct_index = 1
 practice_explanation = "Binary Search REQUIRES a sorted array. Without sorting, dividing the search space in half doesn't work — you have no way to know which half contains the target."
+

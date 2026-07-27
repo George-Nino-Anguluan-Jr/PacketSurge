@@ -1,12 +1,13 @@
-[gd_scene format=3 uid="uid://ky81v2gcgf6"]
+﻿[gd_scene load_steps=2 format=3 uid="uid://b2vizlists01"]
 
-[ext_resource type="Script" uid="uid://cfleg5s5cy3b6" path="res://scenes/academy/visualizations/VizLists.gd" id="1_83tdu"]
+[ext_resource type="Script" path="res://scenes/academy/visualizations/VizLists.gd" id="1_lists"]
 
-[node name="VizLists" type="Control" unique_id=1365553616]
+[node name="VizLists" type="Control"]
 layout_mode = 3
 anchors_preset = 15
 anchor_right = 1.0
 anchor_bottom = 1.0
 grow_horizontal = 2
 grow_vertical = 2
-script = ExtResource("1_83tdu")
+custom_minimum_size = Vector2(400, 500)
+script = ExtResource("1_lists")

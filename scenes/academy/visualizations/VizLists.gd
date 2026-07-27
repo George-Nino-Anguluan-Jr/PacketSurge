@@ -1,93 +1,103 @@
-extends Control
+﻿extends "res://scripts/academy/VizBase.gd"
 
-var diag: Control; var anim: Control; var code_label: Label
-var play_btn: Button; var step_btn: Button; var reset_btn: Button
-var paused := false; var step_idx := 0; var progress := 0.0; var tween: Tween
+var _items: Array = ["red", "green", "blue"]
+var _highlight_index: int = -1
+var _new_item_index: int = -1
+var _removed_index: int = -1
+var _anim_type: String = ""
 
-var steps = [
-	{"code": "fruits = ['apple', 'banana', 'cherry']", "h": -1, "vals": ["apple","banana","cherry"]},
-	{"code": "fruits[0] = 'apple'", "h": 0, "vals": ["apple","banana","cherry"]},
-	{"code": "fruits[1] = 'banana'", "h": 1, "vals": ["apple","banana","cherry"]},
-	{"code": "fruits[2] = 'cherry'", "h": 2, "vals": ["apple","banana","cherry"]},
-	{"code": "fruits.append('date')", "h": 3, "vals": ["apple","banana","cherry","date"]},
-	{"code": "len(fruits) = 4", "h": -1, "vals": ["apple","banana","cherry","date"]},
-]
+func get_steps() -> Array:
+	return [
+		{ "code": "colors = [\"red\", \"green\", \"blue\"]" },
+		{ "code": "print(colors[0])   # red" },
+		{ "code": "colors.append(\"yellow\")" },
+		{ "code": "colors.remove(\"green\")" },
+	]
 
-func _set_progress(v): progress = v; queue_redraw()
+func get_concept_title() -> String:
+	return "Concept: A list holds many items, each with a numbered index (starts at 0)"
 
-func _ready():
-	var ui = VizUtil.standard_ui(self, " Python Lists — Ordered & Mutable", 100, 400)
-	diag = ui.diagram; anim = ui.anim; code_label = ui.code; var ctrl = ui.controls
-	diag.draw.connect(_draw_diag); anim.draw.connect(_draw_anim)
-	play_btn = VizUtil.make_btn("? Play", VizUtil.C_LABEL); step_btn = VizUtil.make_btn("? Step", VizUtil.C_LABEL)
-	reset_btn = VizUtil.make_btn("? Reset", Color("#FF3366"))
-	ctrl.add_child(play_btn); ctrl.add_child(step_btn); ctrl.add_child(reset_btn)
-	play_btn.pressed.connect(_on_play); step_btn.pressed.connect(_on_step); reset_btn.pressed.connect(_on_reset)
+func get_anim_title() -> String:
+	return "Animation: Try accessing, appending, and removing"
 
-func _on_play():
-	if step_idx >= steps.size(): _on_reset(); return
-	paused = not paused; play_btn.text = "? Pause" if not paused else "? Play"
-	if not paused: _start_tween()
+func _set_step(idx: int) -> void:
+	current_step = idx
+	match idx:
+		0:
+			_highlight_index = -1; _removed_index = -1; _new_item_index = -1
+			_animating = false; _anim_type = ""
+		1:
+			_highlight_index = 0; _removed_index = -1; _new_item_index = -1
+			_animating = false; _anim_type = ""
+		2:
+			_highlight_index = -1; _removed_index = -1; _new_item_index = 3
+			_items.append("yellow")
+			_animating = true; _anim_type = "append"; _anim_progress = 0.0
+		3:
+			_highlight_index = 1; _removed_index = 1; _new_item_index = -1
+			_animating = true; _anim_type = "remove"; _anim_progress = 0.0
+	queue_redraw()
 
-func _on_step():
-	paused = true; play_btn.text = "? Play"
-	if tween and tween.is_running(): tween.kill(); _do_step()
+func _on_reset() -> void:
+	_items = ["red", "green", "blue"]
+	super._on_reset()
 
-func _on_reset():
-	paused = true; play_btn.text = "? Play"
-	if tween and tween.is_running(): tween.kill()
-	step_idx = 0; progress = 0.0; code_label.text = "Press ? Play or ? Step to begin"; queue_redraw()
+func _process(delta: float) -> void:
+	if _animating:
+		_anim_progress += delta * 1.4
+		if _anim_progress >= 1.0:
+			_anim_progress = 1.0
+			_animating = false
+			if _anim_type == "remove":
+				_items.remove_at(_removed_index)
+				_removed_index = -1
+		queue_redraw()
 
-func _start_tween():
-	if paused or step_idx >= steps.size(): return
-	if tween and tween.is_running(): tween.kill()
-	tween = create_tween(); tween.tween_method(_set_progress, 0.0, 1.0, 0.7).set_ease(Tween.EASE_IN_OUT)
-	tween.finished.connect(_on_tween_done, CONNECT_ONE_SHOT)
+func _draw_diagram() -> void:
+	var items := ["0", "1", "2"]
+	var vals := ["\"red\"", "\"green\"", "\"blue\""]
+	var cell_w: float = 90.0
+	var cell_h: float = 48.0
+	var total_w: float = cell_w * 3 + 8 * 2
+	var start_x: float = _diagram_rect.position.x + (_diagram_rect.size.x - total_w) * 0.5
+	var cy: float = _diagram_rect.position.y + (_diagram_rect.size.y - cell_h) * 0.5
+	for i in 3:
+		var r := Rect2(start_x + i * (cell_w + 8), cy, cell_w, cell_h)
+		draw_rect(r, VizUtil.C_PANEL, true)
+		draw_rect(r, VizUtil.C_HIGHLIGHT, false, 1.5)
+		draw_string(ThemeDB.fallback_font, Vector2(r.position.x + 6, r.position.y - 4), "[" + items[i] + "]", HORIZONTAL_ALIGNMENT_LEFT, -1, 10, VizUtil.C_MUTED)
+		draw_string(ThemeDB.fallback_font, Vector2(r.position.x + 10, r.position.y + 30), vals[i], HORIZONTAL_ALIGNMENT_LEFT, -1, 14, VizUtil.C_TEXT)
 
-func _on_tween_done():
-	if step_idx >= steps.size(): return
-	step_idx += 1; progress = 0.0
-	if step_idx >= steps.size(): paused = true; play_btn.text = "? Play"; code_label.text = "List demo complete!"; queue_redraw(); return
-	code_label.text = "?  " + steps[step_idx].code; queue_redraw()
-	if not paused: _start_tween()
+func _draw_anim() -> void:
+	var n := _items.size()
+	if n == 0:
+		return
+	var cell_w: float = 80.0
+	var cell_h: float = 70.0
+	var gap: float = 6.0
+	var total_w: float = cell_w * n + gap * (n - 1)
+	var start_x: float = _anim_rect.position.x + (_anim_rect.size.x - total_w) * 0.5
+	var cy: float = _anim_rect.position.y + _anim_rect.size.y * 0.5 - cell_h * 0.5
 
-func _do_step():
-	if step_idx >= steps.size(): paused = true; play_btn.text = "? Play"; code_label.text = "List demo complete!"; return
-	code_label.text = "?  " + steps[step_idx].code; progress = 1.0; step_idx += 1; queue_redraw()
+	for i in n:
+		var pos_x: float = start_x + i * (cell_w + gap)
+		var alpha: float = 1.0
+		if _anim_type == "remove" and i == _removed_index:
+			alpha = 1.0 - _anim_progress
+		var r := Rect2(pos_x, cy, cell_w, cell_h)
+		var color := VizUtil.C_HIGHLIGHT if i == _highlight_index else VizUtil.C_PANEL
+		var border := VizUtil.C_HIGHLIGHT if i == _highlight_index else Color("#2A4A6A")
+		var idx_col: Color = VizUtil.C_MUTED
+		var val_col: Color = VizUtil.C_TEXT
+		color.a = alpha
+		border.a = alpha
+		idx_col.a = alpha
+		val_col.a = alpha
+		draw_rect(r, color, true)
+		draw_rect(r, border, false, 2)
+		draw_string(ThemeDB.fallback_font, Vector2(r.position.x + 6, r.position.y - 5), "[" + str(i) + "]", HORIZONTAL_ALIGNMENT_LEFT, -1, 11, idx_col)
+		draw_string(ThemeDB.fallback_font, Vector2(r.position.x + 8, r.position.y + 44), "\"" + _items[i] + "\"", HORIZONTAL_ALIGNMENT_LEFT, -1, 14, val_col)
 
-func _draw_diag():
-	var f = ThemeDB.fallback_font
-	diag.draw_string(f, Vector2(16, 20), "fruits = ['apple', 'banana', 'cherry']", HORIZONTAL_ALIGNMENT_LEFT, -1, 13, VizUtil.C_LABEL)
-	diag.draw_string(f, Vector2(16, 40), "fruits[0]  # = 'apple'  (index access)", HORIZONTAL_ALIGNMENT_LEFT, -1, 13, VizUtil.C_TEXT)
-	diag.draw_string(f, Vector2(16, 60), "fruits.append('date')  # add to end", HORIZONTAL_ALIGNMENT_LEFT, -1, 13, VizUtil.C_SWAP)
-	diag.draw_string(f, Vector2(16, 80), "len(fruits)  # = 4  (dynamic size)", HORIZONTAL_ALIGNMENT_LEFT, -1, 13, VizUtil.C_VAL)
-
-func _draw_anim():
-	var f = ThemeDB.fallback_font; var w = anim.size.x; var p = progress
-	if step_idx == 0 and p == 0.0: _draw_items(["apple","banana","cherry"], -1); return
-	var idx = min(step_idx, steps.size() - 1); var s = steps[idx]; var vals = s.vals
-	_draw_items(vals, s.h)
-	if s.h >= 0 and s.h < vals.size():
-		var bw = 90.0; var gap = 6.0; var total = vals.size() * (bw + gap) - gap
-		var sx = (w - total) * 0.5; var y = 60.0
-		var ax = sx + s.h * (bw + gap) + bw * 0.5
-		VizUtil.draw_pointer(anim, Vector2(ax, y + 44 + 4), "fruits[" + str(s.h) + "]", VizUtil.C_HIGHLIGHT, f)
-
-func _draw_items(vals, highlight):
-	var f = ThemeDB.fallback_font; var w = anim.size.x
-	var bw = 90.0; var bh = 44.0; var gap = 6.0
-	var total = vals.size() * (bw + gap) - gap; var sx = (w - total) * 0.5; var y = 60.0
-	var p = progress
-	for i in range(vals.size()):
-		var x = sx + i * (bw + gap); var col = VizUtil.C_LABEL
-		if i == highlight: col = VizUtil.lerp_color(VizUtil.C_LABEL, VizUtil.C_HIGHLIGHT, p)
-		anim.draw_rect(Rect2(x, y, bw, bh), Color(col, 0.15))
-		anim.draw_rect(Rect2(x, y, bw, bh), col, false, 1.5)
-		anim.draw_string(f, Vector2(x + 4, y - 8), "[" + str(i) + "]", HORIZONTAL_ALIGNMENT_LEFT, -1, 10, VizUtil.C_MUTED)
-		var label = str(vals[i])
-		anim.draw_string(f, Vector2(x + 6, y + bh * 0.5 + 6), label, HORIZONTAL_ALIGNMENT_LEFT, -1, 13, VizUtil.C_TEXT)
-
-func _notification(what):
-	if what == NOTIFICATION_RESIZED:
-		if diag: diag.queue_redraw()
-		if anim: anim.queue_redraw()
+	if _highlight_index >= 0 and _highlight_index < n and _anim_type != "remove":
+		var px: float = start_x + _highlight_index * (cell_w + gap) + cell_w * 0.5
+		VizUtil.draw_pointer(self, Vector2(px, cy - 6), "colors[" + str(_highlight_index) + "]", VizUtil.C_LABEL, ThemeDB.fallback_font)

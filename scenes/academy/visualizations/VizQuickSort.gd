@@ -1,102 +1,91 @@
-extends Control
+extends "res://scripts/academy/VizBase.gd"
 
-var diag: Control; var anim: Control; var code_label: Label
-var play_btn: Button; var step_btn: Button; var reset_btn: Button
-var paused := false; var step_idx := 0; var progress := 0.0; var tween: Tween
+var _display: Array = []
+var _pivot: int = 0
+var _pivot_idx: int = -1
+var _left: Array = []
+var _right: Array = []
+var _phase: String = ""
+var _highlight: int = -1
 
-var steps = [
-	{"code": "arr = [7, 2, 9, 1, 5]", "arr": [7,2,9,1,5], "pivot": -1, "part": []},
-	{"code": "pivot = arr[2] = 9", "arr": [7,2,9,1,5], "pivot": 2, "part": [0,1,3,4]},
-	{"code": "partition: 5<9 ? swap arr[4]?arr[0]", "arr": [5,2,9,1,7], "pivot": 2, "part": [0,1,3,4]},
-	{"code": "partition: 1<9 ? swap arr[3]?arr[1]", "arr": [5,1,9,2,7], "pivot": 2, "part": [0,1,3,4]},
-	{"code": "swap pivot to final position", "arr": [5,1,2,7,9], "pivot": -1, "part": []},
-	{"code": "pivot = arr[2] = 2 (left half)", "arr": [5,1,2,7,9], "pivot": 2, "part": [0,1]},
-	{"code": "swap arr[0]=5 ? arr[1]=1 ? done", "arr": [1,5,2,7,9], "pivot": -1, "part": []},
-	{"code": "arr = [1, 5, 2] sorted: [1, 2, 5, 7, 9] ?", "arr": [1,2,5,7,9], "pivot": -1, "part": []},
-]
+func get_steps() -> Array:
+	return [
+		{ "code": "arr = [3, 6, 8, 10, 1, 2, 1]" },
+		{ "code": "pivot = arr[3] = 10" },
+		{ "code": "partition: left=[3,6,8,1,2,1] right=[]" },
+		{ "code": "sort left: pivot = 8" },
+		{ "code": "partition: left=[3,6,1,2,1] right=[]" },
+		{ "code": "sort: pivot = 1" },
+		{ "code": "partition: left=[] right=[3,6,2]" },
+		{ "code": "v sorted: [1, 1, 2, 3, 6, 8, 10]" },
+	]
 
-func _set_progress(v): progress = v; queue_redraw()
+func get_concept_title() -> String:
+	return "Concept: Pick pivot, partition smaller/larger, recurse"
 
-func _ready():
-	var ui = VizUtil.standard_ui(self, " Quick Sort — Divide & Conquer with Pivot", 100, 400)
-	diag = ui.diagram; anim = ui.anim; code_label = ui.code; var ctrl = ui.controls
-	diag.draw.connect(_draw_diag); anim.draw.connect(_draw_anim)
-	play_btn = VizUtil.make_btn("? Play", VizUtil.C_LABEL); step_btn = VizUtil.make_btn("? Step", VizUtil.C_LABEL)
-	reset_btn = VizUtil.make_btn("? Reset", Color("#FF3366"))
-	ctrl.add_child(play_btn); ctrl.add_child(step_btn); ctrl.add_child(reset_btn)
-	play_btn.pressed.connect(_on_play); step_btn.pressed.connect(_on_step); reset_btn.pressed.connect(_on_reset)
+func get_anim_title() -> String:
+	return "Animation: Watch the recursive partition"
 
-func _on_play():
-	if step_idx >= steps.size(): _on_reset(); return
-	paused = not paused; play_btn.text = "? Pause" if not paused else "? Play"
-	if not paused: _start_tween()
+func _set_step(idx: int) -> void:
+	current_step = idx
+	match idx:
+		0: _display = [3, 6, 8, 10, 1, 2, 1]; _pivot = 0; _pivot_idx = -1; _left = []; _right = []; _phase = "init"; _highlight = -1
+		1: _display = [3, 6, 8, 10, 1, 2, 1]; _pivot = 10; _pivot_idx = 3; _left = []; _right = []; _phase = "pick"; _highlight = 3
+		2: _display = [3, 6, 8, 1, 2, 1, 10]; _pivot = 10; _pivot_idx = 6; _left = [3, 6, 8, 1, 2, 1]; _right = []; _phase = "partition"; _highlight = -1
+		3: _display = [3, 6, 8, 1, 2, 1]; _pivot = 8; _pivot_idx = 2; _left = []; _right = []; _phase = "pick"; _highlight = 2
+		4: _display = [3, 6, 1, 2, 1, 8]; _pivot = 8; _pivot_idx = 5; _left = [3, 6, 1, 2, 1]; _right = []; _phase = "partition"; _highlight = -1
+		5: _display = [3, 6, 1, 2, 1]; _pivot = 1; _pivot_idx = 2; _left = []; _right = []; _phase = "pick"; _highlight = 2
+		6: _display = [1, 3, 6, 2]; _pivot = 1; _pivot_idx = 0; _left = []; _right = [3, 6, 2]; _phase = "partition"; _highlight = -1
+		7: _display = [1, 1, 2, 3, 6, 8, 10]; _pivot = 0; _pivot_idx = -1; _left = []; _right = []; _phase = "done"; _highlight = -1
+	_anim_progress = 0.0
+	_animating = true
+	queue_redraw()
 
-func _on_step():
-	paused = true; play_btn.text = "? Play"
-	if tween and tween.is_running(): tween.kill(); _do_step()
+func _draw_diagram() -> void:
+	draw_string(ThemeDB.fallback_font, Vector2(_diagram_rect.position.x + 12, _diagram_rect.position.y + _diagram_rect.size.y * 0.5), "Pick pivot  â€¢  partition smaller/larger  â€¢  recurse", HORIZONTAL_ALIGNMENT_LEFT, -1, 12, Color("#FFB800"))
 
-func _on_reset():
-	paused = true; play_btn.text = "? Play"
-	if tween and tween.is_running(): tween.kill()
-	step_idx = 0; progress = 0.0; code_label.text = "Press ? Play or ? Step to begin"; queue_redraw()
-
-func _start_tween():
-	if paused or step_idx >= steps.size(): return
-	if tween and tween.is_running(): tween.kill()
-	tween = create_tween(); tween.tween_method(_set_progress, 0.0, 1.0, 1.0).set_ease(Tween.EASE_IN_OUT)
-	tween.finished.connect(_on_tween_done, CONNECT_ONE_SHOT)
-
-func _on_tween_done():
-	if step_idx >= steps.size(): return
-	step_idx += 1; progress = 0.0
-	if step_idx >= steps.size(): paused = true; play_btn.text = "? Play"; code_label.text = "Sorted: [1, 2, 5, 7, 9] ?"; queue_redraw(); return
-	code_label.text = "?  " + steps[step_idx].code; queue_redraw()
-	if not paused: _start_tween()
-
-func _do_step():
-	if step_idx >= steps.size(): paused = true; play_btn.text = "? Play"; code_label.text = "Sorted: [1, 2, 5, 7, 9] ?"; return
-	code_label.text = "?  " + steps[step_idx].code; progress = 1.0; step_idx += 1; queue_redraw()
-
-func _draw_diag():
-	var f = ThemeDB.fallback_font
-	diag.draw_string(f, Vector2(16, 20), "def quick_sort(arr):", HORIZONTAL_ALIGNMENT_LEFT, -1, 13, VizUtil.C_LABEL)
-	diag.draw_string(f, Vector2(16, 40), "    if len(arr) <= 1: return arr", HORIZONTAL_ALIGNMENT_LEFT, -1, 13, VizUtil.C_TEXT)
-	diag.draw_string(f, Vector2(16, 60), "    pivot = arr[len(arr)//2]", HORIZONTAL_ALIGNMENT_LEFT, -1, 13, VizUtil.C_SWAP)
-	diag.draw_string(f, Vector2(16, 80), "    left = [x for x in arr if x < pivot]", HORIZONTAL_ALIGNMENT_LEFT, -1, 13, VizUtil.C_TEXT)
-	diag.draw_string(f, Vector2(16, 98), "    return quick_sort(left)+mid+quick_sort(right)", HORIZONTAL_ALIGNMENT_LEFT, -1, 12, VizUtil.C_VAL)
-
-func _draw_anim():
-	var f = ThemeDB.fallback_font; var w = anim.size.x; var p = progress
-	if step_idx == 0 and p == 0.0: _draw_bars(steps[0].arr, -1, []); return
-	var idx = min(step_idx, steps.size() - 1); var s = steps[idx]; var arr = s.arr; var is_last = (idx == steps.size() - 1)
-	var colors = []
-	for i in range(arr.size()):
-		var col = VizUtil.C_LABEL
-		if i == s.pivot: col = VizUtil.lerp_color(VizUtil.C_LABEL, VizUtil.C_SWAP, p)
-		elif s.part.has(i): col = VizUtil.lerp_color(VizUtil.C_LABEL, VizUtil.C_HIGHLIGHT, p)
-		elif is_last: col = VizUtil.lerp_color(VizUtil.C_LABEL, VizUtil.C_VAL, p)
-		colors.append(col)
-	_draw_bars(arr, s.pivot, s.part, colors)
-
-func _draw_bars(arr, pivot, part, colors = []):
-	var f = ThemeDB.fallback_font; var w = anim.size.x
-	var bw = VizUtil.BAR_W; var gap = VizUtil.BAR_GAP; var n = arr.size()
-	var total = n * (bw + gap) - gap; var sx = (w - total) * 0.5; var y = 20.0
-	var max_val = 0; for v in arr: if typeof(v) == TYPE_INT: max_val = max(max_val, abs(v))
-	if max_val == 0: max_val = 1
-	for i in range(n):
-		var val = arr[i]; var bar_h = VizUtil.MIN_BAR_H + (VizUtil.MAX_BAR_H - VizUtil.MIN_BAR_H) * (float(abs(val)) / float(max_val))
-		var x = sx + i * (bw + gap); var by = y + VizUtil.MAX_BAR_H - bar_h
-		var col = colors[i] if colors.size() > i else VizUtil.C_LABEL
-		anim.draw_rect(Rect2(x, by, bw, bar_h), Color(col, 0.18))
-		anim.draw_rect(Rect2(x, by, bw, bar_h), col, false, 2.0)
-		anim.draw_string(f, Vector2(x + 4, by - 6), "[" + str(i) + "]", HORIZONTAL_ALIGNMENT_LEFT, -1, 10, VizUtil.C_MUTED)
-		var label = str(val); var lw = label.length() * 8
-		anim.draw_string(f, Vector2(x + bw * 0.5 - lw * 0.5, by + bar_h * 0.5 + 6), label, HORIZONTAL_ALIGNMENT_LEFT, -1, 14, VizUtil.C_TEXT)
-	if pivot >= 0:
-		anim.draw_string(f, Vector2(sx + pivot * (bw + gap) + 8, y - 10), "pivot", HORIZONTAL_ALIGNMENT_LEFT, -1, 11, VizUtil.C_SWAP)
-
-func _notification(what):
-	if what == NOTIFICATION_RESIZED:
-		if diag: diag.queue_redraw()
-		if anim: anim.queue_redraw()
+func _draw_anim() -> void:
+	if _phase == "partition":
+		var ln: int = _left.size()
+		var rn: int = _right.size()
+		var total: int = ln + 1 + rn
+		if total == 0: return
+		var cell_w: float = 44.0
+		var gap: float = 6.0
+		var total_w: float = cell_w * total + gap * (total - 1)
+		var start_x: float = _anim_rect.position.x + (_anim_rect.size.x - total_w) * 0.5
+		var cy: float = _anim_rect.position.y + _anim_rect.size.y * 0.4
+		draw_string(ThemeDB.fallback_font, Vector2(start_x - 50, cy + 30), "< pivot", HORIZONTAL_ALIGNMENT_LEFT, -1, 12, VizUtil.C_HIGHLIGHT)
+		draw_string(ThemeDB.fallback_font, Vector2(start_x + total_w - 50, cy + 30), "> pivot", HORIZONTAL_ALIGNMENT_LEFT, -1, 12, Color("#FFB800"))
+		for i in total:
+			var v: int
+			var is_pivot: bool = i == ln
+			if i < ln: v = _left[i]
+			elif is_pivot: v = _pivot
+			else: v = _right[i - ln - 1]
+			var r := Rect2(start_x + i * (cell_w + gap), cy, cell_w, 56)
+			var color: Color = Color("#FFB800") if is_pivot else (VizUtil.C_HIGHLIGHT if i < ln else Color("#00D4FF"))
+			draw_rect(r, color, true)
+			draw_rect(r, Color("#FFB800") if is_pivot else Color("#2A4A6A"), false, 2.5 if is_pivot else 1.5)
+			draw_string(ThemeDB.fallback_font, Vector2(r.position.x + cell_w * 0.5 - 4, r.position.y + 34), str(v), HORIZONTAL_ALIGNMENT_LEFT, -1, 15, VizUtil.C_BG if is_pivot else VizUtil.C_TEXT)
+			if is_pivot:
+				draw_string(ThemeDB.fallback_font, Vector2(r.position.x + cell_w * 0.5 - 16, r.position.y - 6), "PIVOT", HORIZONTAL_ALIGNMENT_LEFT, -1, 10, Color("#FFB800"))
+	else:
+		var n: int = _display.size()
+		if n == 0: return
+		var cell_w: float = 44.0
+		var gap: float = 6.0
+		var total_w: float = cell_w * n + gap * (n - 1)
+		var start_x: float = _anim_rect.position.x + (_anim_rect.size.x - total_w) * 0.5
+		var cy: float = _anim_rect.position.y + _anim_rect.size.y * 0.4
+		for i in n:
+			var v: int = _display[i]
+			var r := Rect2(start_x + i * (cell_w + gap), cy, cell_w, 56)
+			var is_pivot: bool = i == _pivot_idx and _phase == "pick"
+			var is_hl: bool = i == _highlight
+			var color: Color = Color("#FFB800") if is_pivot else (VizUtil.C_HIGHLIGHT if is_hl else Color("#0D4A6A"))
+			draw_rect(r, color, true)
+			draw_rect(r, Color("#FFB800") if is_pivot else Color("#2A4A6A"), false, 2.5 if is_pivot else 1.5)
+			draw_string(ThemeDB.fallback_font, Vector2(r.position.x + cell_w * 0.5 - 4, r.position.y + 34), str(v), HORIZONTAL_ALIGNMENT_LEFT, -1, 15, VizUtil.C_BG if is_pivot else VizUtil.C_TEXT)
+			if is_pivot:
+				draw_string(ThemeDB.fallback_font, Vector2(r.position.x + cell_w * 0.5 - 16, r.position.y - 6), "PIVOT", HORIZONTAL_ALIGNMENT_LEFT, -1, 10, Color("#FFB800"))

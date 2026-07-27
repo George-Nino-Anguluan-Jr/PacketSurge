@@ -1,7 +1,7 @@
 [gd_resource type="Resource" script_class="LessonData" format=3 uid="uid://ddywnc14ns7gy"]
 
 [ext_resource type="Script" uid="uid://ciet8k3fqk8tr" path="res://scripts/data/LessonData.gd" id="1_ureiw"]
-[ext_resource type="PackedScene" uid="uid://cqbi2028yebeg" path="res://scenes/academy/visualizations/VizStacks.tscn" id="2_t55l4"]
+[ext_resource type="PackedScene" path="res://scenes/academy/visualizations/VizStacks.tscn" id="2_t55l4"]
 
 [resource]
 script = ExtResource("1_ureiw")
@@ -88,3 +88,4 @@ practice_question = "What will this code print?    s = []    s.append(1)    s.ap
 practice_options = Array[String](["1", "2", "[1, 2]", "Nothing"])
 practice_correct_index = 1
 practice_explanation = "Items are pushed in order: 1 then 2. The stack is [1, 2] with 2 on top. pop() removes and returns the top item, so it prints 2."
+

@@ -1,97 +1,92 @@
-extends Control
+extends "res://scripts/academy/VizBase.gd"
 
-var diag: Control; var anim: Control; var code_label: Label
-var play_btn: Button; var step_btn: Button; var reset_btn: Button
-var paused := false; var step_idx := 0; var progress := 0.0; var tween: Tween
+var _values: Array = [5, 10, 25, 42]
+var _current_index: int = -1
 
-var steps = [
-	{"code": "head ? [10|·] ? null", "arr": [10], "h": 0},
-	{"code": "insert 20 at head ? [20|·] ? [10|/]", "arr": [20, 10], "h": 0},
-	{"code": "insert 30 at head ? [30|·] ? [20|·] ? [10|/]", "arr": [30, 20, 10], "h": 0},
-	{"code": "head ? [20|·] ? [10|/] (removed 30)", "arr": [20, 10], "h": 0},
-	{"code": "head ? [10|/] (removed 20)", "arr": [10], "h": 0},
-]
+func get_steps() -> Array:
+	return [
+		{ "code": "current = node1" },
+		{ "code": "current = node2" },
+		{ "code": "current = node3" },
+		{ "code": "current = node4" },
+		{ "code": "current = None -> done" },
+	]
 
-func _set_progress(v): progress = v; queue_redraw()
+func get_concept_title() -> String:
+	return "Concept: Nodes connected by next-pointers (chain of clues)"
 
-func _ready():
-	var ui = VizUtil.standard_ui(self, " Linked List — Nodes with Pointers", 100, 400)
-	diag = ui.diagram; anim = ui.anim; code_label = ui.code; var ctrl = ui.controls
-	diag.draw.connect(_draw_diag); anim.draw.connect(_draw_anim)
-	play_btn = VizUtil.make_btn("? Play", VizUtil.C_LABEL); step_btn = VizUtil.make_btn("? Step", VizUtil.C_LABEL)
-	reset_btn = VizUtil.make_btn("? Reset", Color("#FF3366"))
-	ctrl.add_child(play_btn); ctrl.add_child(step_btn); ctrl.add_child(reset_btn)
-	play_btn.pressed.connect(_on_play); step_btn.pressed.connect(_on_step); reset_btn.pressed.connect(_on_reset)
+func get_anim_title() -> String:
+	return "Animation: Walk the chain from head to tail"
 
-func _on_play():
-	if step_idx >= steps.size(): _on_reset(); return
-	paused = not paused; play_btn.text = "? Pause" if not paused else "? Play"
-	if not paused: _start_tween()
+func _set_step(idx: int) -> void:
+	current_step = idx
+	_current_index = idx if idx < 4 else -1
+	_anim_progress = 0.0
+	_animating = true
+	queue_redraw()
 
-func _on_step():
-	paused = true; play_btn.text = "? Play"
-	if tween and tween.is_running(): tween.kill(); _do_step()
+func _draw_diagram() -> void:
+	draw_string(ThemeDB.fallback_font, Vector2(_diagram_rect.position.x + 12, _diagram_rect.position.y + 16), "Node = [ value | next ]  ->", HORIZONTAL_ALIGNMENT_LEFT, -1, 12, Color("#FFB800"))
+	var cy: float = _diagram_rect.position.y + _diagram_rect.size.y * 0.7
+	var x: float = _diagram_rect.position.x + 60.0
+	for i in 3:
+		var r := Rect2(x, cy, 80, 30)
+		draw_rect(r, Color("#0D4A6A"), true)
+		draw_rect(r, Color("#00D4FF"), false, 1.5)
+		draw_string(ThemeDB.fallback_font, Vector2(r.position.x + 8, r.position.y + 20), str(5 + i * 10), HORIZONTAL_ALIGNMENT_LEFT, -1, 12, VizUtil.C_TEXT)
+		x += 90
 
-func _on_reset():
-	paused = true; play_btn.text = "? Play"
-	if tween and tween.is_running(): tween.kill()
-	step_idx = 0; progress = 0.0; code_label.text = "Press ? Play or ? Step to begin"; queue_redraw()
+func _draw_anim() -> void:
+	var n: int = _values.size()
+	var node_w: float = 110.0
+	var node_h: float = 70.0
+	var gap: float = 60.0
+	var total_w: float = node_w * n + gap * (n - 1)
+	var start_x: float = _anim_rect.position.x + (_anim_rect.size.x - total_w) * 0.5
+	var cy: float = _anim_rect.position.y + _anim_rect.size.y * 0.4
 
-func _start_tween():
-	if paused or step_idx >= steps.size(): return
-	if tween and tween.is_running(): tween.kill()
-	tween = create_tween(); tween.tween_method(_set_progress, 0.0, 1.0, 0.7).set_ease(Tween.EASE_IN_OUT)
-	tween.finished.connect(_on_tween_done, CONNECT_ONE_SHOT)
+	draw_string(ThemeDB.fallback_font, Vector2(start_x - 60, cy + 8), "HEAD ->", HORIZONTAL_ALIGNMENT_LEFT, -1, 12, Color("#00FF88"))
+	draw_string(ThemeDB.fallback_font, Vector2(start_x + total_w - 20, cy + 8), "-> None", HORIZONTAL_ALIGNMENT_LEFT, -1, 12, Color("#FF3366"))
 
-func _on_tween_done():
-	if step_idx >= steps.size(): return
-	step_idx += 1; progress = 0.0
-	if step_idx >= steps.size(): paused = true; play_btn.text = "? Play"; code_label.text = "Linked list demo complete!"; queue_redraw(); return
-	code_label.text = "?  " + steps[step_idx].code; queue_redraw()
-	if not paused: _start_tween()
+	for i in n - 1:
+		var a_from := Vector2(start_x + (i + 1) * node_w + i * gap, cy + node_h * 0.5)
+		var a_to := Vector2(start_x + (i + 1) * (node_w + gap), cy + node_h * 0.5)
+		var a_color: Color = Color("#2A4A6A")
+		if i < _current_index:
+			a_color = Color("#00FF88")
+		elif i == _current_index:
+			a_color = VizUtil.C_HIGHLIGHT
+		draw_line(a_from, a_to, a_color, 2.5)
+		VizUtil.draw_arrow(self, a_from, a_to, a_color, 8)
 
-func _do_step():
-	if step_idx >= steps.size(): paused = true; play_btn.text = "? Play"; code_label.text = "Linked list demo complete!"; return
-	code_label.text = "?  " + steps[step_idx].code; progress = 1.0; step_idx += 1; queue_redraw()
-
-func _draw_diag():
-	var f = ThemeDB.fallback_font
-	diag.draw_string(f, Vector2(16, 20), "class Node:", HORIZONTAL_ALIGNMENT_LEFT, -1, 13, VizUtil.C_LABEL)
-	diag.draw_string(f, Vector2(16, 40), "    def __init__(self, val):", HORIZONTAL_ALIGNMENT_LEFT, -1, 13, VizUtil.C_TEXT)
-	diag.draw_string(f, Vector2(16, 60), "        self.val = val", HORIZONTAL_ALIGNMENT_LEFT, -1, 13, VizUtil.C_TEXT)
-	diag.draw_string(f, Vector2(16, 80), "        self.next = None", HORIZONTAL_ALIGNMENT_LEFT, -1, 13, VizUtil.C_SWAP)
-
-func _draw_anim():
-	var f = ThemeDB.fallback_font; var w = anim.size.x; var p = progress
-	if step_idx == 0 and p == 0.0: _draw_list([10], 0); return
-	var idx = min(step_idx, steps.size() - 1); var s = steps[idx]
-	_draw_list(s.arr, s.h)
-
-func _draw_list(arr, head):
-	var f = ThemeDB.fallback_font; var w = anim.size.x; var h = 400.0
-	var bw = 80.0; var bh = 50.0; var gap = 30.0
-	var total = arr.size() * (bw + gap) - gap; var sx = (w - total) * 0.5; var y = h * 0.5 - bh * 0.5
-	if arr.size() == 0:
-		anim.draw_string(f, Vector2(w * 0.5 - 20, y), "null", HORIZONTAL_ALIGNMENT_LEFT, -1, 14, VizUtil.C_MUTED)
-		return
-	for i in range(arr.size()):
-		var x = sx + i * (bw + gap); var col = VizUtil.C_LABEL
-		if i == head: col = VizUtil.lerp_color(VizUtil.C_LABEL, VizUtil.C_HIGHLIGHT, progress)
-		anim.draw_rect(Rect2(x, y, bw - 20, bh), Color(col, 0.2))
-		anim.draw_rect(Rect2(x, y, bw - 20, bh), col, false, 2.0)
-		anim.draw_rect(Rect2(x + bw - 20, y, 20, bh), Color(VizUtil.C_MUTED, 0.15))
-		anim.draw_rect(Rect2(x + bw - 20, y, 20, bh), VizUtil.C_MUTED, false, 1.5)
-		anim.draw_string(f, Vector2(x + 8, y + bh * 0.5 + 6), str(arr[i]), HORIZONTAL_ALIGNMENT_LEFT, -1, 14, VizUtil.C_TEXT)
-		if i < arr.size() - 1:
-			var arrow_from = Vector2(x + bw + 2, y + bh * 0.5)
-			var arrow_to = Vector2(x + bw + gap - 8, y + bh * 0.5)
-			VizUtil.draw_arrow(anim, arrow_from, arrow_to, VizUtil.C_MUTED)
-			anim.draw_string(f, Vector2(x + bw + 6, y + bh * 0.5 - 10), "next", HORIZONTAL_ALIGNMENT_LEFT, -1, 8, VizUtil.C_MUTED)
+	for i in n:
+		var r := Rect2(start_x + i * (node_w + gap), cy, node_w, node_h)
+		var is_current: bool = i == _current_index
+		var is_visited: bool = i < _current_index
+		var alpha: float = 1.0
+		if is_current and _anim_progress < 1.0:
+			alpha = 0.4 + 0.6 * (sin(_anim_progress * 12.0) * 0.5 + 0.5)
+		var bg: Color = Color("#003D66") if is_visited or is_current else VizUtil.C_PANEL
+		var border: Color = Color("#00FF88") if is_visited or is_current else Color("#2A4A6A")
+		bg.a = alpha
+		border.a = alpha
+		var val_col: Color = Color("#00FF88") if (is_current or is_visited) else VizUtil.C_TEXT
+		val_col.a = alpha
+		var next_col: Color = Color("#00FF88") if (is_current or is_visited) else VizUtil.C_TEXT
+		next_col.a = alpha
+		draw_rect(r, bg, true)
+		draw_rect(r, border, false, 2.5 if is_current or is_visited else 1.5)
+		var val_r := Rect2(r.position.x, r.position.y, node_w * 0.55, node_h)
+		var val_bg: Color = Color(border, 0.3)
+		val_bg.a = alpha
+		draw_rect(val_r, val_bg, true)
+		draw_string(ThemeDB.fallback_font, Vector2(val_r.position.x + 12, val_r.position.y + 28), "val", HORIZONTAL_ALIGNMENT_LEFT, -1, 10, VizUtil.C_MUTED)
+		draw_string(ThemeDB.fallback_font, Vector2(val_r.position.x + 12, val_r.position.y + 56), str(_values[i]), HORIZONTAL_ALIGNMENT_LEFT, -1, 20, val_col)
+		draw_line(Vector2(r.position.x + node_w * 0.55, r.position.y), Vector2(r.position.x + node_w * 0.55, r.position.y + node_h), border, 1.5)
+		draw_string(ThemeDB.fallback_font, Vector2(r.position.x + node_w * 0.6, r.position.y + 18), "next", HORIZONTAL_ALIGNMENT_LEFT, -1, 10, VizUtil.C_MUTED)
+		var next_text: String
+		if i < n - 1:
+			next_text = "-> n" + str(i + 2)
 		else:
-			anim.draw_string(f, Vector2(x + bw, y + bh * 0.5 + 6), "null", HORIZONTAL_ALIGNMENT_LEFT, -1, 10, VizUtil.C_MUTED)
-	anim.draw_string(f, Vector2(sx - 40, y + bh * 0.5 + 6), "head?", HORIZONTAL_ALIGNMENT_LEFT, -1, 12, VizUtil.C_HIGHLIGHT)
-
-func _notification(what):
-	if what == NOTIFICATION_RESIZED:
-		if diag: diag.queue_redraw()
-		if anim: anim.queue_redraw()
+			next_text = "None"
+		draw_string(ThemeDB.fallback_font, Vector2(r.position.x + node_w * 0.6, r.position.y + 50), next_text, HORIZONTAL_ALIGNMENT_LEFT, -1, 12, next_col)

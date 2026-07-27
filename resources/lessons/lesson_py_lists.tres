@@ -1,7 +1,7 @@
 [gd_resource type="Resource" script_class="LessonData" format=3 uid="uid://c0s0tnbukxy8v"]
 
 [ext_resource type="Script" uid="uid://ciet8k3fqk8tr" path="res://scripts/data/LessonData.gd" id="1_6cnu5"]
-[ext_resource type="PackedScene" uid="uid://ky81v2gcgf6" path="res://scenes/academy/visualizations/VizLists.tscn" id="2_ontg8"]
+[ext_resource type="PackedScene" path="res://scenes/academy/visualizations/VizLists.tscn" id="2_ontg8"]
 
 [resource]
 script = ExtResource("1_6cnu5")
@@ -69,3 +69,4 @@ practice_question = "What does len() tell you about a list?"
 practice_options = Array[String](["The number of items in the list", "The last item in the list", "The first item in the list", "The total size of the list in memory"])
 practice_correct_index = 0
 practice_explanation = "len() returns the number of items (length) of the list. For example, len([10, 20, 30]) returns 3."
+

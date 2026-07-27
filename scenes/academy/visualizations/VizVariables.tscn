@@ -1,12 +1,13 @@
-[gd_scene format=3 uid="uid://bfmvnhmt8alcr"]
+﻿[gd_scene load_steps=2 format=3 uid="uid://b2vizvariables01"]
 
-[ext_resource type="Script" uid="uid://b1q6y27rgempt" path="res://scenes/academy/visualizations/VizVariables.gd" id="1_1j2vk"]
+[ext_resource type="Script" path="res://scenes/academy/visualizations/VizVariables.gd" id="1_variables"]
 
-[node name="DrawSurface" type="Control" unique_id=1365553616]
+[node name="VizVariables" type="Control"]
 layout_mode = 3
 anchors_preset = 15
 anchor_right = 1.0
 anchor_bottom = 1.0
 grow_horizontal = 2
 grow_vertical = 2
-script = ExtResource("1_1j2vk")
+custom_minimum_size = Vector2(400, 500)
+script = ExtResource("1_variables")
