@@ -14,7 +14,7 @@ vconfig_version=5
 
 config/name="Packet Surge"
 run/main_scene="uid://crbm2w57pccxo"
-config/features=PackedStringArray("4.7", "Forward Plus")
+config/features=PackedStringArray("4.6", "Forward Plus")
 run/max_fps=60
 config/icon="res://icon.svg"
 
@@ -39,6 +39,10 @@ window/size/viewport_height=720
 window/stretch/mode="canvas_items"
 window/stretch/aspect="expand"
 window/handheld/orientation="landscape"
+
+[dotnet]
+
+project/assembly_name="Packet Surge"
 
 [input]
 
