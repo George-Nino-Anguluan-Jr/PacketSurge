@@ -37,6 +37,11 @@ const SPIRE_VARIANTS: Dictionary = {
 	"bubble_shield":  { "variant": "Leafbug",        "pack": "enemy_pack2" },
 	"pivot_splitter": { "variant": "Magma_Crab",     "pack": "enemy_pack2" },
 	"selection_mark": { "variant": "Scorpion",       "pack": "enemy_pack2" },
+	"insertion_stack":{ "variant": "Maggot",         "pack": "enemy_pack3" },
+	"merge_twin":     { "variant": "Beetle",         "pack": "enemy_pack3" },
+	"count_meter":    { "variant": "Mantis",         "pack": "enemy_pack3" },
+	"radix_digit":    { "variant": "Mosquito",       "pack": "enemy_pack3" },
+	"scan_wave":      { "variant": "EggCluster",     "pack": "enemy_pack3" },
 }
 
 var _last_position: Vector2 = Vector2.ZERO

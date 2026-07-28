@@ -195,30 +195,59 @@ func _exec_stmt(stripped, env, state):
 		if parts.size() == 2:
 			var lhs = parts[0].strip_edges()
 			var rhs = parts[1].strip_edges()
-			var lb = lhs.find("[")
-			if lb != -1 and lhs.ends_with("]"):
-				var vname = lhs.substr(0, lb).strip_edges()
-				var idx_str = lhs.substr(lb + 1, lhs.length() - lb - 2).strip_edges()
-				var idx = _eval_expr(idx_str, env, state)
-				if state.ok and env.has(vname) and typeof(env[vname]) == TYPE_ARRAY and typeof(idx) == TYPE_INT:
-					var val = _eval_expr(rhs, env, state)
-					if state.ok:
-						env[vname][idx] = val
+			# Tuple / list unpacking: a, b = c, d  or  arr[i], arr[j] = arr[j], arr[i]
+			if "," in lhs:
+				var lhs_targets = _split_comma(lhs)
+				var rhs_values  = _split_comma(rhs)
+				if lhs_targets.size() != rhs_values.size():
+					state.ok = false
+					state.err = "Assignment mismatch: " + str(lhs_targets.size()) + " targets, " + str(rhs_values.size()) + " values."
 					return
-			if lhs.is_valid_identifier():
-				var val = _eval_expr(rhs, env, state)
-				if state.ok:
-					env[lhs] = val
+				# Evaluate RHS first into a temp list so the swap semantics work
+				# (e.g. arr[j], arr[j+1] = arr[j+1], arr[j]).
+				var tmp = []
+				for r in rhs_values:
+					var v = _eval_expr(r.strip_edges(), env, state)
+					if not state.ok:
+						return
+					tmp.append(v)
+				for k in range(lhs_targets.size()):
+					var target = lhs_targets[k].strip_edges()
+					_assign_single_target(target, tmp[k], env, state)
+					if not state.ok:
+						return
 				return
-			else:
-				state.ok = false
-				state.err = "Invalid assignment: '" + lhs + "' is not a valid variable name or array index."
+			var val = _eval_expr(rhs, env, state)
+			if not state.ok:
 				return
+			_assign_single_target(lhs, val, env, state)
+			return
 	if "(" in stripped and stripped.ends_with(")"):
 		_eval_expr(stripped, env, state)
 		return
 	state.ok = false
 	state.err = "Unknown statement: " + stripped
+
+func _assign_single_target(target: String, val, env: Dictionary, state: Dictionary) -> void:
+	# Handles both `name = value` and `name[idx] = value` for a single target.
+	var lb = target.find("[")
+	if lb != -1 and target.ends_with("]"):
+		var vname = target.substr(0, lb).strip_edges()
+		var idx_str = target.substr(lb + 1, target.length() - lb - 2).strip_edges()
+		var idx = _eval_expr(idx_str, env, state)
+		if not state.ok:
+			return
+		if env.has(vname) and typeof(env[vname]) == TYPE_ARRAY and typeof(idx) == TYPE_INT:
+			env[vname][idx] = val
+			return
+		state.ok = false
+		state.err = "Invalid array index in assignment: '" + target + "'."
+		return
+	if target.is_valid_identifier():
+		env[target] = val
+		return
+	state.ok = false
+	state.err = "Invalid assignment: '" + target + "' is not a valid variable name or array index."
 
 func _eval_expr(expr, env, state):
 	var s = expr.strip_edges()
@@ -422,6 +451,8 @@ func _eval_expr(expr, env, state):
 				if state.ok and typeof(obj) == TYPE_ARRAY:
 					obj.append(arg)
 					return obj
+		return null
+
 	if s.begins_with("(") and s.ends_with(")"):
 		var inner = s.substr(1, s.length() - 2).strip_edges()
 		return _eval_expr(inner, env, state)
@@ -437,18 +468,78 @@ func _eval_expr(expr, env, state):
 					return null
 				arg_vals.append(v)
 		match fname:
-			"len": return arg_vals[0].size() if arg_vals.size() == 1 else null
-			"str": return str(arg_vals[0]) if arg_vals.size() == 1 else null
-			"int": return int(arg_vals[0]) if arg_vals.size() == 1 else null
-			"float": return float(arg_vals[0]) if arg_vals.size() == 1 else null
+			"len":
+				if arg_vals.size() != 1:
+					state.ok = false
+					state.err = "len() takes exactly 1 argument, got " + str(arg_vals.size()) + "."
+					return null
+				var v = arg_vals[0]
+				if v == null:
+					state.ok = false
+					state.err = "len() of None."
+					return null
+				return v.size()
+			"str":
+				if arg_vals.size() != 1:
+					state.ok = false
+					state.err = "str() takes exactly 1 argument, got " + str(arg_vals.size()) + "."
+					return null
+				return str(arg_vals[0])
+			"int":
+				if arg_vals.size() != 1:
+					state.ok = false
+					state.err = "int() takes exactly 1 argument, got " + str(arg_vals.size()) + "."
+					return null
+				if arg_vals[0] == null:
+					state.ok = false
+					state.err = "int() of None."
+					return null
+				return int(arg_vals[0])
+			"float":
+				if arg_vals.size() != 1:
+					state.ok = false
+					state.err = "float() takes exactly 1 argument, got " + str(arg_vals.size()) + "."
+					return null
+				if arg_vals[0] == null:
+					state.ok = false
+					state.err = "float() of None."
+					return null
+				return float(arg_vals[0])
 			"range":
 				var start = 0
 				var stop = 0
 				if arg_vals.size() == 1:
-					stop = arg_vals[0]
+					var v = arg_vals[0]
+					if v == null:
+						state.ok = false
+						state.err = "range() argument is None."
+						return null
+					if typeof(v) != TYPE_INT and typeof(v) != TYPE_FLOAT:
+						state.ok = false
+						state.err = "range() expects an int, got an array. Did you mean range(len(arr))?"
+						return null
+					stop = int(v)
 				elif arg_vals.size() == 2:
-					start = arg_vals[0]
-					stop = arg_vals[1]
+					var s_val = arg_vals[0]
+					var e_val = arg_vals[1]
+					if s_val == null or e_val == null:
+						state.ok = false
+						state.err = "range() argument is None."
+						return null
+					if typeof(s_val) != TYPE_INT and typeof(s_val) != TYPE_FLOAT:
+						state.ok = false
+						state.err = "range() start expects an int, got " + _type_name(typeof(s_val)) + "."
+						return null
+					if typeof(e_val) != TYPE_INT and typeof(e_val) != TYPE_FLOAT:
+						state.ok = false
+						state.err = "range() stop expects an int, got " + _type_name(typeof(e_val)) + "."
+						return null
+					start = int(s_val)
+					stop = int(e_val)
+				else:
+					state.ok = false
+					state.err = "range() takes 1 or 2 arguments, got " + str(arg_vals.size()) + "."
+					return null
 				var r = []
 				var i = start
 				while i < stop:
