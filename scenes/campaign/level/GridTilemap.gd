@@ -3,7 +3,7 @@
 class_name GridTilemap
 extends Node2D
 
-var grid_system: GridSystem
+var grid_system
 var tile_size: int = 64
 
 var _dark_tex: ImageTexture
@@ -334,7 +334,7 @@ func _path_tex_for(cell: Vector2i) -> ImageTexture:
 		return _path_h_tex
 	return _path_v_tex
 
-func build_from_grid(grid: GridSystem, base_cell: Vector2i = Vector2i(-1, -1)) -> void:
+func build_from_grid(grid, base_cell: Vector2i = Vector2i(-1, -1)) -> void:
 	grid_system = grid
 	_seed = GameManager.current_level * 7919
 	generate_tiles()
