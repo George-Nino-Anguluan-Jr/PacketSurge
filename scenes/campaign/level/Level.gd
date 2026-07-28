@@ -1,6 +1,8 @@
 # Level.gd
 extends Node2D
 
+const GridSystem = preload("res://scenes/campaign/level/GridSystem.gd")
+
 # ─── NODE REFERENCES ───────────────────────────────────
 @onready var grid_visual: Node2D             = $GridLayer/GridVisual
 @onready var tower_layer: Node2D             = $TowerLayer
@@ -43,7 +45,7 @@ var level_number: int              = 1
 var score: int                     = 0
 var base_health: int               = 10
 var selected_tower_data: TowerData = null
-var grid_system: Node2D            = null
+var grid_system
 var level_start_time: float        = 0.0
 var is_level_ended: bool           = false
 
@@ -241,9 +243,9 @@ func _on_viewport_size_changed() -> void:
 	var vp_size = get_viewport().get_visible_rect().size
 
 	# Reserve half a cell of margin so tower visuals at grid edges aren't clipped
-	var margin = GridSystem.CELL_SIZE * 0.5
-	var grid_w = GridSystem.GRID_COLS * GridSystem.CELL_SIZE + margin * 2.0
-	var grid_h = GridSystem.GRID_ROWS * GridSystem.CELL_SIZE + margin * 2.0
+	var margin = grid_system.CELL_SIZE * 0.5
+	var grid_w = grid_system.GRID_COLS * grid_system.CELL_SIZE + margin * 2.0
+	var grid_h = grid_system.GRID_ROWS * grid_system.CELL_SIZE + margin * 2.0
 
 	var hud_height = $HUD/HUDControl/TopHUD.size.y
 	var avail_h = max(vp_size.y - hud_height, 100)
