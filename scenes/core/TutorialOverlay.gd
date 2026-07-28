@@ -39,6 +39,18 @@ func _build_ui() -> void:
 	set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
 	mouse_filter = Control.MOUSE_FILTER_STOP
 
+	# Responsive sizing
+	var screen_w: float = size.x
+	var is_mobile: bool = screen_w < 600
+	var card_target_w: float = min(420.0, screen_w - 32.0)
+	var title_fs: int = 24 if is_mobile else 22
+	var body_fs: int = 18 if is_mobile else 16
+	var step_fs: int = 13 if is_mobile else 12
+	var btn_fs: int = 18 if is_mobile else 16
+	var btn_h: int = 50 if is_mobile else 46
+	var btn_w: int = 200 if is_mobile else 180
+	var side_margin: int = 22 if is_mobile else 24
+
 	# Dim layer with custom drawing (handles spotlight cutout)
 	_dim = Control.new()
 	_dim.name = "Dim"
@@ -50,16 +62,16 @@ func _build_ui() -> void:
 	# Skip button (top-right corner)
 	_skip_btn = Button.new()
 	_skip_btn.text = "Skip Tour"
-	_skip_btn.custom_minimum_size = Vector2(80, 28)
-	_skip_btn.position = Vector2(size.x - 96, 16)
+	_skip_btn.custom_minimum_size = Vector2(90 if is_mobile else 80, 32 if is_mobile else 28)
+	_skip_btn.position = Vector2(size.x - _skip_btn.custom_minimum_size.x - 16, 16)
 	_skip_btn.add_theme_color_override("font_color", Color("#4A7FA5"))
-	_skip_btn.add_theme_font_size_override("font_size", 10)
+	_skip_btn.add_theme_font_size_override("font_size", 11 if is_mobile else 10)
 	_skip_btn.pressed.connect(_on_skip_pressed)
 	add_child(_skip_btn)
 
 	# Card container (positioned later)
 	_card = PanelContainer.new()
-	_card.custom_minimum_size = Vector2(340, 0)
+	_card.custom_minimum_size = Vector2(card_target_w, 0)
 	_card.size_flags_horizontal = Control.SIZE_SHRINK_CENTER
 	_card.mouse_filter = Control.MOUSE_FILTER_STOP
 	var st := StyleBoxFlat.new()
@@ -77,19 +89,19 @@ func _build_ui() -> void:
 	add_child(_card)
 
 	var layout := VBoxContainer.new()
-	layout.add_theme_constant_override("separation", 10)
+	layout.add_theme_constant_override("separation", 12 if is_mobile else 10)
 	layout.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-	layout.add_theme_constant_override("margin_left", 22)
-	layout.add_theme_constant_override("margin_right", 22)
-	layout.add_theme_constant_override("margin_top", 18)
-	layout.add_theme_constant_override("margin_bottom", 18)
+	layout.add_theme_constant_override("margin_left", side_margin)
+	layout.add_theme_constant_override("margin_right", side_margin)
+	layout.add_theme_constant_override("margin_top", 20 if is_mobile else 18)
+	layout.add_theme_constant_override("margin_bottom", 20 if is_mobile else 18)
 	_card.add_child(layout)
 
 	# Title
 	_title_lbl = Label.new()
 	_title_lbl.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	_title_lbl.add_theme_color_override("font_color", Color("#00D4FF"))
-	_title_lbl.add_theme_font_size_override("font_size", 16)
+	_title_lbl.add_theme_font_size_override("font_size", title_fs)
 	_layout_add(layout, _title_lbl)
 
 	# Body
@@ -97,7 +109,7 @@ func _build_ui() -> void:
 	_body_lbl.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	_body_lbl.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 	_body_lbl.add_theme_color_override("font_color", Color("#E8F4FD"))
-	_body_lbl.add_theme_font_size_override("font_size", 12)
+	_body_lbl.add_theme_font_size_override("font_size", body_fs)
 	_body_lbl.size_flags_vertical = Control.SIZE_EXPAND_FILL
 	_layout_add(layout, _body_lbl)
 
@@ -105,14 +117,14 @@ func _build_ui() -> void:
 	_step_lbl = Label.new()
 	_step_lbl.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	_step_lbl.add_theme_color_override("font_color", Color("#4A7FA5"))
-	_step_lbl.add_theme_font_size_override("font_size", 9)
+	_step_lbl.add_theme_font_size_override("font_size", step_fs)
 	_layout_add(layout, _step_lbl)
 
 	# Next button
 	_next_btn = Button.new()
-	_next_btn.custom_minimum_size = Vector2(150, 38)
+	_next_btn.custom_minimum_size = Vector2(btn_w, btn_h)
 	_next_btn.size_flags_horizontal = Control.SIZE_SHRINK_CENTER
-	_next_btn.add_theme_font_size_override("font_size", 13)
+	_next_btn.add_theme_font_size_override("font_size", btn_fs)
 	_next_btn.pressed.connect(_on_next_pressed)
 	_layout_add(layout, _next_btn)
 

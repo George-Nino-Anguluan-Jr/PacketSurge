@@ -27,6 +27,7 @@ func _ready() -> void:
 	ScreenManager.make_scroll_touch_friendly(class_panel)
 	get_tree().root.size_changed.connect(_apply_responsive_layout)
 	SupabaseManager.leaderboard_loaded.connect(_on_class_data_loaded)
+	_maybe_show_tutorial()
 
 # ─── BUTTON SETUP ──────────────────────────────────────
 func _setup_buttons() -> void:
@@ -906,3 +907,49 @@ func _apply_responsive_layout() -> void:
 		tab_bar.offset_right = 0
 		back_btn.custom_minimum_size = Vector2(90, 0)
 		title_label.add_theme_font_size_override("font_size", 16)
+
+# ─── TUTORIAL ──────────────────────────────────────────
+const TutorialOverlay = preload("res://scenes/core/TutorialOverlay.gd")
+
+func _maybe_show_tutorial() -> void:
+	if ProgressManager.has_seen_tutorial("analytics"):
+		return
+	await get_tree().process_frame
+	var tut = TutorialOverlay.new()
+	add_child(tut)
+	tut.tutorial_finished.connect(func(): ProgressManager.mark_tutorial_seen("analytics"))
+	tut.start(_get_analytics_tutorial_steps())
+
+func _get_analytics_tutorial_steps() -> Array:
+	var steps: Array = []
+	steps.append({
+		"title": "Analytics",
+		"body": "Dive deep into your learning patterns.\n\nView stats, charts, and compare yourself with classmates.",
+		"force_center": true,
+	})
+	steps.append({
+		"title": "My Stats Tab",
+		"body": "See your personal stats — lessons mastered, time spent, and campaign progress.",
+		"highlight": my_stats_tab.get_path(),
+	})
+	steps.append({
+		"title": "Class Tab",
+		"body": "Compare your performance against the class average and see where you rank.",
+		"highlight": class_tab.get_path(),
+	})
+	steps.append({
+		"title": "Scroll & Explore",
+		"body": "Scroll down to see progress charts, accuracy breakdowns, time per lesson, and per-level statistics.",
+		"highlight": my_stats_panel.get_path(),
+	})
+	steps.append({
+		"title": "Back Button",
+		"body": "Tap here to return to your profile.",
+		"highlight": back_btn.get_path(),
+	})
+	steps.append({
+		"title": "Track Your Growth!",
+		"body": "Use these insights to spot weak topics and focus your practice.\nGood luck, operator!",
+		"force_center": true,
+	})
+	return steps

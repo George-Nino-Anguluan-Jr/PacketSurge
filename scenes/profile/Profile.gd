@@ -14,6 +14,7 @@ func _ready() -> void:
 	_apply_responsive_layout()
 	get_tree().root.size_changed.connect(_apply_responsive_layout)
 	ScreenManager.make_scroll_touch_friendly(scroll_container)
+	_maybe_show_tutorial()
 
 func _is_compact() -> bool:
 	return ScreenManager.is_mobile() or ScreenManager.is_tablet()
@@ -553,3 +554,44 @@ func _apply_responsive_layout() -> void:
 	else:
 		back_btn.custom_minimum_size = Vector2(90, 0)
 		title_label.add_theme_font_size_override("font_size", 16)
+
+# ─── TUTORIAL ──────────────────────────────────────────
+const TutorialOverlay = preload("res://scenes/core/TutorialOverlay.gd")
+
+func _maybe_show_tutorial() -> void:
+	if ProgressManager.has_seen_tutorial("profile"):
+		return
+	await get_tree().process_frame
+	var tut = TutorialOverlay.new()
+	add_child(tut)
+	tut.tutorial_finished.connect(func(): ProgressManager.mark_tutorial_seen("profile"))
+	tut.start(_get_profile_tutorial_steps())
+
+func _get_profile_tutorial_steps() -> Array:
+	var steps: Array = []
+	steps.append({
+		"title": "Your Profile",
+		"body": "This is your operator profile.\nTrack your progress, manage your account, and view your stats here.",
+		"force_center": true,
+	})
+	steps.append({
+		"title": "Progress Summary",
+		"body": "See how many lessons you've mastered, campaign levels completed, and towers unlocked.\nScroll down to view all sections.",
+		"highlight": scroll_container.get_path(),
+	})
+	steps.append({
+		"title": "Analytics",
+		"body": "Tap here to view detailed analytics on your learning patterns and strengths.",
+		"highlight": analytics_btn.get_path(),
+	})
+	steps.append({
+		"title": "Back Button",
+		"body": "Tap here to return to the main menu.",
+		"highlight": back_btn.get_path(),
+	})
+	steps.append({
+		"title": "Account Actions",
+		"body": "Scroll down to find password reset, logout, and danger zone options (reset progress).",
+		"force_center": true,
+	})
+	return steps

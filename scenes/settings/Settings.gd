@@ -17,6 +17,7 @@ func _ready() -> void:
 	_apply_responsive_layout()
 	ScreenManager.make_scroll_touch_friendly(general_panel)
 	get_tree().root.size_changed.connect(_apply_responsive_layout)
+	_maybe_show_tutorial()
 
 # ─── BUTTON SETUP ──────────────────────────────────────
 func _setup_buttons() -> void:
@@ -336,3 +337,44 @@ func _apply_responsive_layout() -> void:
 	else:
 		back_btn.custom_minimum_size = Vector2(90, 0)
 		title_label.add_theme_font_size_override("font_size", 16)
+
+# ─── TUTORIAL ──────────────────────────────────────────
+const TutorialOverlay = preload("res://scenes/core/TutorialOverlay.gd")
+
+func _maybe_show_tutorial() -> void:
+	if ProgressManager.has_seen_tutorial("settings"):
+		return
+	await get_tree().process_frame
+	var tut = TutorialOverlay.new()
+	add_child(tut)
+	tut.tutorial_finished.connect(func(): ProgressManager.mark_tutorial_seen("settings"))
+	tut.start(_get_settings_tutorial_steps())
+
+func _get_settings_tutorial_steps() -> Array:
+	var steps: Array = []
+	steps.append({
+		"title": "Settings",
+		"body": "Tweak audio, configure your account, and learn about the game from here.\n\nLet's take a quick tour.",
+		"force_center": true,
+	})
+	steps.append({
+		"title": "Audio Settings",
+		"body": "Drag the sliders to adjust effects volume and background music.\nChanges apply instantly.",
+		"highlight": general_content.get_path(),
+	})
+	steps.append({
+		"title": "About",
+		"body": "Scroll down to see the version info, engine, and developer credits.",
+		"highlight": general_panel.get_path(),
+	})
+	steps.append({
+		"title": "Back Button",
+		"body": "Tap here anytime to return to the main menu.",
+		"highlight": back_btn.get_path(),
+	})
+	steps.append({
+		"title": "All Set!",
+		"body": "Settings auto-save — no need to confirm. Have fun, operator!",
+		"force_center": true,
+	})
+	return steps
