@@ -28,6 +28,7 @@ func _ready() -> void:
 	_apply_responsive_layout()
 	get_tree().root.size_changed.connect(_apply_responsive_layout)
 	SupabaseManager.leaderboard_loaded.connect(_on_leaderboard_loaded)
+	_maybe_show_tutorial()
 
 # ─── BUTTON SETUP ──────────────────────────────────────
 func _setup_buttons() -> void:
@@ -386,3 +387,59 @@ func _apply_responsive_layout() -> void:
 		my_rank_label.visible = true
 		title_label.add_theme_font_size_override("font_size", 16)
 		back_btn.custom_minimum_size = Vector2(90, 0)
+
+# ─── TUTORIAL ──────────────────────────────────────────
+const TutorialOverlay = preload("res://scenes/core/TutorialOverlay.gd")
+
+func _maybe_show_tutorial() -> void:
+	if ProgressManager.has_seen_tutorial("leaderboard"):
+		return
+	await get_tree().process_frame
+	var tut = TutorialOverlay.new()
+	add_child(tut)
+	tut.tutorial_finished.connect(func(): ProgressManager.mark_tutorial_seen("leaderboard"))
+	tut.start(_get_leaderboard_tutorial_steps())
+
+func _get_leaderboard_tutorial_steps() -> Array:
+	var steps: Array = []
+	steps.append({
+		"title": "Leaderboard",
+		"body": "See how you stack up against other operators on the network.\n\nClimb the ranks by mastering topics and earning stars.",
+		"force_center": true,
+	})
+	steps.append({
+		"title": "Your Rank",
+		"body": "Your current global rank is shown here. Complete more lessons to rank up!",
+		"highlight": my_rank_label.get_path(),
+	})
+	steps.append({
+		"title": "Global Tab",
+		"body": "See the top players across the entire network.",
+		"highlight": global_tab.get_path(),
+	})
+	steps.append({
+		"title": "Section Tab",
+		"body": "Compare yourself with classmates in your section only.",
+		"highlight": section_tab.get_path(),
+	})
+	steps.append({
+		"title": "Leaderboard Cards",
+		"body": "Cards show rank, name, section, topics mastered, stars, and score.\nYour own card is highlighted in green.",
+		"highlight": global_list.get_path(),
+	})
+	steps.append({
+		"title": "Refresh",
+		"body": "Tap this button to reload the latest rankings.",
+		"highlight": refresh_btn.get_path(),
+	})
+	steps.append({
+		"title": "Back",
+		"body": "Tap here anytime to return to the main menu.",
+		"highlight": back_btn.get_path(),
+	})
+	steps.append({
+		"title": "Ready to Compete!",
+		"body": "Top tip: mastering topics in the Academy boosts your score fast.\nGood luck, operator!",
+		"force_center": true,
+	})
+	return steps
