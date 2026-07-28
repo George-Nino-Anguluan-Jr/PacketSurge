@@ -242,22 +242,17 @@ func _setup_wave_timeline() -> void:
 func _on_viewport_size_changed() -> void:
 	var vp_size = get_viewport().get_visible_rect().size
 
-	# Reserve half a cell of margin so tower visuals at grid edges aren't clipped
-	var margin = grid_system.CELL_SIZE * 0.5
-	var grid_w = grid_system.GRID_COLS * grid_system.CELL_SIZE + margin * 2.0
-	var grid_h = grid_system.GRID_ROWS * grid_system.CELL_SIZE + margin * 2.0
+	var grid_w = grid_system.GRID_COLS * grid_system.CELL_SIZE
+	var grid_h = grid_system.GRID_ROWS * grid_system.CELL_SIZE
 
 	var hud_height = $HUD/HUDControl/TopHUD.size.y
 	var avail_h = max(vp_size.y - hud_height, 100)
 
 	var zoom_x = vp_size.x / grid_w
 	var zoom_y = avail_h / grid_h
-	var zoom = min(zoom_x, zoom_y)
-	zoom = clamp(zoom, 0.35, 1.25)
-	$GameCamera.zoom = Vector2(zoom, zoom)
+	$GameCamera.zoom = Vector2(zoom_x, zoom_y)
 
-	# Shift camera down so the grid centers in the area below the HUD
-	var y_offset = hud_height / (2.0 * zoom)
+	var y_offset = hud_height / (2.0 * zoom_y)
 	$GameCamera.position = Vector2(grid_w / 2.0, grid_h / 2.0 - y_offset)
 
 func _build_tower_selector() -> void:
