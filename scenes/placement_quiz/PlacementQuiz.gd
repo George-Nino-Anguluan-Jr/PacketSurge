@@ -122,7 +122,7 @@ func _build_intro() -> void:
 
 	# Description
 	var desc := Label.new()
-		desc.text = "Answer 10 quick questions about Python basics.\n\n" + \
+	desc.text = "Answer 10 quick questions about Python basics.\n\n" + \
 		"Score 80% or higher  →  Skip Python lessons\n" + \
 		"Score below 80%  →  Start Academy from the beginning\n\n" + \
 		"This takes about 2 minutes."
