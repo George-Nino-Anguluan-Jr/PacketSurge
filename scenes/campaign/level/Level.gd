@@ -131,13 +131,6 @@ const CHALLENGES = {
 # ─── TOWER DEFINITIONS ─────────────────────────────────
 # ─── READY ─────────────────────────────────────────────
 func _ready() -> void:
-	# HUDControl is a fullscreen Control whose default mouse_filter=STOP would
-	# block clicks from reaching the grid behind it. With STOP, GridSystem's
-	# _unhandled_input never fires (it only sees unconsumed clicks). Set
-	# IGNORE so HUDControl is invisible to mouse events; its child Buttons
-	# (BackBtn, PauseBtn, etc.) keep their own MOUSE_FILTER_STOP and still
-	# receive their own clicks.
-	$HUD/HUDControl.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	level_number     = GameManager.current_level
 	level_start_time = Time.get_ticks_msec() / 1000.0
 	_setup_grid()
@@ -421,11 +414,20 @@ func _on_cell_clicked(cell: Vector2i) -> void:
 		_remove_preview_tower()
 		overlay_menu.visible = false
 
-	# Tower menu visible → any click closes it
+	# Tower menu visible → close on click outside any panel child.
+	# If the click landed on a button inside the overlay, ignore it here so
+	# the button's `pressed` signal can still fire and act on the tower.
 	if overlay_menu.visible and is_instance_valid(_selected_tower):
-		overlay_menu.visible = false
-		_selected_tower.set_selected(false)
-		_selected_tower = null
+		var mouse_pos = get_global_mouse_position()
+		var inside_panel = false
+		for child in overlay_menu.get_children():
+			if child is Control and (child as Control).get_global_rect().has_point(mouse_pos):
+				inside_panel = true
+				break
+		if not inside_panel:
+			overlay_menu.visible = false
+			_selected_tower.set_selected(false)
+			_selected_tower = null
 		return
 
 	if overlay_menu.visible and cell == _current_menu_cell:
@@ -960,30 +962,6 @@ func _show_wave_splash_animation(wave_num: int) -> void:
 func _input(event: InputEvent) -> void:
 	if event.is_action_pressed("ui_cancel"):
 		_on_pause_pressed()
-
-func _unhandled_input(event: InputEvent) -> void:
-	# Close the tower overlay when clicking outside it.
-	# Uses _unhandled_input so the buttons INSIDE the overlay still receive
-	# their clicks (a Button with MOUSE_FILTER_STOP consumes the event first).
-	if not (event is InputEventMouseButton and event.pressed and event.button_index == MOUSE_BUTTON_LEFT):
-		return
-	if overlay_menu == null or not overlay_menu.visible:
-		return
-	# overlay_menu is a Control with no size of its own; children are placed
-	# at explicit positions. Check whether the click landed on any child
-	# (button, panel, etc.) — if so, the event should reach that child,
-	# but it didn't, so we still treat it as outside.
-	var mouse_pos = get_global_mouse_position()
-	for child in overlay_menu.get_children():
-		if child is Control and (child as Control).get_global_rect().has_point(mouse_pos):
-			return
-	# No child contains the click → close the overlay.
-	overlay_menu.visible = false
-	for child in overlay_menu.get_children():
-		child.queue_free()
-	if is_instance_valid(_selected_tower):
-		_selected_tower.set_selected(false)
-		_selected_tower = null
 
 # ─── PAUSE / SPEED HANDLERS ────────────────────────────
 func _on_pause_pressed() -> void:
