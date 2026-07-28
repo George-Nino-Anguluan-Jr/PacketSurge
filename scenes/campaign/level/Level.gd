@@ -161,6 +161,15 @@ func _setup_grid() -> void:
 	for wp in config["waypoints"]:
 		waypoints.append(wp)
 
+	# Center waypoints on cells so enemies walk through path centers
+	var cs = grid_system.CELL_SIZE
+	var hc = cs * 0.5
+	for i in range(waypoints.size()):
+		waypoints[i] = Vector2(
+			int(waypoints[i].x / cs) * cs + hc,
+			int(waypoints[i].y / cs) * cs + hc
+		)
+
 	var spots: Array[Vector2i] = []
 	for sp in config["tower_spots"]:
 		spots.append(sp)
@@ -187,6 +196,15 @@ func _setup_level() -> void:
 	var waypoints: Array[Vector2] = []
 	for wp in config["waypoints"]:
 		waypoints.append(wp)
+
+	# Center waypoints on cells so enemies walk through path centers
+	var cs = 64
+	var hc = cs * 0.5
+	for i in range(waypoints.size()):
+		waypoints[i] = Vector2(
+			int(waypoints[i].x / cs) * cs + hc,
+			int(waypoints[i].y / cs) * cs + hc
+		)
 
 	wave_manager.initialize(
 		config["waves"],
