@@ -414,22 +414,6 @@ func _on_cell_clicked(cell: Vector2i) -> void:
 		_remove_preview_tower()
 		overlay_menu.visible = false
 
-	# Tower menu visible → close on click outside any panel child.
-	# If the click landed on a button inside the overlay, ignore it here so
-	# the button's `pressed` signal can still fire and act on the tower.
-	if overlay_menu.visible and is_instance_valid(_selected_tower):
-		var mouse_pos = get_global_mouse_position()
-		var inside_panel = false
-		for child in overlay_menu.get_children():
-			if child is Control and (child as Control).get_global_rect().has_point(mouse_pos):
-				inside_panel = true
-				break
-		if not inside_panel:
-			overlay_menu.visible = false
-			_selected_tower.set_selected(false)
-			_selected_tower = null
-		return
-
 	if overlay_menu.visible and cell == _current_menu_cell:
 		return
 	_current_menu_cell = cell
@@ -438,7 +422,7 @@ func _on_cell_clicked(cell: Vector2i) -> void:
 		child.queue_free()
 	if is_instance_valid(_selected_tower):
 		_selected_tower.set_selected(false)
-	_selected_tower = null
+		_selected_tower = null
 
 	var existing = grid_system.get_tower_at(cell)
 	if existing:
@@ -467,7 +451,7 @@ func _show_tower_menu(cell: Vector2i, tower: Node) -> void:
 	var btn_h := 26
 	var sep := 4
 	var title_h := 18
-	var num_rows = (1 if tower.current_level < tower.max_level else 0) + 1 + 1
+	var num_rows = (1 if tower.current_level < tower.max_level else 0) + 1 + 1 + 1
 	var total_h = title_h + num_rows * btn_h + (num_rows + 1) * sep + margin * 2
 	var total_w = btn_w + margin * 2
 
@@ -540,6 +524,21 @@ func _show_tower_menu(cell: Vector2i, tower: Node) -> void:
 	sell_btn.add_theme_color_override("font_color", Color("#FF8844"))
 	sell_btn.pressed.connect(_on_sell_tower.bind(cell, tower, sell_value))
 	layout.add_child(sell_btn)
+
+	# Close button
+	var close_btn := Button.new()
+	close_btn.text = "✕ Close"
+	close_btn.custom_minimum_size = Vector2(btn_w, btn_h)
+	close_btn.size = Vector2(btn_w, btn_h)
+	close_btn.add_theme_font_size_override("font_size", 9)
+	close_btn.add_theme_color_override("font_color", Color("#4A7FA5"))
+	close_btn.pressed.connect(func():
+		overlay_menu.visible = false
+		if is_instance_valid(_selected_tower):
+			_selected_tower.set_selected(false)
+			_selected_tower = null
+	)
+	layout.add_child(close_btn)
 
 	overlay_menu.visible = true
 
