@@ -115,7 +115,7 @@ func initialize(
 	_theme = _get_current_theme()
 	_generate_decorations()
 
-	set_process_unhandled_input(true)
+	set_process_input(true)
 	set_process(true)
 	queue_redraw()
 
@@ -289,10 +289,7 @@ func remove_tower(cell: Vector2i) -> void:
 		queue_redraw()
 
 # ─── INPUT ─────────────────────────────────────────────
-func _unhandled_input(event: InputEvent) -> void:
-	# _unhandled_input (not _input) so UI buttons consume the click first.
-	# Without this, clicking the upgrade/sell/ability buttons inside the
-	# tower overlay also fires a cell_clicked which closes the overlay.
+func _input(event: InputEvent) -> void:
 	if not is_placing_tower:
 		# If we are not placing a tower, we should still allow cell clicking!
 		if event is InputEventMouseButton and event.button_index == MOUSE_BUTTON_LEFT and event.pressed:
