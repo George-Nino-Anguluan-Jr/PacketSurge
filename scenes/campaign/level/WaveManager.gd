@@ -118,14 +118,13 @@ func _spawn_enemy(wave_num: int, index: int) -> void:
 		var speed  = 80.0 * difficulty_modifier
 		enemy.initialize(path_waypoints, health, speed, enemy_type)
 
-	# Spread enemies perpendicular to the path direction at spawn
-	# so they don't stack on top of each other and get stuck
-	if path_waypoints.size() >= 2:
-		var spawn_dir = (path_waypoints[1] - path_waypoints[0]).normalized()
-		var perp = Vector2(-spawn_dir.y, spawn_dir.x)
-		var spawn_offset = (_spawn_index % 5 - 2) * 24.0
-		_spawn_index += 1
-		enemy.position += perp * spawn_offset
+		# Spread enemies perpendicular to the path direction at spawn
+		if path_waypoints.size() >= 2:
+			var spawn_dir = (path_waypoints[1] - path_waypoints[0]).normalized()
+			var perp = Vector2(-spawn_dir.y, spawn_dir.x)
+			var spawn_offset = (_spawn_index % 5 - 2) * 10.0
+			_spawn_index += 1
+			enemy.position += perp * spawn_offset
 
 	enemy.connect("enemy_defeated",    _on_enemy_defeated)
 	enemy.connect("enemy_reached_end", _on_enemy_reached_end)
