@@ -244,7 +244,7 @@ func _process(delta: float) -> void:
 
 	# Active target tracking rotation
 	var target_to_track = current_target
-	if not is_instance_valid(target_to_track) or position.distance_to(target_to_track.position) > attack_range + ENEMY_RADIUS * 2:
+	if not is_instance_valid(target_to_track) or position.distance_to(target_to_track.position) > attack_range + ENEMY_RADIUS:
 		target_to_track = _get_closest_enemy()
 
 	if is_instance_valid(target_to_track):
@@ -331,7 +331,7 @@ func _update_entry_order() -> void:
 
 	# Remove enemies that left range or died
 	_entry_order = _entry_order.filter(func(e):
-		return is_instance_valid(e) and position.distance_to(e.position) <= attack_range + ENEMY_RADIUS * 2
+		return is_instance_valid(e) and position.distance_to(e.position) <= attack_range + ENEMY_RADIUS
 	)
 
 	# Add newly entered enemies and trigger immediate attack
@@ -339,9 +339,12 @@ func _update_entry_order() -> void:
 		if not enemy.has_method("take_damage"):
 			continue
 		var dist = position.distance_to(enemy.position)
-		if dist <= attack_range + ENEMY_RADIUS * 2 and not _entry_order.has(enemy):
+		if dist <= attack_range + ENEMY_RADIUS and not _entry_order.has(enemy):
 			_entry_order.append(enemy)
 			attack_timer = 1.0 / attack_speed
+			if _get_closest_enemy() != null or not _entry_order.is_empty():
+				attack_timer = 0.0
+				_attack()
 
 # ─── MAIN ATTACK ROUTER ────────────────────────────────
 func _attack() -> void:
@@ -374,7 +377,7 @@ func _attack_array() -> void:
 			return
 		var targets: Array[Node] = []
 		for enemy in enemy_layer.get_children():
-			if enemy.has_method("take_damage") and position.distance_to(enemy.position) <= attack_range + ENEMY_RADIUS * 2:
+			if enemy.has_method("take_damage") and position.distance_to(enemy.position) <= attack_range + ENEMY_RADIUS:
 				targets.append(enemy)
 		if targets.is_empty():
 			return
@@ -419,7 +422,7 @@ func _attack_bubble() -> void:
 		return
 	var enemies: Array[Node] = []
 	for enemy in enemy_layer.get_children():
-		if enemy.has_method("take_damage") and position.distance_to(enemy.position) <= attack_range + ENEMY_RADIUS * 2:
+		if enemy.has_method("take_damage") and position.distance_to(enemy.position) <= attack_range + ENEMY_RADIUS:
 			enemies.append(enemy)
 	if enemies.is_empty():
 		return
@@ -458,7 +461,7 @@ func _attack_quick() -> void:
 		return
 	var targets: Array[Node] = []
 	for enemy in enemy_layer.get_children():
-		if enemy.has_method("take_damage") and position.distance_to(enemy.position) <= attack_range + ENEMY_RADIUS * 2:
+		if enemy.has_method("take_damage") and position.distance_to(enemy.position) <= attack_range + ENEMY_RADIUS:
 			targets.append(enemy)
 			if targets.size() >= 2:
 				break
@@ -706,7 +709,7 @@ func _get_closest_enemy() -> Node:
 	if enemy_layer == null:
 		return null
 	var closest: Node = null
-	var closest_dist: float = attack_range + ENEMY_RADIUS * 2
+	var closest_dist: float = attack_range + ENEMY_RADIUS
 	for enemy in enemy_layer.get_children():
 		if not enemy.has_method("take_damage"):
 			continue
@@ -720,7 +723,7 @@ func _get_closest_to_point(point: Vector2, exclude: Array[Node]) -> Node:
 	if enemy_layer == null:
 		return null
 	var closest: Node = null
-	var closest_dist: float = attack_range + ENEMY_RADIUS * 2
+	var closest_dist: float = attack_range + ENEMY_RADIUS
 	for enemy in enemy_layer.get_children():
 		if not enemy.has_method("take_damage"):
 			continue
@@ -741,7 +744,7 @@ func _get_lowest_hp_enemy() -> Node:
 		if not enemy.has_method("take_damage"):
 			continue
 		var dist = position.distance_to(enemy.position)
-		if dist > attack_range + ENEMY_RADIUS * 2:
+		if dist > attack_range + ENEMY_RADIUS:
 			continue
 		if "current_health" in enemy and enemy.current_health < lowest_hp:
 			lowest_hp = enemy.current_health

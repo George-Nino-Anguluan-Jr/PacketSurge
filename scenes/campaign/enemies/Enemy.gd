@@ -73,7 +73,10 @@ func initialize(
 	_setup_spire()
 	if waypoints.size() > 0:
 		position = waypoints[0]
-		_last_position = waypoints[0]	
+		_last_position = waypoints[0]
+
+	# Allow enemies to pass through each other
+	collision_mask = 0	
 
 func _setup_type() -> void:
 	var edef = GameManager.ENEMY_DEFINITIONS.get(enemy_type, {})
