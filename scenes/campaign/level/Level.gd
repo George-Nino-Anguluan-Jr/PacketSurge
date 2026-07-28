@@ -27,7 +27,7 @@ const GridSystem = preload("res://scenes/campaign/level/GridSystem.gd")
 @onready var wave_progress_bar: ProgressBar = $HUD/HUDControl/TopHUD/TopLayout/WaveProgressTimeline/ProgressBar
 @onready var timeline_flags: Control        = $HUD/HUDControl/TopHUD/TopLayout/WaveProgressTimeline/FlagsContainer
 @onready var skip_wave_btn: Button           = $HUD/HUDControl/TopHUD/TopLayout/SkipWaveBtn
-@onready var challenge_btn: Button           = $HUD/HUDControl/TopHUD/TopLayout/ChallengeBtn
+
 var _diff_badge: Button = null
 @onready var micro_panel: PanelContainer     = $HUD/HUDControl/MicroCodingPanel
 @onready var wave_splash: Control            = $HUD/HUDControl/WaveSplash
@@ -146,7 +146,8 @@ func _ready() -> void:
 	SoundManager.play_level_music(level_number)
 	_build_challenge_panel()
 	if level_number == 1:
-		pass
+		if ProgressManager.has_seen_tutorial("level"):
+			call_deferred("_show_challenge")
 	else:
 		call_deferred("_show_challenge")
 	_maybe_show_tutorial()
@@ -290,7 +291,7 @@ func _setup_buttons() -> void:
 	select_level_btn.pressed.connect(_on_select_level_pressed)
 	main_menu_btn.pressed.connect(_on_main_menu_pressed)
 	skip_wave_btn.pressed.connect(_on_skip_wave_pressed)
-	challenge_btn.pressed.connect(_show_challenge)
+
 
 	_ff_btn = Button.new()
 	_ff_btn.text = "▶▶"
@@ -899,7 +900,7 @@ func _setup_diff_badge() -> void:
 	_diff_badge.add_theme_font_size_override("font_size", 11)
 	_diff_badge.flat = true
 	_diff_badge.pressed.connect(_show_diff_popup.bind(mod))
-	challenge_btn.add_sibling(_diff_badge)
+	skip_wave_btn.add_sibling(_diff_badge)
 
 func _show_diff_popup(mod: float) -> void:
 	SignalBus.hud_message_requested.emit(_get_diff_tip(mod), 3.0)
@@ -1689,7 +1690,11 @@ func _maybe_show_tutorial() -> void:
 	await get_tree().process_frame
 	var tut = TutorialOverlay.new()
 	$HUD.add_child(tut)
-	tut.tutorial_finished.connect(func(): ProgressManager.mark_tutorial_seen("level"))
+	tut.tutorial_finished.connect(func():
+		ProgressManager.mark_tutorial_seen("level")
+		await get_tree().create_timer(0.5).timeout
+		_show_challenge()
+	)
 	tut.start(_get_level_tutorial_steps())
 
 func _get_level_tutorial_steps() -> Array:
@@ -1716,8 +1721,8 @@ func _get_level_tutorial_steps() -> Array:
 	})
 	steps.append({
 		"title": "Coding Challenges",
-		"body": "During waves, tap ⌨ for a coding challenge. Correct answers earn bonus RAM for more tower deployments!",
-		"highlight": challenge_btn.get_path(),
+		"body": "After this tutorial, a coding challenge will appear. Solve Python problems correctly to earn bonus RAM for more tower deployments!",
+		"force_center": true,
 	})
 	steps.append({
 		"title": "Pause & Menu",
