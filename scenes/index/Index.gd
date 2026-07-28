@@ -43,6 +43,7 @@ func _ready() -> void:
 	ScreenManager.make_scroll_touch_friendly(enemies_panel)
 	_apply_responsive_layout()
 	get_tree().root.size_changed.connect(_apply_responsive_layout)
+	_maybe_show_tutorial()
 
 # ─── BUTTON SETUP ──────────────────────────────────────
 func _setup_buttons() -> void:
@@ -613,3 +614,49 @@ func _apply_responsive_layout() -> void:
 		match active_tab:
 			"towers": _build_towers_tab()
 			"enemies": _build_enemies_tab()
+
+# ─── TUTORIAL ──────────────────────────────────────────
+const TutorialOverlay = preload("res://scenes/core/TutorialOverlay.gd")
+
+func _maybe_show_tutorial() -> void:
+	if ProgressManager.has_seen_tutorial("index"):
+		return
+	await get_tree().process_frame
+	var tut = TutorialOverlay.new()
+	add_child(tut)
+	tut.tutorial_finished.connect(func(): ProgressManager.mark_tutorial_seen("index"))
+	tut.start(_get_index_tutorial_steps())
+
+func _get_index_tutorial_steps() -> Array:
+	var steps: Array = []
+	steps.append({
+		"title": "Welcome to the Index",
+		"body": "This is your complete catalog of every tower and enemy on the network.\n\nBrowse stats, abilities, and matchups so you know what to deploy.",
+		"force_center": true,
+	})
+	steps.append({
+		"title": "Towers & Enemies",
+		"body": "Switch between Towers and Enemies using these tabs.\nTap each to explore the full catalog.",
+		"highlight": towers_tab.get_path(),
+	})
+	steps.append({
+		"title": "Search",
+		"body": "Looking for something specific?\nType here to filter by name or data structure.",
+		"highlight": search_field.get_path(),
+	})
+	steps.append({
+		"title": "Tower Cards",
+		"body": "Scroll through tower cards to see damage, speed, range, RAM costs, and matchups.\n\nUnlock towers by completing Academy lessons.",
+		"highlight": towers_panel.get_path(),
+	})
+	steps.append({
+		"title": "Back Button",
+		"body": "Tap here anytime to return to the main menu.",
+		"highlight": back_btn.get_path(),
+	})
+	steps.append({
+		"title": "Ready to Explore!",
+		"body": "Study the Index to become a stronger operator.\nGood luck out there!",
+		"force_center": true,
+	})
+	return steps
