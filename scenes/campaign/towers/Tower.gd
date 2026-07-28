@@ -415,7 +415,7 @@ func _attack() -> void:
 		_:                    _attack_default()
 
 func _attack_array() -> void:
-	if not _spire or not current_target:
+	if not current_target:
 		return
 	current_target = current_target
 	var hit_list = [current_target]
@@ -426,62 +426,62 @@ func _attack_array() -> void:
 			if hit_list.size() >= 3:
 				break
 	for t in hit_list:
-		_spire.fire(t, damage * 0.4)
+		_spawn_projectile("index_bolt", damage * 0.4, 350.0, t)
 
 func _attack_stack() -> void:
-	if not _spire or targets.is_empty():
+	if targets.is_empty():
 		return
 	var t = targets[-1]
 	current_target = t
-	_spire.fire(t, damage * 1.4)
+	_spawn_projectile("stack_mortar", damage * 1.4, 300.0, t)
 
 func _attack_queue() -> void:
-	if not _spire or targets.is_empty():
+	if targets.is_empty():
 		return
 	var t = targets[0]
 	current_target = t
-	_spire.fire(t, damage)
+	_spawn_projectile("queue_rail", damage, 400.0, t)
 
 func _attack_linked() -> void:
-	if not _spire or not current_target:
+	if not current_target:
 		return
-	_spire.fire(current_target, damage)
+	_spawn_projectile("chain_lightning", damage, 350.0, current_target)
 
 func _attack_bubble() -> void:
-	if not _spire or targets.is_empty():
+	if targets.is_empty():
 		return
 	var t = targets[0]
 	current_target = t
 	var nearby = _get_nearby(1)
 	if nearby.size() >= 2:
-		_spire.fire(t, damage * 0.8)
-		_spire.fire(nearby[1], damage * 0.8)
+		_spawn_projectile("bubble_pulse", damage * 0.8, 280.0, t)
+		_spawn_projectile("bubble_pulse", damage * 0.8, 280.0, nearby[1])
 	else:
-		_spire.fire(t, damage * 0.6)
+		_spawn_projectile("bubble_pulse", damage * 0.6, 280.0, t)
 
 func _attack_selection() -> void:
-	if not _spire or targets.is_empty():
+	if targets.is_empty():
 		return
 	var t = _get_lowest_hp(targets)
 	current_target = t
-	_spire.fire(t, damage * 1.8)
+	_spawn_projectile("selection_sniper", damage * 1.8, 500.0, t)
 
 func _attack_insertion() -> void:
-	if not _spire or not current_target:
+	if not current_target:
 		return
-	_spire.fire(current_target, damage)
+	_spawn_projectile("insertion_needle", damage, 350.0, current_target)
 	if current_target.has_method("apply_dot"):
 		current_target.apply_dot(damage * 0.3, 3.0)
 
 func _attack_quick() -> void:
-	if not _spire or targets.is_empty():
+	if targets.is_empty():
 		return
 	var t = targets[0]
 	current_target = t
-	_spire.fire(t, damage * 0.8)
+	_spawn_projectile("quick_split", damage * 0.8, 450.0, t)
 	var nearby = _get_nearby(1)
 	if nearby.size() >= 2:
-		_spire.fire(nearby[1], damage * 0.8)
+		_spawn_projectile("quick_split", damage * 0.8, 450.0, nearby[1])
 
 func _attack_merge() -> void:
 	if not current_target:
@@ -1025,18 +1025,36 @@ func _draw_overlays(color: Color) -> void:
 					trail_pts.append(t_pos)
 				for j in range(trail_pts.size() - 1):
 					draw_line(trail_pts[j], trail_pts[j + 1], Color(color, 0.4 - j * 0.07), 1.5)
-				var sz = 2.0 + digit * 0.3
-				draw_circle(rd, sz, Color.WHITE)
-				draw_circle(rd, sz + 1.5, Color(color, 0.5))
-				draw_string(ThemeDB.fallback_font, rd + Vector2(-2, 3), str(digit), HORIZONTAL_ALIGNMENT_CENTER, -1, 6, color)
-			"radix_digit":
-				var digit = p.get("digit", 1)
-				var rot_off = _anim_time * 8.0 + digit
-				var orbit_pos = rd + Vector2(cos(rot_off) * 4.0, sin(rot_off) * 4.0)
-				draw_circle(orbit_pos, 2.5, Color.WHITE)
-				draw_circle(orbit_pos, 4.5, Color(color, 0.5 - (digit % 10) * 0.05))
-				draw_arc(orbit_pos, 6.0, rot_off, rot_off + PI * 0.8, 6, color, 1.5)
-				draw_string(ThemeDB.fallback_font, orbit_pos + Vector2(-3, 3), str(digit), HORIZONTAL_ALIGNMENT_CENTER, -1, 6, Color("#FFFFFF"))
+			"bubble_pulse":
+				var t = p["elapsed_time"] / (p["total_dist"] / p["speed"]) if p["total_dist"] > 0 else 1.0
+				var pulse = sin(t * PI * 4.0) * 2.0
+				draw_circle(rd, 4.0 + pulse, Color(color, 0.4))
+				draw_circle(rd, 2.0, Color.WHITE)
+				draw_line(rd - Vector2(6, 0), rd + Vector2(6, 0), color, 2.0)
+				draw_line(rd - Vector2(0, 6), rd + Vector2(0, 6), color, 2.0)
+			"selection_sniper":
+				var heading = (p["target_last_pos"] - p["pos"]).normalized() if (p["target_last_pos"] - p["pos"]).length() > 0 else Vector2.RIGHT
+				var perp = Vector2(-heading.y, heading.x)
+				draw_line(rd - perp * 12.0, rd + perp * 12.0, Color.WHITE, 1.5)
+				draw_line(rd - perp * 12.0, rd + perp * 12.0, color, 1.0)
+				draw_line(rd - Vector2(16, 0), rd + Vector2(16, 0), Color.WHITE, 1.0)
+				draw_circle(rd, 3.0, Color.WHITE)
+				draw_circle(rd, 6.0, Color(color, 0.6))
+			"insertion_needle":
+				var heading = (p["target_last_pos"] - p["pos"]).normalized() if (p["target_last_pos"] - p["pos"]).length() > 0 else Vector2.RIGHT
+				var perp = Vector2(-heading.y, heading.x)
+				draw_line(rd - heading * 10.0, rd + heading * 10.0, Color.WHITE, 3.0)
+				draw_line(rd - heading * 10.0, rd + heading * 10.0, color, 2.0)
+				draw_line(rd - perp * 4.0, rd + perp * 4.0, Color(color, 0.5), 1.5)
+				draw_circle(rd, 2.0, Color.WHITE)
+			"quick_split":
+				var heading = (p["target_last_pos"] - p["pos"]).normalized() if (p["target_last_pos"] - p["pos"]).length() > 0 else Vector2.RIGHT
+				var perp = Vector2(-heading.y, heading.x)
+				draw_line(rd - perp * 8.0, rd + perp * 8.0, Color.WHITE, 2.5)
+				draw_line(rd - perp * 8.0, rd + perp * 8.0, color, 1.5)
+				draw_circle(rd + perp * 8.0, 2.0, Color.WHITE)
+				draw_circle(rd - perp * 8.0, 2.0, Color.WHITE)
+				draw_circle(rd, 3.0, Color(color, 0.7))
 			"linear_scan":
 				var heading = (p["target_last_pos"] - p["pos"]).normalized() if (p["target_last_pos"] - p["pos"]).length() > 0 else Vector2.RIGHT
 				var perp = Vector2(-heading.y, heading.x)
@@ -1106,3 +1124,6 @@ func _draw_overlays(color: Color) -> void:
 
 	if Engine.is_editor_hint():
 		draw_arc(Vector2.ZERO, attack_range, 0, TAU, 64, Color(color, 0.15), 1.0)
+
+ 
+ 

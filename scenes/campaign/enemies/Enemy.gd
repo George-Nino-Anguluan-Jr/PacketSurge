@@ -28,21 +28,7 @@ var _mobile_redraw_skip: int = 0
 const _SpireEnemy = preload("res://scenes/campaign/enemies/SpireEnemy.gd")
 var _spire: Node2D = null
 
-const SPIRE_VARIANTS: Dictionary = {
-	"basic_packet":   { "variant": "Clampbeetle",    "pack": "enemy_pack1" },
-	"queue_jumper":   { "variant": "Firewasp",        "pack": "enemy_pack1" },
-	"indexed_packet": { "variant": "Flying_Locust",   "pack": "enemy_pack1" },
-	"linked_drain":   { "variant": "Voidbutterfly",   "pack": "enemy_pack1" },
-	"overflow_packet":{ "variant": "Firebug",        "pack": "enemy_pack2" },
-	"bubble_shield":  { "variant": "Leafbug",        "pack": "enemy_pack2" },
-	"pivot_splitter": { "variant": "Magma_Crab",     "pack": "enemy_pack2" },
-	"selection_mark": { "variant": "Scorpion",       "pack": "enemy_pack2" },
-	"insertion_stack":{ "variant": "Maggot",         "pack": "enemy_pack3" },
-	"merge_twin":     { "variant": "Beetle",         "pack": "enemy_pack3" },
-	"count_meter":    { "variant": "Mantis",         "pack": "enemy_pack3" },
-	"radix_digit":    { "variant": "Mosquito",       "pack": "enemy_pack3" },
-	"scan_wave":      { "variant": "EggCluster",     "pack": "enemy_pack3" },
-}
+const SPIRE_VARIANTS: Dictionary = {}
 
 var _last_position: Vector2 = Vector2.ZERO
 
@@ -623,12 +609,23 @@ func _draw() -> void:
 	# For spire-mapped enemies, skip procedural body drawing (the spire sprite is shown instead)
 	if not _spire:
 		match enemy_type:
+			"basic_packet":      _draw_basic(col, bob)
+			"queue_jumper":      _draw_queue_jumper(col, bob)
+			"overflow_packet":   _draw_overflow(col, bob)
+			"linked_drain":      _draw_linked(col, bob)
+			"bubble_shield":     _draw_bubble(col, bob)
+			"pivot_splitter":    _draw_pivot(col, bob)
+			"indexed_packet":    _draw_indexed(col, bob)
+			"selection_mark":    _draw_selection(col, bob)
 			"insertion_stack":   _draw_insertion(col, bob)
 			"merge_twin":        _draw_merge(col, bob)
 			"count_meter":       _draw_count(col, bob)
 			"radix_digit":       _draw_radix(col, bob)
 			"scan_wave":         _draw_scan(col, bob)
 			"binary_mask":       _draw_binary(col, bob)
+			_:
+				# Fallback for any future types
+				_draw_3d_box(Vector2(0, bob - 2), Vector2(12, 12), 10.0, col, col.lightened(0.3), 1.5)
 	else:
 		# Damage flash overlay for spire enemies
 		if flash:
@@ -710,6 +707,206 @@ func _draw_type_overlay(bob: float) -> void:
 				draw_arc(Vector2(0, 0 + bob), 20, 0, TAU, 16, Color("#00FF88", 0.6), 2.0)
 			else:
 				draw_arc(Vector2(0, 0 + bob), 18, 0, TAU, 16, Color("#FF3366", 0.3), 1.0)
+
+# --- OLD PROCEDURAL DRAW FUNCTIONS (RESTORED) -------------------
+
+func _draw_basic(col: Color, bob: float) -> void:
+	# 3D data packet cube
+	_draw_3d_box(Vector2(0, bob - 4), Vector2(13, 13), 8.0, Color("#15202E"), col, 1.5)
+	# Top face circuit lines
+	draw_line(Vector2(-7, bob - 4 - 8 * SQUASH + 2), Vector2(7, bob - 4 - 8 * SQUASH + 2), Color(col, 0.6), 1.0)
+	draw_circle(Vector2(0, bob - 4 - 8 * SQUASH), 2.0, Color(col, 0.7))
+	# Drop shadow
+	draw_set_transform(Vector2(0, bob + 4), 0.0, Vector2(1.0, 0.35))
+	draw_circle(Vector2.ZERO, 12, Color(0, 0, 0, 0.25))
+	draw_set_transform(Vector2.ZERO, 0.0, Vector2.ONE)
+
+func _draw_queue_jumper(col: Color, bob: float) -> void:
+	# 3D arrow/wedge (pointing right = motion direction)
+	var ahead = _count_enemies_ahead()
+	var scale = 0.85 + (1.0 - float(ahead) / 10.0) * 0.3
+	var w = 12.0 * scale
+	var h = 8.0 * scale
+	# Body: 3D extruded arrow shape using diamond prism
+	var tip = Vector2(w * 1.1, bob)
+	var top = Vector2(-w * 0.6, bob - h)
+	var bot = Vector2(-w * 0.6, bob + h)
+	var back = Vector2(-w * 0.9, bob)
+	# Draw extruded arrow as 3D box on its side
+	_draw_3d_box(Vector2(0, bob - 1), Vector2(w, h), 7.0, Color("#15202E"), col, 1.5)
+	# Tip cone
+	_draw_3d_hexagon(Vector2(w + 4, bob), 6.0, 5.0, Color("#15202E"), col, 1.3)
+	# Speed lines (more when faster)
+	var trail_count = max(1, 5 - int(ahead / 2))
+	for i in range(trail_count):
+		var tx = -w * 0.9 - 6 - i * 4
+		draw_line(Vector2(tx, bob - 3), Vector2(tx - 4, bob), Color(col, 0.5 - i * 0.07), 1.5)
+		draw_line(Vector2(tx - 4, bob), Vector2(tx, bob + 3), Color(col, 0.5 - i * 0.07), 1.5)
+	# Drop shadow
+	draw_set_transform(Vector2(0, bob + 8), 0.0, Vector2(1.0, 0.3))
+	draw_circle(Vector2.ZERO, 14, Color(0, 0, 0, 0.25))
+	draw_set_transform(Vector2.ZERO, 0.0, Vector2.ONE)
+
+func _draw_overflow(col: Color, bob: float) -> void:
+	# 3D stacked cubes - grows with layers
+	var layers = type_data.get("layers", 0)
+	var stack_height = min(layers, 4) * 4.0
+	# Bottom base layer (always)
+	_draw_3d_box(Vector2(0, bob - 2), Vector2(13, 13), 7.0, Color("#15202E"), col, 1.5)
+	# Stacked layers above
+	for i in range(min(layers, 4)):
+		var y_offset = bob - 10 - i * 8.0
+		var layer_col = Color(col).lerp(Color("#FFB800"), float(i) / 4.0)
+		_draw_3d_box(Vector2(0, y_offset), Vector2(10 - i * 0.8, 10 - i * 0.8), 6.0,
+			Color("#15202E"), layer_col, 1.3)
+	# Top crown spike
+	if layers > 0:
+		var top_y = bob - 10 - stack_height
+		draw_line(Vector2(0, top_y - 8 * SQUASH), Vector2(0, top_y - 18), Color("#FFB800"), 2.0)
+
+func _draw_linked(col: Color, bob: float) -> void:
+	# 3D hexagonal prism (linked list node)
+	_draw_3d_hexagon(Vector2(0, bob - 2), 12.0, 7.0, Color("#15202E"), col, 1.5)
+	# Top face connector dots
+	for i in range(6):
+		var a = i * PI / 3.0
+		var px = cos(a) * 8
+		var py = bob - 2 + sin(a) * 8 * SQUASH
+		draw_circle(Vector2(px, py - 7 * SQUASH), 1.2, Color("#00FF88", 0.8))
+	# Drop shadow
+	draw_set_transform(Vector2(0, bob + 5), 0.0, Vector2(1.0, 0.3))
+	draw_circle(Vector2.ZERO, 12, Color(0, 0, 0, 0.25))
+	draw_set_transform(Vector2.ZERO, 0.0, Vector2.ONE)
+
+func _draw_bubble(col: Color, bob: float) -> void:
+	# 3D sphere core
+	_draw_3d_sphere(Vector2(0, bob - 2), 11.0, col)
+	# Shield ring (orbiting segments)
+	var shield_hp = type_data.get("shield_hp", 0)
+	var shield_max = type_data.get("shield_max", 3)
+	if shield_hp > 0:
+		var seg_angle = TAU / shield_max
+		for i in range(shield_max):
+			var a = i * seg_angle + _bob_time * 0.3
+			var sx = cos(a) * 16
+			var sy = bob - 2 + sin(a) * 16 * SQUASH
+			var is_active = i < shield_hp
+			var seg_col = Color("#00D4FF", 0.8) if is_active else Color("#1A3A5A", 0.4)
+			draw_circle(Vector2(sx, sy), 2.5, seg_col)
+			# Connecting ring
+			if i < shield_max - 1:
+				var a2 = (i + 1) * seg_angle + _bob_time * 0.3
+				draw_line(Vector2(sx, sy), Vector2(cos(a2) * 16, bob - 2 + sin(a2) * 16 * SQUASH), Color("#00D4FF", 0.3), 1.0)
+	# Drop shadow
+	draw_set_transform(Vector2(0, bob + 8), 0.0, Vector2(1.0, 0.3))
+	draw_circle(Vector2.ZERO, 16, Color(0, 0, 0, 0.25))
+	draw_set_transform(Vector2.ZERO, 0.0, Vector2.ONE)
+
+func _draw_pivot(col: Color, bob: float) -> void:
+	# Large 3D box boss with prominent pivot line
+	_draw_3d_box(Vector2(0, bob - 4), Vector2(20, 12), 12.0, Color("#15202E"), col, 2.0)
+	# Top-face pivot rod (long thin 3D box running through center)
+	_draw_3d_box(Vector2(0, bob - 4 - 12 * SQUASH), Vector2(22, 1.5), 3.0, Color("#0D141C"), Color("#FFFFFF", 0.8), 1.0)
+	# Top face warning markers
+	draw_circle(Vector2(-14, bob - 4 - 12 * SQUASH), 2.0, Color("#FFFFFF", 0.7))
+	draw_circle(Vector2(14, bob - 4 - 12 * SQUASH), 2.0, Color("#FFFFFF", 0.7))
+	# Side spikes (3D cylinders pointing up)
+	var spike_positions = [-12.0, 0.0, 12.0]
+	for sx in spike_positions:
+		_draw_3d_cylinder(Vector2(sx, bob - 4 - 12 * SQUASH - 6), 2.0, 6.0, Color("#0F1720"), col, 1.2)
+		_draw_3d_sphere(Vector2(sx, bob - 4 - 12 * SQUASH - 12), 2.5, col)
+	# Drop shadow
+	draw_set_transform(Vector2(0, bob + 8), 0.0, Vector2(1.0, 0.3))
+	draw_circle(Vector2.ZERO, 22, Color(0, 0, 0, 0.35))
+	draw_set_transform(Vector2.ZERO, 0.0, Vector2.ONE)
+
+func _draw_indexed(col: Color, bob: float) -> void:
+	# 3D data packet with bracket frame and number tile on top
+	# Outer bracket frame (3D box, narrow)
+	_draw_3d_box(Vector2(0, bob - 2), Vector2(13, 13), 8.0, Color("#15202E"), col, 1.5)
+	# Index number tile on top (smaller 3D box)
+	var idx = type_data.get("index", 0)
+	var tile_y = bob - 2 - 8 * SQUASH - 4
+	_draw_3d_box(Vector2(0, tile_y), Vector2(7, 7), 3.0, Color("#0F1A2E"), Color("#FFFFFF", 0.9), 1.2)
+	# Bracket corners (drawn as short cylinder posts on each corner)
+	var corners = [Vector2(-11, -11), Vector2(11, -11), Vector2(-11, 11), Vector2(11, 11)]
+	for c in corners:
+		draw_line(Vector2(c.x * 0.4, bob - 2 + c.y * 0.4 - 8 * SQUASH),
+			Vector2(c.x * 0.4 + c.x * 0.3, bob - 2 + c.y * 0.4 - 8 * SQUASH),
+			col, 1.5)
+	# Drop shadow
+	draw_set_transform(Vector2(0, bob + 6), 0.0, Vector2(1.0, 0.3))
+	draw_circle(Vector2.ZERO, 14, Color(0, 0, 0, 0.25))
+	draw_set_transform(Vector2.ZERO, 0.0, Vector2.ONE)
+
+func _draw_selection(col: Color, bob: float) -> void:
+	# 3D octagonal prism with crosshair target
+	var marked = type_data.get("marked", false)
+	var outline_col = Color("#FFD700") if marked else col
+	# Build octagonal top points (in local coords)
+	var top_pts = PackedVector2Array()
+	for i in range(8):
+		var a = i * TAU / 8.0
+		top_pts.append(Vector2(cos(a) * 12, sin(a) * 12 * SQUASH))
+	# Translate to bob position
+	draw_set_transform(Vector2(0, bob - 3), 0.0, Vector2.ONE)
+	# Draw extruded side panels (8 faces)
+	for i in range(8):
+		var next_i = (i + 1) % 8
+		var t1 = top_pts[i]
+		var t2 = top_pts[next_i]
+		var b1 = t1 + Vector2(0, 6)
+		var b2 = t2 + Vector2(0, 6)
+		draw_colored_polygon([t1, t2, b2, b1], Color("#0D141C"))
+		draw_polyline(PackedVector2Array([t1, t2]), outline_col, 1.5)
+		draw_polyline(PackedVector2Array([b1, b2]), outline_col, 1.5)
+	# Top face
+	draw_colored_polygon(top_pts, Color("#1E2C3D"))
+	draw_polyline(PackedVector2Array([top_pts[0], top_pts[1], top_pts[2], top_pts[3], top_pts[4], top_pts[5], top_pts[6], top_pts[7], top_pts[0]]), outline_col, 1.5)
+	draw_set_transform(Vector2.ZERO, 0.0, Vector2.ONE)
+	# Crosshair target on top
+	draw_line(Vector2(-5, 0), Vector2(5, 0), outline_col, 1.0)
+	draw_line(Vector2(0, -5), Vector2(0, 5), outline_col, 1.0)
+	draw_circle(Vector2.ZERO, 2.0, outline_col, true, 1.0)
+	# Drop shadow
+	draw_set_transform(Vector2(0, bob + 8), 0.0, Vector2(1.0, 0.3))
+	draw_circle(Vector2.ZERO, 18, Color(0, 0, 0, 0.25))
+	draw_set_transform(Vector2.ZERO, 0.0, Vector2.ONE)
+
+func _draw_scan(col: Color, bob: float) -> void:
+	# 3D elongated hexagon with scan beam
+	var vulnerable = type_data.get("vulnerable", true)
+	# Build elongated hex top points
+	var top_pts = PackedVector2Array()
+	for i in range(6):
+		var a = i * PI / 3.0
+		var rx = 16.0 if i % 2 == 0 else 8.0
+		var ry = 7.0
+		top_pts.append(Vector2(cos(a) * rx, sin(a) * ry * SQUASH))
+	# Side panels
+	draw_set_transform(Vector2(0, bob - 2), 0.0, Vector2.ONE)
+	for i in range(6):
+		var next_i = (i + 1) % 6
+		var t1 = top_pts[i]
+		var t2 = top_pts[next_i]
+		var b1 = t1 + Vector2(0, 5)
+		var b2 = t2 + Vector2(0, 5)
+		draw_colored_polygon([t1, t2, b2, b1], Color("#0D141C"))
+		draw_polyline(PackedVector2Array([t1, t2]), Color("#00D4FF"), 1.5)
+		draw_polyline(PackedVector2Array([b1, b2]), Color("#00D4FF", 0.4), 1.0)
+	draw_set_transform(Vector2.ZERO, 0.0, Vector2.ONE)
+	# Top face
+	draw_colored_polygon(top_pts, Color("#1E2C3D"))
+	draw_polyline(PackedVector2Array([top_pts[0], top_pts[1], top_pts[2], top_pts[3], top_pts[4], top_pts[5], top_pts[0]]), Color("#00D4FF"), 1.5)
+	# Scan beam
+	if vulnerable:
+		draw_line(Vector2(-8, bob), Vector2(8, bob), Color("#00FF88", 0.7), 2.0)
+	else:
+		draw_line(Vector2(-8, bob), Vector2(8, bob), Color("#FF3366", 0.5), 2.0)
+	# Drop shadow
+	draw_set_transform(Vector2(0, bob + 6), 0.0, Vector2(1.0, 0.3))
+	draw_circle(Vector2.ZERO, 18, Color(0, 0, 0, 0.25))
+	draw_set_transform(Vector2.ZERO, 0.0, Vector2.ONE)
 
 func _draw_insertion(col: Color, bob: float) -> void:
 	# 3D triangular wedge pointing right (insertion direction)
@@ -809,48 +1006,6 @@ func _draw_radix(col: Color, bob: float) -> void:
 	# Drop shadow
 	draw_set_transform(Vector2(0, bob + 5), 0.0, Vector2(1.0, 0.3))
 	draw_circle(Vector2.ZERO, 15, Color(0, 0, 0, 0.3))
-	draw_set_transform(Vector2.ZERO, 0.0, Vector2.ONE)
-
-func _draw_scan(col: Color, bob: float) -> void:
-	# 3D elongated hexagon with scan beam
-	var vulnerable = type_data.get("vulnerable", true)
-	# Build elongated hex top points
-	var top_pts = PackedVector2Array()
-	for i in range(6):
-		var a = i * PI / 3.0
-		var rx = 16.0 if i % 2 == 0 else 8.0
-		var ry = 7.0
-		top_pts.append(Vector2(cos(a) * rx, sin(a) * ry * SQUASH))
-	# Side panels
-	draw_set_transform(Vector2(0, bob - 2), 0.0, Vector2.ONE)
-	for i in range(6):
-		var next_i = (i + 1) % 6
-		var t1 = top_pts[i]
-		var t2 = top_pts[next_i]
-		var b1 = t1 + Vector2(0, 5)
-		var b2 = t2 + Vector2(0, 5)
-		var mid_angle = i * PI / 3.0 + (PI / 6.0)
-		var l_dot = cos(mid_angle - 2.2)
-		var shade_mix = lerp(0.1, 0.4, (l_dot + 1.0) / 2.0)
-		var panel = PackedVector2Array([t1, t2, b2, b1])
-		draw_colored_polygon(panel, Color("#0D131A"))
-		draw_colored_polygon(panel, Color(col, shade_mix * 0.4))
-		draw_polyline(PackedVector2Array([t1, t2, b2, b1]), Color(col, 0.4), 1.0)
-	# Top face
-	draw_colored_polygon(top_pts, Color("#1B2A3A"))
-	var outline_loop = top_pts.duplicate()
-	outline_loop.append(top_pts[0])
-	draw_polyline(outline_loop, col, 1.5)
-	# Scan beam (vertical line on top)
-	var phase = type_data.get("scan_phase", 0.0)
-	var scan_x = sin(phase * 2.0) * 8
-	draw_line(Vector2(scan_x, -7 * SQUASH), Vector2(scan_x, 7 * SQUASH),
-		Color("#00FF88") if vulnerable else Color("#FF3366", 0.4), 2.0)
-	draw_circle(Vector2(scan_x, 0), 1.5, Color("#FFFFFF") if vulnerable else Color("#FF3366", 0.6))
-	draw_set_transform(Vector2.ZERO, 0.0, Vector2.ONE)
-	# Drop shadow
-	draw_set_transform(Vector2(0, bob + 5), 0.0, Vector2(1.0, 0.3))
-	draw_circle(Vector2.ZERO, 16, Color(0, 0, 0, 0.25))
 	draw_set_transform(Vector2.ZERO, 0.0, Vector2.ONE)
 
 func _draw_binary(col: Color, bob: float) -> void:
