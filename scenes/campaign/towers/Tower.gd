@@ -77,8 +77,9 @@ func initialize(data: TowerData, cell: Vector2i, e_layer: Node2D) -> void:
 	current_level = 1
 	z_index = 1
 	_setup_sprite()
-	_setup_range_area()
-	_animate_placement()
+	if not preview_mode:
+		_setup_range_area()
+		_animate_placement()
 	queue_redraw()
 
 func _setup_range_area() -> void:

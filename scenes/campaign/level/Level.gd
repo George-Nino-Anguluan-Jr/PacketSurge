@@ -48,6 +48,10 @@ var selected_tower_data: TowerData = null
 var grid_system
 var level_start_time: float        = 0.0
 var is_level_ended: bool           = false
+var _preview_tower: Node2D        = null
+var _confirm_cell: Vector2i       = Vector2i(-1, -1)
+var _is_fast_forward: bool        = false
+var _ff_btn: Button               = null
 
 const INTER_WAVE_DURATION: float  = 15.0
 var wave_countdown: float          = INTER_WAVE_DURATION
@@ -147,6 +151,7 @@ func _ready() -> void:
 		call_deferred("_show_challenge")
 
 func _exit_tree() -> void:
+	Engine.time_scale = 1.0
 	SoundManager.stop_music()
 
 # ─── SETUP ─────────────────────────────────────────────
@@ -285,6 +290,17 @@ func _setup_buttons() -> void:
 	main_menu_btn.pressed.connect(_on_main_menu_pressed)
 	skip_wave_btn.pressed.connect(_on_skip_wave_pressed)
 	challenge_btn.pressed.connect(_show_challenge)
+
+	_ff_btn = Button.new()
+	_ff_btn.text = "▶▶"
+	_ff_btn.custom_minimum_size = Vector2(36, 28)
+	_ff_btn.size_flags_vertical = Control.SIZE_SHRINK_CENTER
+	_ff_btn.add_theme_color_override("font_color", Color("#4A7FA5"))
+	_ff_btn.add_theme_font_size_override("font_size", 10)
+	_ff_btn.tooltip_text = "Fast-forward (2x)"
+	_ff_btn.pressed.connect(_on_fast_forward_pressed)
+	$HUD/HUDControl/TopHUD/TopLayout.add_child(_ff_btn)
+	pause_btn.get_parent().move_child(_ff_btn, pause_btn.get_index())
 
 func _connect_signals() -> void:
 	ram_manager.ram_changed.connect(_on_ram_changed)
@@ -481,7 +497,7 @@ func _on_overlay_tower_selected(tower_id: String) -> void:
 		_flash_ram_label(false)
 		_play_feedback(false)
 		return
-		
+
 	selected_tower_data              = TowerData.new()
 	selected_tower_data.tower_id     = def["tower_id"]
 	selected_tower_data.tower_name   = def["tower_name"]
@@ -493,11 +509,26 @@ func _on_overlay_tower_selected(tower_id: String) -> void:
 	selected_tower_data.icon_text    = def["icon_text"]
 	selected_tower_data.spire_variant = def.get("spire_variant", "")
 	selected_tower_data.spire_base_h  = def.get("spire_base_h", 0)
-	
-	_place_tower(current_clicked_cell)
+
+	_confirm_cell = current_clicked_cell
+	_create_preview_tower(def, _confirm_cell)
+	_show_placement_confirmation(_confirm_cell)
 
 # ─── GRID INTERACTION ──────────────────────────────────
 func _on_cell_clicked(cell: Vector2i) -> void:
+	if is_instance_valid(_preview_tower) and overlay_menu.visible:
+		if cell == _confirm_cell:
+			return  # Let the confirmation buttons handle it
+		_remove_preview_tower()
+		overlay_menu.visible = false
+
+	# Tower menu visible → any click closes it
+	if overlay_menu.visible and is_instance_valid(_selected_tower):
+		overlay_menu.visible = false
+		_selected_tower.set_selected(false)
+		_selected_tower = null
+		return
+
 	if overlay_menu.visible and cell == _current_menu_cell:
 		return
 	_current_menu_cell = cell
@@ -535,7 +566,7 @@ func _show_tower_menu(cell: Vector2i, tower: Node) -> void:
 	var btn_h := 26
 	var sep := 4
 	var title_h := 18
-	var num_rows = 1 + (1 if tower.current_level < tower.max_level else 0) + 1 + 1 + 1
+	var num_rows = (1 if tower.current_level < tower.max_level else 0) + 1 + 1
 	var total_h = title_h + num_rows * btn_h + (num_rows + 1) * sep + margin * 2
 	var total_w = btn_w + margin * 2
 
@@ -609,20 +640,6 @@ func _show_tower_menu(cell: Vector2i, tower: Node) -> void:
 	sell_btn.pressed.connect(_on_sell_tower.bind(cell, tower, sell_value))
 	layout.add_child(sell_btn)
 
-	var close_btn := Button.new()
-	close_btn.text = "✕ Close"
-	close_btn.custom_minimum_size = Vector2(btn_w, btn_h)
-	close_btn.size = Vector2(btn_w, btn_h)
-	close_btn.add_theme_font_size_override("font_size", 9)
-	close_btn.add_theme_color_override("font_color", Color("#4A7FA5"))
-	close_btn.pressed.connect(func():
-		overlay_menu.visible = false
-		_current_menu_cell = Vector2i(-1, -1)
-		if is_instance_valid(_selected_tower):
-			_selected_tower.set_selected(false)
-		_selected_tower = null)
-	layout.add_child(close_btn)
-
 	overlay_menu.visible = true
 
 func _on_sell_tower(cell: Vector2i, tower: Node, value: int) -> void:
@@ -660,6 +677,107 @@ func _on_ability_used(tower: Node, cost: int) -> void:
 	overlay_menu.visible = false
 	_spawn_floating_text(tower.get_ability_name() + "!", tower.global_position, Color("#FFB800"), 14)
 	_play_feedback(true)
+
+# ─── PLACEMENT PREVIEW & CONFIRMATION ──────────────────
+func _create_preview_tower(def: Dictionary, cell: Vector2i) -> void:
+	var tower_scene = preload("res://scenes/campaign/towers/Tower.tscn")
+	_preview_tower = tower_scene.instantiate()
+	_preview_tower.preview_mode = true
+	var data = TowerData.new()
+	data.tower_id       = def["tower_id"]
+	data.tower_name     = def["tower_name"]
+	data.ram_cost       = def["ram_cost"]
+	data.damage         = def["damage"]
+	data.attack_speed   = def["attack_speed"]
+	data.attack_range   = def["attack_range"]
+	data.color          = def["color"]
+	data.icon_text      = def["icon_text"]
+	data.spire_variant  = def.get("spire_variant", "")
+	data.spire_base_h   = def.get("spire_base_h", 0)
+	_preview_tower.initialize(data, cell, null)
+	_preview_tower.set_selected(true)
+	tower_layer.add_child(_preview_tower)
+	_preview_tower.position = grid_system.get_cell_center(cell)
+
+func _remove_preview_tower() -> void:
+	if is_instance_valid(_preview_tower):
+		_preview_tower.queue_free()
+		_preview_tower = null
+	_confirm_cell = Vector2i(-1, -1)
+
+func _show_placement_confirmation(cell: Vector2i) -> void:
+	var cell_center = grid_system.get_cell_center(cell)
+	var canvas_pos = get_canvas_transform() * cell_center
+	overlay_menu.position = canvas_pos
+	for child in overlay_menu.get_children():
+		child.queue_free()
+
+	var btn_size := 36.0
+	# Confirm (check) button
+	var check_btn := Button.new()
+	check_btn.text = "✓"
+	check_btn.custom_minimum_size = Vector2(btn_size, btn_size)
+	check_btn.size = Vector2(btn_size, btn_size)
+	check_btn.position = Vector2(-btn_size - 6, -btn_size * 0.5)
+	check_btn.add_theme_color_override("font_color", Color("#00FF88"))
+	check_btn.add_theme_font_size_override("font_size", 18)
+	var ok_style := StyleBoxFlat.new()
+	ok_style.bg_color = Color("#071F0E", 0.95)
+	ok_style.border_color = Color("#00FF88")
+	ok_style.border_width_left = 2
+	ok_style.border_width_right = 2
+	ok_style.border_width_top = 2
+	ok_style.border_width_bottom = 2
+	ok_style.corner_radius_top_left = 18
+	ok_style.corner_radius_top_right = 18
+	ok_style.corner_radius_bottom_left = 18
+	ok_style.corner_radius_bottom_right = 18
+	check_btn.add_theme_stylebox_override("normal", ok_style)
+	check_btn.pressed.connect(_on_confirm_placement)
+	overlay_menu.add_child(check_btn)
+
+	# Cancel (X) button
+	var x_btn := Button.new()
+	x_btn.text = "✗"
+	x_btn.custom_minimum_size = Vector2(btn_size, btn_size)
+	x_btn.size = Vector2(btn_size, btn_size)
+	x_btn.position = Vector2(6, -btn_size * 0.5)
+	x_btn.add_theme_color_override("font_color", Color("#FF3366"))
+	x_btn.add_theme_font_size_override("font_size", 18)
+	var cancel_style := StyleBoxFlat.new()
+	cancel_style.bg_color = Color("#1F070E", 0.95)
+	cancel_style.border_color = Color("#FF3366")
+	cancel_style.border_width_left = 2
+	cancel_style.border_width_right = 2
+	cancel_style.border_width_top = 2
+	cancel_style.border_width_bottom = 2
+	cancel_style.corner_radius_top_left = 18
+	cancel_style.corner_radius_top_right = 18
+	cancel_style.corner_radius_bottom_left = 18
+	cancel_style.corner_radius_bottom_right = 18
+	x_btn.add_theme_stylebox_override("normal", cancel_style)
+	x_btn.pressed.connect(_on_cancel_placement)
+	overlay_menu.add_child(x_btn)
+
+	var screen_size = get_viewport_rect().size
+	var menu_offset_x = clamp(overlay_menu.position.x, 90.0, screen_size.x - 90.0) - overlay_menu.position.x
+	var menu_offset_y = clamp(overlay_menu.position.y, 90.0, screen_size.y - 90.0) - overlay_menu.position.y
+	overlay_menu.position += Vector2(menu_offset_x, menu_offset_y)
+	overlay_menu.visible = true
+
+func _on_confirm_placement() -> void:
+	if not is_instance_valid(_preview_tower):
+		return
+	overlay_menu.visible = false
+	var cell = _confirm_cell
+	_remove_preview_tower()
+	_place_tower(cell)
+
+func _on_cancel_placement() -> void:
+	if not is_instance_valid(_preview_tower):
+		return
+	overlay_menu.visible = false
+	_remove_preview_tower()
 
 func _show_placement_radial(cell: Vector2i) -> void:
 	# Determine equipped towers (bring/equip from tower select)
@@ -732,6 +850,7 @@ func _show_placement_radial(cell: Vector2i) -> void:
 		dummy_data.spire_variant = def.get("spire_variant", "")
 		dummy_data.spire_base_h  = def.get("spire_base_h", 0)
 		
+		visual_tower.preview_mode = true
 		visual_tower.initialize(dummy_data, Vector2i(-1, -1), null)
 		visual_tower.position = Vector2(btn_size / 2.0, btn_size / 2.0)
 		
@@ -928,7 +1047,7 @@ func _input(event: InputEvent) -> void:
 	if event.is_action_pressed("ui_cancel"):
 		_on_pause_pressed()
 
-# ─── PAUSE HANDLERS ────────────────────────────────────
+# ─── PAUSE / SPEED HANDLERS ────────────────────────────
 func _on_pause_pressed() -> void:
 	get_tree().paused = true
 	pause_menu.visible = true
@@ -936,6 +1055,17 @@ func _on_pause_pressed() -> void:
 func _on_resume_pressed() -> void:
 	get_tree().paused = false
 	pause_menu.visible = false
+
+func _on_fast_forward_pressed() -> void:
+	_is_fast_forward = not _is_fast_forward
+	if _is_fast_forward:
+		Engine.time_scale = 2.0
+		_ff_btn.add_theme_color_override("font_color", Color("#FFB800"))
+		_ff_btn.tooltip_text = "Fast-forward (2x) — ON"
+	else:
+		Engine.time_scale = 1.0
+		_ff_btn.add_theme_color_override("font_color", Color("#4A7FA5"))
+		_ff_btn.tooltip_text = "Fast-forward (2x)"
 
 func _on_select_level_pressed() -> void:
 	get_tree().paused = false
@@ -1048,6 +1178,7 @@ func _update_base_health_label() -> void:
 
 # ─── RESULT PANEL ──────────────────────────────────────
 func _show_result_panel(victory: bool) -> void:
+	get_tree().paused = true
 	SoundManager.stop_music()
 	if victory:
 		SoundManager.play_game_over()
