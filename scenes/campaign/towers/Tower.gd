@@ -683,9 +683,7 @@ func _spawn_chain_arc(from_pos: Vector2, to_pos: Vector2) -> void:
 # ─── DRAW ───────────────────────────────────────────────
 func _draw() -> void:
 	if _spire:
-		if current_level > 1:
-			draw_string(ThemeDB.fallback_font, Vector2(10, -spire_base_h * 0.5 * 0.5 - 14),
-				"Lv" + str(current_level), HORIZONTAL_ALIGNMENT_LEFT, -1, 9, Color("#FFB800"))
+		# Spire model already encodes the level visually, so no Lv label needed.
 		if _selected:
 			draw_circle(Vector2.ZERO, attack_range + ENEMY_RADIUS, Color(tower_color, 0.06))
 			draw_arc(Vector2.ZERO, attack_range + ENEMY_RADIUS, 0, TAU, 64, Color(tower_color, 0.25), 1.5)
