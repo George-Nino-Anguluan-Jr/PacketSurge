@@ -62,6 +62,7 @@ func _ready() -> void:
 	_check_placement_quiz()
 	_build_continue_button()
 	_connect_button_sounds(self)
+	_maybe_show_tutorial()
 
 func _build_continue_button() -> void:
 	var section = $CenterContainer/MainLayout/ButtonSection
@@ -352,3 +353,67 @@ func _apply_responsive_layout() -> void:
 		top_left_container.add_theme_constant_override("separation", 12)
 		leaderboard_button.custom_minimum_size = Vector2(48, 48)
 		settings_button.custom_minimum_size = Vector2(48, 48)
+
+# ─── TUTORIAL ──────────────────────────────────────────
+const TutorialOverlay = preload("res://scenes/core/TutorialOverlay.gd")
+
+func _maybe_show_tutorial() -> void:
+	if ProgressManager.has_seen_tutorial("main_menu"):
+		return
+	# Wait for layout/buttons to settle
+	await get_tree().process_frame
+	var tut = TutorialOverlay.new()
+	add_child(tut)
+	tut.tutorial_finished.connect(func(): ProgressManager.mark_tutorial_seen("main_menu"))
+	tut.start(_get_main_menu_tutorial_steps())
+
+func _get_main_menu_tutorial_steps() -> Array:
+	var steps: Array = []
+	steps.append({
+		"title": "Welcome, Operator!",
+		"body": "You're now in the PacketSurge network.\nThis quick tour will walk you through every module of the game.",
+		"force_center": true,
+	})
+	if _continue_btn:
+		steps.append({
+			"title": "Continue Button",
+			"body": "This button takes you to where you left off — your next lesson, level, or activity.",
+			"highlight": _continue_btn.get_path(),
+		})
+	steps.append({
+		"title": "Academy",
+		"body": "Learn Python and data structures with interactive lessons. Unlock towers and levels as you master topics.",
+		"highlight": academy_button.get_path(),
+	})
+	steps.append({
+		"title": "Campaign",
+		"body": "Defend the network with the towers you've unlocked. Each level is a Tower Defense puzzle.",
+		"highlight": campaign_button.get_path(),
+	})
+	steps.append({
+		"title": "Index",
+		"body": "Browse every concept, algorithm, and tower you've encountered so far.",
+		"highlight": index_button.get_path(),
+	})
+	if profile_card.visible:
+		steps.append({
+			"title": "Your Profile",
+			"body": "Tap your avatar to view your profile, mastery stats, and earned achievements.",
+			"highlight": profile_card.get_path(),
+		})
+	steps.append({
+		"title": "Leaderboard",
+		"body": "Track your progress against classmates on the global leaderboard.",
+		"highlight": leaderboard_button.get_path(),
+	})
+	steps.append({
+		"title": "Settings",
+		"body": "Tweak audio, display, and account preferences from the settings menu.",
+		"highlight": settings_button.get_path(),
+	})
+	steps.append({
+		"title": "You're Ready!",
+		"body": "Hit the Continue button above to start your training. Good luck, operator!",
+		"force_center": true,
+	})
+	return steps

@@ -146,7 +146,7 @@ func _ready() -> void:
 	SoundManager.play_level_music(level_number)
 	_build_challenge_panel()
 	if level_number == 1:
-		call_deferred("_show_tutorial")
+		pass
 	else:
 		call_deferred("_show_challenge")
 
@@ -372,118 +372,6 @@ var overlay_menu: Control = null
 var current_clicked_cell: Vector2i = Vector2i(-1, -1)
 var _current_menu_cell: Vector2i = Vector2i(-1, -1)
 var _selected_tower: Node = null
-
-var _tutorial_step: int = 0
-var _tutorial_overlay: Control = null
-
-func _show_tutorial() -> void:
-	_tutorial_overlay = Control.new()
-	_tutorial_overlay.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
-	_tutorial_overlay.mouse_filter = Control.MOUSE_FILTER_STOP
-	$HUD/HUDControl.add_child(_tutorial_overlay)
-
-	var bg := ColorRect.new()
-	bg.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
-	bg.color = Color(0, 0, 0, 0.7)
-	_tutorial_overlay.add_child(bg)
-
-	_tutorial_step = 0
-	_show_tutorial_step()
-
-func _show_tutorial_step() -> void:
-	for child in _tutorial_overlay.get_children():
-		if child is ColorRect: continue
-		child.queue_free()
-
-	var card := PanelContainer.new()
-	card.custom_minimum_size = Vector2(300, 220)
-	card.set_anchors_preset(Control.PRESET_CENTER)
-	var st := StyleBoxFlat.new()
-	st.bg_color = Color("#0A1628")
-	st.border_color = Color("#00D4FF")
-	st.border_width_left = 2
-	st.border_width_right = 2
-	st.border_width_top = 2
-	st.border_width_bottom = 2
-	st.corner_radius_top_left = 12
-	st.corner_radius_top_right = 12
-	st.corner_radius_bottom_left = 12
-	st.corner_radius_bottom_right = 12
-	card.add_theme_stylebox_override("panel", st)
-	_tutorial_overlay.add_child(card)
-
-	var layout := VBoxContainer.new()
-	layout.add_theme_constant_override("separation", 12)
-	layout.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-	layout.size_flags_vertical = Control.SIZE_EXPAND_FILL
-	layout.add_theme_constant_override("margin_left", 20)
-	layout.add_theme_constant_override("margin_right", 20)
-	layout.add_theme_constant_override("margin_top", 20)
-	layout.add_theme_constant_override("margin_bottom", 20)
-	card.add_child(layout)
-
-	var title := Label.new()
-	title.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
-	title.add_theme_color_override("font_color", Color("#00D4FF"))
-	title.add_theme_font_size_override("font_size", 16)
-	layout.add_child(title)
-
-	var body := Label.new()
-	body.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
-	body.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
-	body.add_theme_color_override("font_color", Color("#E8F4FD"))
-	body.add_theme_font_size_override("font_size", 13)
-	body.size_flags_vertical = Control.SIZE_EXPAND_FILL
-	layout.add_child(body)
-
-	var steps_lbl := Label.new()
-	steps_lbl.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
-	steps_lbl.add_theme_color_override("font_color", Color("#4A7FA5"))
-	steps_lbl.add_theme_font_size_override("font_size", 10)
-	layout.add_child(steps_lbl)
-
-	var btn := Button.new()
-	btn.custom_minimum_size = Vector2(160, 40)
-	btn.size_flags_horizontal = Control.SIZE_SHRINK_CENTER
-	btn.add_theme_font_size_override("font_size", 13)
-	layout.add_child(btn)
-
-	var tutorial_data = [
-		{
-			"title": "Welcome, Operator!",
-			"body": "This is your first mission.\nPackets will flow along the path from left to right.\nYour job: place towers to destroy them before they reach the end."
-		},
-		{
-			"title": "Placing Towers",
-			"body": "Click on any highlighted grid cell to open the tower selector.\nChoose a tower to place it.\nEach tower costs RAM (shown on the button)."
-		},
-		{
-			"title": "RAM & Waves",
-			"body": "You earn RAM by destroying enemies and completing waves.\nUse RAM to place and upgrade towers.\nSurvive all waves with high base HP for a better grade!"
-		},
-		{
-			"title": "Upgrading Towers",
-			"body": "Click an existing tower to open its menu.\nUpgrade it to increase damage and range.\nUpgrades cost RAM — manage your budget wisely!"
-		},
-	]
-
-	if _tutorial_step < tutorial_data.size():
-		var d = tutorial_data[_tutorial_step]
-		title.text = d["title"]
-		body.text = d["body"]
-		steps_lbl.text = "Step " + str(_tutorial_step + 1) + " of " + str(tutorial_data.size())
-		btn.text = "Next →" if _tutorial_step < tutorial_data.size() - 1 else "Let's Go!"
-		btn.pressed.connect(_on_tutorial_next)
-	else:
-		_tutorial_overlay.queue_free()
-		_tutorial_overlay = null
-
-func _on_tutorial_next() -> void:
-	_tutorial_step += 1
-	_show_tutorial_step()
-	if _tutorial_overlay == null:
-		call_deferred("_show_challenge")
-
 func _create_overlay_menu() -> void:
 	# Use Control instead of PanelContainer for custom radial layout
 	overlay_menu = Control.new()
@@ -1199,6 +1087,7 @@ func _show_result_panel(victory: bool) -> void:
 		SoundManager.play_game_over()
 	for child in game_over_panel.get_children():
 		child.queue_free()
+	game_over_panel.process_mode = Node.PROCESS_MODE_WHEN_PAUSED
 
 	var layout := VBoxContainer.new()
 	layout.add_theme_constant_override("separation", 16)

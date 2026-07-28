@@ -57,6 +57,7 @@ var campaign_progress: Dictionary  = {
 	"level_stars":        {},  # level_number → int (0-3)
 }
 var campaign_time: Dictionary      = {}  # level_number (str) → seconds (float)
+var tutorials_seen: Array[String]   = []  # tutorial scene key (e.g. "main_menu", "level_1")
 
 # ─── STARTUP ───────────────────────────────────────────
 func _ready() -> void:
@@ -273,6 +274,7 @@ func save_progress() -> void:
 		"unlocked_towers":   unlocked_towers,
 		"new_unlocked_towers": new_unlocked_towers,
 		"campaign_progress": campaign_progress,
+		"tutorials_seen":    tutorials_seen,
 	}
 	var json_string = JSON.stringify(data)
 
@@ -338,6 +340,12 @@ func load_progress() -> void:
 		new_unlocked_towers.append(str(tower))
 
 	campaign_progress = parsed.get("campaign_progress", {})
+
+	var loaded_tutorials = parsed.get("tutorials_seen", [])
+	tutorials_seen = []
+	for t in loaded_tutorials:
+		tutorials_seen.append(str(t))
+
 	print("[ProgressManager] Progress loaded.")
 
 func reset_all_progress() -> void:
@@ -346,6 +354,7 @@ func reset_all_progress() -> void:
 	campaign_time       = {}
 	unlocked_towers     = []
 	new_unlocked_towers = []
+	tutorials_seen      = []
 	campaign_progress   = {
 		"placement_quiz_done": false,
 		"max_level_unlocked":  0,
@@ -353,4 +362,18 @@ func reset_all_progress() -> void:
 		"level_stars":        {},
 	}
 	_ensure_base_state()
+	save_progress()
+
+# ─── TUTORIAL TRACKING ─────────────────────────────────
+func has_seen_tutorial(key: String) -> bool:
+	return key in tutorials_seen
+
+func mark_tutorial_seen(key: String) -> void:
+	if key not in tutorials_seen:
+		tutorials_seen.append(key)
+		save_progress()
+		print("[ProgressManager] Tutorial seen: ", key)
+
+func reset_tutorial(key: String) -> void:
+	tutorials_seen.erase(key)
 	save_progress()
