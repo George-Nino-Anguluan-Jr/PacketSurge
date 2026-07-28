@@ -790,8 +790,9 @@ func _show_placement_radial(cell: Vector2i) -> void:
 		
 	# Build radial selection
 	var num_options = equipped.size()
-	var radius = 72.0
-	var btn_size = 54.0
+	var radius = 88.0
+	var btn_w = 72.0
+	var btn_h = 96.0
 	
 	for i in range(num_options):
 		var tower_id = equipped[i]
@@ -805,13 +806,13 @@ func _show_placement_radial(cell: Vector2i) -> void:
 		
 		# Generous touch target button (Works beautifully on mobile)
 		var btn := TextureButton.new()
-		btn.custom_minimum_size = Vector2(btn_size, btn_size)
-		btn.size = Vector2(btn_size, btn_size)
-		btn.position = offset_pos - Vector2(btn_size/2.0, btn_size/2.0)
+		btn.custom_minimum_size = Vector2(btn_w, btn_h)
+		btn.size = Vector2(btn_w, btn_h)
+		btn.position = offset_pos - Vector2(btn_w / 2.0, btn_h / 2.0)
 		btn.ignore_texture_size = true
 		btn.stretch_mode = TextureButton.STRETCH_SCALE
 		
-		# Style circular icon container
+		# Style rounded rectangle icon container
 		var normal_style := StyleBoxFlat.new()
 		normal_style.bg_color = Color("#070F1E", 0.9)
 		normal_style.border_color = Color(def["color"])
@@ -819,10 +820,10 @@ func _show_placement_radial(cell: Vector2i) -> void:
 		normal_style.border_width_right = 2
 		normal_style.border_width_top = 2
 		normal_style.border_width_bottom = 2
-		normal_style.corner_radius_top_left = int(btn_size / 2.0)
-		normal_style.corner_radius_top_right = int(btn_size / 2.0)
-		normal_style.corner_radius_bottom_left = int(btn_size / 2.0)
-		normal_style.corner_radius_bottom_right = int(btn_size / 2.0)
+		normal_style.corner_radius_top_left = 10
+		normal_style.corner_radius_top_right = 10
+		normal_style.corner_radius_bottom_left = 10
+		normal_style.corner_radius_bottom_right = 10
 		
 		# Display StyleBox as backdrop on the button using a Panel
 		var bg_panel := Panel.new()
@@ -831,9 +832,7 @@ func _show_placement_radial(cell: Vector2i) -> void:
 		bg_panel.add_theme_stylebox_override("panel", normal_style)
 		btn.add_child(bg_panel)
 		
-		# Create a sub-viewport or small instanced tower that displays the actual model directly!
-		# Since Godot 4 allows us to put Node2D inside Control using a Node2D container or directly,
-		# let's instantiate the actual tower scene directly inside the button as a lightweight visual node.
+		# Visual tower (icon at top half of button, centered horizontally)
 		var tower_scene = load("res://scenes/campaign/towers/Tower.tscn")
 		var visual_tower = tower_scene.instantiate()
 		
@@ -852,10 +851,10 @@ func _show_placement_radial(cell: Vector2i) -> void:
 		
 		visual_tower.preview_mode = true
 		visual_tower.initialize(dummy_data, Vector2i(-1, -1), null)
-		visual_tower.position = Vector2(btn_size / 2.0, btn_size / 2.0)
+		visual_tower.position = Vector2(btn_w / 2.0, 24.0)
 		
-		# Scale down model nicely so it fits perfect in the circular button
-		visual_tower.scale = Vector2(0.5, 0.5)
+		# Scale down model to fit in the top icon area
+		visual_tower.scale = Vector2(0.42, 0.42)
 		
 		# Strip game behaviors from visual preview model
 		visual_tower.set_process(false)
@@ -864,15 +863,29 @@ func _show_placement_radial(cell: Vector2i) -> void:
 		
 		btn.add_child(visual_tower)
 		
-		# Price Tag (small overlay at the bottom of the node)
+		# Tower name centered horizontally and vertically in its row
+		var name_lbl := Label.new()
+		name_lbl.text = def["tower_name"]
+		name_lbl.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+		name_lbl.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
+		name_lbl.add_theme_font_size_override("font_size", 9)
+		name_lbl.add_theme_color_override("font_color", Color("#88AACC"))
+		name_lbl.position = Vector2(0, 54)
+		name_lbl.custom_minimum_size = Vector2(btn_w, 16)
+		name_lbl.size = Vector2(btn_w, 16)
+		name_lbl.mouse_filter = Control.MOUSE_FILTER_IGNORE
+		btn.add_child(name_lbl)
+		
+		# Price Tag centered horizontally and vertically at bottom
 		var price_lbl := Label.new()
-		price_lbl.text = str(def["ram_cost"])
+		price_lbl.text = str(def["ram_cost"]) + "⚡"
 		price_lbl.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
-		price_lbl.add_theme_font_size_override("font_size", 8)
+		price_lbl.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
+		price_lbl.add_theme_font_size_override("font_size", 11)
 		price_lbl.add_theme_color_override("font_color", Color("#00D4FF"))
-		price_lbl.position = Vector2(0, btn_size - 8)
-		price_lbl.custom_minimum_size = Vector2(btn_size, 10)
-		price_lbl.size = Vector2(btn_size, 10)
+		price_lbl.position = Vector2(0, 74)
+		price_lbl.custom_minimum_size = Vector2(btn_w, 18)
+		price_lbl.size = Vector2(btn_w, 18)
 		price_lbl.mouse_filter = Control.MOUSE_FILTER_IGNORE
 		btn.add_child(price_lbl)
 		
@@ -907,8 +920,10 @@ func _show_placement_radial(cell: Vector2i) -> void:
 	
 	# Clamp positions of buttons inside screen borders for mobile viewports
 	var screen_size = get_viewport_rect().size
-	var menu_offset_x = clamp(overlay_menu.position.x, 90.0, screen_size.x - 90.0) - overlay_menu.position.x
-	var menu_offset_y = clamp(overlay_menu.position.y, 90.0, screen_size.y - 90.0) - overlay_menu.position.y
+	var clamp_margin_x = btn_w + radius
+	var clamp_margin_y = btn_h + radius
+	var menu_offset_x = clamp(overlay_menu.position.x, clamp_margin_x, screen_size.x - clamp_margin_x) - overlay_menu.position.x
+	var menu_offset_y = clamp(overlay_menu.position.y, clamp_margin_y, screen_size.y - clamp_margin_y) - overlay_menu.position.y
 	overlay_menu.position += Vector2(menu_offset_x, menu_offset_y)
 	
 	overlay_menu.visible = true
