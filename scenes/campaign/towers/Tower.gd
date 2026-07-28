@@ -1,4 +1,4 @@
-# Tower.gd
+# Tower.gd — real tower defense pattern: Area2D range detection + simple timer
 extends Node2D
 
 const ENEMY_RADIUS: float = 20.0
@@ -18,18 +18,16 @@ var current_target: Node       = null
 var attack_timer: float        = 0.0
 var enemy_layer: Node2D        = null
 var grid_cell: Vector2i        = Vector2i.ZERO
+var targets: Array[Node]       = []  # Enemies currently in range (by Area2D)
 var _shoot_flash: float        = 0.0
-var _entry_order: Array[Node]  = []  # Tracks enemies in order they entered range (for Stack/Queue)
-var _flash_targets: Array[Vector2] = []  # Multiple flash lines for AoE/chain attacks
+var _flash_targets: Array[Vector2] = []
+var _selected: bool = false
 
 # Upgrade state
 var current_level: int         = 1
 var max_level: int             = 3
 
-# ─── PREVIEW MODE (Index screen) ───────────────────────
-# When true, the tower skips its gameplay loop (_process) and
-# just sits still as a static 3D model. Toggled externally;
-# default false so existing scenes behave identically.
+# ─── PREVIEW MODE ──────────────────────────────────────
 var preview_mode: bool         = false
 
 # Ability state
@@ -46,18 +44,20 @@ var _mobile_redraw_skip: int   = 0
 var _projectiles: Array[Dictionary] = []
 var _explosions: Array[Dictionary]  = []
 var _chain_arcs: Array[Dictionary]  = []
-var _selected: bool = false
 
 @onready var sprite: Sprite2D = $TowerSprite
 
-# ─── SPRITE MODE (Spire Tower Pack) ─────────────────────
+# ─── SPRITE MODE ───────────────────────────────────────
 const _SpireTower = preload("res://scenes/campaign/towers/SpireTower.gd")
 var _spire = null
 var spire_variant: String = ""
 var spire_base_h: int = 0
 
+# ─── AREA2D RANGE DETECTOR ─────────────────────────────
+var _range_area: Area2D = null
+var _range_shape: CollisionShape2D = null
+
 func _ready() -> void:
-	# Hide sprite for icon rendering if tower is not fully initialized
 	if tower_id == "":
 		_setup_sprite()
 
@@ -77,9 +77,86 @@ func initialize(data: TowerData, cell: Vector2i, e_layer: Node2D) -> void:
 	current_level = 1
 	z_index = 1
 	_setup_sprite()
+	_setup_range_area()
 	_animate_placement()
 	queue_redraw()
 
+func _setup_range_area() -> void:
+	_range_area = Area2D.new()
+	_range_area.name = "RangeDetector"
+	_range_area.collision_mask = 1
+	_range_area.monitoring = true
+	_range_area.monitorable = false
+	add_child(_range_area)
+
+	_range_shape = CollisionShape2D.new()
+	_range_shape.name = "RangeShape"
+	var circle = CircleShape2D.new()
+	circle.radius = attack_range + ENEMY_RADIUS
+	_range_shape.shape = circle
+	_range_area.add_child(_range_shape)
+
+	_range_area.body_entered.connect(_on_enemy_entered)
+	_range_area.body_exited.connect(_on_enemy_exited)
+
+func _on_enemy_entered(body: Node) -> void:
+	if not body.has_method("take_damage"):
+		return
+	if not targets.has(body):
+		targets.append(body)
+		# Fire immediately when enemy enters range
+		attack_timer = 0.0
+		_attack()
+
+func _on_enemy_exited(body: Node) -> void:
+	targets.erase(body)
+	if body == current_target:
+		current_target = null
+
+func _clean_targets() -> void:
+	targets = targets.filter(func(t):
+		return is_instance_valid(t) and not t.is_dead
+	)
+
+# ─── TARGET SELECTION ──────────────────────────────────
+func _get_target() -> Node:
+	_clean_targets()
+	if targets.is_empty():
+		return null
+	match tower_id:
+		"tower_stack":
+			return targets[-1]
+		"tower_queue":
+			return targets[0]
+		"tower_selection":
+			return _get_lowest_hp(targets)
+		"tower_bubble":
+			return targets[0]
+		"tower_quick":
+			return targets[0]
+		_:
+			return _get_closest(targets)
+
+func _get_closest(list: Array) -> Node:
+	var best: Node = null
+	var best_dist: float = INF
+	for t in list:
+		var d = global_position.distance_to(t.global_position)
+		if d < best_dist:
+			best_dist = d
+			best = t
+	return best
+
+func _get_lowest_hp(list: Array) -> Node:
+	var best: Node = null
+	var best_hp: float = INF
+	for t in list:
+		if t.current_health < best_hp:
+			best_hp = t.current_health
+			best = t
+	return best
+
+# ─── ABILITY ───────────────────────────────────────────
 func get_ability_name() -> String:
 	var def = GameManager.TOWER_DEFINITIONS.get(tower_id, {})
 	return def.get("ability_name", "Special")
@@ -97,7 +174,6 @@ func set_selected(v: bool) -> void:
 func activate_ability() -> bool:
 	if not is_ability_ready():
 		return false
-	# One-time big damage burst
 	var dmg_mult = 2.5 + current_level * 0.5
 	_apply_ability_damage(damage * dmg_mult)
 	ability_cooldown = ability_max_cooldown
@@ -133,14 +209,11 @@ func _apply_ability_damage(dmg: float) -> void:
 	_shoot_flash = 2.0
 	queue_redraw()
 
+# ─── UPGRADE ───────────────────────────────────────────
 func upgrade() -> int:
-	"""Upgrade the tower to the next level. Returns the new level."""
 	if current_level >= max_level:
 		return current_level
-	
 	current_level += 1
-	
-	# Apply upgrade bonuses based on tower type
 	match tower_id:
 		"tower_array":
 			damage *= 1.3
@@ -183,27 +256,18 @@ func upgrade() -> int:
 		"tower_binary":
 			damage *= 1.4
 			attack_range *= 1.1
-	
 	if _spire:
 		_spire.set_level(current_level)
-
-	# Emit upgrade signal
 	SignalBus.tower_upgraded.emit(tower_id, current_level)
-	
-	# Visual feedback
 	_animate_upgrade()
-	
 	return current_level
 
 func _animate_upgrade() -> void:
-	"""Visual feedback for upgrade"""
 	var tween = create_tween()
 	tween.set_ease(Tween.EASE_OUT)
 	tween.set_trans(Tween.TRANS_BACK)
 	tween.tween_property(self, "scale", Vector2(1.5, 1.5), 0.15)
 	tween.tween_property(self, "scale", Vector2(1.35, 1.35), 0.25)
-	
-	# Flash effect
 	_shoot_flash = 1.5
 	queue_redraw()
 
@@ -220,38 +284,38 @@ func _setup_sprite() -> void:
 		sprite.visible = true
 
 func _animate_placement() -> void:
-	# Keep placement animation by tweening a simple scaling effect drawn in _draw
 	scale = Vector2(0.1, 0.1)
 	var tween = create_tween()
 	tween.set_ease(Tween.EASE_OUT)
 	tween.set_trans(Tween.TRANS_BACK)
 	tween.tween_property(self, "scale", Vector2(1.35, 1.35), 0.35)
 
+# ─── PROCESS ──────────────────────────────────────────
 func _process(delta: float) -> void:
 	if preview_mode:
 		_anim_time += delta
 		queue_redraw()
 		return
+
 	_anim_time += delta
 	attack_timer += delta
 	if ability_cooldown > 0:
 		ability_cooldown -= delta
-	_update_entry_order()
 
-	# Handle physical recoil decay
 	if _recoil > 0:
 		_recoil = max(0.0, _recoil - delta * 6.0)
 
-	# Active target tracking rotation
-	var target_to_track = current_target
-	if not is_instance_valid(target_to_track) or position.distance_to(target_to_track.position) > attack_range + ENEMY_RADIUS:
-		target_to_track = _get_closest_enemy()
+	# Pick best target
+	var target = _get_target()
+	if target != current_target:
+		current_target = target
 
-	if is_instance_valid(target_to_track):
-		var desired_angle = (target_to_track.position - position).angle()
+	# Rotate turret toward target
+	if is_instance_valid(current_target):
+		var desired_angle = (current_target.global_position - global_position).angle()
 		_turret_angle = lerp_angle(_turret_angle, desired_angle, delta * 8.0)
 	else:
-		_turret_angle = lerp_angle(_turret_angle, -PI/2, delta * 2.0)
+		_turret_angle = lerp_angle(_turret_angle, -PI / 2, delta * 2.0)
 
 	if _shoot_flash > 0:
 		_shoot_flash -= delta * 4.0
@@ -259,31 +323,37 @@ func _process(delta: float) -> void:
 	if _spire:
 		_spire.aim(_turret_angle)
 
-	# Throttle redraws to every other frame on mobile for performance
 	_mobile_redraw_skip += 1
 	if _mobile_redraw_skip % 2 == 0:
 		queue_redraw()
 
-	# ─── UPDATE ACTIVE FLYING PROJECTILES ──────────────────
-	var remaining_projectiles: Array[Dictionary] = []
+	# Update projectiles
+	_update_projectiles(delta)
+	_update_explosions(delta)
+	_update_arcs(delta)
+
+	# Fire at fire rate
+	if attack_timer >= 1.0 / attack_speed and current_target != null:
+		attack_timer = 0.0
+		_attack()
+
+# ─── PROJECTILE UPDATE ─────────────────────────────────
+func _update_projectiles(delta: float) -> void:
+	var remaining: Array[Dictionary] = []
 	for p in _projectiles:
 		p["elapsed_time"] += delta
-
 		if p.has("delay") and p["delay"] > 0:
 			p["delay"] -= delta
 			if p["delay"] > 0:
-				remaining_projectiles.append(p)
+				remaining.append(p)
 				continue
-
 		var target_pos = p["target_last_pos"]
 		if is_instance_valid(p["target"]):
 			target_pos = p["target"].position
 			p["target_last_pos"] = target_pos
-
 		var current_pos = p["pos"]
 		var next_pos = current_pos.move_toward(target_pos, p["speed"] * delta)
 		p["pos"] = next_pos
-
 		if p["style"] == "stack_mortar":
 			var dir_vec = target_pos - p["start_pos"]
 			var d_total = dir_vec.length()
@@ -296,59 +366,32 @@ func _process(delta: float) -> void:
 				p["draw_pos"] = next_pos
 		else:
 			p["draw_pos"] = next_pos
-
 		if next_pos.distance_to(target_pos) < 25.0:
 			_on_projectile_impact(p)
 		else:
-			remaining_projectiles.append(p)
-	_projectiles = remaining_projectiles
+			remaining.append(p)
+	_projectiles = remaining
 
-	# ─── UPDATE ACTIVE IMPACT EXPLOSIONS ──────────────────
-	var remaining_explosions: Array[Dictionary] = []
+func _update_explosions(delta: float) -> void:
+	var remaining: Array[Dictionary] = []
 	for e in _explosions:
 		e["elapsed"] += delta
 		e["radius"] = lerp(0.0, e["max_radius"], e["elapsed"] / e["lifetime"])
 		if e["elapsed"] < e["lifetime"]:
-			remaining_explosions.append(e)
-	_explosions = remaining_explosions
+			remaining.append(e)
+	_explosions = remaining
 
-	var remaining_arcs: Array[Dictionary] = []
+func _update_arcs(delta: float) -> void:
+	var remaining: Array[Dictionary] = []
 	for arc in _chain_arcs:
 		arc["elapsed"] += delta
 		if arc["elapsed"] < arc["lifetime"]:
-			remaining_arcs.append(arc)
-	_chain_arcs = remaining_arcs
+			remaining.append(arc)
+	_chain_arcs = remaining
 
-	# ─── FIRE WHEN ENEMY IN RANGE ─────────────────────────
-	if attack_timer >= 1.0 / attack_speed and (_get_closest_enemy() != null or not _entry_order.is_empty()):
-		attack_timer = 0.0
-		_attack()
-
-# ─── TRACK ENEMIES ENTERING RANGE (needed for Stack/Queue logic) ──
-func _update_entry_order() -> void:
-	if enemy_layer == null:
-		return
-
-	# Remove enemies that left range or died
-	_entry_order = _entry_order.filter(func(e):
-		return is_instance_valid(e) and position.distance_to(e.position) <= attack_range + ENEMY_RADIUS
-	)
-
-	# Add newly entered enemies and trigger immediate attack
-	for enemy in enemy_layer.get_children():
-		if not enemy.has_method("take_damage"):
-			continue
-		var dist = position.distance_to(enemy.position)
-		if dist <= attack_range + ENEMY_RADIUS and not _entry_order.has(enemy):
-			_entry_order.append(enemy)
-			attack_timer = 1.0 / attack_speed
-			if _get_closest_enemy() != null or not _entry_order.is_empty():
-				attack_timer = 0.0
-				_attack()
-
-# ─── MAIN ATTACK ROUTER ────────────────────────────────
+# ─── ATTACK ────────────────────────────────────────────
 func _attack() -> void:
-	if not _get_closest_enemy() and _entry_order.is_empty():
+	if not _get_target():
 		return
 	SoundManager.play_tower_attack(tower_id)
 	_flash_targets.clear()
@@ -370,118 +413,78 @@ func _attack() -> void:
 		"tower_binary":       _attack_binary()
 		_:                    _attack_default()
 
-# ─── ARRAY — fast single target, closest enemy (O(1) access) ──
 func _attack_array() -> void:
-	if _spire:
-		if enemy_layer == null:
-			return
-		var targets: Array[Node] = []
-		for enemy in enemy_layer.get_children():
-			if enemy.has_method("take_damage") and position.distance_to(enemy.position) <= attack_range + ENEMY_RADIUS:
-				targets.append(enemy)
-		if targets.is_empty():
-			return
-		current_target = targets[0]
-		for i in range(min(3, targets.size())):
-			_spire.fire(targets[i], damage * 0.4)
+	if not _spire or not current_target:
 		return
+	current_target = current_target
+	var hit_list = [current_target]
+	var nearby = _get_nearby(2)
+	for e in nearby:
+		if e != current_target and not hit_list.has(e):
+			hit_list.append(e)
+			if hit_list.size() >= 3:
+				break
+	for t in hit_list:
+		_spire.fire(t, damage * 0.4)
 
 func _attack_stack() -> void:
-	if _entry_order.is_empty():
+	if not _spire or targets.is_empty():
 		return
-	var target = _entry_order[_entry_order.size() - 1]
-	if is_instance_valid(target):
-		current_target = target
-		if _spire:
-			_spire.fire(target, damage * 1.4)
-			return
+	var t = targets[-1]
+	current_target = t
+	_spire.fire(t, damage * 1.4)
 
 func _attack_queue() -> void:
-	if _entry_order.is_empty():
+	if not _spire or targets.is_empty():
 		return
-	var target = _entry_order[0]
-	if not is_instance_valid(target):
-		return
-	current_target = target
-	if _spire:
-		_spire.fire(target, damage)
-		return
-	queue_redraw()
+	var t = targets[0]
+	current_target = t
+	_spire.fire(t, damage)
 
 func _attack_linked() -> void:
-	var target = _get_closest_enemy()
-	if target:
-		current_target = target
-		if _spire:
-			_spire.fire(target, damage)
-			return
-		queue_redraw()
+	if not _spire or not current_target:
+		return
+	_spire.fire(current_target, damage)
 
 func _attack_bubble() -> void:
-	if enemy_layer == null:
+	if not _spire or targets.is_empty():
 		return
-	var enemies: Array[Node] = []
-	for enemy in enemy_layer.get_children():
-		if enemy.has_method("take_damage") and position.distance_to(enemy.position) <= attack_range + ENEMY_RADIUS:
-			enemies.append(enemy)
-	if enemies.is_empty():
-		return
-	current_target = enemies[0]
-	if _spire:
-		if enemies.size() >= 2:
-			_spire.fire(enemies[0], damage * 0.8)
-			_spire.fire(enemies[1], damage * 0.8)
-		else:
-			_spire.fire(enemies[0], damage * 0.6)
-		return
-	queue_redraw()
+	var t = targets[0]
+	current_target = t
+	var nearby = _get_nearby(1)
+	if nearby.size() >= 2:
+		_spire.fire(t, damage * 0.8)
+		_spire.fire(nearby[1], damage * 0.8)
+	else:
+		_spire.fire(t, damage * 0.6)
 
 func _attack_selection() -> void:
-	var target = _get_lowest_hp_enemy()
-	if target:
-		current_target = target
-		if _spire:
-			_spire.fire(target, damage * 1.8)
-			return
-		queue_redraw()
+	if not _spire or targets.is_empty():
+		return
+	var t = _get_lowest_hp(targets)
+	current_target = t
+	_spire.fire(t, damage * 1.8)
 
 func _attack_insertion() -> void:
-	var target = _get_closest_enemy()
-	if target:
-		current_target = target
-		if _spire:
-			_spire.fire(target, damage)
-			if target.has_method("apply_dot"):
-				target.apply_dot(damage * 0.3, 3.0)
-			return
-		queue_redraw()
+	if not _spire or not current_target:
+		return
+	_spire.fire(current_target, damage)
+	if current_target.has_method("apply_dot"):
+		current_target.apply_dot(damage * 0.3, 3.0)
 
 func _attack_quick() -> void:
-	if enemy_layer == null:
+	if not _spire or targets.is_empty():
 		return
-	var targets: Array[Node] = []
-	for enemy in enemy_layer.get_children():
-		if enemy.has_method("take_damage") and position.distance_to(enemy.position) <= attack_range + ENEMY_RADIUS:
-			targets.append(enemy)
-			if targets.size() >= 2:
-				break
-	if targets.is_empty():
-		return
-	current_target = targets[0]
-	if _spire:
-		_spire.fire(targets[0], damage * 0.8)
-		if targets.size() >= 2:
-			_spire.fire(targets[1], damage * 0.8)
-		return
-	queue_redraw()
+	var t = targets[0]
+	current_target = t
+	_spire.fire(t, damage * 0.8)
+	var nearby = _get_nearby(1)
+	if nearby.size() >= 2:
+		_spire.fire(nearby[1], damage * 0.8)
 
 func _attack_merge() -> void:
-	if enemy_layer == null:
+	if not current_target:
 		return
-	var target = _get_closest_enemy()
-	if not target:
-		return
-	current_target = target
 	var spawn_origin = position + Vector2(0, -14).rotated(_turret_angle)
 	var offset_l = Vector2(-6, -6).rotated(_turret_angle)
 	var offset_r = Vector2(-6, 6).rotated(_turret_angle)
@@ -490,31 +493,29 @@ func _attack_merge() -> void:
 			"pos": spawn_origin + offset,
 			"start_pos": spawn_origin + offset,
 			"draw_pos": spawn_origin + offset,
-			"target": target,
-			"target_last_pos": target.position,
+			"target": current_target,
+			"target_last_pos": current_target.position,
 			"speed": 260.0,
 			"damage": damage * 0.6,
 			"style": "merge_beam",
 			"elapsed_time": 0.0,
-			"total_dist": (target.position - spawn_origin).length(),
+			"total_dist": (current_target.position - spawn_origin).length(),
 			"merge_side": "left" if offset == offset_l else "right"
 		}
 		_projectiles.append(p)
 	queue_redraw()
 
 func _attack_counting() -> void:
-	var target = _get_closest_enemy()
-	if not target:
+	if not current_target:
 		return
-	current_target = target
 	var spawn_origin = position + Vector2(0, -14).rotated(_turret_angle)
 	for i in range(5):
 		var p = {
 			"pos": spawn_origin,
 			"start_pos": spawn_origin,
 			"draw_pos": spawn_origin,
-			"target": target,
-			"target_last_pos": target.position,
+			"target": current_target,
+			"target_last_pos": current_target.position,
 			"speed": 200.0 + i * 40.0,
 			"damage": damage * 0.25,
 			"style": "counting_pellet",
@@ -526,19 +527,17 @@ func _attack_counting() -> void:
 	queue_redraw()
 
 func _attack_radix() -> void:
-	var target = _get_closest_enemy()
-	if not target:
+	if not current_target:
 		return
-	current_target = target
 	var spawn_origin = position + Vector2(0, -14).rotated(_turret_angle)
+	var digits = [1, 10, 100]
 	for i in range(3):
-		var digits = [1, 10, 100]
 		var p = {
 			"pos": spawn_origin,
 			"start_pos": spawn_origin,
 			"draw_pos": spawn_origin,
-			"target": target,
-			"target_last_pos": target.position,
+			"target": current_target,
+			"target_last_pos": current_target.position,
 			"speed": 320.0,
 			"damage": damage * 0.4,
 			"style": "radix_digit",
@@ -550,59 +549,63 @@ func _attack_radix() -> void:
 	queue_redraw()
 
 func _attack_linear() -> void:
-	var target = _get_closest_enemy()
-	if not target:
+	if not current_target:
 		return
-	current_target = target
 	var spawn_origin = position + Vector2(0, -14).rotated(_turret_angle)
 	var p = {
 		"pos": spawn_origin,
 		"start_pos": spawn_origin,
 		"draw_pos": spawn_origin,
-		"target": target,
-		"target_last_pos": target.position,
+		"target": current_target,
+		"target_last_pos": current_target.position,
 		"speed": 350.0,
 		"damage": damage,
 		"style": "linear_scan",
 		"elapsed_time": 0.0,
-		"total_dist": (target.position - spawn_origin).length()
+		"total_dist": (current_target.position - spawn_origin).length()
 	}
 	_projectiles.append(p)
 	queue_redraw()
 
 func _attack_binary() -> void:
-	var target = _get_closest_enemy()
-	if target:
-		current_target = target
-		var spawn_origin = position + Vector2(0, -14).rotated(_turret_angle)
-		var p = {
-			"pos": spawn_origin,
-			"start_pos": spawn_origin,
-			"draw_pos": spawn_origin,
-			"target": target,
-			"target_last_pos": target.position,
-			"speed": 450.0,
-			"damage": damage * 2.2,
-			"style": "binary_sniper",
-			"elapsed_time": 0.0,
-			"total_dist": (target.position - spawn_origin).length()
-		}
-		_projectiles.append(p)
-		queue_redraw()
-
-func _attack_default() -> void:
-	_attack_array()
-
-# ─── PROJECTILE SPAWN & SIMULATION SYSTEM ─────────────────────────────
-func _spawn_projectile(p_style: String, p_damage: float, p_speed: float, p_target: Node) -> void:
-	if not is_instance_valid(p_target):
+	if not current_target:
 		return
-	# Spawn at muzzle (relative height of -14px offset)
 	var spawn_origin = position + Vector2(0, -14).rotated(_turret_angle)
 	var p = {
 		"pos": spawn_origin,
 		"start_pos": spawn_origin,
-		"draw_pos": spawn_origin, # Initialize draw_pos immediately to avoid draw-process frame race condition!
+		"draw_pos": spawn_origin,
+		"target": current_target,
+		"target_last_pos": current_target.position,
+		"speed": 450.0,
+		"damage": damage * 2.2,
+		"style": "binary_sniper",
+		"elapsed_time": 0.0,
+		"total_dist": (current_target.position - spawn_origin).length()
+	}
+	_projectiles.append(p)
+	queue_redraw()
+
+func _attack_default() -> void:
+	_attack_array()
+
+func _get_nearby(count: int) -> Array:
+	var result: Array[Node] = []
+	for t in targets:
+		result.append(t)
+		if result.size() >= count + 1:
+			break
+	return result
+
+# ─── PROJECTILE SYSTEM ─────────────────────────────────
+func _spawn_projectile(p_style: String, p_damage: float, p_speed: float, p_target: Node) -> void:
+	if not is_instance_valid(p_target):
+		return
+	var spawn_origin = position + Vector2(0, -14).rotated(_turret_angle)
+	var p = {
+		"pos": spawn_origin,
+		"start_pos": spawn_origin,
+		"draw_pos": spawn_origin,
 		"target": p_target,
 		"target_last_pos": p_target.position,
 		"speed": p_speed,
@@ -616,10 +619,7 @@ func _spawn_projectile(p_style: String, p_damage: float, p_speed: float, p_targe
 func _on_projectile_impact(p: Dictionary) -> void:
 	if is_instance_valid(p["target"]) and p["target"].has_method("take_damage"):
 		p["target"].take_damage(p["damage"])
-
 	_spawn_impact_explosion(p["target_last_pos"], p["style"])
-
-	# Chain lightning arcs on impact for Linked List!
 	if p["style"] == "chain_lightning" and p.has("chains_left") and p["chains_left"] > 0:
 		var last_pos = p["target_last_pos"]
 		var chained: Array[Node] = []
@@ -627,32 +627,38 @@ func _on_projectile_impact(p: Dictionary) -> void:
 			chained.append(n)
 		var current_damage = p["damage"]
 		var chains_left = p["chains_left"]
-		
 		while chains_left > 0:
 			var next_target = _get_closest_to_point(last_pos, chained)
 			if not next_target:
 				break
-			
 			chains_left -= 1
 			chained.append(next_target)
 			current_damage *= 0.8
-			
 			var next_pos = next_target.position
 			_spawn_chain_arc(last_pos, next_pos)
-			
 			if next_target.has_method("take_damage"):
 				next_target.take_damage(current_damage)
 			_spawn_impact_explosion(next_pos, "chain_lightning")
-			
 			last_pos = next_pos
+
+func _get_closest_to_point(point: Vector2, exclude: Array[Node]) -> Node:
+	_clean_targets()
+	var best: Node = null
+	var best_dist: float = attack_range + ENEMY_RADIUS * 2
+	for e in targets:
+		if exclude.has(e):
+			continue
+		var d = point.distance_to(e.global_position)
+		if d <= best_dist:
+			best_dist = d
+			best = e
+	return best
 
 func _spawn_impact_explosion(pos: Vector2, style: String) -> void:
 	var radius_map = {
 		"stack_mortar": 18.0, "chain_lightning": 22.0, "queue_rail": 14.0,
-		"binary_sniper": 16.0,
-		"index_bolt": 8.0,
-		"merge_beam": 14.0, "counting_pellet": 10.0, "radix_digit": 8.0,
-		"linear_scan": 12.0
+		"binary_sniper": 16.0, "index_bolt": 8.0, "merge_beam": 14.0,
+		"counting_pellet": 10.0, "radix_digit": 8.0, "linear_scan": 12.0
 	}
 	var max_r = radius_map.get(style, 8.0)
 	var e = {
@@ -673,8 +679,37 @@ func _spawn_chain_arc(from_pos: Vector2, to_pos: Vector2) -> void:
 		"lifetime": 0.35
 	})
 
+# ─── DRAW ───────────────────────────────────────────────
+func _draw() -> void:
+	if _spire:
+		if current_level > 1:
+			draw_string(ThemeDB.fallback_font, Vector2(10, -spire_base_h * 0.5 * 0.5 - 14),
+				"Lv" + str(current_level), HORIZONTAL_ALIGNMENT_LEFT, -1, 9, Color("#FFB800"))
+		if _selected:
+			draw_circle(Vector2.ZERO, attack_range + ENEMY_RADIUS, Color(tower_color, 0.06))
+			draw_arc(Vector2.ZERO, attack_range + ENEMY_RADIUS, 0, TAU, 64, Color(tower_color, 0.25), 1.5)
+			draw_string(ThemeDB.fallback_font, Vector2(0, -attack_range - ENEMY_RADIUS - 14),
+				"Range: " + str(attack_range), HORIZONTAL_ALIGNMENT_CENTER, -1, 10, Color(tower_color, 0.7))
+		return
+
+	_draw_3d_base_plates(tower_color)
+	_draw_turret_assembly(tower_color)
+	_draw_overlays(tower_color)
+
+	if current_level > 1:
+		draw_string(ThemeDB.fallback_font, Vector2(10, -36),
+			"Lv" + str(current_level), HORIZONTAL_ALIGNMENT_LEFT, -1, 9, Color("#FFB800"))
+
+	if _selected:
+		draw_circle(Vector2.ZERO, attack_range + ENEMY_RADIUS, Color(tower_color, 0.06))
+		draw_arc(Vector2.ZERO, attack_range + ENEMY_RADIUS, 0, TAU, 64, Color(tower_color, 0.25), 1.5)
+		draw_string(ThemeDB.fallback_font, Vector2(0, -attack_range - ENEMY_RADIUS - 14),
+			"Range: " + str(attack_range), HORIZONTAL_ALIGNMENT_CENTER, -1, 10, Color(tower_color, 0.7))
+
+# ─── VOLUMETRIC 3D DRAWING HELPERS ─────────────────────
+const SQUASH: float = 0.65
+
 func _draw_ellipse(center: Vector2, radius: float, color: Color, filled: bool = true, width: float = -1.0) -> void:
-	# Custom ellipse drawer that scales purely on math and never touches/messes with canvas transforms
 	var points = PackedVector2Array()
 	var steps = 24
 	for i in range(steps + 1):
@@ -691,7 +726,6 @@ func _draw_lightning_bolt(from: Vector2, to: Vector2, color: Color) -> void:
 	points.append(from)
 	var dir = to - from
 	var dist = dir.length()
-	
 	if dist > 4.0:
 		var normal = Vector2(-dir.y, dir.x).normalized()
 		for i in range(1, steps):
@@ -700,194 +734,72 @@ func _draw_lightning_bolt(from: Vector2, to: Vector2, color: Color) -> void:
 			var pt = from + dir * t + normal * jag
 			points.append(pt)
 	points.append(to)
-	
 	draw_polyline(points, color, 2.5)
 	draw_polyline(points, Color.WHITE, 1.0)
 
-# ─── TARGETING HELPERS ─────────────────────────────────
-func _get_closest_enemy() -> Node:
-	if enemy_layer == null:
-		return null
-	var closest: Node = null
-	var closest_dist: float = attack_range + ENEMY_RADIUS
-	for enemy in enemy_layer.get_children():
-		if not enemy.has_method("take_damage"):
-			continue
-		var dist = position.distance_to(enemy.position)
-		if dist <= closest_dist:
-			closest_dist = dist
-			closest = enemy
-	return closest
-
-func _get_closest_to_point(point: Vector2, exclude: Array[Node]) -> Node:
-	if enemy_layer == null:
-		return null
-	var closest: Node = null
-	var closest_dist: float = attack_range + ENEMY_RADIUS
-	for enemy in enemy_layer.get_children():
-		if not enemy.has_method("take_damage"):
-			continue
-		if exclude.has(enemy):
-			continue
-		var dist = point.distance_to(enemy.position)
-		if dist <= closest_dist:
-			closest_dist = dist
-			closest = enemy
-	return closest
-
-func _get_lowest_hp_enemy() -> Node:
-	if enemy_layer == null:
-		return null
-	var lowest: Node = null
-	var lowest_hp: float = INF
-	for enemy in enemy_layer.get_children():
-		if not enemy.has_method("take_damage"):
-			continue
-		var dist = position.distance_to(enemy.position)
-		if dist > attack_range + ENEMY_RADIUS:
-			continue
-		if "current_health" in enemy and enemy.current_health < lowest_hp:
-			lowest_hp = enemy.current_health
-			lowest = enemy
-	return lowest
-
-# ─── DRAW ───────────────────────────────────────────────
-const SQUASH: float = 0.65  # Perspective squashing ratio to simulate an angled 3D camera lookup
-
-func _draw() -> void:
-	if _spire:
-		if current_level > 1:
-			draw_string(
-				ThemeDB.fallback_font,
-				Vector2(10, -spire_base_h * 0.5 * 0.5 - 14),
-				"Lv" + str(current_level),
-				HORIZONTAL_ALIGNMENT_LEFT, -1, 9,
-				Color("#FFB800")
-			)
-		if _selected:
-			draw_circle(Vector2.ZERO, attack_range + ENEMY_RADIUS, Color(tower_color, 0.06))
-			draw_arc(Vector2.ZERO, attack_range + ENEMY_RADIUS, 0, TAU, 64, Color(tower_color, 0.25), 1.5)
-			var label = "Range: " + str(attack_range)
-			draw_string(ThemeDB.fallback_font, Vector2(0, -attack_range - ENEMY_RADIUS - 14), label, HORIZONTAL_ALIGNMENT_CENTER, -1, 10, Color(tower_color, 0.7))
-		return
-
-	# 3D Depth Bases are drawn at ground level
-	_draw_3d_base_plates(tower_color)
-	
-	# Rotating Turrets are offset upwards to look like they float/mount in 3D volume space
-	_draw_turret_assembly(tower_color)
-	
-	_draw_overlays(tower_color)
-	
-	# Draw level indicator
-	if current_level > 1:
-		draw_string(
-			ThemeDB.fallback_font,
-			Vector2(10, -36),
-			"Lv" + str(current_level),
-			HORIZONTAL_ALIGNMENT_LEFT, -1, 9,
-			Color("#FFB800")
-		)
-
-	if _selected:
-		draw_circle(Vector2.ZERO, attack_range + ENEMY_RADIUS, Color(tower_color, 0.06))
-		draw_arc(Vector2.ZERO, attack_range + ENEMY_RADIUS, 0, TAU, 64, Color(tower_color, 0.25), 1.5)
-		var label = "Range: " + str(attack_range)
-		draw_string(ThemeDB.fallback_font, Vector2(0, -attack_range - ENEMY_RADIUS - 14), label, HORIZONTAL_ALIGNMENT_CENTER, -1, 10, Color(tower_color, 0.7))
-
-# ─── VOLUMETRIC 3D PRIMITIVE DRAWING HELPERS ───────────────────────
 func _draw_3d_cylinder(center: Vector2, radius: float, height: float, color: Color, outline_color: Color = Color.WHITE, line_width: float = 1.5) -> void:
-	# 1. Shaded Side Extrusion (Front facing walls)
 	var left_x = center.x - radius
 	var right_x = center.x + radius
 	var wall_rect = Rect2(left_x, center.y, radius * 2.0, height)
-	draw_rect(wall_rect, Color("#0F1720"), true) # Dark metal cylinder background
-	
-	# Shaded left-to-right metallic panels (light source from top-left)
-	draw_rect(Rect2(left_x, center.y, radius, height), Color(outline_color, 0.15), true) # Left half highlight
-	draw_rect(Rect2(center.x, center.y, radius, height), Color(0, 0, 0, 0.25), true) # Right half shadow
-	
-	# Cylinder vertical corner edge lines
+	draw_rect(wall_rect, Color("#0F1720"), true)
+	draw_rect(Rect2(left_x, center.y, radius, height), Color(outline_color, 0.15), true)
+	draw_rect(Rect2(center.x, center.y, radius, height), Color(0, 0, 0, 0.25), true)
 	draw_line(center + Vector2(-radius, 0), center + Vector2(-radius, height), outline_color, line_width)
 	draw_line(center + Vector2(radius, 0), center + Vector2(radius, height), outline_color, line_width)
-	
-	# 2. Top Rim Face (Squashed circle creating perspective 3D cylinder cap)
 	draw_set_transform(center, 0.0, Vector2(1.0, SQUASH))
 	draw_circle(Vector2.ZERO, radius, Color("#15202E"))
 	draw_circle(Vector2.ZERO, radius, outline_color, false, line_width)
 	draw_set_transform(Vector2.ZERO, 0.0, Vector2.ONE)
 
 func _draw_3d_box(center: Vector2, extents: Vector2, height: float, color: Color, outline_color: Color = Color.WHITE, line_width: float = 1.5) -> void:
-	# Top perspective face coordinates
 	var t_tl = center + Vector2(-extents.x, -extents.y * SQUASH)
 	var t_tr = center + Vector2(extents.x, -extents.y * SQUASH)
 	var t_br = center + Vector2(extents.x, extents.y * SQUASH)
 	var t_bl = center + Vector2(-extents.x, extents.y * SQUASH)
-	
-	# Bottom face coordinates shifted downwards along Y axis
 	var b_tl = t_tl + Vector2(0, height)
 	var b_tr = t_tr + Vector2(0, height)
 	var b_br = t_br + Vector2(0, height)
 	var b_bl = t_bl + Vector2(0, height)
-
-	# Right Side shadow panel (shadow side)
 	var r_panel = PackedVector2Array([t_tr, t_br, b_br, b_tr])
 	draw_colored_polygon(r_panel, Color("#0D141C"))
 	draw_polyline(PackedVector2Array([t_tr, t_br, b_br, b_tr]), outline_color, line_width)
-	
-	# Front Side light panel (facing the viewer)
 	var f_panel = PackedVector2Array([t_bl, t_br, b_br, b_bl])
 	draw_colored_polygon(f_panel, Color("#141D29"))
-	draw_colored_polygon(f_panel, Color(outline_color, 0.15)) # Combine colored alloy tint
+	draw_colored_polygon(f_panel, Color(outline_color, 0.15))
 	draw_polyline(PackedVector2Array([t_bl, t_br, b_br, b_bl]), outline_color, line_width)
-	
-	# Left Side shaded panel (mid-light side)
 	var l_panel = PackedVector2Array([t_tl, t_bl, b_bl, b_tl])
 	draw_colored_polygon(l_panel, Color("#101720"))
 	draw_polyline(PackedVector2Array([t_tl, t_bl, b_bl, b_tl]), Color(outline_color, 0.4), line_width)
-
-	# Top face (solid metallic deck)
 	var top_face = PackedVector2Array([t_tl, t_tr, t_br, t_bl])
 	draw_colored_polygon(top_face, Color("#1E2C3D"))
 	draw_polyline(PackedVector2Array([t_tl, t_tr, t_br, t_bl, t_tl]), outline_color, line_width)
 
 func _draw_3d_hexagon(center: Vector2, radius: float, height: float, color: Color, outline_color: Color = Color.WHITE, line_width: float = 1.5) -> void:
-	# Calculate top squashed hex points
 	var top_pts = PackedVector2Array()
 	for i in range(6):
 		var angle = i * (PI / 3.0)
 		top_pts.append(center + Vector2(cos(angle) * radius, sin(angle) * radius * SQUASH))
-		
-	# Draw extruded side panels
 	for i in range(6):
 		var next_i = (i + 1) % 6
 		var t1 = top_pts[i]
 		var t2 = top_pts[next_i]
 		var b1 = t1 + Vector2(0, height)
 		var b2 = t2 + Vector2(0, height)
-		
-		# Directional lighting shading based on wall heading normal (source from top-left)
 		var mid_angle = i * (PI / 3.0) + (PI / 6.0)
-		var l_dot = cos(mid_angle - 2.2) # Left/top light source
+		var l_dot = cos(mid_angle - 2.2)
 		var shade_mix = lerp(0.05, 0.5, (l_dot + 1.0) / 2.0)
-		
 		var panel = PackedVector2Array([t1, t2, b2, b1])
 		draw_colored_polygon(panel, Color("#0D131A"))
 		draw_colored_polygon(panel, Color(outline_color, shade_mix * 0.4))
 		draw_polyline(PackedVector2Array([t1, t2, b2, b1]), Color(outline_color, 0.4), 1.0)
-		
-	# Top metal plate face
 	draw_colored_polygon(top_pts, Color("#1B2A3A"))
 	var outline_loop = top_pts
 	outline_loop.append(top_pts[0])
 	draw_polyline(outline_loop, outline_color, line_width)
 
 func _draw_3d_sphere(center: Vector2, radius: float, color: Color) -> void:
-	# Spherical volume lighting shader mock using overlapping light offset circles
 	draw_circle(center, radius, Color("#0F1721"))
 	draw_circle(center, radius, Color(color, 0.25))
-	
-	# Highlight core shifted towards top-left light source
 	var highlight_c = center - Vector2(radius * 0.25, radius * 0.25)
 	draw_circle(highlight_c, radius * 0.6, Color(color, 0.4))
 	draw_circle(highlight_c, radius * 0.2, Color.WHITE)
@@ -900,16 +812,11 @@ func _get_polygon_points(sides: int, radius: float, offset: Vector2 = Vector2.ZE
 	return points
 
 func _draw_3d_base_plates(color: Color) -> void:
-	# Draw volumetric 3D base plates with a solid height of 10 pixels extrusion
 	var base_height: float = 10.0
-	
-	# Base Drop Shadow (cast on floor grid)
 	var shadow_color = Color(0, 0, 0, 0.3)
 	draw_set_transform(Vector2(4, 6), 0.0, Vector2.ONE)
 	_draw_base_extrusion_geometry(shadow_color, base_height)
 	draw_set_transform(Vector2.ZERO, 0.0, Vector2.ONE)
-	
-	# Draw physical extruded side walls and top rims of the bases
 	_draw_base_extrusion_geometry(color, base_height)
 
 func _draw_base_extrusion_geometry(color: Color, height: float) -> void:
@@ -953,7 +860,6 @@ func _draw_base_extrusion_geometry(color: Color, height: float) -> void:
 func _draw_turret_assembly(color: Color) -> void:
 	var t_pivot = Vector2(0, -14)
 	draw_set_transform(t_pivot, _turret_angle, Vector2.ONE)
-
 	match tower_id:
 		"tower_array":
 			var recoil = -_recoil * 6.0
@@ -964,7 +870,6 @@ func _draw_turret_assembly(color: Color) -> void:
 				draw_circle(Vector2(bx + recoil + 8.0, -2 * SQUASH), 1.2, Color.BLACK)
 			for i in range(5):
 				draw_circle(Vector2(-9 + i * 4.5, 5), 1.0, Color(color, 0.5))
-
 		"tower_stack":
 			var recoil = -_recoil * 8.0
 			for i in range(4):
@@ -972,7 +877,6 @@ func _draw_turret_assembly(color: Color) -> void:
 				_draw_3d_cylinder(Vector2(0, sy), 4.5 - i * 0.4, 2.5, Color("#15202E"), Color(color, 0.3 + i * 0.12), 1.0)
 			_draw_3d_cylinder(Vector2(recoil, -7), 4.0, 9.0, Color("#223344"), color, 1.5)
 			draw_circle(Vector2(recoil + 9.0, -7 * SQUASH), 2.5, Color.BLACK)
-
 		"tower_queue":
 			var recoil = -_recoil * 9.0
 			_draw_3d_box(Vector2(0, 0), Vector2(20, 3), 4.0, Color("#15202E"), color, 1.2)
@@ -983,7 +887,6 @@ func _draw_turret_assembly(color: Color) -> void:
 			draw_circle(Vector2(12 + recoil, 0), 2.0, Color.BLACK)
 			draw_line(Vector2(-12, 4), Vector2(-14, 1), Color(color, 0.4), 1.0)
 			draw_line(Vector2(-12, 4), Vector2(-14, 7), Color(color, 0.4), 1.0)
-
 		"tower_linked_list":
 			var recoil = -_recoil * 5.0
 			_draw_3d_sphere(Vector2.ZERO, 4.0, color)
@@ -1000,7 +903,6 @@ func _draw_turret_assembly(color: Color) -> void:
 				_draw_3d_sphere(n, 3.0, Color(color, 0.4 + i * 0.2))
 				_draw_3d_cylinder(Vector2(n.x + 3 + recoil, n.y), 1.5, 5.0, Color("#203040"), color, 1.0)
 				draw_circle(Vector2(n.x + 8 + recoil, n.y * SQUASH), 1.0, Color.BLACK)
-
 		"tower_merge":
 			var recoil = -_recoil * 7.0
 			_draw_3d_cylinder(Vector2(-6, -7), 2.5, 5.0, Color("#15202E"), color, 1.0)
@@ -1010,7 +912,6 @@ func _draw_turret_assembly(color: Color) -> void:
 			_draw_3d_sphere(Vector2.ZERO, 4.5, Color(color, 0.6))
 			_draw_3d_cylinder(Vector2(5 + recoil, 0), 3.5, 9.0, Color("#223344"), color, 1.5)
 			draw_circle(Vector2(14 + recoil, 0), 2.5, Color.BLACK)
-
 		"tower_counting":
 			var recoil = -_recoil * 4.0
 			_draw_3d_box(Vector2(0, 0), Vector2(24, 3), 4.0, Color("#15202E"), color, 1.2)
@@ -1020,7 +921,6 @@ func _draw_turret_assembly(color: Color) -> void:
 				_draw_3d_cylinder(Vector2(bx + recoil, -bh/2 - 1), 1.8, bh, Color("#1C2C3D"), Color(color, 0.3 + i * 0.1), 1.0)
 				draw_circle(Vector2(bx + recoil + bh, (-bh/2 - 1) * SQUASH), 1.0, Color.BLACK)
 			_draw_3d_box(Vector2(0, -10), Vector2(14, 2), 2.0, Color("#203040"), Color(color, 0.5), 1.0)
-
 		"tower_radix":
 			var recoil = -_recoil * 6.0
 			_draw_3d_sphere(Vector2.ZERO, 4.5, color)
@@ -1033,7 +933,6 @@ func _draw_turret_assembly(color: Color) -> void:
 			for i in range(8):
 				var da = i * TAU / 8.0
 				draw_circle(Vector2(cos(da) * 7.5, sin(da) * 7.5 * SQUASH), 0.8, Color(color, 0.6))
-
 		"tower_linear":
 			var recoil = -_recoil * 9.0
 			_draw_3d_box(Vector2(0, 0), Vector2(24, 2), 2.0, Color("#101721"), Color(color, 0.25), 1.0)
@@ -1042,7 +941,6 @@ func _draw_turret_assembly(color: Color) -> void:
 			draw_circle(Vector2(12 + recoil, -2 * SQUASH), 1.5, Color.BLACK)
 			for i in range(7):
 				draw_circle(Vector2(-12 + i * 4, 3), 0.6, Color(color, 0.3))
-
 		"tower_binary", _:
 			var recoil = -_recoil * 12.0
 			_draw_3d_box(Vector2(-4, 0), Vector2(10, 8), 9.0, Color("#15202E"), color, 1.8)
@@ -1053,24 +951,19 @@ func _draw_turret_assembly(color: Color) -> void:
 			var ch = 3.5
 			draw_line(Vector2(4 + recoil, -ch), Vector2(4 + recoil, ch), Color(color, 0.8), 1.5)
 			draw_line(Vector2(4 + recoil - ch, 0), Vector2(4 + recoil + ch, 0), Color(color, 0.8), 1.5)
-
 	draw_set_transform(Vector2.ZERO, 0.0, Vector2.ONE)
 
 func _draw_shaded_capsule(center: Vector2, radius: float, base_color: Color, highlight_color: Color) -> void:
-	# Draw shaded volumetric sphere for physical mortar bomb
 	draw_circle(center, radius, base_color)
 	draw_circle(center, radius, Color(highlight_color, 0.35))
 	draw_circle(center - Vector2(radius * 0.25, radius * 0.25), radius * 0.5, Color.WHITE)
 
 func _draw_binary_trail(pos: Vector2, trail_color: Color) -> void:
-	# Draw gorgeous high-tech vector binary '1' and '0' particle trails
 	var is_one = int(pos.x + pos.y + _anim_time * 20.0) % 2 == 0
 	var col = Color(trail_color, 0.5)
 	if is_one:
-		# Draw a '1'
 		draw_line(pos - Vector2(0, 3), pos + Vector2(0, 3), col, 1.5)
 	else:
-		# Draw a hollow '0'
 		draw_rect(Rect2(pos - Vector2(2, 3), Vector2(4, 6)), col, false, 1.0)
 
 func _draw_overlays(color: Color) -> void:
@@ -1082,15 +975,11 @@ func _draw_overlays(color: Color) -> void:
 				var idx = p.get("index", 0)
 				var phase = sin(_anim_time * 20.0 + idx) * 1.5
 				var sz = 3.0 + phase * 0.3
-				var pts = PackedVector2Array([
-					rd + Vector2(sz, 0), rd + Vector2(0, -sz),
-					rd + Vector2(-sz, 0), rd + Vector2(0, sz)
-				])
+				var pts = PackedVector2Array([rd + Vector2(sz, 0), rd + Vector2(0, -sz), rd + Vector2(-sz, 0), rd + Vector2(0, sz)])
 				draw_colored_polygon(pts, Color.WHITE)
 				draw_colored_polygon(pts, Color(color, 0.5))
 				draw_string(ThemeDB.fallback_font, rd + Vector2(-3, 3), str(idx), HORIZONTAL_ALIGNMENT_CENTER, -1, 7, color)
 				draw_circle(rp + Vector2(2, 5), 3.0, Color(0, 0, 0, 0.15))
-
 			"stack_mortar":
 				var t = p["elapsed_time"] / (p["total_dist"] / p["speed"]) if p["total_dist"] > 0 else 1.0
 				var grow = 4.0 + sin(t * PI) * 2.0
@@ -1098,7 +987,6 @@ func _draw_overlays(color: Color) -> void:
 				_draw_shaded_capsule(rd, grow, Color("#4B5B6D"), color)
 				draw_circle(rd - Vector2(3, -2), 1.5, Color(color, 0.7))
 				draw_line(rd - Vector2(0, grow), rd - Vector2(0, grow + 4), Color("#8899AA"), 2.0)
-
 			"queue_rail":
 				var heading = (p["target_last_pos"] - p["pos"]).normalized()
 				var line_start = rd - heading * 16.0
@@ -1107,7 +995,6 @@ func _draw_overlays(color: Color) -> void:
 				for j in range(3):
 					var dot_pos = line_start + heading * j * 5.0
 					draw_circle(dot_pos, 1.5, Color(color, 0.6 - j * 0.15))
-
 			"chain_lightning":
 				var heading = (p["target_last_pos"] - p["pos"]).normalized() if (p["target_last_pos"] - p["pos"]).length() > 0 else Vector2.RIGHT
 				var dist = p["total_dist"]
@@ -1122,7 +1009,6 @@ func _draw_overlays(color: Color) -> void:
 					draw_line(prev, next, Color.WHITE, 2.5 - j * 0.3)
 					draw_line(prev, next, color, 1.0)
 					prev = next
-
 			"merge_beam":
 				var frac = clamp(p["elapsed_time"] / (p["total_dist"] / p["speed"]), 0.0, 1.0) if p["total_dist"] > 0 else 1.0
 				var side = p.get("merge_side", "left")
@@ -1131,7 +1017,6 @@ func _draw_overlays(color: Color) -> void:
 				draw_line(rd, beam_pos, Color(color, 0.6), 2.5)
 				draw_circle(beam_pos, 3.0, Color.WHITE)
 				draw_circle(beam_pos, 5.0, Color(color, 0.3))
-
 			"counting_pellet":
 				var digit = p.get("digit", 1)
 				var trail_pts = PackedVector2Array()
@@ -1145,7 +1030,6 @@ func _draw_overlays(color: Color) -> void:
 				draw_circle(rd, sz, Color.WHITE)
 				draw_circle(rd, sz + 1.5, Color(color, 0.5))
 				draw_string(ThemeDB.fallback_font, rd + Vector2(-2, 3), str(digit), HORIZONTAL_ALIGNMENT_CENTER, -1, 6, color)
-
 			"radix_digit":
 				var digit = p.get("digit", 1)
 				var rot_off = _anim_time * 8.0 + digit
@@ -1154,7 +1038,6 @@ func _draw_overlays(color: Color) -> void:
 				draw_circle(orbit_pos, 4.5, Color(color, 0.5 - (digit % 10) * 0.05))
 				draw_arc(orbit_pos, 6.0, rot_off, rot_off + PI * 0.8, 6, color, 1.5)
 				draw_string(ThemeDB.fallback_font, orbit_pos + Vector2(-3, 3), str(digit), HORIZONTAL_ALIGNMENT_CENTER, -1, 6, Color("#FFFFFF"))
-
 			"linear_scan":
 				var heading = (p["target_last_pos"] - p["pos"]).normalized() if (p["target_last_pos"] - p["pos"]).length() > 0 else Vector2.RIGHT
 				var perp = Vector2(-heading.y, heading.x)
@@ -1162,7 +1045,6 @@ func _draw_overlays(color: Color) -> void:
 				draw_line(rd - perp * 8.0, rd + perp * 8.0, Color(color, 0.6), 1.0)
 				draw_circle(rd, 2.0, Color.WHITE)
 				draw_circle(rd, 4.0, Color(color, 0.4))
-
 			"binary_sniper":
 				var heading = (p["target_last_pos"] - p["pos"]).normalized() if (p["target_last_pos"] - p["pos"]).length() > 0 else Vector2.RIGHT
 				var perp = Vector2(-heading.y, heading.x)
@@ -1172,7 +1054,6 @@ func _draw_overlays(color: Color) -> void:
 				draw_circle(rd, 2.5, Color.WHITE)
 				draw_circle(rd, 5.0, Color(color, 0.6))
 				draw_line(rd - heading * 6.0, rd, Color(color, 0.8), 2.5)
-
 			_:
 				draw_circle(rd, 2.8, Color.WHITE)
 				draw_circle(rd, 4.8, color)
@@ -1226,6 +1107,3 @@ func _draw_overlays(color: Color) -> void:
 
 	if Engine.is_editor_hint():
 		draw_arc(Vector2.ZERO, attack_range, 0, TAU, 64, Color(color, 0.15), 1.0)
-	elif OS.is_debug_build() or Input.is_mouse_button_pressed(MOUSE_BUTTON_LEFT):
-		pass
-
