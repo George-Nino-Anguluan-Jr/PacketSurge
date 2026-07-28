@@ -66,6 +66,7 @@ func _ready() -> void:
 	_setup_intro_popup()
 	
 	get_tree().root.size_changed.connect(_on_size_changed)
+	_maybe_show_tutorial()
 
 # ─── LEFT PANEL ────────────────────────────────────────
 func _build_left_panel() -> void:
@@ -622,3 +623,50 @@ func _on_size_changed() -> void:
 		_build_placeholders()
 		await get_tree().process_frame
 		_build_tower_cards()
+
+
+# ─── TUTORIAL ──────────────────────────────────────────
+const TutorialOverlay = preload("res://scenes/core/TutorialOverlay.gd")
+
+func _maybe_show_tutorial() -> void:
+	if ProgressManager.has_seen_tutorial("tower_select"):
+		return
+	await get_tree().process_frame
+	var tut = TutorialOverlay.new()
+	add_child(tut)
+	tut.tutorial_finished.connect(func(): ProgressManager.mark_tutorial_seen("tower_select"))
+	tut.start(_get_tower_select_tutorial_steps())
+
+func _get_tower_select_tutorial_steps() -> Array:
+	var steps: Array = []
+	steps.append({
+		"title": "Select Your Towers",
+		"body": "Choose up to 5 towers to deploy into this level.\n\nEach tower has unique abilities — pick wisely based on the enemy intel on the left.",
+		"force_center": true,
+	})
+	steps.append({
+		"title": "Mission Intel",
+		"body": "Read the mission briefing here: level concept, enemy warnings, and key stats like wave count and starting RAM.",
+		"highlight": $OuterScroll/ContentArea/LeftMargin.get_path(),
+	})
+	steps.append({
+		"title": "Tower Slots",
+		"body": "Drag or tap towers to place them in these 5 deployment slots.\n\nFill at least one slot to enable the Start button.",
+		"highlight": selected_row.get_path(),
+	})
+	steps.append({
+		"title": "Available Towers",
+		"body": "Browse your unlocked towers here. Tap a card for detailed stats, or drag it into a slot above.\n\nNewly unlocked towers appear highlighted.",
+		"highlight": available_grid.get_path(),
+	})
+	steps.append({
+		"title": "Start Level",
+		"body": "Ready to deploy? Tap START LEVEL to begin defending against incoming packet waves.",
+		"highlight": start_btn.get_path(),
+	})
+	steps.append({
+		"title": "Good Luck!",
+		"body": "Choose your towers, fill the slots, and clear every wave. Good luck, operator!",
+		"force_center": true,
+	})
+	return steps
