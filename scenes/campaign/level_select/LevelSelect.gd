@@ -50,6 +50,7 @@ func _ready() -> void:
 	# Smoothly auto-scroll to center on current/unlocked progress
 	await get_tree().process_frame
 	_auto_scroll_to_current()
+	_maybe_show_tutorial()
 
 var _map_redraw_counter: int = 0
 
@@ -586,3 +587,49 @@ func _apply_responsive_layout() -> void:
 		back_btn.custom_minimum_size = Vector2(80, 44)
 	else:
 		back_btn.custom_minimum_size = Vector2(90, 0)
+
+# ─── TUTORIAL ──────────────────────────────────────────
+const TutorialOverlay = preload("res://scenes/core/TutorialOverlay.gd")
+
+func _maybe_show_tutorial() -> void:
+	if ProgressManager.has_seen_tutorial("campaign"):
+		return
+	await get_tree().process_frame
+	var tut = TutorialOverlay.new()
+	add_child(tut)
+	tut.tutorial_finished.connect(func(): ProgressManager.mark_tutorial_seen("campaign"))
+	tut.start(_get_campaign_tutorial_steps())
+
+func _get_campaign_tutorial_steps() -> Array:
+	var steps: Array = []
+	steps.append({
+		"title": "Campaign Map",
+		"body": "This is the Tactical Progression Map.\nEach node represents a system you need to secure.\n\nClear waves of corrupted packets using your data structure knowledge.",
+		"force_center": true,
+	})
+	steps.append({
+		"title": "Your Progress",
+		"body": "Track how many systems you've unlocked.\nComplete Academy lessons to unlock more levels here.",
+		"highlight": ram_label.get_path(),
+	})
+	steps.append({
+		"title": "Level Nodes",
+		"body": "Tap an unlocked node to deploy towers into that system.\n\nBlue nodes are unlocked — green nodes are completed.\nLocked nodes 🔒 require Academy progression.",
+		"highlight": map_canvas.get_path(),
+	})
+	steps.append({
+		"title": "Scrolling the Map",
+		"body": "Scroll horizontally to explore the full map.\nLater levels contain tougher challenges and more complex data structures.",
+		"highlight": map_scroll.get_path(),
+	})
+	steps.append({
+		"title": "Back Button",
+		"body": "Tap here to return to the main menu when you're done planning your campaign.",
+		"highlight": back_btn.get_path(),
+	})
+	steps.append({
+		"title": "Ready to Deploy!",
+		"body": "Complete Academy lessons to unlock nodes, then deploy towers to secure the network. Good luck, operator!",
+		"force_center": true,
+	})
+	return steps
