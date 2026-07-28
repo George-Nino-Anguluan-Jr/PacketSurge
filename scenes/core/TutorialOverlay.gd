@@ -39,8 +39,8 @@ func _build_ui() -> void:
 	set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
 	mouse_filter = Control.MOUSE_FILTER_STOP
 
-	# Responsive sizing
-	var screen_w: float = size.x
+	# Responsive sizing — use viewport size so we don't need to await layout
+	var screen_w: float = get_viewport().get_visible_rect().size.x
 	var is_mobile: bool = screen_w < 600
 	var card_target_w: float = min(420.0, screen_w - 32.0)
 	var title_fs: int = 24 if is_mobile else 22
@@ -63,7 +63,7 @@ func _build_ui() -> void:
 	_skip_btn = Button.new()
 	_skip_btn.text = "Skip Tour"
 	_skip_btn.custom_minimum_size = Vector2(90 if is_mobile else 80, 32 if is_mobile else 28)
-	_skip_btn.position = Vector2(size.x - _skip_btn.custom_minimum_size.x - 16, 16)
+	_skip_btn.position = Vector2(screen_w - _skip_btn.custom_minimum_size.x - 16, 16)
 	_skip_btn.add_theme_color_override("font_color", Color("#4A7FA5"))
 	_skip_btn.add_theme_font_size_override("font_size", 11 if is_mobile else 10)
 	_skip_btn.pressed.connect(_on_skip_pressed)
@@ -184,8 +184,9 @@ func _position_card(step_data: Dictionary) -> void:
 	if card_h <= 0:
 		card_h = 160
 
-	var screen_w: float = size.x
-	var screen_h: float = size.y
+	var screen_size = get_viewport().get_visible_rect().size
+	var screen_w: float = screen_size.x
+	var screen_h: float = screen_size.y
 	var margin: float = 16.0
 
 	if step_data.get("force_center", false) or _highlight_rect.size == Vector2.ZERO:

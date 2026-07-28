@@ -149,6 +149,7 @@ func _ready() -> void:
 		pass
 	else:
 		call_deferred("_show_challenge")
+	_maybe_show_tutorial()
 
 func _exit_tree() -> void:
 	Engine.time_scale = 1.0
@@ -1677,3 +1678,55 @@ func _advance_challenge() -> void:
 	if not is_instance_valid(micro_panel) or not micro_panel.visible:
 		return
 	_show_challenge()
+
+# ─── TUTORIAL ──────────────────────────────────────────
+const TutorialOverlay = preload("res://scenes/core/TutorialOverlay.gd")
+
+func _maybe_show_tutorial() -> void:
+	if ProgressManager.has_seen_tutorial("level"):
+		return
+	await get_tree().process_frame
+	await get_tree().process_frame
+	var tut = TutorialOverlay.new()
+	$HUD.add_child(tut)
+	tut.tutorial_finished.connect(func(): ProgressManager.mark_tutorial_seen("level"))
+	tut.start(_get_level_tutorial_steps())
+
+func _get_level_tutorial_steps() -> Array:
+	var steps: Array = []
+	steps.append({
+		"title": "Battle Station",
+		"body": "Welcome to the tower defense! Place towers on the grid to intercept enemies moving along the path. Defend your base at all costs.",
+		"force_center": true,
+	})
+	steps.append({
+		"title": "Command HUD",
+		"body": "Your command center: RAM for tower costs, Wave counter, Base health (❤️), and Score. Each tower costs RAM to deploy.",
+		"highlight": $HUD/HUDControl/TopHUD.get_path(),
+	})
+	steps.append({
+		"title": "The Grid",
+		"body": "This is your battlefield.\n\n🟢 Tap a green cell to place a tower — position them along the enemy path for maximum coverage.\n\n⬆️ Tap an existing tower to UPGRADE it (costs RAM, increases power).\n\n💰 Tap a tower and hit SELL to reclaim RAM and free up the cell.",
+		"force_center": true,
+	})
+	steps.append({
+		"title": "Wave Controls",
+		"body": "The wave timeline shows your progress. Use SKIP (20⚡) to start the next wave early, or ▶▶ for 2x speed.",
+		"highlight": $HUD/HUDControl/TopHUD/TopLayout/WaveProgressTimeline.get_path(),
+	})
+	steps.append({
+		"title": "Coding Challenges",
+		"body": "During waves, tap ⌨ for a coding challenge. Correct answers earn bonus RAM for more tower deployments!",
+		"highlight": challenge_btn.get_path(),
+	})
+	steps.append({
+		"title": "Pause & Menu",
+		"body": "Tap ⏸ to pause the game. From there you can resume, retry the level, or return to the main menu.",
+		"highlight": pause_btn.get_path(),
+	})
+	steps.append({
+		"title": "Good Luck, Operator!",
+		"body": "Clear all waves to secure the system. Build smart, spend wisely, and protect your base!",
+		"force_center": true,
+	})
+	return steps
