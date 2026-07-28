@@ -50,6 +50,7 @@ func _ready() -> void:
 	ScreenManager.make_scroll_touch_friendly(scroll_area)
 	ScreenManager.make_scroll_touch_friendly($ContentArea/Sidebar/ScrollContainer)
 	get_tree().root.size_changed.connect(_apply_responsive_layout)
+	_maybe_show_tutorial()
 	SignalBus.topic_unlocked.connect(_on_topic_state_changed)
 	SignalBus.topic_mastered.connect(_on_topic_state_changed)
 
@@ -1060,3 +1061,49 @@ func _toggle_sidebar() -> void:
 func _input(event: InputEvent) -> void:
 	if event.is_action_pressed("ui_cancel"):
 		GameManager.go_to("main_menu")
+
+# ─── TUTORIAL ──────────────────────────────────────────
+const TutorialOverlay = preload("res://scenes/core/TutorialOverlay.gd")
+
+func _maybe_show_tutorial() -> void:
+	if ProgressManager.has_seen_tutorial("academy"):
+		return
+	await get_tree().process_frame
+	var tut = TutorialOverlay.new()
+	add_child(tut)
+	tut.tutorial_finished.connect(func(): ProgressManager.mark_tutorial_seen("academy"))
+	tut.start(_get_academy_tutorial_steps())
+
+func _get_academy_tutorial_steps() -> Array:
+	var steps: Array = []
+	steps.append({
+		"title": "Welcome to the Academy",
+		"body": "This is your learning hub, operator!\n\nMaster Python, data structures, sorting, and searching through interactive lessons — no coding experience needed.",
+		"force_center": true,
+	})
+	steps.append({
+		"title": "Topics Sidebar",
+		"body": "Browse topics organized by category: Python Fundamentals, Data Structures, Sorting, and Searching.\n\nTap any unlocked topic to start learning. Complete lessons to unlock more.",
+		"highlight": $ContentArea/Sidebar.get_path(),
+	})
+	steps.append({
+		"title": "Your Progress",
+		"body": "Keep an eye on your mastery count here. Every completed lesson unlocks new towers and enemies in Campaign mode.",
+		"highlight": progress_label.get_path(),
+	})
+	steps.append({
+		"title": "Lesson Content",
+		"body": "Lessons appear here with interactive content, visualizations, code editors, and practice exercises.\n\nEach lesson has 8 steps to guide you from concept to mastery.",
+		"highlight": $ContentArea/LessonArea.get_path(),
+	})
+	steps.append({
+		"title": "Step Navigation",
+		"body": "Move through lesson steps with Previous and Next. Tap 💡 Hint when you're stuck on a problem — it won't affect your score.",
+		"highlight": $BottomBar.get_path(),
+	})
+	steps.append({
+		"title": "Ready to Learn!",
+		"body": "That's the tour! Start with Python Fundamentals and work your way up to Sorting and Searching.\n\nGood luck, operator!",
+		"force_center": true,
+	})
+	return steps
