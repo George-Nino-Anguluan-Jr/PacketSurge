@@ -7,6 +7,8 @@ const GridSystem = preload("res://scenes/campaign/level/GridSystem.gd")
 @onready var grid_visual: Node2D             = $GridLayer/GridVisual
 @onready var tower_layer: Node2D             = $TowerLayer
 @onready var enemy_layer: Node2D             = $EnemyLayer
+@onready var projectile_layer: Node2D        = $ProjectileLayer
+@onready var managers_node: Node             = $Managers
 @onready var wave_manager: Node              = $Managers/WaveManager
 @onready var ram_manager: Node               = $Managers/RAMManager
 @onready var back_btn: Button                = $HUD/HUDControl/TopHUD/TopLayout/BackBtn
@@ -129,6 +131,13 @@ const CHALLENGES = {
 # ─── TOWER DEFINITIONS ─────────────────────────────────
 # ─── READY ─────────────────────────────────────────────
 func _ready() -> void:
+	# HUDControl is a fullscreen Control whose default mouse_filter=STOP would
+	# block clicks from reaching the grid behind it. With STOP, GridSystem's
+	# _unhandled_input never fires (it only sees unconsumed clicks). Set
+	# IGNORE so HUDControl is invisible to mouse events; its child Buttons
+	# (BackBtn, PauseBtn, etc.) keep their own MOUSE_FILTER_STOP and still
+	# receive their own clicks.
+	$HUD/HUDControl.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	level_number     = GameManager.current_level
 	level_start_time = Time.get_ticks_msec() / 1000.0
 	_setup_grid()
@@ -952,6 +961,30 @@ func _input(event: InputEvent) -> void:
 	if event.is_action_pressed("ui_cancel"):
 		_on_pause_pressed()
 
+func _unhandled_input(event: InputEvent) -> void:
+	# Close the tower overlay when clicking outside it.
+	# Uses _unhandled_input so the buttons INSIDE the overlay still receive
+	# their clicks (a Button with MOUSE_FILTER_STOP consumes the event first).
+	if not (event is InputEventMouseButton and event.pressed and event.button_index == MOUSE_BUTTON_LEFT):
+		return
+	if overlay_menu == null or not overlay_menu.visible:
+		return
+	# overlay_menu is a Control with no size of its own; children are placed
+	# at explicit positions. Check whether the click landed on any child
+	# (button, panel, etc.) — if so, the event should reach that child,
+	# but it didn't, so we still treat it as outside.
+	var mouse_pos = get_global_mouse_position()
+	for child in overlay_menu.get_children():
+		if child is Control and (child as Control).get_global_rect().has_point(mouse_pos):
+			return
+	# No child contains the click → close the overlay.
+	overlay_menu.visible = false
+	for child in overlay_menu.get_children():
+		child.queue_free()
+	if is_instance_valid(_selected_tower):
+		_selected_tower.set_selected(false)
+		_selected_tower = null
+
 # ─── PAUSE / SPEED HANDLERS ────────────────────────────
 func _on_pause_pressed() -> void:
 	get_tree().paused = true
@@ -1082,14 +1115,24 @@ func _update_base_health_label() -> void:
 		_play_feedback(false)
 
 # ─── RESULT PANEL ──────────────────────────────────────
+func _freeze_gameplay() -> void:
+	# Stop waves + RAM accrual and freeze every live enemy, tower, projectile
+	# in place WITHOUT pausing the whole SceneTree (which would block UI input
+	# on the lesson-unlock popup).
+	managers_node.process_mode = Node.PROCESS_MODE_DISABLED
+	for n in [enemy_layer, tower_layer, projectile_layer]:
+		for child in n.get_children():
+			child.process_mode = Node.PROCESS_MODE_DISABLED
+
 func _show_result_panel(victory: bool) -> void:
-	get_tree().paused = true
+	_freeze_gameplay()
 	SoundManager.stop_music()
 	if victory:
 		SoundManager.play_game_over()
 	for child in game_over_panel.get_children():
 		child.queue_free()
-	game_over_panel.process_mode = Node.PROCESS_MODE_WHEN_PAUSED
+	# End-state UI must keep processing so its buttons stay clickable.
+	game_over_panel.process_mode = Node.PROCESS_MODE_ALWAYS
 
 	var layout := VBoxContainer.new()
 	layout.add_theme_constant_override("separation", 16)

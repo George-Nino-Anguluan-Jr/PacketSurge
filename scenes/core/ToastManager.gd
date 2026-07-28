@@ -182,6 +182,10 @@ func show_redirect(
 	_redirect_popup = Control.new()
 	_redirect_popup.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
 	_redirect_popup.mouse_filter = Control.MOUSE_FILTER_STOP
+	# Defensive: the level-complete popup can fire while the rest of the tree
+	# is processing normally, but if anything else ever pauses the tree the
+	# popup must still respond to clicks.
+	_redirect_popup.process_mode = Node.PROCESS_MODE_ALWAYS
 	add_child(_redirect_popup)
 
 	var overlay := ColorRect.new()
