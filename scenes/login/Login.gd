@@ -262,7 +262,7 @@ func _style_input_field(field: LineEdit) -> void:
 	field.add_theme_stylebox_override("focus",  _make_focused_style())
 	field.add_theme_color_override("font_color",             Color("#E8F4FD"))
 	field.add_theme_color_override("font_placeholder_color", Color("#4A7FA5"))
-	field.add_theme_font_size_override("font_size", 14)
+	field.add_theme_font_size_override("font_size", 16)
 
 func _make_focused_style() -> StyleBoxFlat:
 	var style := StyleBoxFlat.new()
@@ -296,7 +296,7 @@ func _style_option_button(btn: OptionButton) -> void:
 	style.corner_radius_bottom_right = 4
 	btn.add_theme_stylebox_override("normal", style)
 	btn.add_theme_color_override("font_color", Color("#E8F4FD"))
-	btn.add_theme_font_size_override("font_size", 14)
+	btn.add_theme_font_size_override("font_size", 16)
 
 func _style_accent_button(btn: Button) -> void:
 	var normal := StyleBoxFlat.new()
@@ -314,7 +314,7 @@ func _style_accent_button(btn: Button) -> void:
 	btn.add_theme_stylebox_override("normal",  normal)
 	btn.add_theme_stylebox_override("hover",   hover)
 	btn.add_theme_color_override("font_color", Color("#050D1A"))
-	btn.add_theme_font_size_override("font_size", 15)
+	btn.add_theme_font_size_override("font_size", 17)
 
 func _style_active_tab(btn: Button, active: bool) -> void:
 	var style := StyleBoxFlat.new()
@@ -335,7 +335,7 @@ func _style_active_tab(btn: Button, active: bool) -> void:
 	btn.add_theme_stylebox_override("normal",   style)
 	btn.add_theme_stylebox_override("hover",    style)
 	btn.add_theme_stylebox_override("pressed",  style)
-	btn.add_theme_font_size_override("font_size", 14)
+	btn.add_theme_font_size_override("font_size", 16)
 
 # ─── RESPONSIVE ────────────────────────────────────────
 func _apply_responsive_layout() -> void:
@@ -345,23 +345,23 @@ func _apply_responsive_layout() -> void:
 	var register_form = $CenterContainer/MainLayout/FormCard/CardLayout/RegisterForm
 	
 	if ScreenManager.is_mobile():
-		card.custom_minimum_size = Vector2(320, 0)
-		title_label.add_theme_font_size_override("font_size", 28)
-		main_layout.add_theme_constant_override("separation", 16)
-		login_form.add_theme_constant_override("separation", 10)
-		register_form.add_theme_constant_override("separation", 8)
-		status_label.add_theme_font_size_override("font_size", 12)
-	elif ScreenManager.is_tablet():
 		card.custom_minimum_size = Vector2(380, 0)
-		title_label.add_theme_font_size_override("font_size", 36)
-		main_layout.add_theme_constant_override("separation", 20)
+		title_label.add_theme_font_size_override("font_size", 34)
+		main_layout.add_theme_constant_override("separation", 18)
 		login_form.add_theme_constant_override("separation", 12)
 		register_form.add_theme_constant_override("separation", 10)
 		status_label.add_theme_font_size_override("font_size", 13)
-	else:
-		card.custom_minimum_size = Vector2(420, 0)
-		title_label.add_theme_font_size_override("font_size", 48)
-		main_layout.add_theme_constant_override("separation", 24)
-		login_form.add_theme_constant_override("separation", 12)
-		register_form.add_theme_constant_override("separation", 10)
+	elif ScreenManager.is_tablet():
+		card.custom_minimum_size = Vector2(460, 0)
+		title_label.add_theme_font_size_override("font_size", 42)
+		main_layout.add_theme_constant_override("separation", 22)
+		login_form.add_theme_constant_override("separation", 14)
+		register_form.add_theme_constant_override("separation", 12)
 		status_label.add_theme_font_size_override("font_size", 14)
+	else:
+		card.custom_minimum_size = Vector2(520, 0)
+		title_label.add_theme_font_size_override("font_size", 56)
+		main_layout.add_theme_constant_override("separation", 26)
+		login_form.add_theme_constant_override("separation", 14)
+		register_form.add_theme_constant_override("separation", 12)
+		status_label.add_theme_font_size_override("font_size", 15)

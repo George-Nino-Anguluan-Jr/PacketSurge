@@ -57,10 +57,10 @@ func _ready() -> void:
 	_setup_buttons()
 	_setup_profile_card()
 	_animate_title_in()
+	_build_continue_button()
 	_apply_responsive_layout()
 	get_tree().root.size_changed.connect(_apply_responsive_layout)
 	_check_placement_quiz()
-	_build_continue_button()
 	_connect_button_sounds(self)
 	_maybe_show_tutorial()
 
@@ -327,27 +327,51 @@ func _style_profile_card() -> void:
 func _apply_responsive_layout() -> void:
 	var top_left_container: HBoxContainer = $TopLeftContainer
 	if ScreenManager.is_mobile():
-		title_label.add_theme_font_size_override("font_size", 38)
+		title_label.add_theme_font_size_override("font_size", 48)
+		_continue_btn.add_theme_font_size_override("font_size", 19)
 		for btn in _all_buttons:
-			btn.custom_minimum_size = Vector2(260, 48)
+			btn.custom_minimum_size = Vector2(320, 56)
+		for btn in _core_buttons:
+			btn.add_theme_font_size_override("font_size", 18)
+		username_label.add_theme_font_size_override("font_size", 22)
+		class_label.add_theme_font_size_override("font_size", 18)
+		avatar_label.add_theme_font_size_override("font_size", 28)
+		leaderboard_button.add_theme_font_size_override("font_size", 26)
+		settings_button.add_theme_font_size_override("font_size", 26)
 		top_left_container.offset_left = 12.0
 		top_left_container.offset_top = 12.0
-		top_left_container.add_theme_constant_override("separation", 8)
-		leaderboard_button.custom_minimum_size = Vector2(40, 40)
-		settings_button.custom_minimum_size = Vector2(40, 40)
+		top_left_container.add_theme_constant_override("separation", 10)
+		leaderboard_button.custom_minimum_size = Vector2(52, 52)
+		settings_button.custom_minimum_size = Vector2(52, 52)
 	elif ScreenManager.is_tablet():
-		title_label.add_theme_font_size_override("font_size", 52)
+		title_label.add_theme_font_size_override("font_size", 56)
+		_continue_btn.add_theme_font_size_override("font_size", 18)
 		for btn in _all_buttons:
-			btn.custom_minimum_size = Vector2(300, 50)
+			btn.custom_minimum_size = Vector2(340, 54)
+		for btn in _core_buttons:
+			btn.add_theme_font_size_override("font_size", 17)
+		username_label.add_theme_font_size_override("font_size", 20)
+		class_label.add_theme_font_size_override("font_size", 16)
+		avatar_label.add_theme_font_size_override("font_size", 26)
+		leaderboard_button.add_theme_font_size_override("font_size", 24)
+		settings_button.add_theme_font_size_override("font_size", 24)
 		top_left_container.offset_left = 18.0
 		top_left_container.offset_top = 18.0
 		top_left_container.add_theme_constant_override("separation", 10)
-		leaderboard_button.custom_minimum_size = Vector2(44, 44)
-		settings_button.custom_minimum_size = Vector2(44, 44)
+		leaderboard_button.custom_minimum_size = Vector2(48, 48)
+		settings_button.custom_minimum_size = Vector2(48, 48)
 	else:
-		title_label.add_theme_font_size_override("font_size", 64)
+		title_label.add_theme_font_size_override("font_size", 68)
+		_continue_btn.add_theme_font_size_override("font_size", 17)
 		for btn in _all_buttons:
-			btn.custom_minimum_size = Vector2(320, 52)
+			btn.custom_minimum_size = Vector2(360, 56)
+		for btn in _core_buttons:
+			btn.add_theme_font_size_override("font_size", 16)
+		username_label.add_theme_font_size_override("font_size", 18)
+		class_label.add_theme_font_size_override("font_size", 14)
+		avatar_label.add_theme_font_size_override("font_size", 24)
+		leaderboard_button.add_theme_font_size_override("font_size", 22)
+		settings_button.add_theme_font_size_override("font_size", 22)
 		top_left_container.offset_left = 24.0
 		top_left_container.offset_top = 24.0
 		top_left_container.add_theme_constant_override("separation", 12)

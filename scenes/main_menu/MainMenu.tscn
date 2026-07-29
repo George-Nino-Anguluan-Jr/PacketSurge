@@ -53,7 +53,7 @@ alignment = 1
 layout_mode = 2
 size_flags_horizontal = 4
 theme_override_colors/font_color = Color(0, 0.83137256, 1, 1)
-theme_override_font_sizes/font_size = 64
+theme_override_font_sizes/font_size = 68
 text = "PACKET SURGE"
 
 [node name="Spacer" type="Control" parent="CenterContainer/MainLayout" unique_id=514360466]
@@ -65,17 +65,17 @@ layout_mode = 2
 theme_override_constants/separation = 12
 
 [node name="CampaignButton" type="Button" parent="CenterContainer/MainLayout/ButtonSection" unique_id=324031090]
-custom_minimum_size = Vector2(260, 52)
+custom_minimum_size = Vector2(360, 56)
 layout_mode = 2
 text = "CAMPAIGN"
 
 [node name="AcademyButton" type="Button" parent="CenterContainer/MainLayout/ButtonSection" unique_id=1640463120]
-custom_minimum_size = Vector2(260, 52)
+custom_minimum_size = Vector2(360, 56)
 layout_mode = 2
 text = "ACADEMY"
 
 [node name="IndexButton" type="Button" parent="CenterContainer/MainLayout/ButtonSection" unique_id=171158732]
-custom_minimum_size = Vector2(260, 52)
+custom_minimum_size = Vector2(360, 56)
 layout_mode = 2
 text = "INDEX"
 
@@ -125,7 +125,7 @@ mouse_filter = 1
 theme_override_constants/separation = 12
 
 [node name="AvatarPanel" type="PanelContainer" parent="TopLeftContainer/ProfileCard/MarginContainer/ProfileLayout" unique_id=999888780]
-custom_minimum_size = Vector2(36, 36)
+custom_minimum_size = Vector2(52, 52)
 layout_mode = 2
 mouse_filter = 1
 size_flags_vertical = 4
@@ -134,7 +134,7 @@ size_flags_vertical = 4
 layout_mode = 2
 size_flags_horizontal = 4
 theme_override_colors/font_color = Color(0, 0.83137256, 1, 1)
-theme_override_font_sizes/font_size = 16
+theme_override_font_sizes/font_size = 28
 text = "U"
 horizontal_alignment = 1
 vertical_alignment = 1
@@ -143,30 +143,30 @@ vertical_alignment = 1
 layout_mode = 2
 mouse_filter = 1
 size_flags_horizontal = 3
-theme_override_constants/separation = 2
+theme_override_constants/separation = 4
 alignment = 1
 
 [node name="UsernameLabel" type="Label" parent="TopLeftContainer/ProfileCard/MarginContainer/ProfileLayout/TextLayout" unique_id=999888783]
 layout_mode = 2
 theme_override_colors/font_color = Color(0.9098039, 0.95686275, 0.99215686, 1)
-theme_override_font_sizes/font_size = 13
+theme_override_font_sizes/font_size = 22
 text = "Username"
 
 [node name="ClassLabel" type="Label" parent="TopLeftContainer/ProfileCard/MarginContainer/ProfileLayout/TextLayout" unique_id=999888784]
 layout_mode = 2
 theme_override_colors/font_color = Color(0.2901961, 0.49803922, 0.64705884, 1)
-theme_override_font_sizes/font_size = 11
+theme_override_font_sizes/font_size = 16
 text = "Year & Section"
 
 [node name="LeaderboardButton" type="Button" parent="TopLeftContainer" unique_id=719556249]
-custom_minimum_size = Vector2(48, 48)
+custom_minimum_size = Vector2(52, 52)
 layout_mode = 2
 size_flags_vertical = 4
 icon = ExtResource("4_leaderboard")
 expand_icon = true
 
 [node name="SettingsButton" type="Button" parent="TopLeftContainer" unique_id=1796636240]
-custom_minimum_size = Vector2(48, 48)
+custom_minimum_size = Vector2(52, 52)
 layout_mode = 2
 size_flags_vertical = 4
 icon = ExtResource("5_settings")
