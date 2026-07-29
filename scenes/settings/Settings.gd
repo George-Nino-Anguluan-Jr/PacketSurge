@@ -103,20 +103,20 @@ func _make_toggle_row(
 
 	var lbl := Label.new()
 	lbl.text = label
-	lbl.add_theme_font_size_override("font_size", 13 if _is_compact() else 14)
+	lbl.add_theme_font_size_override("font_size", 16 if _is_compact() else 17)
 	lbl.add_theme_color_override("font_color", Color("#E8F4FD"))
 	text_col.add_child(lbl)
 
 	var desc := Label.new()
 	desc.text          = description
 	desc.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
-	desc.add_theme_font_size_override("font_size", 10 if _is_compact() else 11)
+	desc.add_theme_font_size_override("font_size", 13 if _is_compact() else 13)
 	desc.add_theme_color_override("font_color", Color("#4A7FA5"))
 	text_col.add_child(desc)
 	row.add_child(text_col)
 
 	var toggle := Button.new()
-	toggle.custom_minimum_size = Vector2(70 if _is_compact() else 80, 40 if _is_compact() else 36)
+	toggle.custom_minimum_size = Vector2(80 if _is_compact() else 90, 44 if _is_compact() else 40)
 	toggle.text = "ON" if current_value else "OFF"
 	_style_toggle_button(toggle, current_value)
 	toggle.pressed.connect(_on_toggle_pressed.bind(toggle, on_toggle))
@@ -163,14 +163,14 @@ func _make_slider_row(
 
 	var lbl := Label.new()
 	lbl.text = label
-	lbl.add_theme_font_size_override("font_size", 13 if _is_compact() else 14)
+	lbl.add_theme_font_size_override("font_size", 16 if _is_compact() else 17)
 	lbl.add_theme_color_override("font_color", Color("#E8F4FD"))
 	row.add_child(lbl)
 
 	var desc := Label.new()
 	desc.text          = description
 	desc.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
-	desc.add_theme_font_size_override("font_size", 10 if _is_compact() else 11)
+	desc.add_theme_font_size_override("font_size", 13 if _is_compact() else 13)
 	desc.add_theme_color_override("font_color", Color("#4A7FA5"))
 	row.add_child(desc)
 
@@ -190,9 +190,9 @@ func _make_slider_row(
 	slider_box.add_child(slider)
 
 	var pct_label := Label.new()
-	pct_label.custom_minimum_size = Vector2(36 if _is_compact() else 40, 0)
+	pct_label.custom_minimum_size = Vector2(40 if _is_compact() else 44, 0)
 	pct_label.text = str(int(current_value * 100)) + "%"
-	pct_label.add_theme_font_size_override("font_size", 13 if _is_compact() else 14)
+	pct_label.add_theme_font_size_override("font_size", 16 if _is_compact() else 17)
 	pct_label.add_theme_color_override("font_color", Color("#00D4FF"))
 	pct_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_RIGHT
 	slider_box.add_child(pct_label)
@@ -214,7 +214,7 @@ func _is_compact() -> bool:
 func _make_section_label(text: String) -> Label:
 	var lbl := Label.new()
 	lbl.text = text
-	lbl.add_theme_font_size_override("font_size", 11)
+	lbl.add_theme_font_size_override("font_size", 14 if _is_compact() else 15)
 	lbl.add_theme_color_override("font_color", Color("#00D4FF"))
 	return lbl
 
@@ -248,15 +248,15 @@ func _make_info_row(label: String, value: String) -> PanelContainer:
 
 	var lbl := Label.new()
 	lbl.text = label
-	lbl.custom_minimum_size = Vector2(100 if _is_compact() else 120, 0)
-	lbl.add_theme_font_size_override("font_size", 12 if _is_compact() else 13)
+	lbl.custom_minimum_size = Vector2(110 if _is_compact() else 130, 0)
+	lbl.add_theme_font_size_override("font_size", 15 if _is_compact() else 16)
 	lbl.add_theme_color_override("font_color", Color("#4A7FA5"))
 	row.add_child(lbl)
 
 	var val := Label.new()
 	val.text = value if value != "" else "—"
 	val.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-	val.add_theme_font_size_override("font_size", 12 if _is_compact() else 13)
+	val.add_theme_font_size_override("font_size", 15 if _is_compact() else 16)
 	val.add_theme_color_override("font_color", Color("#E8F4FD"))
 	row.add_child(val)
 
@@ -284,6 +284,7 @@ func _apply_styles() -> void:
 	back_style.corner_radius_bottom_right = 4
 	back_btn.add_theme_stylebox_override("normal", back_style)
 	back_btn.add_theme_color_override("font_color", Color("#00D4FF"))
+	back_btn.add_theme_font_size_override("font_size", 16 if _is_compact() else 17)
 
 func _style_toggle_button(btn: Button, is_on: bool) -> void:
 	var style := StyleBoxFlat.new()
@@ -302,7 +303,7 @@ func _style_toggle_button(btn: Button, is_on: bool) -> void:
 		"font_color",
 		Color("#050D1A") if is_on else Color("#4A7FA5")
 	)
-	btn.add_theme_font_size_override("font_size", 13)
+	btn.add_theme_font_size_override("font_size", 14 if _is_compact() else 15)
 
 # ─── RESPONSIVE ────────────────────────────────────────
 func _apply_responsive_layout() -> void:
@@ -324,19 +325,19 @@ func _apply_responsive_layout() -> void:
 		content_area.add_theme_constant_override("margin_right", 20)
 		content_area.add_theme_constant_override("margin_top", 20)
 		content_area.add_theme_constant_override("margin_bottom", 20)
-		back_btn.custom_minimum_size = Vector2(70, 44)
-		title_label.add_theme_font_size_override("font_size", 14)
+		back_btn.custom_minimum_size = Vector2(80, 52)
+		title_label.add_theme_font_size_override("font_size", 20)
 	elif ScreenManager.is_tablet():
 		ScreenManager.apply_panel_padding(top_bar, 24)
 		content_area.add_theme_constant_override("margin_left", 24)
 		content_area.add_theme_constant_override("margin_right", 24)
 		content_area.add_theme_constant_override("margin_top", 24)
 		content_area.add_theme_constant_override("margin_bottom", 24)
-		back_btn.custom_minimum_size = Vector2(80, 44)
-		title_label.add_theme_font_size_override("font_size", 15)
+		back_btn.custom_minimum_size = Vector2(95, 52)
+		title_label.add_theme_font_size_override("font_size", 22)
 	else:
-		back_btn.custom_minimum_size = Vector2(90, 0)
-		title_label.add_theme_font_size_override("font_size", 16)
+		back_btn.custom_minimum_size = Vector2(110, 0)
+		title_label.add_theme_font_size_override("font_size", 24)
 
 # ─── TUTORIAL ──────────────────────────────────────────
 const TutorialOverlay = preload("res://scenes/core/TutorialOverlay.gd")

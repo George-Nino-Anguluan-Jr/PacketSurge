@@ -42,6 +42,7 @@ text = "← BACK"
 layout_mode = 2
 size_flags_horizontal = 3
 theme_override_colors/font_color = Color(0.9098039, 0.95686275, 0.99215686, 1)
+theme_override_font_sizes/font_size = 22
 text = "SETTINGS"
 
 [node name="ContentArea" type="MarginContainer" parent="." unique_id=366766470]
