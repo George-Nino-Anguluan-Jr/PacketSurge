@@ -56,19 +56,19 @@ layout_mode = 1
 anchors_preset = -1
 anchor_right = 1.0
 offset_top = 52.0
-offset_bottom = 96.0
+offset_bottom = 100.0
 grow_horizontal = 2
 grow_vertical = 2
 theme_override_constants/separation = 0
 
 [node name="GlobalTab" type="Button" parent="TabBar" unique_id=82612884]
-custom_minimum_size = Vector2(0, 44)
+custom_minimum_size = Vector2(0, 48)
 layout_mode = 2
 size_flags_horizontal = 3
 text = "🌐 GLOBAL"
 
 [node name="SectionTab" type="Button" parent="TabBar" unique_id=1277452808]
-custom_minimum_size = Vector2(0, 44)
+custom_minimum_size = Vector2(0, 48)
 layout_mode = 2
 size_flags_horizontal = 3
 text = "🏫 MY SECTION"
@@ -78,7 +78,7 @@ layout_mode = 1
 anchors_preset = -1
 anchor_right = 1.0
 anchor_bottom = 1.0
-offset_top = 96.0
+offset_top = 100.0
 grow_horizontal = 2
 grow_vertical = 2
 theme_override_constants/margin_left = 16
@@ -96,7 +96,7 @@ size_flags_horizontal = 3
 theme_override_constants/separation = 12
 
 [node name="RefreshBtn" type="Button" parent="ContentArea/ScrollArea/GlobalPanel" unique_id=1864236247]
-custom_minimum_size = Vector2(100, 36)
+custom_minimum_size = Vector2(110, 42)
 layout_mode = 2
 text = "↻ Refresh"
 
@@ -111,7 +111,7 @@ size_flags_horizontal = 3
 theme_override_constants/separation = 12
 
 [node name="SectionRefreshBtn" type="Button" parent="ContentArea/ScrollArea/SectionPanel" unique_id=363592238]
-custom_minimum_size = Vector2(100, 36)
+custom_minimum_size = Vector2(110, 42)
 layout_mode = 2
 text = "↻ Refresh"
 

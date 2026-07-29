@@ -57,7 +57,7 @@ func _build_content() -> void:
 func _make_section_title(text: String, color: Color = Color("#00D4FF")) -> Label:
 	var lbl := Label.new()
 	lbl.text = text
-	lbl.add_theme_font_size_override("font_size", 12)
+	lbl.add_theme_font_size_override("font_size", 16 if _is_compact() else 17)
 	lbl.add_theme_color_override("font_color", color)
 	return lbl
 
@@ -129,15 +129,15 @@ func _make_info_row(label: String, value: String) -> PanelContainer:
 
 	var lbl := Label.new()
 	lbl.text = label
-	lbl.custom_minimum_size = Vector2(100 if _is_compact() else 120, 0)
-	lbl.add_theme_font_size_override("font_size", 12 if _is_compact() else 13)
+	lbl.custom_minimum_size = Vector2(110 if _is_compact() else 130, 0)
+	lbl.add_theme_font_size_override("font_size", 16 if _is_compact() else 17)
 	lbl.add_theme_color_override("font_color", Color("#4A7FA5"))
 	row.add_child(lbl)
 
 	var val := Label.new()
 	val.text = value
 	val.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-	val.add_theme_font_size_override("font_size", 12 if _is_compact() else 13)
+	val.add_theme_font_size_override("font_size", 16 if _is_compact() else 17)
 	val.add_theme_color_override("font_color", Color("#E8F4FD"))
 	row.add_child(val)
 
@@ -189,7 +189,7 @@ func _make_stat_card(label: String, value: String, color: Color) -> PanelContain
 	var val_lbl := Label.new()
 	val_lbl.text = value
 	val_lbl.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
-	val_lbl.add_theme_font_size_override("font_size", 22)
+	val_lbl.add_theme_font_size_override("font_size", 24)
 	val_lbl.add_theme_color_override("font_color", color)
 	layout.add_child(val_lbl)
 
@@ -197,7 +197,7 @@ func _make_stat_card(label: String, value: String, color: Color) -> PanelContain
 	lbl.text = label
 	lbl.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	lbl.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
-	lbl.add_theme_font_size_override("font_size", 10)
+	lbl.add_theme_font_size_override("font_size", 14)
 	lbl.add_theme_color_override("font_color", Color("#4A7FA5"))
 	layout.add_child(lbl)
 
@@ -246,15 +246,15 @@ func _make_session_row(label: String, value: String) -> HBoxContainer:
 
 	var lbl := Label.new()
 	lbl.text = label
-	lbl.custom_minimum_size = Vector2(120, 0)
-	lbl.add_theme_font_size_override("font_size", 13)
+	lbl.custom_minimum_size = Vector2(100 if _is_compact() else 120, 0)
+	lbl.add_theme_font_size_override("font_size", 16 if _is_compact() else 17)
 	lbl.add_theme_color_override("font_color", Color("#4A7FA5"))
 	row.add_child(lbl)
 
 	var val := Label.new()
 	val.text = value
 	val.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-	val.add_theme_font_size_override("font_size", 13)
+	val.add_theme_font_size_override("font_size", 16 if _is_compact() else 17)
 	val.add_theme_color_override("font_color", Color("#E8F4FD"))
 	row.add_child(val)
 
@@ -337,10 +337,11 @@ func _make_account_actions() -> PanelContainer:
 
 func _make_action_btn(text: String, callback: Callable) -> Button:
 	var btn := Button.new()
-	btn.custom_minimum_size = Vector2(0, 38)
+	btn.custom_minimum_size = Vector2(0, 46)
 	btn.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	btn.text = text
 	btn.pressed.connect(callback)
+	btn.add_theme_font_size_override("font_size", 16 if _is_compact() else 17)
 
 	var normal := StyleBoxFlat.new()
 	normal.bg_color               = Color("#0A1628")
@@ -413,15 +414,16 @@ func _make_danger_zone() -> PanelContainer:
 	var warning_lbl := Label.new()
 	warning_lbl.text = "These actions are destructive and cannot be undone."
 	warning_lbl.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
-	warning_lbl.add_theme_font_size_override("font_size", 11)
+	warning_lbl.add_theme_font_size_override("font_size", 14)
 	warning_lbl.add_theme_color_override("font_color", Color("#FF6680"))
 	layout.add_child(warning_lbl)
 
 	var reset_btn := Button.new()
-	reset_btn.custom_minimum_size = Vector2(0, 38)
+	reset_btn.custom_minimum_size = Vector2(0, 46)
 	reset_btn.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	reset_btn.text = "🗑 Reset All Progress"
 	reset_btn.pressed.connect(_on_reset_progress_pressed)
+	reset_btn.add_theme_font_size_override("font_size", 16 if _is_compact() else 17)
 
 	var reset_normal := StyleBoxFlat.new()
 	reset_normal.bg_color            = Color("#FF3366", 0.15)
@@ -496,6 +498,7 @@ func _apply_styles() -> void:
 	back_style.corner_radius_bottom_right = 4
 	back_btn.add_theme_stylebox_override("normal", back_style)
 	back_btn.add_theme_color_override("font_color", Color("#00D4FF"))
+	back_btn.add_theme_font_size_override("font_size", 16 if _is_compact() else 17)
 
 	var analytics_style := StyleBoxFlat.new()
 	analytics_style.bg_color               = Color("#0A1628")
@@ -510,6 +513,7 @@ func _apply_styles() -> void:
 	analytics_style.corner_radius_bottom_right = 4
 	analytics_btn.add_theme_stylebox_override("normal", analytics_style)
 	analytics_btn.add_theme_color_override("font_color", Color("#00FF88"))
+	analytics_btn.add_theme_font_size_override("font_size", 16 if _is_compact() else 17)
 
 	var analytics_hover := StyleBoxFlat.new()
 	analytics_hover.bg_color                = Color("#00FF88", 0.1)
@@ -541,19 +545,22 @@ func _apply_responsive_layout() -> void:
 		content_area.add_theme_constant_override("margin_right", 20)
 		content_area.add_theme_constant_override("margin_top", 20)
 		content_area.add_theme_constant_override("margin_bottom", 20)
-		back_btn.custom_minimum_size = Vector2(70, 44)
-		title_label.add_theme_font_size_override("font_size", 14)
+		back_btn.custom_minimum_size = Vector2(85, 52)
+		title_label.add_theme_font_size_override("font_size", 20)
+		analytics_btn.custom_minimum_size = Vector2(120, 44)
 	elif ScreenManager.is_tablet():
 		ScreenManager.apply_panel_padding(top_bar, 24)
 		content_area.add_theme_constant_override("margin_left", 24)
 		content_area.add_theme_constant_override("margin_right", 24)
 		content_area.add_theme_constant_override("margin_top", 24)
 		content_area.add_theme_constant_override("margin_bottom", 24)
-		back_btn.custom_minimum_size = Vector2(80, 44)
-		title_label.add_theme_font_size_override("font_size", 15)
+		back_btn.custom_minimum_size = Vector2(95, 52)
+		title_label.add_theme_font_size_override("font_size", 22)
+		analytics_btn.custom_minimum_size = Vector2(130, 44)
 	else:
-		back_btn.custom_minimum_size = Vector2(90, 0)
-		title_label.add_theme_font_size_override("font_size", 16)
+		back_btn.custom_minimum_size = Vector2(110, 52)
+		title_label.add_theme_font_size_override("font_size", 24)
+		analytics_btn.custom_minimum_size = Vector2(150, 44)
 
 # ─── TUTORIAL ──────────────────────────────────────────
 const TutorialOverlay = preload("res://scenes/core/TutorialOverlay.gd")

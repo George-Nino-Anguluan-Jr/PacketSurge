@@ -215,7 +215,7 @@ func _make_entry_card(
 	name_label.text = entry.get("username", "Unknown")
 	if is_me:
 		name_label.text += " (You)"
-	name_label.add_theme_font_size_override("font_size", 13 if compact else 15)
+	name_label.add_theme_font_size_override("font_size", 17 if compact else 18)
 	name_label.add_theme_color_override(
 		"font_color",
 		Color("#00FF88") if is_me else Color("#E8F4FD")
@@ -224,7 +224,7 @@ func _make_entry_card(
 
 	var section_label := Label.new()
 	section_label.text = entry.get("section", "")
-	section_label.add_theme_font_size_override("font_size", 10 if compact else 11)
+	section_label.add_theme_font_size_override("font_size", 13 if compact else 14)
 	section_label.add_theme_color_override("font_color", Color("#4A7FA5"))
 	name_section.add_child(section_label)
 
@@ -264,18 +264,18 @@ func _add_stat_column(
 	var compact = ScreenManager.is_mobile()
 	var col := VBoxContainer.new()
 	col.add_theme_constant_override("separation", 2)
-	col.custom_minimum_size = Vector2(50 if compact else 60, 0)
+	col.custom_minimum_size = Vector2(60 if compact else 70, 0)
 
 	var lbl := Label.new()
 	lbl.text = label
-	lbl.add_theme_font_size_override("font_size", 9 if compact else 10)
+	lbl.add_theme_font_size_override("font_size", 12 if compact else 13)
 	lbl.add_theme_color_override("font_color", Color("#4A7FA5"))
 	lbl.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	col.add_child(lbl)
 
 	var val := Label.new()
 	val.text = value
-	val.add_theme_font_size_override("font_size", 12 if compact else 14)
+	val.add_theme_font_size_override("font_size", 15 if compact else 17)
 	val.add_theme_color_override("font_color", color)
 	val.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	col.add_child(val)
@@ -315,6 +315,7 @@ func _apply_styles() -> void:
 	back_style.corner_radius_bottom_right = 4
 	back_btn.add_theme_stylebox_override("normal", back_style)
 	back_btn.add_theme_color_override("font_color", Color("#00D4FF"))
+	back_btn.add_theme_font_size_override("font_size", 16)
 
 	# Refresh buttons
 	for btn in [refresh_btn, section_refresh_btn]:
@@ -331,7 +332,7 @@ func _apply_styles() -> void:
 		r_style.corner_radius_bottom_right = 4
 		btn.add_theme_stylebox_override("normal", r_style)
 		btn.add_theme_color_override("font_color", Color("#4A7FA5"))
-		btn.add_theme_font_size_override("font_size", 12)
+		btn.add_theme_font_size_override("font_size", 16)
 
 func _style_active_tab(btn: Button, active: bool) -> void:
 	var style := StyleBoxFlat.new()
@@ -352,7 +353,7 @@ func _style_active_tab(btn: Button, active: bool) -> void:
 	btn.add_theme_stylebox_override("normal",  style)
 	btn.add_theme_stylebox_override("hover",   style)
 	btn.add_theme_stylebox_override("pressed", style)
-	btn.add_theme_font_size_override("font_size", 14)
+	btn.add_theme_font_size_override("font_size", 18)
 
 # ─── RESPONSIVE ────────────────────────────────────────
 func _apply_responsive_layout() -> void:
@@ -362,7 +363,7 @@ func _apply_responsive_layout() -> void:
 	var tab_bar = $TabBar
 	
 	if ScreenManager.is_mobile():
-		my_rank_label.visible = false
+		my_rank_label.visible = true
 		ScreenManager.apply_panel_padding(top_bar, 20)
 		tab_bar.offset_left = 20
 		tab_bar.offset_right = -20
@@ -370,8 +371,9 @@ func _apply_responsive_layout() -> void:
 		content_area.add_theme_constant_override("margin_right", 20)
 		content_area.add_theme_constant_override("margin_top", 20)
 		content_area.add_theme_constant_override("margin_bottom", 20)
-		title_label.add_theme_font_size_override("font_size", 14)
-		back_btn.custom_minimum_size = Vector2(70, 44)
+		title_label.add_theme_font_size_override("font_size", 20)
+		back_btn.custom_minimum_size = Vector2(85, 52)
+		back_btn.add_theme_font_size_override("font_size", 18)
 	elif ScreenManager.is_tablet():
 		my_rank_label.visible = true
 		ScreenManager.apply_panel_padding(top_bar, 24)
@@ -381,12 +383,14 @@ func _apply_responsive_layout() -> void:
 		content_area.add_theme_constant_override("margin_right", 24)
 		content_area.add_theme_constant_override("margin_top", 24)
 		content_area.add_theme_constant_override("margin_bottom", 24)
-		title_label.add_theme_font_size_override("font_size", 15)
-		back_btn.custom_minimum_size = Vector2(80, 44)
+		title_label.add_theme_font_size_override("font_size", 22)
+		back_btn.custom_minimum_size = Vector2(95, 52)
+		back_btn.add_theme_font_size_override("font_size", 18)
 	else:
 		my_rank_label.visible = true
-		title_label.add_theme_font_size_override("font_size", 16)
-		back_btn.custom_minimum_size = Vector2(90, 0)
+		title_label.add_theme_font_size_override("font_size", 24)
+		back_btn.custom_minimum_size = Vector2(110, 52)
+		back_btn.add_theme_font_size_override("font_size", 18)
 
 # ─── TUTORIAL ──────────────────────────────────────────
 const TutorialOverlay = preload("res://scenes/core/TutorialOverlay.gd")
