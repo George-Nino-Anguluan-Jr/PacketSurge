@@ -58,6 +58,7 @@ var _ff_btn: Button               = null
 const INTER_WAVE_DURATION: float  = 15.0
 var wave_countdown: float          = INTER_WAVE_DURATION
 var countdown_active: bool         = true
+var _tutorial_active: bool         = false
 
 # ─── CODING CHALLENGES ──────────────────────────────────
 const CHALLENGES = {
@@ -866,6 +867,9 @@ func _on_tower_selected(tower_id: String) -> void:
 
 # ─── PROCESS ───────────────────────────────────────────
 func _process(delta: float) -> void:
+	if _tutorial_active:
+		_update_wave_progress_bar()
+		return
 	if countdown_active and not is_level_ended:
 		wave_countdown -= delta
 		if wave_countdown <= 0.0:
@@ -1708,9 +1712,11 @@ func _maybe_show_tutorial() -> void:
 		return
 	await get_tree().process_frame
 	await get_tree().process_frame
+	_tutorial_active = true
 	var tut = TutorialOverlay.new()
 	$HUD.add_child(tut)
 	tut.tutorial_finished.connect(func():
+		_tutorial_active = false
 		ProgressManager.mark_tutorial_seen("level")
 		await get_tree().create_timer(0.5).timeout
 		_show_challenge()
