@@ -38,6 +38,7 @@ func start(steps: Array) -> void:
 func _build_ui() -> void:
 	set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
 	mouse_filter = Control.MOUSE_FILTER_STOP
+	z_index = 1000
 
 	# Responsive sizing — use viewport size so we don't need to await layout
 	var screen_w: float = get_viewport().get_visible_rect().size.x
