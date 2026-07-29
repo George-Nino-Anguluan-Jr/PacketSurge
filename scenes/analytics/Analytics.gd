@@ -162,7 +162,7 @@ func _make_stat_card(
 	var val_label := Label.new()
 	val_label.text = value
 	val_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
-	val_label.add_theme_font_size_override("font_size", 24)
+	val_label.add_theme_font_size_override("font_size", 26)
 	val_label.add_theme_color_override("font_color", color)
 	layout.add_child(val_label)
 
@@ -170,7 +170,7 @@ func _make_stat_card(
 	lbl.text = label
 	lbl.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	lbl.autowrap_mode        = TextServer.AUTOWRAP_WORD_SMART
-	lbl.add_theme_font_size_override("font_size", 10)
+	lbl.add_theme_font_size_override("font_size", 14)
 	lbl.add_theme_color_override("font_color", Color("#4A7FA5"))
 	layout.add_child(lbl)
 
@@ -236,7 +236,7 @@ func _make_progress_chart() -> Control:
 			ThemeDB.fallback_font,
 			Vector2(20, size.y - 4),
 			"■ Mastered  ■ Unlocked  ■ Locked",
-			HORIZONTAL_ALIGNMENT_LEFT, -1, 10,
+			HORIZONTAL_ALIGNMENT_LEFT, -1, 12,
 			Color("#4A7FA5")
 		)
 	)
@@ -347,7 +347,7 @@ func _make_time_chart() -> Control:
 						ThemeDB.fallback_font,
 						Vector2(x + 2, size.y - 22 - bar_h),
 						str(mins) + "m " + str(secs) + "s",
-						HORIZONTAL_ALIGNMENT_LEFT, -1, 9,
+						HORIZONTAL_ALIGNMENT_LEFT, -1, 11,
 						Color("#9B59B6")
 					)
 				else:
@@ -355,7 +355,7 @@ func _make_time_chart() -> Control:
 						ThemeDB.fallback_font,
 						Vector2(x + 2, size.y - 22 - bar_h),
 						str(secs) + "s",
-						HORIZONTAL_ALIGNMENT_LEFT, -1, 9,
+						HORIZONTAL_ALIGNMENT_LEFT, -1, 11,
 						Color("#9B59B6")
 					)
 			else:
@@ -435,14 +435,14 @@ func _make_lesson_row(
 		"mastered": icon.text = "✅"
 		"unlocked": icon.text = "🔓"
 		_:          icon.text = "🔒"
-	icon.add_theme_font_size_override("font_size", 14)
+	icon.add_theme_font_size_override("font_size", 16)
 	layout.add_child(icon)
 
 	# Name
 	var name_lbl := Label.new()
 	name_lbl.text = name
 	name_lbl.custom_minimum_size    = Vector2(120, 0)
-	name_lbl.add_theme_font_size_override("font_size", 13)
+	name_lbl.add_theme_font_size_override("font_size", 16)
 	match state:
 		"mastered": name_lbl.add_theme_color_override("font_color", Color("#00FF88"))
 		"unlocked": name_lbl.add_theme_color_override("font_color", Color("#E8F4FD"))
@@ -454,7 +454,7 @@ func _make_lesson_row(
 		var time_lbl := Label.new()
 		time_lbl.text = _format_time(time)
 		time_lbl.custom_minimum_size = Vector2(50, 0)
-		time_lbl.add_theme_font_size_override("font_size", 11)
+		time_lbl.add_theme_font_size_override("font_size", 14)
 		time_lbl.add_theme_color_override("font_color", Color("#9B59B6"))
 		time_lbl.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 		layout.add_child(time_lbl)
@@ -513,15 +513,15 @@ func _make_campaign_row(
 
 	var level_lbl := Label.new()
 	level_lbl.text = "Level " + str(level_num)
-	level_lbl.custom_minimum_size = Vector2(60, 0)
-	level_lbl.add_theme_font_size_override("font_size", 13)
+	level_lbl.custom_minimum_size = Vector2(70, 0)
+	level_lbl.add_theme_font_size_override("font_size", 16)
 	level_lbl.add_theme_color_override("font_color", Color("#4A7FA5"))
 	hbox.add_child(level_lbl)
 
 	var name_lbl := Label.new()
 	name_lbl.text = name
 	name_lbl.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-	name_lbl.add_theme_font_size_override("font_size", 13)
+	name_lbl.add_theme_font_size_override("font_size", 16)
 	var unlocked = stars > 0
 	if stars == 0:
 		name_lbl.add_theme_color_override("font_color", Color("#2A3A4A"))
@@ -532,15 +532,15 @@ func _make_campaign_row(
 	var stars_lbl := Label.new()
 	stars_lbl.text = "★".repeat(stars) + "☆".repeat(3 - stars)
 	stars_lbl.custom_minimum_size = Vector2(42, 0)
-	stars_lbl.add_theme_font_size_override("font_size", 11)
+	stars_lbl.add_theme_font_size_override("font_size", 14)
 	stars_lbl.add_theme_color_override("font_color", Color("#FFB800"))
 	stars_lbl.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	hbox.add_child(stars_lbl)
 
 	var time_lbl := Label.new()
 	time_lbl.text = _format_time(time) if stars > 0 else "--"
-	time_lbl.custom_minimum_size = Vector2(55, 0)
-	time_lbl.add_theme_font_size_override("font_size", 11)
+	time_lbl.custom_minimum_size = Vector2(60, 0)
+	time_lbl.add_theme_font_size_override("font_size", 14)
 	time_lbl.add_theme_color_override("font_color", Color("#9B59B6"))
 	time_lbl.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	hbox.add_child(time_lbl)
@@ -556,7 +556,7 @@ func _fetch_class_data() -> void:
 	loading.text = "Loading class data..."
 	loading.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	loading.add_theme_color_override("font_color", Color("#4A7FA5"))
-	loading.add_theme_font_size_override("font_size", 14)
+	loading.add_theme_font_size_override("font_size", 16)
 	class_content.add_child(loading)
 	SupabaseManager.fetch_leaderboard(SupabaseManager.section)
 
@@ -575,6 +575,7 @@ func _build_class_comparison() -> void:
 		empty.text = "No class data available yet."
 		empty.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 		empty.add_theme_color_override("font_color", Color("#4A7FA5"))
+		empty.add_theme_font_size_override("font_size", 16)
 		class_content.add_child(empty)
 		return
 
@@ -671,7 +672,7 @@ func _make_comparison_row(
 	var title_lbl := Label.new()
 	title_lbl.text = label
 	title_lbl.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-	title_lbl.add_theme_font_size_override("font_size", 13)
+	title_lbl.add_theme_font_size_override("font_size", 16)
 	title_lbl.add_theme_color_override("font_color", Color("#E8F4FD"))
 	title_row.add_child(title_lbl)
 
@@ -681,7 +682,7 @@ func _make_comparison_row(
 		var diff   = my_val - avg_val
 		vs_lbl.text = ("▲ +" if diff > 0 else "▼ ") + \
 					  str(snappedf(diff, 0.1)) + " vs avg"
-		vs_lbl.add_theme_font_size_override("font_size", 11)
+		vs_lbl.add_theme_font_size_override("font_size", 14)
 		vs_lbl.add_theme_color_override(
 			"font_color",
 			Color("#00FF88") if diff >= 0 else Color("#FF3366")
@@ -719,13 +720,13 @@ func _make_bar_row(
 	var lbl := Label.new()
 	lbl.text = label
 	lbl.custom_minimum_size = Vector2(80, 0)
-	lbl.add_theme_font_size_override("font_size", 11)
+	lbl.add_theme_font_size_override("font_size", 14)
 	lbl.add_theme_color_override("font_color", Color("#4A7FA5"))
 	row.add_child(lbl)
 
 	# Bar background
 	var bar_container := Control.new()
-	bar_container.custom_minimum_size   = Vector2(0, 16)
+	bar_container.custom_minimum_size   = Vector2(0, 20)
 	bar_container.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 
 	var ratio = clamp(value / max_val, 0.0, 1.0) if max_val > 0 else 0.0
@@ -747,7 +748,7 @@ func _make_bar_row(
 	var val_lbl := Label.new()
 	val_lbl.text = str(int(value))
 	val_lbl.custom_minimum_size = Vector2(30, 0)
-	val_lbl.add_theme_font_size_override("font_size", 11)
+	val_lbl.add_theme_font_size_override("font_size", 14)
 	val_lbl.add_theme_color_override("font_color", color)
 	val_lbl.horizontal_alignment = HORIZONTAL_ALIGNMENT_RIGHT
 	row.add_child(val_lbl)
@@ -770,7 +771,7 @@ func _make_mini_leaderboard() -> VBoxContainer:
 		var rank_lbl := Label.new()
 		rank_lbl.text = "#" + str(i + 1)
 		rank_lbl.custom_minimum_size = Vector2(32, 0)
-		rank_lbl.add_theme_font_size_override("font_size", 13)
+		rank_lbl.add_theme_font_size_override("font_size", 16)
 		rank_lbl.add_theme_color_override(
 			"font_color",
 			Color("#00FF88") if is_me else Color("#4A7FA5")
@@ -783,7 +784,7 @@ func _make_mini_leaderboard() -> VBoxContainer:
 		if is_me:
 			name_lbl.text += " ← You"
 		name_lbl.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-		name_lbl.add_theme_font_size_override("font_size", 13)
+		name_lbl.add_theme_font_size_override("font_size", 16)
 		name_lbl.add_theme_color_override(
 			"font_color",
 			Color("#00FF88") if is_me else Color("#E8F4FD")
@@ -793,7 +794,7 @@ func _make_mini_leaderboard() -> VBoxContainer:
 		# Score
 		var score_lbl := Label.new()
 		score_lbl.text = str(int(entry.get("score", 0))) + " pts"
-		score_lbl.add_theme_font_size_override("font_size", 13)
+		score_lbl.add_theme_font_size_override("font_size", 16)
 		score_lbl.add_theme_color_override(
 			"font_color",
 			Color("#00FF88") if is_me else Color("#FFB800")
@@ -808,7 +809,7 @@ func _make_mini_leaderboard() -> VBoxContainer:
 func _make_section_title(text: String) -> Label:
 	var lbl := Label.new()
 	lbl.text = text
-	lbl.add_theme_font_size_override("font_size", 12)
+	lbl.add_theme_font_size_override("font_size", 16 if _is_compact() else 17)
 	lbl.add_theme_color_override("font_color", Color("#00D4FF"))
 	return lbl
 
@@ -845,6 +846,7 @@ func _apply_styles() -> void:
 	back_style.corner_radius_bottom_right = 4
 	back_btn.add_theme_stylebox_override("normal", back_style)
 	back_btn.add_theme_color_override("font_color", Color("#00D4FF"))
+	back_btn.add_theme_font_size_override("font_size", 16 if _is_compact() else 17)
 
 func _style_active_tab(btn: Button, active: bool) -> void:
 	var style := StyleBoxFlat.new()
@@ -865,7 +867,7 @@ func _style_active_tab(btn: Button, active: bool) -> void:
 	btn.add_theme_stylebox_override("normal",  style)
 	btn.add_theme_stylebox_override("hover",   style)
 	btn.add_theme_stylebox_override("pressed", style)
-	btn.add_theme_font_size_override("font_size", 14)
+	btn.add_theme_font_size_override("font_size", 18)
 
 # ─── RESPONSIVE ────────────────────────────────────────
 func _apply_responsive_layout() -> void:
@@ -890,8 +892,8 @@ func _apply_responsive_layout() -> void:
 		content_area.add_theme_constant_override("margin_right", 20)
 		content_area.add_theme_constant_override("margin_top", 20)
 		content_area.add_theme_constant_override("margin_bottom", 20)
-		back_btn.custom_minimum_size = Vector2(70, 44)
-		title_label.add_theme_font_size_override("font_size", 14)
+		back_btn.custom_minimum_size = Vector2(85, 52)
+		title_label.add_theme_font_size_override("font_size", 20)
 	elif ScreenManager.is_tablet():
 		ScreenManager.apply_panel_padding(top_bar, 24)
 		tab_bar.offset_left = 24
@@ -900,13 +902,13 @@ func _apply_responsive_layout() -> void:
 		content_area.add_theme_constant_override("margin_right", 24)
 		content_area.add_theme_constant_override("margin_top", 24)
 		content_area.add_theme_constant_override("margin_bottom", 24)
-		back_btn.custom_minimum_size = Vector2(80, 44)
-		title_label.add_theme_font_size_override("font_size", 15)
+		back_btn.custom_minimum_size = Vector2(95, 52)
+		title_label.add_theme_font_size_override("font_size", 22)
 	else:
 		tab_bar.offset_left = 0
 		tab_bar.offset_right = 0
-		back_btn.custom_minimum_size = Vector2(90, 0)
-		title_label.add_theme_font_size_override("font_size", 16)
+		back_btn.custom_minimum_size = Vector2(110, 52)
+		title_label.add_theme_font_size_override("font_size", 24)
 
 # ─── TUTORIAL ──────────────────────────────────────────
 const TutorialOverlay = preload("res://scenes/core/TutorialOverlay.gd")
