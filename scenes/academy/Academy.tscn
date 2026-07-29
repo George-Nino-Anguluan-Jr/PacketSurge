@@ -34,12 +34,13 @@ layout_mode = 2
 theme_override_constants/separation = 16
 
 [node name="MenuBtn" type="Button" parent="TopBar/TopBarLayout" unique_id=40883983]
-custom_minimum_size = Vector2(44, 0)
+custom_minimum_size = Vector2(48, 48)
 layout_mode = 2
+theme_override_font_sizes/font_size = 20
 text = "☰"
 
 [node name="BackBtn" type="Button" parent="TopBar/TopBarLayout" unique_id=1304584775]
-custom_minimum_size = Vector2(90, 0)
+custom_minimum_size = Vector2(110, 52)
 layout_mode = 2
 text = "← BACK"
 
@@ -47,14 +48,15 @@ text = "← BACK"
 layout_mode = 2
 size_flags_horizontal = 3
 theme_override_colors/font_color = Color(0.9098039, 0.95686275, 0.99215686, 1)
+theme_override_font_sizes/font_size = 24
 text = "ACADEMY"
 
 [node name="ProgressLabel" type="Label" parent="TopBar/TopBarLayout" unique_id=674080664]
 layout_mode = 2
 size_flags_horizontal = 8
 theme_override_colors/font_color = Color(0.2901961, 0.49803922, 0.64705884, 1)
-theme_override_font_sizes/font_size = 13
-text = " 0 / 12 Mastered"
+theme_override_font_sizes/font_size = 16
+text = " 0 / 18 Mastered"
 
 [node name="ContentArea" type="HBoxContainer" parent="." unique_id=1722657898]
 layout_mode = 1
@@ -83,12 +85,12 @@ theme_override_constants/separation = 8
 [node name="SidebarTitle" type="Label" parent="ContentArea/Sidebar/ScrollContainer/SidebarLayout" unique_id=162875821]
 layout_mode = 2
 theme_override_colors/font_color = Color(0, 0.83137256, 1, 1)
-theme_override_font_sizes/font_size = 13
+theme_override_font_sizes/font_size = 16
 text = "TOPICS"
 horizontal_alignment = 1
 
 [node name="Separator" type="HSeparator" parent="ContentArea/Sidebar/ScrollContainer/SidebarLayout" unique_id=1740970850]
-layout_mode = 2
+
 
 [node name="PythonSection" type="VBoxContainer" parent="ContentArea/Sidebar/ScrollContainer/SidebarLayout" unique_id=939553201]
 layout_mode = 2
@@ -97,7 +99,7 @@ theme_override_constants/separation = 4
 [node name="SectionLabel" type="Label" parent="ContentArea/Sidebar/ScrollContainer/SidebarLayout/PythonSection" unique_id=2117417504]
 layout_mode = 2
 theme_override_colors/font_color = Color(0.2901961, 0.49803922, 0.64705884, 1)
-theme_override_font_sizes/font_size = 11
+theme_override_font_sizes/font_size = 14
 text = "PYTHON"
 
 [node name="TopicList_Python" type="VBoxContainer" parent="ContentArea/Sidebar/ScrollContainer/SidebarLayout/PythonSection" unique_id=2030128004]
@@ -109,7 +111,7 @@ layout_mode = 2
 [node name="SectionLabel2" type="Label" parent="ContentArea/Sidebar/ScrollContainer/SidebarLayout/DSSection" unique_id=1951976543]
 layout_mode = 2
 theme_override_colors/font_color = Color(0.2901961, 0.49803922, 0.64705884, 1)
-theme_override_font_sizes/font_size = 11
+theme_override_font_sizes/font_size = 14
 text = "DATA STRUCTURES"
 
 [node name="TopicList_DS" type="VBoxContainer" parent="ContentArea/Sidebar/ScrollContainer/SidebarLayout/DSSection" unique_id=1464377745]
@@ -121,7 +123,7 @@ layout_mode = 2
 [node name="SectionLabel3" type="Label" parent="ContentArea/Sidebar/ScrollContainer/SidebarLayout/SortSection"]
 layout_mode = 2
 theme_override_colors/font_color = Color(0.2901961, 0.49803922, 0.64705884, 1)
-theme_override_font_sizes/font_size = 11
+theme_override_font_sizes/font_size = 14
 text = "SORTING ALGORITHMS"
 
 [node name="TopicList_Sort" type="VBoxContainer" parent="ContentArea/Sidebar/ScrollContainer/SidebarLayout/SortSection"]
@@ -133,7 +135,7 @@ layout_mode = 2
 [node name="SectionLabel4" type="Label" parent="ContentArea/Sidebar/ScrollContainer/SidebarLayout/SearchSection"]
 layout_mode = 2
 theme_override_colors/font_color = Color(0.2901961, 0.49803922, 0.64705884, 1)
-theme_override_font_sizes/font_size = 11
+theme_override_font_sizes/font_size = 14
 text = "SEARCHING ALGORITHMS"
 
 [node name="TopicList_Search" type="VBoxContainer" parent="ContentArea/Sidebar/ScrollContainer/SidebarLayout/SearchSection"]
@@ -153,13 +155,13 @@ layout_mode = 2
 [node name="LessonTitle" type="Label" parent="ContentArea/LessonArea/LessonContainer/LessonHeader" unique_id=877561718]
 layout_mode = 2
 theme_override_colors/font_color = Color(0.9098039, 0.95686275, 0.99215686, 1)
-theme_override_font_sizes/font_size = 28
+theme_override_font_sizes/font_size = 32
 text = "Select a topic"
 
 [node name="LessonCategory" type="Label" parent="ContentArea/LessonArea/LessonContainer/LessonHeader" unique_id=1823317527]
 layout_mode = 2
 theme_override_colors/font_color = Color(0.2901961, 0.49803922, 0.64705884, 1)
-theme_override_font_sizes/font_size = 13
+theme_override_font_sizes/font_size = 16
 text = "Python Fundamentals"
 
 [node name="StepIndicator" type="HBoxContainer" parent="ContentArea/LessonArea/LessonContainer" unique_id=345691908]
@@ -169,10 +171,10 @@ theme_override_constants/separation = 8
 [node name="StepContainer" type="MarginContainer" parent="ContentArea/LessonArea/LessonContainer" unique_id=1668782549]
 layout_mode = 2
 size_flags_vertical = 3
-theme_override_constants/margin_left = 16
-theme_override_constants/margin_top = 8
+theme_override_constants/margin_left = 20
+theme_override_constants/margin_top = 12
 theme_override_constants/margin_right = 0
-theme_override_constants/margin_bottom = 8
+theme_override_constants/margin_bottom = 12
 
 [node name="ScrollArea" type="ScrollContainer" parent="ContentArea/LessonArea/LessonContainer/StepContainer" unique_id=1066488883]
 layout_mode = 2
@@ -197,7 +199,7 @@ layout_mode = 2
 theme_override_constants/separation = 12
 
 [node name="HintButton" type="Button" parent="BottomBar/BottomLayout" unique_id=817490083]
-custom_minimum_size = Vector2(90, 0)
+custom_minimum_size = Vector2(100, 52)
 layout_mode = 2
 text = "💡 Hint"
 
@@ -206,12 +208,12 @@ layout_mode = 2
 size_flags_horizontal = 3
 
 [node name="BackStepBtn" type="Button" parent="BottomBar/BottomLayout" unique_id=854579624]
-custom_minimum_size = Vector2(110, 0)
+custom_minimum_size = Vector2(120, 52)
 layout_mode = 2
 text = " ← Previous"
 
 [node name="NextStepBtn" type="Button" parent="BottomBar/BottomLayout" unique_id=2047515145]
-custom_minimum_size = Vector2(110, 0)
+custom_minimum_size = Vector2(120, 52)
 layout_mode = 2
 text = "Next →"
 

@@ -42,7 +42,7 @@ func _ready() -> void:
 func _build_info_button() -> void:
 	_info_btn = Label.new()
 	_info_btn.text = "?"
-	_info_btn.add_theme_font_size_override("font_size", 16)
+	_info_btn.add_theme_font_size_override("font_size", 18)
 	_info_btn.add_theme_color_override("font_color", Color("#4A7FA5"))
 	_info_btn.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	_info_btn.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
@@ -54,7 +54,7 @@ func _build_info_button() -> void:
 func _build_new_badge() -> void:
 	_new_badge = Label.new()
 	_new_badge.text = "NEW!"
-	_new_badge.add_theme_font_size_override("font_size", 9)
+	_new_badge.add_theme_font_size_override("font_size", 11)
 	_new_badge.add_theme_color_override("font_color", Color("#FFD700"))
 	_new_badge.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	_new_badge.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
