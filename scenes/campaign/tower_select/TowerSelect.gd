@@ -79,14 +79,14 @@ func _build_left_panel() -> void:
 
 	var concept_title := Label.new()
 	concept_title.text = "📚 " + level_config.get("concept", "")
-	concept_title.add_theme_font_size_override("font_size", 14)
+	concept_title.add_theme_font_size_override("font_size", 18)
 	concept_title.add_theme_color_override("font_color", Color("#00D4FF"))
 	concept_content.add_child(concept_title)
 
 	var concept_desc := Label.new()
 	concept_desc.text = level_config.get("concept_desc", "")
 	concept_desc.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
-	concept_desc.add_theme_font_size_override("font_size", 12)
+	concept_desc.add_theme_font_size_override("font_size", 15)
 	concept_desc.add_theme_color_override("font_color", Color("#E8F4FD"))
 	concept_content.add_child(concept_desc)
 
@@ -96,14 +96,14 @@ func _build_left_panel() -> void:
 
 	var tip_title := Label.new()
 	tip_title.text = "⚠️ Enemy Warning"
-	tip_title.add_theme_font_size_override("font_size", 13)
+	tip_title.add_theme_font_size_override("font_size", 16)
 	tip_title.add_theme_color_override("font_color", Color("#FFB800"))
 	enemy_tip_content.add_child(tip_title)
 
 	var tip_desc := Label.new()
 	tip_desc.text = level_config.get("enemy_tip", "")
 	tip_desc.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
-	tip_desc.add_theme_font_size_override("font_size", 12)
+	tip_desc.add_theme_font_size_override("font_size", 15)
 	tip_desc.add_theme_color_override("font_color", Color("#E8F4FD"))
 	enemy_tip_content.add_child(tip_desc)
 
@@ -137,14 +137,14 @@ func _add_stat(
 
 	var val := Label.new()
 	val.text = value
-	val.add_theme_font_size_override("font_size", 20)
+	val.add_theme_font_size_override("font_size", 22)
 	val.add_theme_color_override("font_color", color)
 	val.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	col.add_child(val)
 
 	var lbl := Label.new()
 	lbl.text = label
-	lbl.add_theme_font_size_override("font_size", 10)
+	lbl.add_theme_font_size_override("font_size", 12)
 	lbl.add_theme_color_override("font_color", Color("#4A7FA5"))
 	lbl.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	col.add_child(lbl)
@@ -418,6 +418,7 @@ func _apply_styles() -> void:
 	back_style.corner_radius_bottom_right = 4
 	back_btn.add_theme_stylebox_override("normal", back_style)
 	back_btn.add_theme_color_override("font_color", Color("#00D4FF"))
+	back_btn.add_theme_font_size_override("font_size", 16)
 
 	# Concept panel
 	var concept_style := StyleBoxFlat.new()
@@ -476,7 +477,7 @@ func _apply_styles() -> void:
 	start_style.corner_radius_bottom_right = 6
 	start_btn.add_theme_stylebox_override("normal", start_style)
 	start_btn.add_theme_color_override("font_color", Color("#050D1A"))
-	start_btn.add_theme_font_size_override("font_size", 16)
+	start_btn.add_theme_font_size_override("font_size", 18)
 
 # ─── ENEMY 3D PREVIEW ROW ──────────────────────────────
 # Builds an HBoxContainer that hosts a live, frozen 3D model of
@@ -526,6 +527,10 @@ func _make_enemy_preview_cell(enemy_id: String, tint: Color, intro: Dictionary) 
 	var container := SubViewportContainer.new()
 	container.custom_minimum_size = Vector2(72, 72)
 	container.stretch = true
+	container.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	var mat := CanvasItemMaterial.new()
+	mat.blend_mode = CanvasItemMaterial.BLEND_MODE_MIX
+	container.material = mat
 	container.add_child(sub_vp)
 	frame.add_child(container)
 
@@ -550,7 +555,7 @@ func _make_enemy_preview_cell(enemy_id: String, tint: Color, intro: Dictionary) 
 	var lbl := Label.new()
 	lbl.text = intro.get("title", enemy_id).replace(" Packet", "").replace(" Tower", "")
 	lbl.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
-	lbl.add_theme_font_size_override("font_size", 9)
+	lbl.add_theme_font_size_override("font_size", 11)
 	lbl.add_theme_color_override("font_color", tint)
 	lbl.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 	cell.add_child(lbl)
@@ -575,11 +580,11 @@ func _apply_responsive_layout() -> void:
 		right_margin.add_theme_constant_override("margin_top", 20)
 		right_margin.add_theme_constant_override("margin_bottom", 20)
 		available_grid.columns = 2
-		title_label.add_theme_font_size_override("font_size", 14)
-		slot_label.add_theme_font_size_override("font_size", 11)
-		level_name_label.add_theme_font_size_override("font_size", 14)
-		back_btn.custom_minimum_size = Vector2(70, 44)
-		start_btn.custom_minimum_size = Vector2(0, 48)
+		title_label.add_theme_font_size_override("font_size", 20)
+		slot_label.add_theme_font_size_override("font_size", 14)
+		level_name_label.add_theme_font_size_override("font_size", 18)
+		back_btn.custom_minimum_size = Vector2(85, 52)
+		start_btn.custom_minimum_size = Vector2(0, 52)
 	elif ScreenManager.is_tablet():
 		left_margin.visible = true
 		left_margin.custom_minimum_size = Vector2(260, 0)
@@ -593,10 +598,10 @@ func _apply_responsive_layout() -> void:
 		right_margin.add_theme_constant_override("margin_top", 24)
 		right_margin.add_theme_constant_override("margin_bottom", 24)
 		available_grid.columns = 3
-		title_label.add_theme_font_size_override("font_size", 16)
-		slot_label.add_theme_font_size_override("font_size", 12)
-		level_name_label.add_theme_font_size_override("font_size", 18)
-		back_btn.custom_minimum_size = Vector2(80, 44)
+		title_label.add_theme_font_size_override("font_size", 22)
+		slot_label.add_theme_font_size_override("font_size", 15)
+		level_name_label.add_theme_font_size_override("font_size", 20)
+		back_btn.custom_minimum_size = Vector2(95, 52)
 	else:
 		left_margin.visible = true
 		left_margin.custom_minimum_size = Vector2(380, 0)
@@ -610,10 +615,10 @@ func _apply_responsive_layout() -> void:
 		right_margin.add_theme_constant_override("margin_top", 32)
 		right_margin.add_theme_constant_override("margin_bottom", 32)
 		available_grid.columns = 5
-		title_label.add_theme_font_size_override("font_size", 18)
-		slot_label.add_theme_font_size_override("font_size", 13)
+		title_label.add_theme_font_size_override("font_size", 24)
+		slot_label.add_theme_font_size_override("font_size", 16)
 		level_name_label.add_theme_font_size_override("font_size", 22)
-		back_btn.custom_minimum_size = Vector2(90, 0)
+		back_btn.custom_minimum_size = Vector2(110, 52)
 
 func _on_size_changed() -> void:
 	var current = "mobile" if ScreenManager.is_mobile() else "tablet" if ScreenManager.is_tablet() else "desktop"
