@@ -1,0 +1,18 @@
+[gd_resource type="Resource" script_class="TowerData" format=3]
+
+[ext_resource type="Script" path="res://scripts/data/TowerData.gd" id="1_vm3ak"]
+
+[resource]
+script = ExtResource("1_vm3ak")
+tower_id = "tower_quick"
+tower_name = "Quick Tower"
+description = "Splits shot hits 2 enemies."
+data_structure = "Quick Sort"
+ram_cost = 130
+damage = 22.0
+attack_speed = 1.8
+attack_range = 155.0
+time_complexity = "O(n log n)"
+ability_name = "Quick Split"
+color = Color(0.9137255, 0.11764706, 0.3882353, 1)
+icon_text = "ZAP"

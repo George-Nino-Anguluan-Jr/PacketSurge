@@ -1,0 +1,18 @@
+[gd_resource type="Resource" script_class="TowerData" format=3]
+
+[ext_resource type="Script" path="res://scripts/data/TowerData.gd" id="1_t5mx3"]
+
+[resource]
+script = ExtResource("1_t5mx3")
+tower_id = "tower_bubble"
+tower_name = "Bubble Tower"
+description = "AoE pulse - damages every enemy in range."
+data_structure = "Bubble Sort"
+ram_cost = 90
+damage = 16.0
+attack_speed = 1.5
+attack_range = 130.0
+time_complexity = "O(n2)"
+ability_name = "AoE Pulse"
+color = Color(1, 0.72156864, 0, 1)
+icon_text = "^^"

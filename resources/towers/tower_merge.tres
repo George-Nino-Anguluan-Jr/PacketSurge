@@ -1,0 +1,18 @@
+[gd_resource type="Resource" script_class="TowerData" format=3]
+
+[ext_resource type="Script" path="res://scripts/data/TowerData.gd" id="1_02k7q"]
+
+[resource]
+script = ExtResource("1_02k7q")
+tower_id = "tower_merge"
+tower_name = "Merge Tower"
+description = "Guaranteed AoE damage."
+data_structure = "Merge Sort"
+ram_cost = 140
+damage = 20.0
+attack_speed = 1.4
+attack_range = 160.0
+time_complexity = "O(n log n)"
+ability_name = "Merge Blast"
+color = Color(0.24705882, 0.31764707, 0.70980394, 1)
+icon_text = "+"

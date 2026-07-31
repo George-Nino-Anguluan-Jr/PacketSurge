@@ -1,0 +1,18 @@
+[gd_resource type="Resource" script_class="TowerData" format=3]
+
+[ext_resource type="Script" path="res://scripts/data/TowerData.gd" id="1_tpn42"]
+
+[resource]
+script = ExtResource("1_tpn42")
+tower_id = "tower_counting"
+tower_name = "Count Tower"
+description = "Stronger vs groups."
+data_structure = "Counting Sort"
+ram_cost = 110
+damage = 14.0
+attack_speed = 2.2
+attack_range = 130.0
+time_complexity = "O(n+k)"
+ability_name = "Count Barrage"
+color = Color(0, 0.5882353, 0.53333336, 1)
+icon_text = "#"

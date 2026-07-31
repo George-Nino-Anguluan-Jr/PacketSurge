@@ -1,0 +1,13 @@
+[gd_resource type="Resource" script_class="EnemyData" format=3]
+
+[ext_resource type="Script" path="res://scripts/data/EnemyData.gd" id="1_k6aro"]
+
+[resource]
+script = ExtResource("1_k6aro")
+enemy_id = "queue_jumper"
+title = "Queue Jumper"
+tagline = "Speeds up as enemies ahead of it die."
+icon = "▶▶"
+special = "Speed scales with the number of enemies ahead — near the front = fast."
+lesson = "Queue FIFO — handle the oldest arrival first."
+color = Color(1, 0.41960785, 0.20784314, 1)

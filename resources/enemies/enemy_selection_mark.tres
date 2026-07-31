@@ -1,0 +1,14 @@
+[gd_resource type="Resource" script_class="EnemyData" format=3]
+
+[ext_resource type="Script" path="res://scripts/data/EnemyData.gd" id="1_ov1jk"]
+
+[resource]
+script = ExtResource("1_ov1jk")
+enemy_id = "selection_mark"
+title = "Selection Mark"
+tagline = "Nearly invulnerable unless it's the lowest-HP enemy on screen."
+icon = "◎"
+threat = "High"
+special = "75% damage resistance unless it has the lowest HP in range."
+lesson = "Selection Sort finds the minimum — Selection Tower auto-targets the weakest."
+color = Color(0.90588236, 0.29803923, 0.23529412, 1)

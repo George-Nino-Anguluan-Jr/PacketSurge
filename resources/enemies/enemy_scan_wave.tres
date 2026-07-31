@@ -1,0 +1,13 @@
+[gd_resource type="Resource" script_class="EnemyData" format=3]
+
+[ext_resource type="Script" path="res://scripts/data/EnemyData.gd" id="1_oig3r"]
+
+[resource]
+script = ExtResource("1_oig3r")
+enemy_id = "scan_wave"
+title = "Scan Wave"
+tagline = "Only vulnerable at the extreme ends of its oscillation."
+icon = "→?"
+special = "Oscillates while moving. 90% damage resistance between scan extremes."
+lesson = "Linear Search scans every element — Linear Tower's wide sweep catches it."
+color = Color(0.3764706, 0.49019608, 0.54509807, 1)

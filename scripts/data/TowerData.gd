@@ -19,6 +19,9 @@ extends Resource
 @export var strengths: Array[String] = []
 @export var weaknesses: Array[String] = []
 
+# Ability
+@export var ability_name: String     = ""
+
 # Visual
 @export var color: Color             = Color("#00D4FF")
 @export var icon_text: String        = "[ ]"

@@ -1,0 +1,14 @@
+[gd_resource type="Resource" script_class="EnemyData" format=3]
+
+[ext_resource type="Script" path="res://scripts/data/EnemyData.gd" id="1_liwot"]
+
+[resource]
+script = ExtResource("1_liwot")
+enemy_id = "pivot_splitter"
+title = "Pivot Splitter"
+tagline = "Boss — splits into 2 smaller enemies on death."
+icon = "⚡"
+threat = "Extreme"
+special = "Massive HP boss. On death, splits into 2 weaker basic packets."
+lesson = "Quick Sort pivot partitioning — handle the split halves."
+color = Color(0.90588236, 0.29803923, 0.23529412, 1)

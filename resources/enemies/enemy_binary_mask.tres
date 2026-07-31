@@ -1,0 +1,14 @@
+[gd_resource type="Resource" script_class="EnemyData" format=3]
+
+[ext_resource type="Script" path="res://scripts/data/EnemyData.gd" id="1_x2b53"]
+
+[resource]
+script = ExtResource("1_x2b53")
+enemy_id = "binary_mask"
+title = "Binary Mask"
+tagline = "Alternates vulnerable half every few seconds."
+icon = "½"
+threat = "Extreme"
+special = "Only the highlighted half takes full damage. Switches every 2-3 seconds."
+lesson = "Binary Search halves the search space — Binary Tower's precision hits the right side."
+color = Color(0.54509807, 0.7647059, 0.2901961, 1)

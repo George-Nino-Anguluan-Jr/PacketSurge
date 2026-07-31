@@ -1,0 +1,17 @@
+[gd_resource type="Resource" script_class="TowerData" format=3]
+
+[ext_resource type="Script" path="res://scripts/data/TowerData.gd" id="1_7a4bx"]
+
+[resource]
+script = ExtResource("1_7a4bx")
+tower_id = "tower_selection"
+tower_name = "Selection Tower"
+description = "Always finishes off the weakest enemy."
+data_structure = "Selection Sort"
+ram_cost = 110
+damage = 24.0
+attack_range = 170.0
+time_complexity = "O(n2)"
+ability_name = "Find Weakest"
+color = Color(0.90588236, 0.29803923, 0.23529412, 1)
+icon_text = "->v"

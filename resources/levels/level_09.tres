@@ -1,0 +1,20 @@
+[gd_resource type="Resource" script_class="LevelData" format=3]
+
+[ext_resource type="Script" path="res://scripts/data/LevelData.gd" id="1_8uyek"]
+
+[resource]
+script = ExtResource("1_8uyek")
+level_number = 9
+level_name = "Merge Protocol"
+description = "Merge Sort splits arrays in half then merges sorted halves. Your Merge Tower does guaranteed AoE damage — O(n log n) means no enemy escapes."
+data_structure = "Merge Sort"
+concept_desc = "Merge Sort splits arrays in half then merges sorted halves. Your Merge Tower does guaranteed AoE damage — O(n log n) means no enemy escapes."
+enemy_tip = "Pivot Splitter boss divides in two on death. Quick Tower's split shot counters the split!"
+starting_ram = 275
+wave_count = 6
+tower_slots = 5
+required_towers = Array[String](["tower_merge"])
+enemy_types = Array[String](["basic_packet", "pivot_splitter", "merge_twin"])
+available_towers = Array[String](["tower_array", "tower_stack", "tower_queue", "tower_linked_list", "tower_bubble", "tower_selection", "tower_insertion", "tower_quick", "tower_merge"])
+path_waypoints = Array[Vector2]([Vector2(0, 448), Vector2(384, 448), Vector2(384, 64), Vector2(768, 64), Vector2(768, 320), Vector2(576, 320), Vector2(576, 448), Vector2(1088, 448)])
+tower_spots = Array[Vector2i]([Vector2i(2, 5), Vector2i(4, 5), Vector2i(2, 1), Vector2i(5, 1), Vector2i(9, 1), Vector2i(11, 1), Vector2i(10, 5), Vector2i(12, 5), Vector2i(7, 4), Vector2i(16, 7)])

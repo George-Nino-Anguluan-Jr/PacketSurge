@@ -1,11 +1,14 @@
-extends Node
+# EnemyData.gd
+class_name EnemyData
+extends Resource
 
+@export var enemy_id: String    = ""
+@export var title: String       = "Enemy"
+@export var tagline: String     = ""
+@export var icon: String        = "[ ]"
+@export var threat: String      = "Medium"
+@export_multiline var special: String = ""
+@export_multiline var lesson: String  = ""
 
-# Called when the node enters the scene tree for the first time.
-func _ready() -> void:
-	pass # Replace with function body.
-
-
-# Called every frame. 'delta' is the elapsed time since the previous frame.
-func _process(delta: float) -> void:
-	pass
+# Visual identity
+@export var color: Color        = Color("#FF3366")

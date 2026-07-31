@@ -1,0 +1,20 @@
+[gd_resource type="Resource" script_class="LevelData" format=3]
+
+[ext_resource type="Script" path="res://scripts/data/LevelData.gd" id="1_nds82"]
+
+[resource]
+script = ExtResource("1_nds82")
+level_number = 4
+level_name = "Linked Assault"
+description = "A Linked List connects nodes with pointers. Your Linked Tower chains damage — hitting one enemy then jumping to the next nearby one."
+data_structure = "Linked Lists"
+concept_desc = "A Linked List connects nodes with pointers. Your Linked Tower chains damage — hitting one enemy then jumping to the next nearby one."
+enemy_tip = "Queue Jumper packets speed up when they reach the front. Queue Tower's FIFO targeting counters them."
+starting_ram = 200
+wave_count = 5
+tower_slots = 3
+required_towers = Array[String](["tower_linked_list"])
+enemy_types = Array[String](["basic_packet", "queue_jumper", "linked_drain"])
+available_towers = Array[String](["tower_array", "tower_stack", "tower_queue", "tower_linked_list"])
+path_waypoints = Array[Vector2]([Vector2(0, 192), Vector2(192, 192), Vector2(192, 64), Vector2(512, 64), Vector2(512, 384), Vector2(832, 384), Vector2(832, 128), Vector2(1088, 128)])
+tower_spots = Array[Vector2i]([Vector2i(1, 3), Vector2i(3, 3), Vector2i(4, 0), Vector2i(6, 0), Vector2i(4, 5), Vector2i(6, 5), Vector2i(10, 5), Vector2i(12, 5), Vector2i(14, 1), Vector2i(16, 1)])

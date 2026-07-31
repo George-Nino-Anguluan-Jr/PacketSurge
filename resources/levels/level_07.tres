@@ -1,0 +1,20 @@
+[gd_resource type="Resource" script_class="LevelData" format=3]
+
+[ext_resource type="Script" path="res://scripts/data/LevelData.gd" id="1_nyewv"]
+
+[resource]
+script = ExtResource("1_nyewv")
+level_number = 7
+level_name = "Stack Defense"
+description = "Insertion Sort inserts each element into its correct position one at a time. Your Insertion Tower applies stacking damage-over-time — inserting damage repeatedly."
+data_structure = "Insertion Sort"
+concept_desc = "Insertion Sort inserts each element into its correct position one at a time. Your Insertion Tower applies stacking damage-over-time — inserting damage repeatedly."
+enemy_tip = "Selection Mark packets are nearly invulnerable unless they're the lowest HP. Selection Tower auto-targets them!"
+starting_ram = 250
+wave_count = 6
+tower_slots = 4
+required_towers = Array[String](["tower_insertion"])
+enemy_types = Array[String](["basic_packet", "selection_mark", "insertion_stack"])
+available_towers = Array[String](["tower_array", "tower_stack", "tower_queue", "tower_linked_list", "tower_bubble", "tower_selection", "tower_insertion"])
+path_waypoints = Array[Vector2]([Vector2(0, 320), Vector2(192, 320), Vector2(192, 64), Vector2(448, 64), Vector2(448, 448), Vector2(704, 448), Vector2(704, 64), Vector2(960, 64), Vector2(960, 480), Vector2(1088, 480)])
+tower_spots = Array[Vector2i]([Vector2i(1, 5), Vector2i(3, 5), Vector2i(1, 1), Vector2i(4, 1), Vector2i(4, 7), Vector2i(6, 7), Vector2i(8, 6), Vector2i(10, 6), Vector2i(12, 1), Vector2i(15, 1), Vector2i(15, 7), Vector2i(17, 7)])

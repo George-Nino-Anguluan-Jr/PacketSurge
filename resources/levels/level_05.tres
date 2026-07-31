@@ -1,0 +1,20 @@
+[gd_resource type="Resource" script_class="LevelData" format=3]
+
+[ext_resource type="Script" path="res://scripts/data/LevelData.gd" id="1_5eu8s"]
+
+[resource]
+script = ExtResource("1_5eu8s")
+level_number = 5
+level_name = "Bubble Protocol"
+description = "Bubble Sort compares adjacent elements repeatedly — O(n²). Your Bubble Tower hits ALL enemies in range simultaneously, like comparing every pair."
+data_structure = "Bubble Sort"
+concept_desc = "Bubble Sort compares adjacent elements repeatedly — O(n²). Your Bubble Tower hits ALL enemies in range simultaneously, like comparing every pair."
+enemy_tip = "Linked Drain packets share damage with a partner. Hash Tower's random bursts can catch both quickly!"
+starting_ram = 225
+wave_count = 5
+tower_slots = 4
+required_towers = Array[String](["tower_bubble"])
+enemy_types = Array[String](["basic_packet", "linked_drain", "bubble_shield"])
+available_towers = Array[String](["tower_array", "tower_stack", "tower_queue", "tower_linked_list", "tower_bubble"])
+path_waypoints = Array[Vector2]([Vector2(0, 448), Vector2(256, 448), Vector2(256, 64), Vector2(640, 64), Vector2(640, 448), Vector2(896, 448), Vector2(896, 128), Vector2(1088, 128)])
+tower_spots = Array[Vector2i]([Vector2i(1, 5), Vector2i(3, 5), Vector2i(1, 7), Vector2i(4, 7), Vector2i(6, 0), Vector2i(8, 0), Vector2i(6, 7), Vector2i(9, 6), Vector2i(13, 5), Vector2i(15, 1)])

@@ -1,0 +1,14 @@
+[gd_resource type="Resource" script_class="EnemyData" format=3]
+
+[ext_resource type="Script" path="res://scripts/data/EnemyData.gd" id="1_ibvj6"]
+
+[resource]
+script = ExtResource("1_ibvj6")
+enemy_id = "merge_twin"
+title = "Merge Twin"
+tagline = "Pair that absorbs its partner's HP on death."
+icon = "⊕"
+threat = "High"
+special = "Spawns as a pair. If one dies, the other gains bonus HP & speed."
+lesson = "Merge Sort splits then merges — Merge Tower's AoE kills both evenly."
+color = Color(0.24705882, 0.31764707, 0.70980394, 1)

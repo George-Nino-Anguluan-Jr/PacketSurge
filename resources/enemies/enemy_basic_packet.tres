@@ -1,0 +1,12 @@
+[gd_resource type="Resource" script_class="EnemyData" format=3]
+
+[ext_resource type="Script" path="res://scripts/data/EnemyData.gd" id="1_ca77q"]
+
+[resource]
+script = ExtResource("1_ca77q")
+enemy_id = "basic_packet"
+title = "Basic Packet"
+tagline = "The standard network packet — no special abilities."
+threat = "Low"
+special = "No special ability — pure data, the most common enemy in early waves."
+lesson = "Foundational — every campaign starts with these."

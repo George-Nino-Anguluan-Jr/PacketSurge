@@ -1,0 +1,14 @@
+[gd_resource type="Resource" script_class="EnemyData" format=3]
+
+[ext_resource type="Script" path="res://scripts/data/EnemyData.gd" id="1_5ms66"]
+
+[resource]
+script = ExtResource("1_5ms66")
+enemy_id = "overflow_packet"
+title = "Overflow Packet"
+tagline = "Grows stronger as enemies behind it die. Kill front-to-back."
+icon = "↑↓"
+threat = "High"
+special = "Gains HP when enemies behind it die. Must be killed LIFO."
+lesson = "Stack LIFO — last in, first out targeting."
+color = Color(0.5568628, 0.26666668, 0.6784314, 1)

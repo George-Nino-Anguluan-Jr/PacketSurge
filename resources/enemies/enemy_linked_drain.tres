@@ -1,0 +1,13 @@
+[gd_resource type="Resource" script_class="EnemyData" format=3]
+
+[ext_resource type="Script" path="res://scripts/data/EnemyData.gd" id="1_6tgy8"]
+
+[resource]
+script = ExtResource("1_6tgy8")
+enemy_id = "linked_drain"
+title = "Linked Drain"
+tagline = "Linked pair — damage is split between partners."
+icon = "→→"
+special = "Spawns as a linked pair connected by a line. 50/50 damage split with partner."
+lesson = "Linked Lists connect nodes — follow the pointers to damage both at once."
+color = Color(0.18039216, 0.8, 0.44313726, 1)
