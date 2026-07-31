@@ -115,9 +115,6 @@ func _collect_enemies() -> Array:
 	var result: Array = []
 	for enemy_id in EnemyIntroData.all_ids():
 		var intro = EnemyIntroData.get_intro(enemy_id)
-		# Real runtime stats come from Enemy.gd defaults; we expose
-		# a small health/speed/reward from the intro registry for display.
-		var defaults = _enemy_default_stats(enemy_id)
 		var edef = GameManager.ENEMY_DEFINITIONS.get(enemy_id, {})
 		result.append({
 			"id":          enemy_id,
@@ -129,33 +126,11 @@ func _collect_enemies() -> Array:
 			"threat":      intro.get("threat", "Medium"),
 			"color":       edef.get("color", C_RED),
 			"icon":        intro.get("icon", ""),
-			"health":      defaults.health,
-			"speed":       defaults.speed,
-			"reward":      defaults.reward,
+			"health":      float(edef.get("max_health", 100.0)),
+			"speed":       float(edef.get("speed", 80.0)),
+			"reward":      int(edef.get("ram_reward", 10)),
 		})
 	return result
-
-# Mirror of the canonical stat values set in Enemy.gd._setup_type().
-# We keep them here for display only — Enemy.gd is the source of truth
-# for actual gameplay values.
-func _enemy_default_stats(enemy_id: String) -> Dictionary:
-	var presets: Dictionary = {
-		"basic_packet":    {"health": 100.0, "speed": 80.0,  "reward": 10},
-		"indexed_packet":  {"health": 100.0, "speed": 72.0,  "reward": 15},
-		"overflow_packet": {"health": 300.0, "speed": 40.0,  "reward": 30},
-		"queue_jumper":    {"health":  80.0, "speed": 40.0,  "reward": 15},
-		"linked_drain":    {"health": 100.0, "speed": 80.0,  "reward": 20},
-		"bubble_shield":   {"health": 100.0, "speed": 96.0,  "reward": 25},
-		"pivot_splitter":  {"health": 500.0, "speed": 40.0,  "reward": 100},
-		"selection_mark":  {"health": 200.0, "speed": 80.0,  "reward": 20},
-		"insertion_stack": {"health": 150.0, "speed": 64.0,  "reward": 25},
-		"merge_twin":      {"health": 150.0, "speed": 80.0,  "reward": 25},
-		"count_meter":     {"health": 200.0, "speed": 80.0,  "reward": 20},
-		"radix_digit":     {"health": 250.0, "speed": 56.0,  "reward": 35},
-		"scan_wave":       {"health": 150.0, "speed": 72.0,  "reward": 20},
-		"binary_mask":     {"health": 200.0, "speed": 64.0,  "reward": 40},
-	}
-	return presets.get(enemy_id, {"health": 100.0, "speed": 80.0, "reward": 10})
 
 # ─── BUILD TOWERS TAB ──────────────────────────────────
 func _build_towers_tab() -> void:

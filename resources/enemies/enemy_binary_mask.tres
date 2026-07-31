@@ -5,6 +5,10 @@
 [resource]
 script = ExtResource("1_x2b53")
 enemy_id = "binary_mask"
+max_health = 100.0
+speed = 64.0
+ram_reward = 40
+is_boss = false
 title = "Binary Mask"
 tagline = "Alternates vulnerable half every few seconds."
 icon = "½"

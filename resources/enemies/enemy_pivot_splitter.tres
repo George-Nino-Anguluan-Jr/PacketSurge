@@ -5,6 +5,10 @@
 [resource]
 script = ExtResource("1_liwot")
 enemy_id = "pivot_splitter"
+max_health = 500.0
+speed = 40.0
+ram_reward = 100
+is_boss = true
 title = "Pivot Splitter"
 tagline = "Boss — splits into 2 smaller enemies on death."
 icon = "⚡"

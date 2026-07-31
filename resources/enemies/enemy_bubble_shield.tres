@@ -5,6 +5,10 @@
 [resource]
 script = ExtResource("1_viktu")
 enemy_id = "bubble_shield"
+max_health = 100.0
+speed = 96.0
+ram_reward = 25
+is_boss = false
 title = "Bubble Shield"
 tagline = "Shield absorbs the first 3 hits. Pop it first."
 icon = "⭕"

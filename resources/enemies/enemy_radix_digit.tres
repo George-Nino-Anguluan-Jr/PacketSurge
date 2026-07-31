@@ -5,6 +5,10 @@
 [resource]
 script = ExtResource("1_m1vw1")
 enemy_id = "radix_digit"
+max_health = 250.0
+speed = 56.0
+ram_reward = 35
+is_boss = false
 title = "Radix Digit"
 tagline = "Three segmented HP bars — must be depleted in order."
 icon = "1→9"

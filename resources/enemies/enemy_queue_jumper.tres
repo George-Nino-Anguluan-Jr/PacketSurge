@@ -5,6 +5,10 @@
 [resource]
 script = ExtResource("1_k6aro")
 enemy_id = "queue_jumper"
+max_health = 100.0
+speed = 40.0
+ram_reward = 15
+is_boss = false
 title = "Queue Jumper"
 tagline = "Speeds up as enemies ahead of it die."
 icon = "▶▶"

@@ -68,6 +68,25 @@ func _ready() -> void:
 			print("[validate] lesson ", lesson_id, " unlocks missing level: ", lvl)
 			all_ok = false
 
+	# Every enemy must expose combat stats and at least one boss flag
+	var boss_count := 0
+	for enemy_id in edefs:
+		var ed: Dictionary = edefs[enemy_id]
+		if float(ed.get("max_health", 0.0)) <= 0.0:
+			print("[validate] enemy missing positive max_health: ", enemy_id)
+			all_ok = false
+		if float(ed.get("speed", 0.0)) <= 0.0:
+			print("[validate] enemy missing positive speed: ", enemy_id)
+			all_ok = false
+		if int(ed.get("ram_reward", 0)) < 0:
+			print("[validate] enemy with negative ram_reward: ", enemy_id)
+			all_ok = false
+		if ed.get("is_boss", false):
+			boss_count += 1
+	if boss_count == 0:
+		print("[validate] no enemy flagged as is_boss (WaveManager boss wave breaks)")
+		all_ok = false
+
 	# Spot checks on known content
 	if tdefs.get("tower_array", {}).get("tower_name", "") != "Array Tower": all_ok = false
 	if not level_nums.is_empty() and ldefs.get(level_nums[0], {}).get("concept", "") != "Arrays": all_ok = false
@@ -77,6 +96,8 @@ func _ready() -> void:
 		if wps.is_empty() or not (wps[0] is Vector2): all_ok = false
 	if not level_nums.is_empty() and not (ldefs.get(level_nums[0], {}).get("tower_spots", []) is Array): all_ok = false
 	if edefs.get("basic_packet", {}).get("color", Color.BLACK) != Color("#FF3366"): all_ok = false
+	if float(edefs.get("overflow_packet", {}).get("max_health", 0.0)) != 300.0: all_ok = false
+	if not edefs.get("pivot_splitter", {}).get("is_boss", false): all_ok = false
 	if lnames.get("sort_quick", "") != "Quick Sort": all_ok = false
 
 	print("[validate] ", "ALL CHECKS PASSED" if all_ok else "SOME CHECKS FAILED")

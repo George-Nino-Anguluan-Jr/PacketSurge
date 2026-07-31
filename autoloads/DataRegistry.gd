@@ -107,6 +107,13 @@ func get_lesson(lesson_id: String) -> LessonData:
 func get_lesson_count() -> int:
 	return lessons.size()
 
+func get_lesson_ids_in_section(section: String) -> Array[String]:
+	var out: Array[String] = []
+	for lesson in lessons:
+		if lesson.section == section:
+			out.append(lesson.lesson_id)
+	return out
+
 func get_lesson_ids() -> Array[String]:
 	var out: Array[String] = []
 	for lesson in lessons:
@@ -207,6 +214,10 @@ func build_enemy_definitions() -> Dictionary:
 		var r: EnemyData = enemies[enemy_id]
 		out[enemy_id] = {
 			"color": r.color,
+			"max_health": r.max_health,
+			"speed": r.speed,
+			"ram_reward": r.ram_reward,
+			"is_boss": r.is_boss,
 		}
 	return out
 

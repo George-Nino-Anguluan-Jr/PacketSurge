@@ -5,6 +5,10 @@
 [resource]
 script = ExtResource("1_ca77q")
 enemy_id = "basic_packet"
+max_health = 100.0
+speed = 80.0
+ram_reward = 10
+is_boss = false
 title = "Basic Packet"
 tagline = "The standard network packet — no special abilities."
 threat = "Low"

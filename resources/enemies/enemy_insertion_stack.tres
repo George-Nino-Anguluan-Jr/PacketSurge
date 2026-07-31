@@ -5,6 +5,10 @@
 [resource]
 script = ExtResource("1_fwkuj")
 enemy_id = "insertion_stack"
+max_health = 100.0
+speed = 64.0
+ram_reward = 25
+is_boss = false
 title = "Insertion Stack"
 tagline = "Takes 50% extra damage from damage-over-time effects."
 icon = "◀|"
