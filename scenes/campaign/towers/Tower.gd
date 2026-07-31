@@ -47,12 +47,6 @@ var _chain_arcs: Array[Dictionary]  = []
 
 @onready var sprite: Sprite2D = $TowerSprite
 
-# ─── SPRITE MODE ───────────────────────────────────────
-const _SpireTower = preload("res://scenes/campaign/towers/SpireTower.gd")
-var _spire = null
-var spire_variant: String = ""
-var spire_base_h: int = 0
-
 # ─── AREA2D RANGE DETECTOR ─────────────────────────────
 var _range_area: Area2D = null
 var _range_shape: CollisionShape2D = null
@@ -70,8 +64,6 @@ func initialize(data: TowerData, cell: Vector2i, e_layer: Node2D) -> void:
 	ram_cost      = data.ram_cost
 	tower_color   = data.color
 	icon_text     = data.icon_text
-	spire_variant = data.spire_variant
-	spire_base_h  = data.spire_base_h
 	grid_cell     = cell
 	enemy_layer   = e_layer
 	current_level = 1
@@ -257,8 +249,6 @@ func upgrade() -> int:
 		"tower_binary":
 			damage *= 1.4
 			attack_range *= 1.1
-	if _spire:
-		_spire.set_level(current_level)
 	SignalBus.tower_upgraded.emit(tower_id, current_level)
 	_animate_upgrade()
 	return current_level
@@ -273,15 +263,7 @@ func _animate_upgrade() -> void:
 	queue_redraw()
 
 func _setup_sprite() -> void:
-	if spire_variant != "":
-		if not _spire:
-			_spire = _SpireTower.new()
-			add_child(_spire)
-		_spire.setup(spire_variant)
-		_spire.set_level(current_level)
-		if sprite:
-			sprite.visible = false
-	elif sprite:
+	if sprite:
 		sprite.visible = true
 
 func _animate_placement() -> void:
@@ -320,9 +302,6 @@ func _process(delta: float) -> void:
 
 	if _shoot_flash > 0:
 		_shoot_flash -= delta * 4.0
-
-	if _spire:
-		_spire.aim(_turret_angle)
 
 	_mobile_redraw_skip += 1
 	if _mobile_redraw_skip % 2 == 0:
@@ -682,15 +661,6 @@ func _spawn_chain_arc(from_pos: Vector2, to_pos: Vector2) -> void:
 
 # ─── DRAW ───────────────────────────────────────────────
 func _draw() -> void:
-	if _spire:
-		# Spire model already encodes the level visually, so no Lv label needed.
-		if _selected:
-			draw_circle(Vector2.ZERO, attack_range + ENEMY_RADIUS, Color(tower_color, 0.06))
-			draw_arc(Vector2.ZERO, attack_range + ENEMY_RADIUS, 0, TAU, 64, Color(tower_color, 0.25), 1.5)
-			draw_string(ThemeDB.fallback_font, Vector2(0, -attack_range - ENEMY_RADIUS - 14),
-				"Range: " + str(attack_range), HORIZONTAL_ALIGNMENT_CENTER, -1, 10, Color(tower_color, 0.7))
-		return
-
 	_draw_3d_base_plates(tower_color)
 	_draw_turret_assembly(tower_color)
 	_draw_overlays(tower_color)

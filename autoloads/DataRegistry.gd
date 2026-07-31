@@ -183,8 +183,6 @@ func build_tower_definitions() -> Dictionary:
 			"color":           r.color,
 			"icon_text":       r.icon_text,
 			"ability_name":    r.ability_name,
-			"spire_variant":   r.spire_variant,
-			"spire_base_h":    r.spire_base_h,
 		}
 	return out
 

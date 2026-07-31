@@ -24,14 +24,6 @@ var _flash_timer: float   = 0.0
 var _bob_time: float      = 0.0
 var _mobile_redraw_skip: int = 0
 
-# ─── SPIRE SPRITE MODE ───────────────────────────────────
-const _SpireEnemy = preload("res://scenes/campaign/enemies/SpireEnemy.gd")
-var _spire: Node2D = null
-
-const SPIRE_VARIANTS: Dictionary = {}
-
-var _last_position: Vector2 = Vector2.ZERO
-
 # ─── PREVIEW MODE (Index screen) ───────────────────────
 # When true, the enemy is frozen in place and acts purely as a
 # static 3D model (no pathing, no DoT, no collisions). Toggled
@@ -61,10 +53,8 @@ func initialize(
 	enemy_type         = p_type
 	type_data          = p_type_data
 	_setup_type()
-	_setup_spire()
 	if waypoints.size() > 0:
 		position = waypoints[0]
-		_last_position = waypoints[0]
 
 	# Allow enemies to pass through each other
 	collision_mask = 0	
@@ -113,17 +103,6 @@ func _setup_type() -> void:
 			type_data["binary_side"] = false  # false=left vulnerable, true=right
 			type_data["switch_timer"] = 2.0
 
-func _setup_spire() -> void:
-	if not SPIRE_VARIANTS.has(enemy_type):
-		return
-	var entry = SPIRE_VARIANTS[enemy_type]
-	var variant_name = entry["variant"] if entry is Dictionary else entry
-	var pack_name = entry.get("pack", "enemy_pack1") if entry is Dictionary else "enemy_pack1"
-	_spire = _SpireEnemy.new()
-	_spire.name = "SpireSprite"
-	add_child(_spire)
-	_spire.setup(variant_name, pack_name)
-
 func _physics_process(delta: float) -> void:
 	if is_dead or waypoints.size() == 0:
 		return
@@ -158,18 +137,6 @@ func _physics_process(delta: float) -> void:
 		_reach_end()
 		return
 	_move_toward_waypoint(delta)
-
-	# Update spire animation state based on movement
-	if _spire:
-		var is_moving = current_waypoint < waypoints.size() and not is_dead
-		_spire.set_state("move" if is_moving else "idle")
-		# Update direction based on actual movement delta
-		var move_delta = position - _last_position
-		if move_delta.length() > 0.5:
-			var dir_str = _dir_from_velocity(move_delta)
-			_spire.set_direction(dir_str)
-			_spire.set_flip_h(move_delta.x < 0)
-		_last_position = position
 
 	_mobile_redraw_skip += 1
 	if _mobile_redraw_skip % 2 == 0:
@@ -247,14 +214,6 @@ func _is_lowest_hp_enemy() -> bool:
 			is_lowest = false
 			break
 	return is_lowest
-
-func _dir_from_velocity(vel: Vector2) -> String:
-	# Map a 2D movement vector to one of 3 sprite directions: down, up, right
-	# down = facing the camera (positive y in Godot 2D = downward on screen)
-	if abs(vel.y) > abs(vel.x):
-		return "down" if vel.y > 0 else "up"
-	else:
-		return "right"
 
 func _move_toward_waypoint(delta: float) -> void:
 	var target    = waypoints[current_waypoint]
@@ -414,17 +373,7 @@ func _die() -> void:
 	SignalBus.enemy_defeated.emit(name)
 	enemy_defeated.emit(self)
 
-	# For spire enemies, play death animation before freeing
-	if _spire:
-		_spire.set_state("death")
-		set_physics_process(false)
-		set_process(false)
-		# Fade out the spire sprite, then free
-		var tween = create_tween()
-		tween.tween_property(self, "modulate:a", 0.0, 0.8)
-		tween.tween_callback(queue_free)
-	else:
-		queue_free()
+	queue_free()
 
 func _on_merge_partner_died(partner_hp: float) -> void:
 	if is_dead:
@@ -576,31 +525,24 @@ func _draw() -> void:
 	var col   = Color("#FFFFFF") if flash else enemy_color
 	var bob   = sin(_bob_time) * 2.0
 
-	# For spire-mapped enemies, skip procedural body drawing (the spire sprite is shown instead)
-	if not _spire:
-		match enemy_type:
-			"basic_packet":      _draw_basic(col, bob)
-			"queue_jumper":      _draw_queue_jumper(col, bob)
-			"overflow_packet":   _draw_overflow(col, bob)
-			"linked_drain":      _draw_linked(col, bob)
-			"bubble_shield":     _draw_bubble(col, bob)
-			"pivot_splitter":    _draw_pivot(col, bob)
-			"indexed_packet":    _draw_indexed(col, bob)
-			"selection_mark":    _draw_selection(col, bob)
-			"insertion_stack":   _draw_insertion(col, bob)
-			"merge_twin":        _draw_merge(col, bob)
-			"count_meter":       _draw_count(col, bob)
-			"radix_digit":       _draw_radix(col, bob)
-			"scan_wave":         _draw_scan(col, bob)
-			"binary_mask":       _draw_binary(col, bob)
-			_:
-				# Fallback for any future types
-				_draw_3d_box(Vector2(0, bob - 2), Vector2(12, 12), 10.0, col, col.lightened(0.3), 1.5)
-	else:
-		# Damage flash overlay for spire enemies
-		if flash:
-			var pulse = (sin(_bob_time * 8.0) + 1.0) * 0.3
-			modulate = Color(1.0 + pulse, 1.0 + pulse, 1.0 + pulse, 1.0)
+	match enemy_type:
+		"basic_packet":      _draw_basic(col, bob)
+		"queue_jumper":      _draw_queue_jumper(col, bob)
+		"overflow_packet":   _draw_overflow(col, bob)
+		"linked_drain":      _draw_linked(col, bob)
+		"bubble_shield":     _draw_bubble(col, bob)
+		"pivot_splitter":    _draw_pivot(col, bob)
+		"indexed_packet":    _draw_indexed(col, bob)
+		"selection_mark":    _draw_selection(col, bob)
+		"insertion_stack":   _draw_insertion(col, bob)
+		"merge_twin":        _draw_merge(col, bob)
+		"count_meter":       _draw_count(col, bob)
+		"radix_digit":       _draw_radix(col, bob)
+		"scan_wave":         _draw_scan(col, bob)
+		"binary_mask":       _draw_binary(col, bob)
+		_:
+			# Fallback for any future types
+			_draw_3d_box(Vector2(0, bob - 2), Vector2(12, 12), 10.0, col, col.lightened(0.3), 1.5)
 
 	_draw_health_bar()
 

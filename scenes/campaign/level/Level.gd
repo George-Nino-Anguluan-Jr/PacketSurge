@@ -400,8 +400,6 @@ func _on_overlay_tower_selected(tower_id: String) -> void:
 	selected_tower_data.attack_range = def["attack_range"]
 	selected_tower_data.color        = def["color"]
 	selected_tower_data.icon_text    = def["icon_text"]
-	selected_tower_data.spire_variant = def.get("spire_variant", "")
-	selected_tower_data.spire_base_h  = def.get("spire_base_h", 0)
 
 	_confirm_cell = current_clicked_cell
 	_create_preview_tower(def, _confirm_cell)
@@ -593,8 +591,6 @@ func _create_preview_tower(def: Dictionary, cell: Vector2i) -> void:
 	data.attack_range   = def["attack_range"]
 	data.color          = def["color"]
 	data.icon_text      = def["icon_text"]
-	data.spire_variant  = def.get("spire_variant", "")
-	data.spire_base_h   = def.get("spire_base_h", 0)
 	_preview_tower.initialize(data, cell, null)
 	_preview_tower.set_selected(true)
 	tower_layer.add_child(_preview_tower)
@@ -747,8 +743,6 @@ func _show_placement_radial(cell: Vector2i) -> void:
 		dummy_data.attack_range = def["attack_range"]
 		dummy_data.color = def["color"]
 		dummy_data.icon_text = def["icon_text"]
-		dummy_data.spire_variant = def.get("spire_variant", "")
-		dummy_data.spire_base_h  = def.get("spire_base_h", 0)
 		
 		visual_tower.preview_mode = true
 		visual_tower.initialize(dummy_data, Vector2i(-1, -1), null)
@@ -859,8 +853,6 @@ func _on_tower_selected(tower_id: String) -> void:
 	selected_tower_data.attack_range = def["attack_range"]
 	selected_tower_data.color        = def["color"]
 	selected_tower_data.icon_text    = def["icon_text"]
-	selected_tower_data.spire_variant = def.get("spire_variant", "")
-	selected_tower_data.spire_base_h  = def.get("spire_base_h", 0)
 	grid_system.is_placing_tower     = true
 	_spawn_floating_text("Click to place " + def["tower_name"] + " (" + str(def["ram_cost"]) + "⚡)",
 		Vector2(get_viewport_rect().size.x / 2, 36), Color("#00D4FF"), 11)
