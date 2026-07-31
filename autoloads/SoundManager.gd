@@ -74,7 +74,10 @@ func _generate_all_sounds() -> void:
 	ram_spend_sound = _generate_sine_sweep(1000.0, 500.0, 0.08, 0.10)
 	_generate_tower_attack_sounds()
 
+var _default_attack_sound: AudioStreamWAV
+
 func _generate_tower_attack_sounds() -> void:
+	_default_attack_sound = _generate_noise_tick(0.04, 0.08)
 	tower_attack_sounds["tower_array"] = _generate_noise_tick(0.03, 0.06)
 	tower_attack_sounds["tower_stack"] = _generate_sine_sweep(150.0, 80.0, 0.15, 0.10)
 	tower_attack_sounds["tower_queue"] = _generate_sine_sweep(1200.0, 400.0, 0.06, 0.08)
@@ -88,6 +91,10 @@ func _generate_tower_attack_sounds() -> void:
 	tower_attack_sounds["tower_radix"] = _generate_sine_sweep(800.0, 1200.0, 0.07, 0.08)
 	tower_attack_sounds["tower_linear"] = _generate_sine_sweep(300.0, 1000.0, 0.10, 0.07)
 	tower_attack_sounds["tower_binary"] = _generate_sine_sweep(2000.0, 500.0, 0.04, 0.10)
+	# Guarantee a sound exists for every tower registered in data, even future ones.
+	for tower_id in DataRegistry.get_tower_ids_ordered():
+		if not tower_attack_sounds.has(tower_id):
+			tower_attack_sounds[tower_id] = _default_attack_sound
 
 func _generate_sine_sweep(start_freq: float, end_freq: float, duration: float, volume: float) -> AudioStreamWAV:
 	var stream = AudioStreamWAV.new()
@@ -235,7 +242,7 @@ func play_enemy_reach_base() -> void:
 	_play(enemy_reach_base_sound, -8.0)
 
 func play_tower_attack(tower_id: String) -> void:
-	var s = tower_attack_sounds.get(tower_id)
+	var s = tower_attack_sounds.get(tower_id, _default_attack_sound)
 	if s:
 		_play(s, -8.0)
 

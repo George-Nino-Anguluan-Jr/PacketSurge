@@ -5,6 +5,10 @@
 [resource]
 script = ExtResource("1_7dmo0")
 enemy_id = "count_meter"
+max_health = 100.0
+speed = 80.0
+ram_reward = 20
+is_boss = false
 title = "Count Meter"
 tagline = "Resists damage until a counter fills."
 icon = "###"

@@ -686,8 +686,8 @@ func _show_placement_radial(cell: Vector2i) -> void:
 	if equipped.is_empty():
 		equipped = _get_level_config().get("towers", [])
 	if equipped.is_empty():
-		# Fail-safe backup
-		equipped = ["tower_array", "tower_stack", "tower_queue", "tower_linked_list", "tower_bubble"]
+		# Fail-safe backup: first 5 towers in data-driven order
+		equipped = DataRegistry.get_tower_ids_ordered().slice(0, 5)
 		
 	# Build radial selection
 	var num_options = equipped.size()

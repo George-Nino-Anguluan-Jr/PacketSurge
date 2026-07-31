@@ -272,15 +272,14 @@ func _show_result() -> void:
 # ─── OUTCOME HANDLERS ──────────────────────────────────
 func _on_passed() -> void:
 	# Mark all Python lessons as mastered
-	var python_lessons = [
-		"py_variables", "py_lists", "py_loops",
-		"py_conditions", "py_functions"
-	]
+	var python_lessons = DataRegistry.get_lesson_ids_in_section("Python Basics")
 	for lesson in python_lessons:
 		ProgressManager.topic_states[lesson] = "mastered"
 
-	# Unlock ds_arrays (first DSA lesson)
-	ProgressManager.topic_states["ds_arrays"] = "unlocked"
+	# Unlock the first DSA lesson
+	var dsa_lessons = DataRegistry.get_lesson_ids_in_section("Data Structures")
+	if not dsa_lessons.is_empty():
+		ProgressManager.topic_states[dsa_lessons[0]] = "unlocked"
 
 	# Mark quiz done
 	ProgressManager.campaign_progress["placement_quiz_done"] = true
@@ -288,27 +287,24 @@ func _on_passed() -> void:
 
 	GameManager.go_to("academy")
 
+func _set_quiz_flow_states() -> void:
+	# Lock python lessons, only the first is unlocked but not mastered
+	var python_lessons = DataRegistry.get_lesson_ids_in_section("Python Basics")
+	for i in range(python_lessons.size()):
+		ProgressManager.topic_states[python_lessons[i]] = "unlocked" if i == 0 else "locked"
+	var dsa_lessons = DataRegistry.get_lesson_ids_in_section("Data Structures")
+	if not dsa_lessons.is_empty():
+		ProgressManager.topic_states[dsa_lessons[0]] = "locked"
+
 func _on_failed() -> void:
-	# Lock python lessons, only variables is unlocked but not mastered
-	ProgressManager.topic_states["py_variables"] = "unlocked"
-	ProgressManager.topic_states["py_lists"] = "locked"
-	ProgressManager.topic_states["py_loops"] = "locked"
-	ProgressManager.topic_states["py_conditions"] = "locked"
-	ProgressManager.topic_states["py_functions"] = "locked"
-	ProgressManager.topic_states["ds_arrays"] = "locked"
+	_set_quiz_flow_states()
 
 	ProgressManager.campaign_progress["placement_quiz_done"] = true
 	ProgressManager.save_progress()
 	GameManager.go_to("academy")
 
 func _skip_quiz() -> void:
-	# Lock python lessons, only variables is unlocked but not mastered
-	ProgressManager.topic_states["py_variables"] = "unlocked"
-	ProgressManager.topic_states["py_lists"] = "locked"
-	ProgressManager.topic_states["py_loops"] = "locked"
-	ProgressManager.topic_states["py_conditions"] = "locked"
-	ProgressManager.topic_states["py_functions"] = "locked"
-	ProgressManager.topic_states["ds_arrays"] = "locked"
+	_set_quiz_flow_states()
 
 	ProgressManager.campaign_progress["placement_quiz_done"] = true
 	ProgressManager.save_progress()

@@ -72,74 +72,44 @@ func initialize(
 func _setup_type() -> void:
 	var edef = GameManager.ENEMY_DEFINITIONS.get(enemy_type, {})
 	enemy_color = edef.get("color", Color.WHITE)
+	# Base stats come pre-scaled from EnemyData (via WaveManager/initialize).
+	ram_reward = int(edef.get("ram_reward", 10))
 	match enemy_type:
-		"basic_packet":
-			ram_reward  = 10
 		"queue_jumper":
-			ram_reward  = 15
-			if not type_data.has("base_speed"):
-				type_data["base_speed"] = move_speed
-			move_speed  = type_data["base_speed"] * 0.5
+			type_data["base_speed"] = move_speed
 		"overflow_packet":
-			ram_reward  = 30
-			move_speed  *= 0.5
-			max_health  *= 3.0
-			current_health = max_health
 			type_data["layers"] = 0
 			type_data["base_max_hp"] = max_health
 		"linked_drain":
-			ram_reward  = 20
 			type_data["link_color"] = Color("#00FF88")
 			if not type_data.has("partner"):
 				type_data["partner"] = null
 		"bubble_shield":
-			ram_reward  = 25
-			move_speed  *= 1.2
 			type_data["shield_hp"] = 3
 			type_data["shield_max"] = 3
 		"pivot_splitter":
-			ram_reward  = 100
-			move_speed  *= 0.5
-			max_health  *= 5.0
-			current_health = max_health
 			type_data["has_split"] = false
 		"indexed_packet":
-			ram_reward  = 15
 			type_data["index"] = randi() % 5
-			move_speed  *= 0.9
 		"selection_mark":
-			ram_reward  = 20
 			type_data["marked"] = false
-		"insertion_stack":
-			ram_reward  = 25
-			move_speed  *= 0.8
 		"merge_twin":
-			ram_reward  = 25
 			type_data["merged"] = false
 			if not type_data.has("partner"):
 				type_data["partner"] = null
 		"count_meter":
-			ram_reward  = 20
 			type_data["count"] = 0
 			type_data["count_max"] = 5
 		"radix_digit":
-			ram_reward  = 35
-			move_speed  *= 0.7
-			max_health  *= 2.5
-			current_health = max_health
 			type_data["segment"] = 0  # 0=units, 1=tens, 2=hundreds
 			var seg_hp = max_health / 3.0
 			type_data["segment_hp"] = [seg_hp, seg_hp, seg_hp]
 			type_data["segment_max"] = [seg_hp, seg_hp, seg_hp]
 		"scan_wave":
-			ram_reward  = 20
-			move_speed  *= 0.8
 			type_data["scan_phase"] = 0.0
 			type_data["scan_amplitude"] = 30.0
 			type_data["vulnerable"] = true
 		"binary_mask":
-			ram_reward  = 40
-			move_speed  *= 0.8
 			type_data["binary_side"] = false  # false=left vulnerable, true=right
 			type_data["switch_timer"] = 2.0
 

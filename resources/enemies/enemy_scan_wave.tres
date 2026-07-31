@@ -5,6 +5,10 @@
 [resource]
 script = ExtResource("1_oig3r")
 enemy_id = "scan_wave"
+max_health = 100.0
+speed = 64.0
+ram_reward = 20
+is_boss = false
 title = "Scan Wave"
 tagline = "Only vulnerable at the extreme ends of its oscillation."
 icon = "→?"

@@ -68,9 +68,9 @@ func _get_enemy_type(wave_num: int, index: int) -> String:
 	if wave_num == 1:
 		return "basic_packet"
 
-	# Last wave special — pivot_splitter boss type
-	var boss_type = "pivot_splitter"
-	if wave_num == total_waves and boss_type in enemy_pool:
+	# Last wave special — the pool's boss type (flagged in enemy data)
+	var boss_type = _get_boss_type()
+	if wave_num == total_waves and boss_type != "":
 		if index == 0:
 			return boss_type
 
@@ -105,6 +105,23 @@ func _get_enemy_type(wave_num: int, index: int) -> String:
 
 	return enemy_pool[0]
 
+func _get_boss_type() -> String:
+	for etype in enemy_pool:
+		var d = DataRegistry.get_enemy(etype)
+		if d and d.is_boss:
+			return etype
+	return ""
+
+func _base_stats_for(enemy_type: String) -> Dictionary:
+	var d = DataRegistry.get_enemy(enemy_type)
+	if d:
+		return {
+			"max_health": d.max_health,
+			"speed": d.speed,
+			"ram_reward": d.ram_reward,
+		}
+	return {"max_health": 100.0, "speed": 80.0, "ram_reward": 10}
+
 func _spawn_enemy(wave_num: int, index: int) -> void:
 	if enemy_scene == null or enemy_layer == null:
 		return
@@ -114,8 +131,9 @@ func _spawn_enemy(wave_num: int, index: int) -> void:
 	var enemy_type = _get_enemy_type(wave_num, index)
 
 	if enemy.has_method("initialize"):
-		var health = 100.0 * difficulty_modifier * (1.0 + wave_num * 0.3)
-		var speed  = 80.0 * difficulty_modifier
+		var stats = _base_stats_for(enemy_type)
+		var health = float(stats["max_health"]) * difficulty_modifier * (1.0 + wave_num * 0.3)
+		var speed  = float(stats["speed"]) * difficulty_modifier
 		enemy.initialize(path_waypoints, health, speed, enemy_type)
 
 		# Spread enemies perpendicular to the path direction at spawn
@@ -147,8 +165,9 @@ func _spawn_linked_partner(enemy: Node, wave_num: int) -> void:
 	var partner = enemy_scene.instantiate()
 	enemy_layer.add_child(partner)
 
-	var health = 100.0 * difficulty_modifier * (1.0 + wave_num * 0.3)
-	var speed  = 80.0 * difficulty_modifier
+	var stats = _base_stats_for("linked_drain")
+	var health = float(stats["max_health"]) * difficulty_modifier * (1.0 + wave_num * 0.3)
+	var speed  = float(stats["speed"]) * difficulty_modifier
 	var part_data = {"partner": enemy}
 	partner.initialize(path_waypoints, health * 0.8, speed, "linked_drain", part_data)
 	enemy.type_data["partner"] = partner
@@ -166,8 +185,9 @@ func _spawn_merge_twin(enemy: Node, wave_num: int) -> void:
 	var partner = enemy_scene.instantiate()
 	enemy_layer.add_child(partner)
 
-	var health = 100.0 * difficulty_modifier * (1.0 + wave_num * 0.3)
-	var speed  = 80.0 * difficulty_modifier
+	var stats = _base_stats_for("merge_twin")
+	var health = float(stats["max_health"]) * difficulty_modifier * (1.0 + wave_num * 0.3)
+	var speed  = float(stats["speed"]) * difficulty_modifier
 	var part_data = {"partner": enemy}
 	partner.initialize(path_waypoints, health, speed, "merge_twin", part_data)
 	enemy.type_data["partner"] = partner

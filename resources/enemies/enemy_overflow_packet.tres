@@ -5,6 +5,10 @@
 [resource]
 script = ExtResource("1_5ms66")
 enemy_id = "overflow_packet"
+max_health = 300.0
+speed = 40.0
+ram_reward = 30
+is_boss = false
 title = "Overflow Packet"
 tagline = "Grows stronger as enemies behind it die. Kill front-to-back."
 icon = "↑↓"

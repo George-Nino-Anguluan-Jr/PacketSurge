@@ -5,6 +5,10 @@
 [resource]
 script = ExtResource("1_ov1jk")
 enemy_id = "selection_mark"
+max_health = 100.0
+speed = 80.0
+ram_reward = 20
+is_boss = false
 title = "Selection Mark"
 tagline = "Nearly invulnerable unless it's the lowest-HP enemy on screen."
 icon = "◎"

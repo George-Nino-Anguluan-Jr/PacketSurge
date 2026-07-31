@@ -5,6 +5,10 @@
 [resource]
 script = ExtResource("1_ibvj6")
 enemy_id = "merge_twin"
+max_health = 100.0
+speed = 80.0
+ram_reward = 25
+is_boss = false
 title = "Merge Twin"
 tagline = "Pair that absorbs its partner's HP on death."
 icon = "⊕"

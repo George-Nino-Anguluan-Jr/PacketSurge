@@ -5,6 +5,10 @@
 [resource]
 script = ExtResource("1_6tgy8")
 enemy_id = "linked_drain"
+max_health = 100.0
+speed = 80.0
+ram_reward = 20
+is_boss = false
 title = "Linked Drain"
 tagline = "Linked pair — damage is split between partners."
 icon = "→→"
