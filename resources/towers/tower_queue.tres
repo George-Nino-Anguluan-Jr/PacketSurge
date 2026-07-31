@@ -1,0 +1,17 @@
+[gd_resource type="Resource" script_class="TowerData" format=3]
+
+[ext_resource type="Script" path="res://scripts/data/TowerData.gd" id="1_qf76d"]
+
+[resource]
+script = ExtResource("1_qf76d")
+tower_id = "tower_queue"
+tower_name = "Queue Tower"
+description = "Pierces 2 enemies in line. FIFO targeting."
+data_structure = "Queue"
+ram_cost = 75
+damage = 22.0
+attack_speed = 1.6
+attack_range = 160.0
+ability_name = "FIFO Pierce"
+color = Color(0.60784316, 0.34901962, 0.7137255, 1)
+icon_text = "->"

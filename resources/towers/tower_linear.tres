@@ -1,0 +1,17 @@
+[gd_resource type="Resource" script_class="TowerData" format=3]
+
+[ext_resource type="Script" path="res://scripts/data/TowerData.gd" id="1_d7bdu"]
+
+[resource]
+script = ExtResource("1_d7bdu")
+tower_id = "tower_linear"
+tower_name = "Linear Tower"
+description = "Wide scan, guaranteed hit."
+data_structure = "Linear Search"
+ram_cost = 80
+damage = 16.0
+attack_range = 200.0
+time_complexity = "O(n)"
+ability_name = "Linear Sweep"
+color = Color(0.3764706, 0.49019608, 0.54509807, 1)
+icon_text = "->?"

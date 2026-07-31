@@ -1,6 +1,6 @@
 [gd_resource type="Resource" script_class="LessonData" format=3 uid="uid://n6gd71iio3v1"]
 
-[ext_resource type="Script" uid="uid://b3jcovwhgerid" path="res://scripts/data/LessonData.gd" id="1_38uo3"]
+[ext_resource type="Script" uid="uid://ciet8k3fqk8tr" path="res://scripts/data/LessonData.gd" id="1_38uo3"]
 [ext_resource type="PackedScene" path="res://scenes/academy/visualizations/VizVariables.tscn" id="2_3o5rh"]
 
 [resource]

@@ -1,0 +1,13 @@
+[gd_resource type="Resource" script_class="EnemyData" format=3]
+
+[ext_resource type="Script" path="res://scripts/data/EnemyData.gd" id="1_7dmo0"]
+
+[resource]
+script = ExtResource("1_7dmo0")
+enemy_id = "count_meter"
+title = "Count Meter"
+tagline = "Resists damage until a counter fills."
+icon = "###"
+special = "80% damage resistance until 5 hits land — then the counter resets."
+lesson = "Counting Sort tallies occurrences — Count Tower's rapid hits fill it fast."
+color = Color(0, 0.5882353, 0.53333336, 1)

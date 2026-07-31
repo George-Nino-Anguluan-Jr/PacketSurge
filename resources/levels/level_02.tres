@@ -1,0 +1,20 @@
+[gd_resource type="Resource" script_class="LevelData" format=3]
+
+[ext_resource type="Script" path="res://scripts/data/LevelData.gd" id="1_q126n"]
+
+[resource]
+script = ExtResource("1_q126n")
+level_number = 2
+level_name = "Stack Overflow"
+description = "A Stack is LIFO — Last In First Out. Your Stack Tower targets the most recently arrived enemy first."
+data_structure = "Stacks"
+concept_desc = "A Stack is LIFO — Last In First Out. Your Stack Tower targets the most recently arrived enemy first."
+enemy_tip = "Indexed packets have damage resistance. Stack Tower's LIFO targeting helps pick them off."
+starting_ram = 175
+wave_count = 4
+tower_slots = 3
+required_towers = Array[String](["tower_array", "tower_stack"])
+enemy_types = Array[String](["basic_packet", "indexed_packet", "overflow_packet"])
+available_towers = Array[String](["tower_array", "tower_stack"])
+path_waypoints = Array[Vector2]([Vector2(0, 128), Vector2(320, 128), Vector2(320, 448), Vector2(640, 448), Vector2(640, 256), Vector2(1088, 256)])
+tower_spots = Array[Vector2i]([Vector2i(2, 1), Vector2i(4, 1), Vector2i(2, 7), Vector2i(5, 7), Vector2i(7, 6), Vector2i(9, 6), Vector2i(11, 3), Vector2i(13, 3), Vector2i(15, 3), Vector2i(16, 5)])

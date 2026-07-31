@@ -1,0 +1,14 @@
+[gd_resource type="Resource" script_class="EnemyData" format=3]
+
+[ext_resource type="Script" path="res://scripts/data/EnemyData.gd" id="1_m1vw1"]
+
+[resource]
+script = ExtResource("1_m1vw1")
+enemy_id = "radix_digit"
+title = "Radix Digit"
+tagline = "Three segmented HP bars — must be depleted in order."
+icon = "1→9"
+threat = "High"
+special = "HP split across 3 segments (1s, 10s, 100s) — must deplete units first."
+lesson = "Radix Sort processes digit by digit — Radix Tower's multi-pass strips them."
+color = Color(1, 0.34117648, 0.13333334, 1)

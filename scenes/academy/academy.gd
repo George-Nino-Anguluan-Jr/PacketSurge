@@ -56,27 +56,7 @@ func _ready() -> void:
 
 # ─── LOAD LESSONS ──────────────────────────────────────
 func _load_all_lessons() -> void:
-	var lesson_paths = [
-		"res://resources/lessons/lesson_py_variables.tres",
-		"res://resources/lessons/lesson_py_lists.tres",
-		"res://resources/lessons/lesson_py_loops.tres",
-		"res://resources/lessons/lesson_py_conditions.tres",
-		"res://resources/lessons/lesson_py_functions.tres",
-		"res://resources/lessons/lesson_ds_arrays.tres",
-		"res://resources/lessons/lesson_ds_stacks.tres",
-		"res://resources/lessons/lesson_ds_queues.tres",
-		"res://resources/lessons/lesson_ds_linked_lists.tres",
-		"res://resources/lessons/lesson_sort_bubble.tres",
-		"res://resources/lessons/lesson_sort_selection.tres",
-		"res://resources/lessons/lesson_sort_insertion.tres",
-		"res://resources/lessons/lesson_sort_quick.tres",
-		"res://resources/lessons/lesson_sort_merge.tres",
-		"res://resources/lessons/lesson_sort_counting.tres",
-		"res://resources/lessons/lesson_sort_radix.tres",
-		"res://resources/lessons/lesson_search_linear.tres",
-		"res://resources/lessons/lesson_search_binary.tres",
-	]
-	for path in lesson_paths:
+	for path in DataRegistry.lesson_paths:
 		if ResourceLoader.exists(path):
 			var lesson = load(path) as LessonData
 			if lesson:

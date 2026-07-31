@@ -1,0 +1,20 @@
+[gd_resource type="Resource" script_class="LevelData" format=3]
+
+[ext_resource type="Script" path="res://scripts/data/LevelData.gd" id="1_i0woh"]
+
+[resource]
+script = ExtResource("1_i0woh")
+level_number = 6
+level_name = "Selection Strike"
+description = "Selection Sort finds the minimum element each pass. Your Selection Tower always targets the lowest HP enemy — finishing off the weakest first."
+data_structure = "Selection Sort"
+concept_desc = "Selection Sort finds the minimum element each pass. Your Selection Tower always targets the lowest HP enemy — finishing off the weakest first."
+enemy_tip = "Bubble Shield packets absorb the first few hits. Bubble Tower's AoE pops their shields fast!"
+starting_ram = 225
+wave_count = 5
+tower_slots = 4
+required_towers = Array[String](["tower_selection"])
+enemy_types = Array[String](["basic_packet", "bubble_shield", "selection_mark"])
+available_towers = Array[String](["tower_array", "tower_stack", "tower_queue", "tower_bubble", "tower_selection"])
+path_waypoints = Array[Vector2]([Vector2(0, 64), Vector2(384, 64), Vector2(384, 384), Vector2(768, 384), Vector2(768, 128), Vector2(1088, 128)])
+tower_spots = Array[Vector2i]([Vector2i(2, 0), Vector2i(4, 0), Vector2i(2, 5), Vector2i(5, 5), Vector2i(7, 6), Vector2i(9, 6), Vector2i(11, 5), Vector2i(13, 5), Vector2i(15, 1), Vector2i(16, 3)])

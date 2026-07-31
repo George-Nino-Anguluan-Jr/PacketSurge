@@ -1,0 +1,15 @@
+[gd_resource type="Resource" script_class="LevelData" format=3]
+
+[ext_resource type="Script" path="res://scripts/data/LevelData.gd" id="1_fq8ci"]
+
+[resource]
+script = ExtResource("1_fq8ci")
+level_name = "Initialization"
+description = "Arrays store data at fixed indices. Your Array Tower accesses targets in O(1) time — instantly."
+concept_desc = "Arrays store data at fixed indices. Your Array Tower accesses targets in O(1) time — instantly."
+enemy_tip = "Basic packets only. Place towers near the inside of the S-curve for max coverage."
+required_towers = Array[String](["tower_array"])
+enemy_types = Array[String](["basic_packet", "indexed_packet"])
+available_towers = Array[String](["tower_array"])
+path_waypoints = Array[Vector2]([Vector2(0, 320), Vector2(320, 320), Vector2(320, 192), Vector2(704, 192), Vector2(704, 384), Vector2(1088, 384)])
+tower_spots = Array[Vector2i]([Vector2i(3, 2), Vector2i(3, 6), Vector2i(5, 4), Vector2i(7, 4), Vector2i(9, 1), Vector2i(10, 5), Vector2i(14, 5), Vector2i(16, 5)])

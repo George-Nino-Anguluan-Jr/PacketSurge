@@ -1,0 +1,17 @@
+[gd_resource type="Resource" script_class="TowerData" format=3]
+
+[ext_resource type="Script" path="res://scripts/data/TowerData.gd" id="1_vh5wh"]
+
+[resource]
+script = ExtResource("1_vh5wh")
+tower_id = "tower_stack"
+tower_name = "Stack Tower"
+description = "Hits the most recent enemy. LIFO targeting."
+data_structure = "Stack"
+ram_cost = 75
+damage = 28.0
+attack_speed = 1.2
+attack_range = 130.0
+ability_name = "Stack Pop"
+color = Color(1, 0.41960785, 0.20784314, 1)
+icon_text = "^v"

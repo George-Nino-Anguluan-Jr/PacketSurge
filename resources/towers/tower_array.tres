@@ -1,0 +1,14 @@
+[gd_resource type="Resource" script_class="TowerData" format=3]
+
+[ext_resource type="Script" path="res://scripts/data/TowerData.gd" id="1_ph4gw"]
+
+[resource]
+script = ExtResource("1_ph4gw")
+tower_id = "tower_array"
+tower_name = "Array Tower"
+description = "Fast attack. O(1) access speed."
+data_structure = "Array"
+damage = 18.0
+attack_speed = 2.0
+attack_range = 140.0
+ability_name = "O(1) Burst"

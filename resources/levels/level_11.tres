@@ -1,0 +1,20 @@
+[gd_resource type="Resource" script_class="LevelData" format=3]
+
+[ext_resource type="Script" path="res://scripts/data/LevelData.gd" id="1_s68tb"]
+
+[resource]
+script = ExtResource("1_s68tb")
+level_number = 11
+level_name = "Radix Rush"
+description = "Radix Sort processes digits one at a time. Your Radix Tower fires rapid multi-pass bursts — hitting every enemy multiple times like sorting digit by digit."
+data_structure = "Radix Sort"
+concept_desc = "Radix Sort processes digits one at a time. Your Radix Tower fires rapid multi-pass bursts — hitting every enemy multiple times like sorting digit by digit."
+enemy_tip = "Count Meter packets resist damage until their counter fills. Count Tower's rapid hits fill the counter fast!"
+starting_ram = 275
+wave_count = 7
+tower_slots = 5
+required_towers = Array[String](["tower_radix"])
+enemy_types = Array[String](["basic_packet", "count_meter", "radix_digit"])
+available_towers = Array[String](["tower_array", "tower_stack", "tower_queue", "tower_linked_list", "tower_bubble", "tower_selection", "tower_insertion", "tower_quick", "tower_merge", "tower_counting", "tower_radix"])
+path_waypoints = Array[Vector2]([Vector2(0, 256), Vector2(192, 256), Vector2(192, 64), Vector2(448, 64), Vector2(448, 384), Vector2(640, 384), Vector2(640, 128), Vector2(832, 128), Vector2(832, 384), Vector2(1088, 384)])
+tower_spots = Array[Vector2i]([Vector2i(1, 4), Vector2i(3, 4), Vector2i(4, 1), Vector2i(6, 1), Vector2i(6, 6), Vector2i(4, 6), Vector2i(10, 4), Vector2i(9, 2), Vector2i(12, 2), Vector2i(14, 6)])
