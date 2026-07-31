@@ -1095,5 +1095,4 @@ func _draw_overlays(color: Color) -> void:
 	if Engine.is_editor_hint():
 		draw_arc(Vector2.ZERO, attack_range, 0, TAU, 64, Color(color, 0.15), 1.0)
 
- 
- 
+
