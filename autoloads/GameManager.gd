@@ -23,7 +23,6 @@ const SCENES = {
 	"tower_select": "res://scenes/campaign/tower_select/TowerSelect.tscn",
 	"level":        "res://scenes/campaign/level/Level.tscn",
 	"index":        "res://scenes/index/Index.tscn",
-	"sandbox":      "res://scenes/sandbox/Sandbox.tscn",
 	"leaderboard":  "res://scenes/leaderboard/Leaderboard.tscn",
 	"analytics":    "res://scenes/analytics/Analytics.tscn",
 	"settings":     "res://scenes/settings/Settings.tscn",
@@ -34,7 +33,6 @@ const SCENES = {
 # Currently selected level
 var current_level: int = 1
 var current_scene_key: String = ""
-var current_sandbox_structure: String = ""
 
 func _ready() -> void:
 	TOWER_DEFINITIONS = DataRegistry.build_tower_definitions()
