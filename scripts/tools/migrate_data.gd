@@ -1,7 +1,7 @@
-# tools/migrate_data.gd
+# scripts/tools/migrate_data.gd
 # One-time migration: writes named .tres data files from the legacy
 # hardcoded dicts in GameManager.gd / EnemyIntroData.gd.
-# Run:  Godot --headless res://tools/migrate_data.tscn
+# Run:  Godot --headless res://scripts/tools/migrate_data.tscn
 extends Node
 
 func _ready() -> void:
