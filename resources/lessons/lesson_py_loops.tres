@@ -6,6 +6,8 @@
 [resource]
 script = ExtResource("1_46n2l")
 lesson_id = "py_loops"
+order = 3
+section = "Python Basics"
 title = "Loops"
 category = "python"
 icon_text = "↺"

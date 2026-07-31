@@ -6,6 +6,10 @@
 [resource]
 script = ExtResource("1_xgqti")
 lesson_id = "sort_quick"
+order = 13
+section = "Sorting"
+unlocks_tower = "tower_quick"
+unlocks_level = 8
 title = "Quick Sort"
 category = "data_structures"
 icon_text = "⚡"

@@ -14,8 +14,11 @@ func _ready() -> void:
 func _generate_towers() -> void:
 	var TowerData = load("res://scripts/data/TowerData.gd")
 	DirAccess.make_dir_recursive_absolute("res://resources/towers")
-	for tower_id in GameManager.TOWER_DEFINITIONS:
+	var order := 0
+	for tower_id in DataRegistry.get_tower_ids_ordered():
+		order += 1
 		var d: Dictionary = GameManager.TOWER_DEFINITIONS[tower_id]
+		var intro: Dictionary = TowerIntroData.get_intro(tower_id)
 		var r = TowerData.new()
 		r.tower_id        = d.get("tower_id", tower_id)
 		r.tower_name      = d.get("tower_name", "")
@@ -31,6 +34,14 @@ func _generate_towers() -> void:
 		r.icon_text       = d.get("icon_text", "[ ]")
 		r.spire_variant   = d.get("spire_variant", "")
 		r.spire_base_h    = d.get("spire_base_h", 0)
+		r.order           = order
+		r.tagline         = intro.get("tagline", "")
+		r.mechanic        = intro.get("mechanic", "")
+		r.shooting        = intro.get("shooting", "")
+		r.ability_desc    = intro.get("ability", "")
+		r.strong_against  = intro.get("strong", [])
+		r.weak_against    = intro.get("weak", [])
+		r.targeting       = intro.get("targeting", "")
 		var path = "res://resources/towers/%s.tres" % tower_id
 		var err = ResourceSaver.save(r, path)
 		print("[migrate] tower %s -> %s (%s)" % [tower_id, path, error_string(err)])
@@ -62,8 +73,8 @@ func _generate_levels() -> void:
 func _generate_enemies() -> void:
 	var EnemyData = load("res://scripts/data/EnemyData.gd")
 	DirAccess.make_dir_recursive_absolute("res://resources/enemies")
-	for enemy_id in EnemyIntroData.enemy_intros:
-		var d: Dictionary = EnemyIntroData.enemy_intros[enemy_id]
+	for enemy_id in DataRegistry.enemies:
+		var d: Dictionary = EnemyIntroData.get_intro(enemy_id)
 		var r = EnemyData.new()
 		r.enemy_id = enemy_id
 		r.title    = d.get("title", enemy_id)

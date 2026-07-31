@@ -6,6 +6,10 @@
 [resource]
 script = ExtResource("1_ureiw")
 lesson_id = "ds_stacks"
+order = 7
+section = "Data Structures"
+unlocks_tower = "tower_stack"
+unlocks_level = 2
 title = "Stacks"
 category = "data_structures"
 icon_text = "↑↓"

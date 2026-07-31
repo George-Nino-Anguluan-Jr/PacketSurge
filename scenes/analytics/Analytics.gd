@@ -118,11 +118,11 @@ func _make_overview_cards() -> HBoxContainer:
 	)
 
 	row.add_child(_make_stat_card(
-		"LESSONS\nMASTERED", str(mastered) + "/18",
+		"LESSONS\nMASTERED", str(mastered) + "/" + str(DataRegistry.get_lesson_count()),
 		Color("#00FF88")
 	))
 	row.add_child(_make_stat_card(
-		"CAMPAIGN\nLEVELS", str(levels) + "/13",
+		"CAMPAIGN\nLEVELS", str(levels) + "/" + str(DataRegistry.get_level_count()),
 		Color("#FFB800")
 	))
 	row.add_child(_make_stat_card(
@@ -195,12 +195,7 @@ func _make_progress_chart() -> Control:
 	style.corner_radius_bottom_left  = 6
 	style.corner_radius_bottom_right = 6
 
-	var topics = [
-		"py_variables", "py_lists", "py_loops",
-		"py_conditions", "py_functions",
-		"ds_arrays", "ds_stacks", "ds_queues", "ds_linked_lists",
-		"sort_bubble", "sort_selection", "sort_insertion"
-	]
+	var topics = DataRegistry.get_lesson_ids()
 
 	chart.draw.connect(func():
 		var size    = chart.size
@@ -249,12 +244,7 @@ func _make_accuracy_chart() -> Control:
 	chart.custom_minimum_size   = Vector2(0, 180)
 	chart.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 
-	var topics = [
-		"py_variables", "py_lists", "py_loops",
-		"py_conditions", "py_functions",
-		"ds_arrays", "ds_stacks", "ds_queues", "ds_linked_lists",
-		"sort_bubble", "sort_selection", "sort_insertion"
-	]
+	var topics = DataRegistry.get_lesson_ids()
 
 	chart.draw.connect(func():
 		var size   = chart.size
@@ -302,12 +292,7 @@ func _make_time_chart() -> Control:
 	chart.custom_minimum_size   = Vector2(0, 180)
 	chart.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 
-	var topics = [
-		"py_variables", "py_lists", "py_loops",
-		"py_conditions", "py_functions",
-		"ds_arrays", "ds_stacks", "ds_queues", "ds_linked_lists",
-		"sort_bubble", "sort_selection", "sort_insertion"
-	]
+	var topics = DataRegistry.get_lesson_ids()
 
 	chart.draw.connect(func():
 		var size    = chart.size
@@ -380,11 +365,7 @@ func _make_lesson_breakdown() -> VBoxContainer:
 	layout.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	layout.add_theme_constant_override("separation", 8)
 
-	var topic_ids = [
-		"py_variables", "py_lists", "py_loops", "py_conditions", "py_functions",
-		"ds_arrays", "ds_stacks", "ds_queues", "ds_linked_lists",
-		"sort_bubble", "sort_selection", "sort_insertion",
-	]
+	var topic_ids = DataRegistry.get_lesson_ids()
 
 	for topic_id in topic_ids:
 		var state    = ProgressManager.topic_states.get(topic_id, "locked")
@@ -468,11 +449,11 @@ func _make_campaign_breakdown() -> VBoxContainer:
 	layout.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	layout.add_theme_constant_override("separation", 8)
 
-	for level_num in range(1, 14):
+	for level_num in DataRegistry.get_level_numbers():
 		var time = float(ProgressManager.campaign_time.get(str(level_num), 0.0))
 		var stars = ProgressManager.get_level_stars(level_num)
 		var cfg = GameManager.LEVEL_CONFIGS.get(level_num, {})
-		var name = cfg.get("name", "Level " + str(level_num)) if level_num <= 13 else "Level " + str(level_num)
+		var name = cfg.get("name", "Level " + str(level_num))
 		layout.add_child(_make_campaign_row(level_num, name, time, stars))
 
 	return layout
@@ -615,12 +596,12 @@ func _build_class_comparison() -> void:
 	# Comparison cards
 	class_content.add_child(_make_comparison_row(
 		"Topics Mastered",
-		my_mastered, avg_mastered, 18.0,
+		my_mastered, avg_mastered, float(DataRegistry.get_lesson_count()),
 		Color("#00D4FF")
 	))
 	class_content.add_child(_make_comparison_row(
 		"Total Stars",
-		my_stars, avg_stars, 39.0,
+		my_stars, avg_stars, float(DataRegistry.get_total_stars_possible()),
 		Color("#FFB800")
 	))
 	class_content.add_child(_make_comparison_row(

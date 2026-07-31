@@ -78,66 +78,58 @@ func _build_sidebar() -> void:
 	for child in topic_list_search.get_children():
 		child.queue_free()
 
-	# Python Section
-	var python_topics = [
-		"py_variables", "py_lists", "py_loops",
-		"py_conditions", "py_functions"
-	]
-	for topic_id in python_topics:
+	# Lessons come from DataRegistry (ordered). Sections are read from
+	# each lesson's `section` field, so new lessons in existing sections
+	# appear automatically without code changes.
+	var containers := {
+		"Python Basics":    topic_list_python,
+		"Data Structures":  topic_list_ds,
+		"Sorting":          topic_list_sort,
+		"Searching":        topic_list_search,
+	}
+
+	for lesson in all_lessons:
+		var section := lesson.section
+		if section.is_empty():
+			section = _section_from_id(lesson.lesson_id)
+		var container = containers.get(section, topic_list_ds)
+		var topic_id := lesson.lesson_id
 		var btn := Button.new()
 		btn.text      = _get_topic_display_name(topic_id)
 		btn.name      = topic_id
 		btn.alignment = HORIZONTAL_ALIGNMENT_LEFT
 		_style_topic_button(btn, ProgressManager.get_topic_state(topic_id))
 		btn.pressed.connect(_on_topic_selected.bind(topic_id))
-		topic_list_python.add_child(btn)
+		container.add_child(btn)
 		topic_buttons[topic_id] = btn
 
-	# Data Structures Section
-	var ds_topics = [
-		"ds_arrays", "ds_stacks", "ds_queues", "ds_linked_lists"
-	]
-	for topic_id in ds_topics:
-		var btn := Button.new()
-		btn.text      = _get_topic_display_name(topic_id)
-		btn.name      = topic_id
-		btn.alignment = HORIZONTAL_ALIGNMENT_LEFT
-		_style_topic_button(btn, ProgressManager.get_topic_state(topic_id))
-		btn.pressed.connect(_on_topic_selected.bind(topic_id))
-		topic_list_ds.add_child(btn)
-		topic_buttons[topic_id] = btn
-
-	# Sorting Section
-	var sort_topics = [
-		"sort_bubble", "sort_selection", "sort_insertion",
-		"sort_quick", "sort_merge", "sort_counting", "sort_radix"
-	]
-	for topic_id in sort_topics:
-		var btn := Button.new()
-		btn.text      = _get_topic_display_name(topic_id)
-		btn.name      = topic_id
-		btn.alignment = HORIZONTAL_ALIGNMENT_LEFT
-		_style_topic_button(btn, ProgressManager.get_topic_state(topic_id))
-		btn.pressed.connect(_on_topic_selected.bind(topic_id))
-		topic_list_sort.add_child(btn)
-		topic_buttons[topic_id] = btn
-
-	# Searching Section
-	var search_topics = [
-		"search_linear", "search_binary"
-	]
-	for topic_id in search_topics:
-		var btn := Button.new()
-		btn.text      = _get_topic_display_name(topic_id)
-		btn.name      = topic_id
-		btn.alignment = HORIZONTAL_ALIGNMENT_LEFT
-		_style_topic_button(btn, ProgressManager.get_topic_state(topic_id))
-		btn.pressed.connect(_on_topic_selected.bind(topic_id))
-		topic_list_search.add_child(btn)
-		topic_buttons[topic_id] = btn
+func _section_from_id(topic_id: String) -> String:
+	if topic_id.begins_with("py_"):
+		return "Python Basics"
+	if topic_id.begins_with("ds_"):
+		return "Data Structures"
+	if topic_id.begins_with("sort_"):
+		return "Sorting"
+	if topic_id.begins_with("search_"):
+		return "Searching"
+	return "Data Structures"
 
 func _get_topic_display_name(topic_id: String) -> String:
 	return GameManager.LESSON_NAMES.get(topic_id, topic_id)
+
+func _category_label(section: String) -> String:
+	if section.is_empty():
+		return "Lesson"
+	match section:
+		"Python Basics":
+			return "Python Fundamentals"
+		"Data Structures":
+			return "Data Structures"
+		"Sorting":
+			return "Sorting Algorithms"
+		"Searching":
+			return "Searching Algorithms"
+	return section
 
 # ─── TOPIC BUTTON STYLES ───────────────────────────────
 func _style_topic_button(btn: Button, state: String) -> void:
@@ -191,17 +183,8 @@ func _open_lesson(lesson: LessonData) -> void:
 	_lesson_start_time = Time.get_ticks_msec() / 1000.0
 	lesson_title.text = lesson.title
 
-	# Set category label based on lesson_id prefix
-	if lesson.lesson_id.begins_with("py_"):
-		lesson_category.text = "Python Fundamentals"
-	elif lesson.lesson_id.begins_with("ds_"):
-		lesson_category.text = "Data Structures"
-	elif lesson.lesson_id.begins_with("sort_"):
-		lesson_category.text = "Sorting Algorithms"
-	elif lesson.lesson_id.begins_with("search_"):
-		lesson_category.text = "Searching Algorithms"
-	else:
-		lesson_category.text = "Lesson"
+	# Set category label based on lesson section (from data)
+	lesson_category.text = _category_label(lesson.section)
 
 	_build_step_indicator()
 	_show_current_step()
@@ -795,7 +778,7 @@ func _update_progress_label() -> void:
 	for topic_id in ProgressManager.topic_states:
 		if ProgressManager.topic_states[topic_id] == "mastered":
 			mastered += 1
-	progress_label.text = str(mastered) + " / 18 Mastered"
+	progress_label.text = str(mastered) + " / " + str(DataRegistry.get_lesson_count()) + " Mastered"
 
 # ─── SIDEBAR REFRESH ───────────────────────────────────
 func _on_topic_state_changed(_id: String) -> void:

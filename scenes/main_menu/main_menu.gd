@@ -107,7 +107,7 @@ func _get_next_action() -> Dictionary:
 				"callback": func(): GameManager.go_to("academy")
 			}
 	# 3. Find next uncompleted unlocked campaign level
-	for lvl in range(1, 14):
+	for lvl in DataRegistry.get_level_numbers():
 		if ProgressManager.is_level_unlocked(lvl):
 			var completed = ProgressManager.campaign_progress.get("waves_completed", 0) >= lvl
 			if not completed:

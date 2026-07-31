@@ -8,6 +8,9 @@ extends Resource
 @export var data_structure: String   = ""
 @export var ram_cost: int            = 50
 
+# Ordering in the Index / codex (0 = appended after ordered entries)
+@export var order: int               = 0
+
 # Stats
 @export var damage: float            = 10.0
 @export var attack_speed: float      = 1.0
@@ -21,6 +24,15 @@ extends Resource
 
 # Ability
 @export var ability_name: String     = ""
+
+# Intro / codex copy (previously hardcoded in TowerIntroData.gd)
+@export var tagline: String          = ""
+@export_multiline var mechanic: String    = ""
+@export_multiline var shooting: String    = ""
+@export_multiline var ability_desc: String = ""
+@export var strong_against: Array[String] = []
+@export var weak_against: Array[String]   = []
+@export var targeting: String        = ""
 
 # Visual
 @export var color: Color             = Color("#00D4FF")

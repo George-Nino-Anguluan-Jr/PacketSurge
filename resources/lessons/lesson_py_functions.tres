@@ -6,6 +6,8 @@
 [resource]
 script = ExtResource("1_51rxj")
 lesson_id = "py_functions"
+order = 5
+section = "Python Basics"
 title = "Functions"
 category = "python"
 icon_text = "f()"

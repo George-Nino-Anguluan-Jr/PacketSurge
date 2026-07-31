@@ -6,6 +6,10 @@
 [resource]
 script = ExtResource("1_eftlh")
 lesson_id = "ds_queues"
+order = 8
+section = "Data Structures"
+unlocks_tower = "tower_queue"
+unlocks_level = 3
 title = "Queues"
 category = "data_structures"
 icon_text = "→"

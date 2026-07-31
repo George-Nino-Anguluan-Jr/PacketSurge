@@ -6,6 +6,10 @@
 [resource]
 script = ExtResource("1_l7yaq")
 lesson_id = "search_linear"
+order = 17
+section = "Searching"
+unlocks_tower = "tower_linear"
+unlocks_level = 12
 title = "Linear Search"
 category = "data_structures"
 icon_text = "→"

@@ -6,6 +6,10 @@
 [resource]
 script = ExtResource("1_ri56b")
 lesson_id = "sort_merge"
+order = 14
+section = "Sorting"
+unlocks_tower = "tower_merge"
+unlocks_level = 9
 title = "Merge Sort"
 category = "data_structures"
 icon_text = "⊕"

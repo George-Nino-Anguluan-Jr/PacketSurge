@@ -6,6 +6,10 @@
 [resource]
 script = ExtResource("1_csds4")
 lesson_id = "sort_bubble"
+order = 10
+section = "Sorting"
+unlocks_tower = "tower_bubble"
+unlocks_level = 5
 title = "Bubble Sort"
 category = "data_structures"
 icon_text = "↑↑"

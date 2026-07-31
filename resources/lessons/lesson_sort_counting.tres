@@ -6,6 +6,10 @@
 [resource]
 script = ExtResource("1_0x24s")
 lesson_id = "sort_counting"
+order = 15
+section = "Sorting"
+unlocks_tower = "tower_counting"
+unlocks_level = 10
 title = "Counting Sort"
 category = "data_structures"
 icon_text = "#"

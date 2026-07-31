@@ -6,6 +6,10 @@
 [resource]
 script = ExtResource("1_wqrxq")
 lesson_id = "sort_selection"
+order = 11
+section = "Sorting"
+unlocks_tower = "tower_selection"
+unlocks_level = 6
 title = "Selection Sort"
 category = "data_structures"
 icon_text = "→↓"

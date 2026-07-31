@@ -36,15 +36,18 @@ func _collect_features() -> Array:
 
 	var towers_unlocked = ProgressManager.unlocked_towers.size()
 
+	var total_levels := float(DataRegistry.get_level_count())
+	var total_towers := float(DataRegistry.get_tower_count())
+
 	return [
 		float(mastered) / float(max(1, total_topics)),           # 0: topics mastered ratio
 		float(struggling) / float(max(1, total_topics)),         # 1: topics struggling ratio
-		levels_done / 13.0,                                      # 2: levels completed
+		levels_done / max(1.0, total_levels),                    # 2: levels completed
 		avg_stars / 3.0,                                         # 3: average stars
 		0.0,                                                     # 4: level stars (set per-level)
-		float(towers_unlocked) / 13.0,                           # 5: unlocked towers
-		max_level / 13.0,                                        # 6: max level unlocked
-		levels_done / 13.0,                                      # 7: waves done
+		float(towers_unlocked) / max(1.0, total_towers),         # 5: unlocked towers
+		max_level / max(1.0, total_levels),                      # 6: max level unlocked
+		levels_done / max(1.0, total_levels),                    # 7: waves done
 	]
 
 
