@@ -1,8 +1,8 @@
-# tools/validate_data.gd
+# scripts/tools/validate_data.gd
 # Prints DataRegistry contents so you can confirm the data layer loaded.
 # Checks are data-driven: they never assume fixed counts, so adding a
 # .tres file (tower, enemy, lesson, level) keeps passing automatically.
-# Run:  Godot --headless res://tools/validate_data.tscn
+# Run:  Godot --headless res://scripts/tools/validate_data.tscn
 extends Node
 
 func _ready() -> void:
