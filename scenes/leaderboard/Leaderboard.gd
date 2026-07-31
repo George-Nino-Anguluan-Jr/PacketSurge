@@ -236,12 +236,12 @@ func _make_entry_card(
 
 	_add_stat_column(
 	stats, "TOPICS",
-	str(int(entry.get("topics_mastered", 0))) + "/18",
+	str(int(entry.get("topics_mastered", 0))) + "/" + str(DataRegistry.get_lesson_count()),
 	Color("#00D4FF")
 	)
 	_add_stat_column(
 		stats, "STARS",
-		str(int(entry.get("total_stars", 0))) + "/39",
+		str(int(entry.get("total_stars", 0))) + "/" + str(DataRegistry.get_total_stars_possible()),
 		Color("#FFB800")
 	)
 

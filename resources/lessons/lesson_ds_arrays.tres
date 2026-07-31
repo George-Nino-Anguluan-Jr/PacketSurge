@@ -6,6 +6,10 @@
 [resource]
 script = ExtResource("1_mo1o6")
 lesson_id = "ds_arrays"
+order = 6
+section = "Data Structures"
+unlocks_tower = "tower_array"
+unlocks_level = 1
 title = "Arrays"
 category = "data_structures"
 prerequisites = Array[String](["py_functions"])

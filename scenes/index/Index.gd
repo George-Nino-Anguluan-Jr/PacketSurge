@@ -74,21 +74,23 @@ func _show_enemies_tab() -> void:
 	_style_active_tab(towers_tab,  false)
 	_style_active_tab(enemies_tab, true)
 
-# ─── TOWER DATA (built from PROGRESSION_CHAIN) ─────────
-# Returns an Array of Dictionaries, one per tower, in unlock order.
+# ─── TOWER DATA (built from DataRegistry, ordered) ─────
+# Returns an Array of Dictionaries, one per tower, in data order.
 func _collect_towers() -> Array:
-	var result: Array = []
+	var tower_to_lesson: Dictionary = {}
 	for lesson_id in ProgressManager.PROGRESSION_CHAIN:
 		var chain = ProgressManager.PROGRESSION_CHAIN[lesson_id]
-		if chain.get("type") not in ["both", "tower"]:
-			continue
-		var tower_id: String = chain["id"]
+		if chain.get("type") in ["both", "tower"]:
+			tower_to_lesson[chain["id"]] = lesson_id
+
+	var result: Array = []
+	for tower_id in DataRegistry.get_tower_ids_ordered():
 		var intro  = TowerIntroData.get_intro(tower_id)
 		# Stats come from GameManager.TOWER_DEFINITIONS (already in the project)
 		var def    = GameManager.TOWER_DEFINITIONS.get(tower_id, {})
 		result.append({
 			"id":               tower_id,
-			"unlocked_by":      lesson_id,
+			"unlocked_by":      tower_to_lesson.get(tower_id, ""),
 			"name":             def.get("tower_name", tower_id),
 			"tagline":          intro.get("tagline", ""),
 			"mechanic":         intro.get("mechanic", ""),

@@ -6,6 +6,8 @@
 [resource]
 script = ExtResource("1_artpg")
 lesson_id = "py_conditions"
+order = 4
+section = "Python Basics"
 title = "Conditions"
 category = "python"
 icon_text = "?"

@@ -8,6 +8,17 @@ extends Resource
 @export var icon_text: String = "[ ]"
 @export var prerequisites: Array[String] = []
 
+# Ordering within the Academy (0 = appended after ordered entries)
+@export var order: int = 0
+
+# Section shown in the Academy sidebar (e.g. "Python Basics")
+@export var section: String = ""
+
+# Progression: what mastering this lesson unlocks (previously the
+# hardcoded PROGRESSION_CHAIN in ProgressManager.gd)
+@export var unlocks_tower: String = ""  # e.g. "tower_array"
+@export var unlocks_level: int = 0      # e.g. 1 (0 = no level)
+
 # Visualization scene for Step 2
 # Assign the matching .tscn file here per lesson
 @export var visualization_scene: PackedScene = null

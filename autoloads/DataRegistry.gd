@@ -15,16 +15,6 @@ var enemies: Dictionary = {}     # enemy_id -> EnemyData
 var lessons: Array[LessonData] = []
 var lesson_paths: Array[String] = []
 
-# Canonical lesson order (matches Academy sidebar / progression)
-const LESSON_ORDER: Array[String] = [
-	"py_variables", "py_lists", "py_loops",
-	"py_conditions", "py_functions",
-	"ds_arrays", "ds_stacks", "ds_queues", "ds_linked_lists",
-	"sort_bubble", "sort_selection", "sort_insertion",
-	"sort_quick", "sort_merge", "sort_counting", "sort_radix",
-	"search_linear", "search_binary",
-]
-
 const TOWERS_DIR   := "res://resources/towers"
 const LEVELS_DIR   := "res://resources/levels"
 const ENEMIES_DIR  := "res://resources/enemies"
@@ -56,17 +46,29 @@ func _load_enemies() -> void:
 			enemies[r.enemy_id] = r
 
 func _load_lessons() -> void:
-	var by_id: Dictionary = {}
+	var all: Array = []  # of LessonData
 	var path_by_id: Dictionary = {}
 	for path in _list_resources(LESSONS_DIR):
 		var r = load(path) as LessonData
 		if r and r.lesson_id != "":
-			by_id[r.lesson_id] = r
+			all.append(r)
 			path_by_id[r.lesson_id] = path
-	for lesson_id in LESSON_ORDER:
-		if by_id.has(lesson_id):
-			lessons.append(by_id[lesson_id])
-			lesson_paths.append(path_by_id[lesson_id])
+	# Sort: entries with order > 0 first (ascending), then any with
+	# order == 0 (unassigned) alphabetically by id, so new .tres files
+	# are appended automatically without touching code.
+	all.sort_custom(func(a: LessonData, b: LessonData) -> bool:
+		var ao := a.order
+		var bo := b.order
+		if ao == 0 and bo != 0:
+			return false
+		if bo == 0 and ao != 0:
+			return true
+		if ao != bo:
+			return ao < bo
+		return a.lesson_id < b.lesson_id)
+	for r in all:
+		lessons.append(r)
+		lesson_paths.append(path_by_id[r.lesson_id])
 
 func _list_resources(dir_path: String) -> Array[String]:
 	var out: Array[String] = []
@@ -97,6 +99,62 @@ func get_lesson(lesson_id: String) -> LessonData:
 		if lesson.lesson_id == lesson_id:
 			return lesson
 	return null
+
+# ─── COUNTS / ORDER HELPERS ─────────────────────────────
+# Every UI that used to hardcode "18", "13", "39" reads these instead,
+# so adding a .tres file automatically updates every counter.
+
+func get_lesson_count() -> int:
+	return lessons.size()
+
+func get_lesson_ids() -> Array[String]:
+	var out: Array[String] = []
+	for lesson in lessons:
+		out.append(lesson.lesson_id)
+	return out
+
+func get_level_count() -> int:
+	return levels.size()
+
+func get_level_numbers() -> Array[int]:
+	var nums: Array[int] = []
+	for k in levels.keys():
+		nums.append(k)
+	nums.sort()
+	return nums
+
+func get_total_stars_possible() -> int:
+	return get_level_count() * 3
+
+func get_tower_count() -> int:
+	return towers.size()
+
+func get_tower_ids_ordered() -> Array[String]:
+	var list: Array = towers.values()  # Array of TowerData
+	list.sort_custom(func(a: TowerData, b: TowerData) -> bool:
+		var ao := a.order
+		var bo := b.order
+		if ao == 0 and bo != 0:
+			return false
+		if bo == 0 and ao != 0:
+			return true
+		if ao != bo:
+			return ao < bo
+		return a.tower_id < b.tower_id)
+	var out: Array[String] = []
+	for r in list:
+		out.append(r.tower_id)
+	return out
+
+func get_enemy_count() -> int:
+	return enemies.size()
+
+func get_enemy_ids() -> Array[String]:
+	var out: Array[String] = []
+	for enemy_id in enemies:
+		out.append(enemy_id)
+	out.sort()
+	return out
 
 # ─── LEGACY DICTIONARY SHAPES ───────────────────────────
 # These reproduce the exact dictionaries old code read from GameManager,

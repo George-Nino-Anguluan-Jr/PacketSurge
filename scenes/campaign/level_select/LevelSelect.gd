@@ -27,6 +27,26 @@ const MAIN_LEVEL_POSITIONS = {
 var tooltip_panel: PanelContainer = null
 var active_nodes: Array = []
 
+# Level node coordinates. Levels beyond the ones listed here get a
+# procedural continuation of the zig-zag (see _position_for_level).
+func _position_for_level(level_number: int) -> Vector2:
+	if MAIN_LEVEL_POSITIONS.has(level_number):
+		return MAIN_LEVEL_POSITIONS[level_number]
+	var max_key: int = MAIN_LEVEL_POSITIONS.keys().max()
+	var base: Vector2 = MAIN_LEVEL_POSITIONS[max_key]
+	var y_pattern: Array[float] = [180.0, 90.0, 240.0, 140.0, 240.0, 90.0]
+	var idx := level_number - 1
+	return Vector2(
+		100.0 + idx * 150.0,
+		y_pattern[idx % y_pattern.size()]
+	)
+
+func _hex_for_level(level_number: int) -> String:
+	var hex_addresses = ["0x0F", "0x1A", "0x2C", "0x3F", "0x4B", "0x5A", "0x63", "0x7E", "0x8D", "0x9F", "0xA6", "0xB0", "0xCD"]
+	if level_number - 1 < hex_addresses.size():
+		return hex_addresses[level_number - 1]
+	return "0x%02X" % (0xE0 + level_number - 13)
+
 func _ready() -> void:
 	_setup_buttons()
 	_apply_styles()
@@ -75,11 +95,11 @@ func _input(event: InputEvent) -> void:
 # ─── AUTO SCROLL TO CURRENT PROGRESS ───────────────────
 func _auto_scroll_to_current() -> void:
 	var highest_unlocked := 1
-	for main_level in range(1, 14):
+	for main_level in DataRegistry.get_level_numbers():
 		if ProgressManager.is_level_unlocked(main_level):
 			highest_unlocked = main_level
 
-	var target_pos = MAIN_LEVEL_POSITIONS[highest_unlocked]
+	var target_pos = _position_for_level(highest_unlocked)
 	# Center the scrollbar around target pos
 	var center_offset = target_pos.x - (size.x / 2.0)
 	center_offset = clamp(center_offset, 0.0, map_canvas.custom_minimum_size.x - size.x)
@@ -198,15 +218,21 @@ func _build_level_nodes() -> void:
 
 	var unlocked_count := 0
 
-	for main_level in range(1, 14):
+	for main_level in DataRegistry.get_level_numbers():
 		var is_unlocked = ProgressManager.is_level_unlocked(main_level)
 		var is_completed = ProgressManager.campaign_progress.get("waves_completed", 0) >= main_level
 
 		if is_unlocked:
 			unlocked_count += 1
 
-		var pos = MAIN_LEVEL_POSITIONS[main_level]
-		var info = {"number": main_level, "name": "Level " + str(main_level), "ds": "", "waves": 3}
+		var pos = _position_for_level(main_level)
+		var ld = DataRegistry.get_level(main_level)
+		var info = {
+			"number": main_level,
+			"name": ld.level_name if ld else "Level " + str(main_level),
+			"ds": ld.data_structure if ld else "",
+			"waves": ld.wave_count if ld else 3,
+		}
 		var btn = _create_node_button(info, is_unlocked, is_completed, pos)
 		map_canvas.add_child(btn)
 		active_nodes.append(btn)
@@ -226,8 +252,9 @@ func _build_level_nodes() -> void:
 				map_canvas.add_child(star_lbl)
 				active_nodes.append(star_lbl)
 
-	ram_label.text = str(unlocked_count) + " / 13 Unlocked"
-	locked_label.visible = unlocked_count < 13
+	var total_levels := DataRegistry.get_level_count()
+	ram_label.text = str(unlocked_count) + " / " + str(total_levels) + " Unlocked"
+	locked_label.visible = unlocked_count < total_levels
 	map_canvas.queue_redraw()
 
 func _create_node_button(info: Dictionary, is_unlocked: bool, is_completed: bool, pos: Vector2) -> Button:
@@ -311,12 +338,13 @@ func _on_map_canvas_draw() -> void:
 	_draw_traffic_oscillator()
 	
 	# 2. Level Trace connections as clean 45-degree copper lanes
-	for i in range(1, 13):
-		var pos_a = MAIN_LEVEL_POSITIONS[i]
-		var pos_b = MAIN_LEVEL_POSITIONS[i + 1]
-		
-		var unlocked_b = ProgressManager.is_level_unlocked(i + 1)
-		var completed_b = ProgressManager.campaign_progress.get("waves_completed", 0) >= (i + 1)
+	var level_numbers := DataRegistry.get_level_numbers()
+	for i in range(level_numbers.size() - 1):
+		var pos_a = _position_for_level(level_numbers[i])
+		var pos_b = _position_for_level(level_numbers[i + 1])
+
+		var unlocked_b = ProgressManager.is_level_unlocked(level_numbers[i + 1])
+		var completed_b = ProgressManager.campaign_progress.get("waves_completed", 0) >= (level_numbers[i + 1])
 		
 		var points = _get_trace_points(pos_a, pos_b)
 		
@@ -333,8 +361,8 @@ func _on_map_canvas_draw() -> void:
 			_draw_dashed_trace(points, Color("#1A2D3D", 0.4), 1.5, 8.0)
 			
 	# 3. Rotating HUD corner bracket outlines around level nodes (High-Performance L-brackets)
-	for lvl in range(1, 14):
-		var node_pos = MAIN_LEVEL_POSITIONS[lvl]
+	for lvl in level_numbers:
+		var node_pos = _position_for_level(lvl)
 		_draw_node_hud_brackets(node_pos, lvl)
 		
 		# Draw horizontal hardware bus trace connecting the sub-levels
@@ -450,10 +478,9 @@ func _draw_system_readouts() -> void:
 	map_canvas.draw_string(font, Vector2(1850, 45), "[PACKET_LOSS: 0.00% // RETRIES: 0]", HORIZONTAL_ALIGNMENT_LEFT, -1, font_size, color)
 	
 	# Draw hex addresses under each level node
-	var hex_addresses = ["0x0F", "0x1A", "0x2C", "0x3F", "0x4B", "0x5A", "0x63", "0x7E", "0x8D", "0x9F", "0xA6", "0xB0", "0xCD"]
-	for lvl in range(1, 14):
-		var pos = MAIN_LEVEL_POSITIONS[lvl]
-		var hex_addr = "[" + hex_addresses[lvl - 1] + "]"
+	for lvl in DataRegistry.get_level_numbers():
+		var pos = _position_for_level(lvl)
+		var hex_addr = "[" + _hex_for_level(lvl) + "]"
 		map_canvas.draw_string(font, pos + Vector2(-18, 52), hex_addr, HORIZONTAL_ALIGNMENT_LEFT, -1, 9, color * 0.8)
 
 func _draw_traffic_oscillator() -> void:
@@ -510,7 +537,10 @@ func _draw_bg_memory_banks() -> void:
 func _draw_bg_hex_gateway() -> void:
 	# Holographic Gateway Core in Sector 3 (X: 1800, Y: 180)
 	var center = Vector2(1800, 165)
-	var is_unlocked = ProgressManager.is_level_unlocked(13)
+	var last_level := 1
+	for lvl in DataRegistry.get_level_numbers():
+		last_level = lvl
+	var is_unlocked = ProgressManager.is_level_unlocked(last_level)
 	
 	var color_border = Color("#00FF88" if is_unlocked else "#00D4FF", 0.14)
 	

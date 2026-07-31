@@ -1,49 +1,15 @@
 # ProgressManager.gd
 extends Node
 
-# ─── PROGRESSION CONSTANTS ─────────────────────────────
-const PROGRESSION_CHAIN: Dictionary = {
-	# DS lessons → unlock towers and campaign levels
-	"ds_arrays":       {"type": "both",  "id": "tower_array",       "level_id": 1},
-	"ds_stacks":       {"type": "both",  "id": "tower_stack",       "level_id": 2},
-	"ds_queues":       {"type": "both",  "id": "tower_queue",       "level_id": 3},
-	"ds_linked_lists": {"type": "both",  "id": "tower_linked_list", "level_id": 4},
-	# Sorting lessons → unlock towers and campaign levels
-	"sort_bubble":     {"type": "both",  "id": "tower_bubble",      "level_id": 5},
-	"sort_selection":  {"type": "both",  "id": "tower_selection",   "level_id": 6},
-	"sort_insertion":  {"type": "both",  "id": "tower_insertion",   "level_id": 7},
-	"sort_quick":      {"type": "both",  "id": "tower_quick",       "level_id": 8},
-	"sort_merge":      {"type": "both",  "id": "tower_merge",       "level_id": 9},
-	"sort_counting":   {"type": "both",  "id": "tower_counting",    "level_id": 10},
-	"sort_radix":      {"type": "both",  "id": "tower_radix",       "level_id": 11},
-	# Search lessons → unlock towers and campaign levels
-	"search_linear":   {"type": "both",  "id": "tower_linear",      "level_id": 12},
-	"search_binary":   {"type": "both",  "id": "tower_binary",      "level_id": 13},
-}
-
-const LEVEL_UNLOCKS_LESSON: Dictionary = {
-	1:  "ds_stacks",
-	2:  "ds_queues",
-	3:  "ds_linked_lists",
-	4:  "sort_bubble",
-	5:  "sort_selection",
-	6:  "sort_insertion",
-	7:  "sort_quick",
-	8:  "sort_merge",
-	9:  "sort_counting",
-	10: "sort_radix",
-	11: "search_linear",
-	12: "search_binary",
-}
-
-const ALL_LESSONS = [
-	"py_variables", "py_lists", "py_loops",
-	"py_conditions", "py_functions",
-	"ds_arrays", "ds_stacks", "ds_queues", "ds_linked_lists",
-	"sort_bubble", "sort_selection", "sort_insertion",
-	"sort_quick", "sort_merge", "sort_counting", "sort_radix",
-	"search_linear", "search_binary",
-]
+# ─── PROGRESSION DATA (derived from resources/lessons/*.tres) ──────
+# These used to be hardcoded constants. They are now built at startup
+# from LessonData resources, so editing/adding a lesson .tres file
+# updates progression everywhere without touching code. The public
+# shape (dictionaries keyed like the old consts) is unchanged so all
+# existing consumers keep working.
+static var PROGRESSION_CHAIN: Dictionary     = {}
+static var LEVEL_UNLOCKS_LESSON: Dictionary  = {}
+static var ALL_LESSONS: Array[String]         = []
 
 # ─── PROGRESS DATA ─────────────────────────────────────
 var topic_states: Dictionary      = {}
@@ -61,8 +27,28 @@ var tutorials_seen: Array[String]   = []  # tutorial scene key (e.g. "main_menu"
 
 # ─── STARTUP ───────────────────────────────────────────
 func _ready() -> void:
+	_build_progression_data()
 	load_progress()
 	_ensure_base_state()
+
+func _build_progression_data() -> void:
+	ALL_LESSONS = DataRegistry.get_lesson_ids()
+	PROGRESSION_CHAIN = {}
+	LEVEL_UNLOCKS_LESSON = {}
+	for lesson in DataRegistry.lessons:
+		if lesson.unlocks_tower == "" and lesson.unlocks_level <= 0:
+			continue
+		var entry := {
+			"id":       lesson.unlocks_tower,
+			"level_id": lesson.unlocks_level,
+		}
+		var has_tower := lesson.unlocks_tower != ""
+		var has_level := lesson.unlocks_level > 0
+		entry["type"] = "both" if has_tower and has_level \
+			else ("tower" if has_tower else "level")
+		PROGRESSION_CHAIN[lesson.lesson_id] = entry
+		if lesson.unlocks_level > 1:
+			LEVEL_UNLOCKS_LESSON[lesson.unlocks_level - 1] = lesson.lesson_id
 
 func _ensure_base_state() -> void:
 	# py_variables always unlocked
@@ -116,56 +102,19 @@ func get_topic_for_level(level_number: int) -> String:
 
 # ─── UNLOCK CHECKER ────────────────────────────────────
 func check_all_unlocks() -> void:
-	# 1. Sequential Python unlocking
-	if get_topic_state("py_variables") == "mastered":
-		unlock_topic("py_lists")
-	if get_topic_state("py_lists") == "mastered":
-		unlock_topic("py_loops")
-	if get_topic_state("py_loops") == "mastered":
-		unlock_topic("py_conditions")
-	if get_topic_state("py_conditions") == "mastered":
-		unlock_topic("py_functions")
-	if get_topic_state("py_functions") == "mastered":
-		unlock_topic("ds_arrays")
-
-	# 2. Sequential DS / Sort / Search unlocking based on BOTH mastered lesson AND completed campaign level
+	# Sequential unlocking: each lesson unlocks when the previous one
+	# (in DataRegistry order) is mastered. Lessons that also unlock a
+	# campaign level additionally require enough waves completed.
 	var waves_done = campaign_progress.get("waves_completed", 0)
-
-	if get_topic_state("ds_arrays") == "mastered" and waves_done >= 1:
-		unlock_topic("ds_stacks")
-
-	if get_topic_state("ds_stacks") == "mastered" and waves_done >= 2:
-		unlock_topic("ds_queues")
-
-	if get_topic_state("ds_queues") == "mastered" and waves_done >= 3:
-		unlock_topic("ds_linked_lists")
-
-	if get_topic_state("ds_linked_lists") == "mastered" and waves_done >= 4:
-		unlock_topic("sort_bubble")
-
-	if get_topic_state("sort_bubble") == "mastered" and waves_done >= 5:
-		unlock_topic("sort_selection")
-
-	if get_topic_state("sort_selection") == "mastered" and waves_done >= 6:
-		unlock_topic("sort_insertion")
-
-	if get_topic_state("sort_insertion") == "mastered" and waves_done >= 7:
-		unlock_topic("sort_quick")
-
-	if get_topic_state("sort_quick") == "mastered" and waves_done >= 8:
-		unlock_topic("sort_merge")
-
-	if get_topic_state("sort_merge") == "mastered" and waves_done >= 9:
-		unlock_topic("sort_counting")
-
-	if get_topic_state("sort_counting") == "mastered" and waves_done >= 10:
-		unlock_topic("sort_radix")
-
-	if get_topic_state("sort_radix") == "mastered" and waves_done >= 11:
-		unlock_topic("search_linear")
-
-	if get_topic_state("search_linear") == "mastered" and waves_done >= 12:
-		unlock_topic("search_binary")
+	for i in range(1, ALL_LESSONS.size()):
+		var lesson_id: String = ALL_LESSONS[i]
+		if get_topic_state(ALL_LESSONS[i - 1]) != "mastered":
+			continue
+		var entry = PROGRESSION_CHAIN.get(lesson_id)
+		if entry and int(entry.get("level_id", 0)) > 0 \
+				and waves_done < int(entry["level_id"]) - 1:
+			continue
+		unlock_topic(lesson_id)
 
 # ─── LESSON COMPLETION ─────────────────────────────────
 func on_lesson_completed(lesson_id: String) -> void:

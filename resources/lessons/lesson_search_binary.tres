@@ -6,6 +6,10 @@
 [resource]
 script = ExtResource("1_xk5ya")
 lesson_id = "search_binary"
+order = 18
+section = "Searching"
+unlocks_tower = "tower_binary"
+unlocks_level = 13
 title = "Binary Search"
 category = "data_structures"
 icon_text = "½"

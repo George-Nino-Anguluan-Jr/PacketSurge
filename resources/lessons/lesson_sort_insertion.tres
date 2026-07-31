@@ -6,6 +6,10 @@
 [resource]
 script = ExtResource("1_h46rf")
 lesson_id = "sort_insertion"
+order = 12
+section = "Sorting"
+unlocks_tower = "tower_insertion"
+unlocks_level = 7
 title = "Insertion Sort"
 category = "data_structures"
 icon_text = "←↑"

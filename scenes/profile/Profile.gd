@@ -156,8 +156,8 @@ func _make_stats_row() -> HBoxContainer:
 	var levels = ProgressManager.campaign_progress.get("waves_completed", 0)
 	var towers = ProgressManager.unlocked_towers.size()
 
-	row.add_child(_make_stat_card("Lessons\nMastered", str(mastered) + "/18", Color("#00FF88")))
-	row.add_child(_make_stat_card("Campaign\nLevels", str(levels) + "/13", Color("#FFB800")))
+	row.add_child(_make_stat_card("Lessons\nMastered", str(mastered) + "/" + str(DataRegistry.get_lesson_count()), Color("#00FF88")))
+	row.add_child(_make_stat_card("Campaign\nLevels", str(levels) + "/" + str(DataRegistry.get_level_count()), Color("#FFB800")))
 	row.add_child(_make_stat_card("Towers\nUnlocked", str(towers), Color("#00D4FF")))
 
 	return row

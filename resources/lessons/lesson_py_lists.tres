@@ -6,6 +6,8 @@
 [resource]
 script = ExtResource("1_6cnu5")
 lesson_id = "py_lists"
+order = 2
+section = "Python Basics"
 title = "Lists"
 category = "python"
 icon_text = "[ ]"

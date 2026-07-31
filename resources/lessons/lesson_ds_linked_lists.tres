@@ -6,6 +6,10 @@
 [resource]
 script = ExtResource("1_5ypmi")
 lesson_id = "ds_linked_lists"
+order = 9
+section = "Data Structures"
+unlocks_tower = "tower_linked_list"
+unlocks_level = 4
 title = "Linked Lists"
 category = "data_structures"
 icon_text = "→→"

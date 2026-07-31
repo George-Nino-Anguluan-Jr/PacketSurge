@@ -6,6 +6,10 @@
 [resource]
 script = ExtResource("1_3d2s1")
 lesson_id = "sort_radix"
+order = 16
+section = "Sorting"
+unlocks_tower = "tower_radix"
+unlocks_level = 11
 title = "Radix Sort"
 category = "data_structures"
 icon_text = "0→9"

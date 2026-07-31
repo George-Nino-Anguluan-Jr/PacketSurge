@@ -6,6 +6,8 @@
 [resource]
 script = ExtResource("1_38uo3")
 lesson_id = "py_variables"
+order = 1
+section = "Python Basics"
 title = "Variables"
 category = "python"
 icon_text = "[x]"
