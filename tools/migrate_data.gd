@@ -32,8 +32,6 @@ func _generate_towers() -> void:
 		r.ability_name    = d.get("ability_name", "")
 		r.color           = d.get("color", Color("#00D4FF"))
 		r.icon_text       = d.get("icon_text", "[ ]")
-		r.spire_variant   = d.get("spire_variant", "")
-		r.spire_base_h    = d.get("spire_base_h", 0)
 		r.order           = order
 		r.tagline         = intro.get("tagline", "")
 		r.mechanic        = intro.get("mechanic", "")
