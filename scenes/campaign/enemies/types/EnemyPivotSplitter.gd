@@ -9,6 +9,9 @@ func get_type_id() -> String:
 
 func _init_type_state() -> void:
 	type_data["has_split"] = false
+	# Vulnerable to Quick tower (quicksort pivot partitioning)
+	type_data["tower_multipliers"] = {"tower_quick": 2.0}
+	type_data["default_tower_mult"] = 0.6
 
 func _on_death() -> void:
 	if not type_data["has_split"]:

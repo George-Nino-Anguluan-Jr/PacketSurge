@@ -1,6 +1,6 @@
 # TowerBinary.gd
-# Binary Tower — binary search targeting. Fires a high-damage sniper shot.
-# Targets: closest enemy. 2.2x damage multiplier, slow fire.
+# Binary Tower — divide & conquer. Fires a high-damage sniper shot at the
+# median enemy, then the bolt splits, damaging both halves of the group.
 
 extends TowerBase
 
@@ -8,10 +8,9 @@ func get_type_id() -> String:
 	return "tower_binary"
 
 func _select_target() -> Node:
+	# Binary search picks the middle element of the sorted (path-ordered) list.
 	_clean_targets()
-	if targets.is_empty():
-		return null
-	return _get_closest(targets)
+	return _get_median_target()
 
 func _perform_attack() -> void:
 	if not current_target:
@@ -31,10 +30,28 @@ func _perform_attack() -> void:
 		"damage": damage * 2.2,
 		"style": "binary_sniper",
 		"elapsed_time": 0.0,
-		"total_dist": (current_target.position - spawn_origin).length()
+		"total_dist": (current_target.position - spawn_origin).length(),
+		"on_hit": _binary_split,
 	}
 	_spawn_custom_projectile(p)
 	queue_redraw()
+
+func _binary_split(p: Dictionary) -> void:
+	# Divide & conquer: damage the two halves of the enemy group (ahead & behind).
+	var sorted = _get_enemies_sorted_by_progress()
+	if sorted.is_empty():
+		return
+	var mid_idx = int(sorted.size() / 2)
+	var split_dmg = p["damage"] * 0.35
+	for i in range(sorted.size()):
+		var e = sorted[i]
+		if not is_instance_valid(e) or e.is_dead or e == p["target"]:
+			continue
+		# Front half (behind the pivot) and back half (ahead of the pivot)
+		if i < mid_idx or i > mid_idx:
+			e.take_damage(split_dmg, tower_id)
+			var aim = e.get_aim_point() if e.has_method("get_aim_point") else e.position
+			_spawn_impact_explosion(aim, "binary_sniper", e)
 
 func _get_upgrade_stats(level: int) -> Dictionary:
 	return {"damage": 1.4, "speed": 1.0, "range": 1.1}

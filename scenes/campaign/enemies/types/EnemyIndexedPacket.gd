@@ -8,6 +8,9 @@ func get_type_id() -> String:
 
 func _init_type_state() -> void:
 	type_data["index"] = randi() % 5
+	# Vulnerable to Array tower (O(1) index access hits the right index)
+	type_data["tower_multipliers"] = {"tower_array": 2.0}
+	type_data["default_tower_mult"] = 0.6
 
 func _modify_damage(amount: float) -> float:
 	return amount * 0.5

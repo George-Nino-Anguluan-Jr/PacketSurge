@@ -8,8 +8,11 @@ func get_type_id() -> String:
 
 func _init_type_state() -> void:
 	type_data["link_color"] = Color("#00FF88")
-	if not type_data.has("partner"):
-		type_data["partner"] = null
+	if not type_data.has("partner_id"):
+		type_data["partner_id"] = 0
+	# Vulnerable to Linked List tower (chain lightning follows the links)
+	type_data["tower_multipliers"] = {"tower_linked_list": 2.0}
+	type_data["default_tower_mult"] = 0.6
 
 func _modify_damage(amount: float) -> float:
 	var partner = get_partner()
@@ -23,10 +26,19 @@ func _process_type_logic(delta: float) -> void:
 	_bob_time += delta * 1.5
 
 func set_partner(p: Node) -> void:
-	type_data["partner"] = p
+	type_data["partner_id"] = p.get_instance_id() if p != null else 0
 
 func get_partner() -> Node:
-	return type_data.get("partner")
+	# Store the partner's instance ID, never a raw reference, so a freed
+	# partner resolves to null instead of a dangling pointer.
+	var pid: int = int(type_data.get("partner_id", 0))
+	if pid == 0:
+		return null
+	var p = instance_from_id(pid)
+	if p == null or not is_instance_valid(p):
+		type_data["partner_id"] = 0
+		return null
+	return p
 
 func _draw_type_body(col: Color, bob: float) -> void:
 	# 3D hexagonal prism (linked list node)

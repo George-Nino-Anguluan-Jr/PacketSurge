@@ -8,6 +8,7 @@ class_name TowerBase
 extends Node2D
 
 const ENEMY_RADIUS: float = 20.0
+const IMPACT_DISTANCE: float = 14.0
 const SQUASH: float = 0.65
 
 # ─── STATS (shared) ─────────────────────────────────────
@@ -179,16 +180,68 @@ func _get_nearby(count: int) -> Array:
 			break
 	return result
 
-func _get_closest_to_point(point: Vector2, exclude: Array[Node]) -> Node:
+func _get_closest_to_point(point: Vector2, exclude: Array[Node], max_dist: float = -1.0) -> Node:
 	_clean_targets()
 	var best: Node = null
-	var best_dist: float = attack_range + ENEMY_RADIUS * 2
+	var best_dist: float = attack_range + ENEMY_RADIUS * 2 if max_dist < 0.0 else max_dist
 	for e in targets:
 		if exclude.has(e):
 			continue
 		var d = point.distance_to(e.global_position)
 		if d <= best_dist:
 			best_dist = d
+			best = e
+	return best
+
+func _get_nearest(count: int) -> Array:
+	# Returns the closest `count` live enemies to this tower (by global distance).
+	var list: Array = []
+	for e in targets:
+		if is_instance_valid(e) and not e.is_dead:
+			list.append(e)
+	list.sort_custom(func(a, b): return global_position.distance_to(a.global_position) < global_position.distance_to(b.global_position))
+	var out: Array = []
+	for i in range(min(count, list.size())):
+		out.append(list[i])
+	return out
+
+func _get_enemies_sorted_by_progress() -> Array:
+	# Enemies ordered along the path (waypoint progress). Used by Queue/Linked
+	# List/Stack to express list/queue/tree ordering instead of raw distance.
+	var list: Array = []
+	for e in targets:
+		if is_instance_valid(e) and not e.is_dead and e.has_method("get_path_progress"):
+			list.append(e)
+	list.sort_custom(func(a, b): return a.get_path_progress() < b.get_path_progress())
+	return list
+
+func _get_median_target() -> Node:
+	# Binary tower: divide & conquer picks the middle enemy along the path.
+	var list = _get_enemies_sorted_by_progress()
+	if list.is_empty():
+		return null
+	return list[int(list.size() / 2)]
+
+func _get_next_along_path(anchor, exclude: Array[Node], max_dist: float) -> Node:
+	# Linked List / Quick: following the linked nodes in path order == the next enemy
+	# along the route (lowest progress greater than the anchor's), within range.
+	if not anchor or not is_instance_valid(anchor) or not anchor.has_method("get_path_progress"):
+		return null
+	var anchor_prog: float = anchor.get_path_progress()
+	var best: Node = null
+	var best_prog: float = INF
+	for e in targets:
+		if not is_instance_valid(e) or e.is_dead or exclude.has(e):
+			continue
+		if not e.has_method("get_path_progress"):
+			continue
+		var prog: float = e.get_path_progress()
+		if prog <= anchor_prog:
+			continue
+		if anchor.global_position.distance_to(e.global_position) > max_dist:
+			continue
+		if prog < best_prog:
+			best_prog = prog
 			best = e
 	return best
 
@@ -241,7 +294,7 @@ func _apply_ability_damage(dmg: float, abil_targets: Array) -> void:
 	var mult = _get_ability_damage_multiplier()
 	for e in abil_targets:
 		if is_instance_valid(e) and e.has_method("take_damage"):
-			e.take_damage(dmg * mult)
+			e.take_damage(dmg * mult, tower_id)
 	_shoot_flash = 2.0
 	queue_redraw()
 
@@ -316,7 +369,9 @@ func _process(delta: float) -> void:
 		_shoot_flash -= delta * 4.0
 
 	_mobile_redraw_skip += 1
-	if _mobile_redraw_skip % 2 == 0:
+	if not _projectiles.is_empty() or not _explosions.is_empty() or not _chain_arcs.is_empty():
+		queue_redraw()
+	elif _mobile_redraw_skip % 2 == 0:
 		queue_redraw()
 
 	_update_projectiles(delta)
@@ -365,15 +420,28 @@ func _spawn_custom_projectile(p: Dictionary) -> void:
 func _update_projectiles(delta: float) -> void:
 	var remaining: Array[Dictionary] = []
 	for p in _projectiles:
+		if p.get("impacted"):
+			if is_instance_valid(p["target"]):
+				var aim: Vector2 = p["target"].get_aim_point() if p["target"].has_method("get_aim_point") else p["target"].position
+				p["pos"] = aim
+				p["draw_pos"] = aim
+			p["impacted_frames"] = p.get("impacted_frames", 1) - 1
+			if p["impacted_frames"] > 0:
+				remaining.append(p)
+			continue
 		p["elapsed_time"] += delta
 		if p.has("delay") and p["delay"] > 0:
 			p["delay"] -= delta
 			if p["delay"] > 0:
 				remaining.append(p)
 				continue
+		if _is_pierce_beam(p):
+			if _update_pierce_beam(p, delta):
+				remaining.append(p)
+			continue
 		var target_pos = p["target_last_pos"]
 		if is_instance_valid(p["target"]):
-			target_pos = p["target"].position
+			target_pos = p["target"].get_aim_point() if p["target"].has_method("get_aim_point") else p["target"].position
 			p["target_last_pos"] = target_pos
 		var current_pos = p["pos"]
 		var next_pos = current_pos.move_toward(target_pos, p["speed"] * delta)
@@ -390,41 +458,124 @@ func _update_projectiles(delta: float) -> void:
 				p["draw_pos"] = next_pos
 		else:
 			p["draw_pos"] = next_pos
-		if next_pos.distance_to(target_pos) < 25.0:
+		if next_pos.distance_to(target_pos) < IMPACT_DISTANCE:
+			p["pos"] = target_pos
+			p["draw_pos"] = target_pos
 			_on_projectile_impact(p)
+			p["impacted"] = true
+			p["impacted_frames"] = 3
+			remaining.append(p)
 		else:
 			remaining.append(p)
 	_projectiles = remaining
 
-func _on_projectile_impact(p: Dictionary) -> void:
+func _is_pierce_beam(p: Dictionary) -> bool:
+	var s: String = p.get("style", "")
+	return s == "queue_pierce" or s == "linear_beam"
+
+func _update_pierce_beam(p: Dictionary, delta: float) -> bool:
+	# Straight-line beam: flies along beam_dir, sweeps a lateral hit zone,
+	# and hits each enemy on the line exactly once (via hit_list).
+	var step = p["speed"] * delta
+	p["pos"] += p["beam_dir"] * step
+	p["traveled"] += step
+	p["draw_pos"] = p["pos"]
+	var hit_list: Array = p["hit_list"]
+	var falloff: float = p.get("falloff", 1.0)
+	var beam_dir: Vector2 = p["beam_dir"]
+	var perp = Vector2(-beam_dir.y, beam_dir.x)
+	var half_width: float = p.get("beam_width", 12.0)
+	for e in targets:
+		if not is_instance_valid(e) or e.is_dead:
+			continue
+		if hit_list.has(e):
+			continue
+		var offset = e.position - p["start_pos"]
+		var along = offset.dot(beam_dir)
+		if along < -ENEMY_RADIUS:
+			continue
+		var ahead = offset.length() - p["traveled"]
+		if ahead > 18.0 + ENEMY_RADIUS:
+			continue
+		var lateral = abs(offset.dot(perp))
+		if lateral > half_width + ENEMY_RADIUS:
+			continue
+		if e.has_method("take_damage"):
+			e.take_damage(p["damage"] * falloff, tower_id)
+		hit_list.append(e)
+		falloff *= p.get("decay", 0.8)
+		var aim = e.get_aim_point() if e.has_method("get_aim_point") else e.position
+		_spawn_impact_explosion(aim, "linear_scan", e)
+	p["falloff"] = falloff
+	return p["traveled"] < p["max_range"]
+
+func _on_projectile_impact(p: Dictionary) -> bool:
 	if is_instance_valid(p["target"]) and p["target"].has_method("take_damage"):
-		p["target"].take_damage(p["damage"])
-	_spawn_impact_explosion(p["target_last_pos"], p["style"])
+		p["target"].take_damage(p["damage"], tower_id)
+	if p.get("pop", false):
+		_pop_burst(p)
+	_on_style_impact(p)
+	var track: Node = p["target"] if is_instance_valid(p["target"]) else null
+	_spawn_impact_explosion(p["target_last_pos"], p["style"], track)
 	if p["style"] == "chain_lightning" and p.has("chains_left") and p["chains_left"] > 0:
 		var last_pos = p["target_last_pos"]
 		var chained: Array[Node] = []
+		var anchor: Node = p["target"] if is_instance_valid(p["target"]) else null
+		if anchor != null:
+			chained.append(anchor)
 		for n in p["chained_targets"]:
 			chained.append(n)
 		var current_damage = p["damage"]
 		var chains_left = p["chains_left"]
-		while chains_left > 0:
-			var next_target = _get_closest_to_point(last_pos, chained)
+		var chain_radius = p.get("chain_radius", 60.0)
+		var traverse_path: bool = p.get("traverse_path", false)
+		while chains_left > 0 and anchor != null and is_instance_valid(anchor):
+			var next_target: Node = null
+			if traverse_path:
+				next_target = _get_next_along_path(anchor, chained, chain_radius)
+			else:
+				next_target = _get_closest_to_point(last_pos, chained, chain_radius)
 			if not next_target:
 				break
 			chains_left -= 1
 			chained.append(next_target)
 			current_damage *= 0.8
-			var next_pos = next_target.position
+			var next_pos = next_target.get_aim_point() if next_target.has_method("get_aim_point") else next_target.position
 			_spawn_chain_arc(last_pos, next_pos)
 			if next_target.has_method("take_damage"):
-				next_target.take_damage(current_damage)
-			_spawn_impact_explosion(next_pos, "chain_lightning")
+				next_target.take_damage(current_damage, tower_id)
+			_spawn_impact_explosion(next_pos, "chain_lightning", next_target)
 			last_pos = next_pos
+			anchor = next_target
+		return false
+	if p.has("on_hit") and p["on_hit"] is Callable:
+		p["on_hit"].call(p)
+	return false
+
+func _pop_burst(p: Dictionary) -> void:
+	# Stack POP: burst damage to enemies near the impact point.
+	var origin: Vector2 = p["target_last_pos"]
+	var radius: float = p.get("pop_radius", 80.0)
+	for e in targets:
+		if not is_instance_valid(e) or e.is_dead or e == p["target"]:
+			continue
+		if origin.distance_to(e.position) <= radius:
+			e.take_damage(p["damage"] * 0.5, tower_id)
+			var aim = e.get_aim_point() if e.has_method("get_aim_point") else e.position
+			_spawn_impact_explosion(aim, "stack_mortar", e)
+
+
+func _on_style_impact(p: Dictionary) -> void:
+	# Virtual — subclasses override to add per-style impact effects.
+	pass
 
 func _update_explosions(delta: float) -> void:
 	var remaining: Array[Dictionary] = []
 	for e in _explosions:
 		e["elapsed"] += delta
+		var track = e.get("track")
+		if track != null and is_instance_valid(track):
+			e["pos"] = (track.get_aim_point() if track.has_method("get_aim_point") else track.position) - position
 		e["radius"] = lerp(0.0, e["max_radius"], e["elapsed"] / e["lifetime"])
 		if e["elapsed"] < e["lifetime"]:
 			remaining.append(e)
@@ -438,11 +589,12 @@ func _update_arcs(delta: float) -> void:
 			remaining.append(arc)
 	_chain_arcs = remaining
 
-func _spawn_impact_explosion(pos: Vector2, style: String) -> void:
+func _spawn_impact_explosion(pos: Vector2, style: String, track: Node = null) -> void:
 	var radius_map = {
 		"stack_mortar": 18.0, "chain_lightning": 22.0, "queue_rail": 14.0,
 		"binary_sniper": 16.0, "index_bolt": 8.0, "merge_beam": 14.0,
-		"counting_pellet": 10.0, "radix_digit": 8.0, "linear_scan": 12.0
+		"counting_pellet": 10.0, "radix_digit": 8.0, "linear_scan": 12.0,
+		"linear_beam": 16.0, "queue_pierce": 14.0
 	}
 	var max_r = radius_map.get(style, 8.0)
 	var e = {
@@ -453,6 +605,8 @@ func _spawn_impact_explosion(pos: Vector2, style: String) -> void:
 		"elapsed": 0.0,
 		"lifetime": 0.22
 	}
+	if track != null:
+		e["track"] = track
 	_explosions.append(e)
 
 func _spawn_chain_arc(from_pos: Vector2, to_pos: Vector2) -> void:
@@ -539,14 +693,13 @@ func _draw_overlays(color: Color) -> void:
 					var dot_pos = line_start + heading * j * 5.0
 					draw_circle(dot_pos, 1.5, Color(color, 0.6 - j * 0.15))
 			"chain_lightning":
-				var heading = (p["target_last_pos"] - p["pos"]).normalized() if (p["target_last_pos"] - p["pos"]).length() > 0 else Vector2.RIGHT
-				var dist = p["total_dist"]
-				var travel = clamp(p["elapsed_time"] / (dist / p["speed"]), 0.0, 1.0) if dist > 0 else 1.0
+				var bolt_from = rd
+				var bolt_to = p["target_last_pos"] - position
 				var segments = 6
-				var prev = rd
+				var prev = bolt_from
 				for j in range(segments):
 					var frac = (j + 1.0) / segments
-					var base_pos = rd + heading * frac * dist * travel * 0.5
+					var base_pos = bolt_from.lerp(bolt_to, frac)
 					var jitter = Vector2(cos(_anim_time * 40.0 + j * 3.0), sin(_anim_time * 40.0 + j * 3.0)) * 4.0
 					var next_pt = base_pos + jitter
 					draw_line(prev, next_pt, Color.WHITE, 2.5 - j * 0.3)
@@ -606,6 +759,14 @@ func _draw_overlays(color: Color) -> void:
 				draw_line(rd - perp * 8.0, rd + perp * 8.0, Color(color, 0.6), 1.0)
 				draw_circle(rd, 2.0, Color.WHITE)
 				draw_circle(rd, 4.0, Color(color, 0.4))
+			"linear_beam", "queue_pierce":
+				var beam_heading = p.get("beam_dir", Vector2.RIGHT)
+				var beam_perp = Vector2(-beam_heading.y, beam_heading.x)
+				draw_line(rd - beam_heading * 30.0, rd, Color(color, 0.3), 2.5)
+				draw_line(rd - beam_perp * 10.0, rd + beam_perp * 10.0, Color.WHITE, 2.0)
+				draw_line(rd - beam_perp * 10.0, rd + beam_perp * 10.0, color, 1.2)
+				draw_circle(rd, 2.5, Color.WHITE)
+				draw_circle(rd, 5.0, Color(color, 0.35))
 			"binary_sniper":
 				var heading = (p["target_last_pos"] - p["pos"]).normalized() if (p["target_last_pos"] - p["pos"]).length() > 0 else Vector2.RIGHT
 				var perp = Vector2(-heading.y, heading.x)

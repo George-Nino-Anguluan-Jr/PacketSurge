@@ -1,0 +1,51 @@
+name: Export and Build iOS Game
+
+on:
+  push:
+    branches: [ "main", "master" ]
+  workflow_dispatch:
+
+jobs:
+  build-ios:
+    runs-on: macos-14
+
+    steps:
+      - name: Checkout Repository
+        uses: actions/checkout@v4
+
+      - name: Setup Godot Engine
+        uses: chickensoft-games/setup-godot@v2
+        with:
+          version: 4.2.2 # ⚠️ Change to your exact Godot version if different
+
+      - name: Download Export Templates
+        run: |
+          GODOT_VERSION="4.2.2.stable" # ⚠️ Change to your exact Godot version if different
+          mkdir -p ~/.local/share/godot/export_templates/${GODOT_VERSION}
+          curl -LO https://github.com/godotengine/godot/releases/download/${GODOT_VERSION}/Godot_v${GODOT_VERSION}_export_templates.tpz
+          unzip Godot_v${GODOT_VERSION}_export_templates.tpz
+          mv templates/* ~/.local/share/godot/export_templates/${GODOT_VERSION}/
+          rm -rf templates Godot_v${GODOT_VERSION}_export_templates.tpz
+
+      - name: Export Xcode Project
+        run: |
+          mkdir -p build/ios
+          godot --headless --export-release "iOS" build/ios/GameExport.xcodeproj
+
+      - name: Build Xcode Project
+        run: |
+          cd build/ios
+          xcodebuild -project GameExport.xcodeproj \
+                     -scheme "GameExport" \
+                     -sdk iphoneos \
+                     -configuration Release \
+                     CODE_SIGN_IDENTITY="" \
+                     CODE_SIGNING_REQUIRED=NO \
+                     CODE_SIGNING_ALLOWED=NO \
+                     build
+
+      - name: Upload iOS Xcode Artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: ios-xcode-build
+          path: build/ios/

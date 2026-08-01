@@ -9,6 +9,9 @@ func get_type_id() -> String:
 
 func _init_type_state() -> void:
 	type_data["base_speed"] = move_speed
+	# Vulnerable to Queue tower (FIFO enforcement catches queue jumpers)
+	type_data["tower_multipliers"] = {"tower_queue": 2.0}
+	type_data["default_tower_mult"] = 0.6
 
 func _process_type_logic(delta: float) -> void:
 	var ahead_count = _count_enemies_ahead()

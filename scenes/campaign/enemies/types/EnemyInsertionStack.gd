@@ -8,7 +8,9 @@ func get_type_id() -> String:
 	return "insertion_stack"
 
 func _init_type_state() -> void:
-	pass
+	# Vulnerable to Insertion tower (insertion sort inserts past the stack)
+	type_data["tower_multipliers"] = {"tower_insertion": 2.0}
+	type_data["default_tower_mult"] = 0.6
 
 func _get_dot_scaling_on_apply() -> float:
 	return 1.5
