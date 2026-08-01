@@ -200,9 +200,6 @@ func _setup_level() -> void:
 	var config = _get_level_config()
 	ram_manager.initialize(config["start_ram"])
 
-	var enemy_scene = preload(
-		"res://scenes/campaign/enemies/Enemy.tscn"
-	)
 	var waypoints: Array[Vector2] = []
 	for wp in config["waypoints"]:
 		waypoints.append(wp)
@@ -218,7 +215,6 @@ func _setup_level() -> void:
 
 	wave_manager.initialize(
 		config["waves"],
-		enemy_scene,
 		enemy_layer,
 		waypoints,
 		AdaptiveAI.get_wave_modifier(level_number),
@@ -579,9 +575,6 @@ func _on_ability_used(tower: Node, cost: int) -> void:
 
 # ─── PLACEMENT PREVIEW & CONFIRMATION ──────────────────
 func _create_preview_tower(def: Dictionary, cell: Vector2i) -> void:
-	var tower_scene = preload("res://scenes/campaign/towers/Tower.tscn")
-	_preview_tower = tower_scene.instantiate()
-	_preview_tower.preview_mode = true
 	var data = TowerData.new()
 	data.tower_id       = def["tower_id"]
 	data.tower_name     = def["tower_name"]
@@ -591,9 +584,11 @@ func _create_preview_tower(def: Dictionary, cell: Vector2i) -> void:
 	data.attack_range   = def["attack_range"]
 	data.color          = def["color"]
 	data.icon_text      = def["icon_text"]
-	_preview_tower.initialize(data, cell, null)
-	_preview_tower.set_selected(true)
-	tower_layer.add_child(_preview_tower)
+	_preview_tower = TowerFactory.create_preview_tower(data)
+	if _preview_tower:
+		_preview_tower.set_selected(true)
+		tower_layer.add_child(_preview_tower)
+		_preview_tower.position = grid_system.get_cell_center(cell)
 	_preview_tower.position = grid_system.get_cell_center(cell)
 
 func _remove_preview_tower() -> void:
@@ -730,10 +725,6 @@ func _show_placement_radial(cell: Vector2i) -> void:
 		btn.add_child(bg_panel)
 		
 		# Visual tower (icon at top half of button, centered horizontally)
-		var tower_scene = load("res://scenes/campaign/towers/Tower.tscn")
-		var visual_tower = tower_scene.instantiate()
-		
-		# Initialize visual tower node
 		var dummy_data = TowerData.new()
 		dummy_data.tower_id = def["tower_id"]
 		dummy_data.tower_name = def["tower_name"]
@@ -743,20 +734,17 @@ func _show_placement_radial(cell: Vector2i) -> void:
 		dummy_data.attack_range = def["attack_range"]
 		dummy_data.color = def["color"]
 		dummy_data.icon_text = def["icon_text"]
-		
-		visual_tower.preview_mode = true
-		visual_tower.initialize(dummy_data, Vector2i(-1, -1), null)
-		visual_tower.position = Vector2(btn_w / 2.0, 24.0)
-		
-		# Scale down model to fit in the top icon area
-		visual_tower.scale = Vector2(0.42, 0.42)
-		
-		# Strip game behaviors from visual preview model
-		visual_tower.set_process(false)
-		visual_tower.set_physics_process(false)
-		visual_tower.set_process_input(false)
-		
-		btn.add_child(visual_tower)
+
+		var visual_tower = TowerFactory.create_preview_tower(dummy_data)
+		if visual_tower:
+			visual_tower.position = Vector2(btn_w / 2.0, 24.0)
+			# Scale down model to fit in the top icon area
+			visual_tower.scale = Vector2(0.42, 0.42)
+			# Strip game behaviors from visual preview model
+			visual_tower.set_process(false)
+			visual_tower.set_physics_process(false)
+			visual_tower.set_process_input(false)
+			btn.add_child(visual_tower)
 		
 		# Tower name centered horizontally and vertically in its row
 		var name_lbl := Label.new()
@@ -826,13 +814,12 @@ func _show_placement_radial(cell: Vector2i) -> void:
 func _place_tower(cell: Vector2i) -> void:
 	ram_manager.spend(selected_tower_data.ram_cost)
 
-	var tower_scene = preload(
-		"res://scenes/campaign/towers/Tower.tscn"
-	)
-	var tower = tower_scene.instantiate()
+	var tower = TowerFactory.create_tower(selected_tower_data, cell, enemy_layer)
+	if tower == null:
+		push_error("[Level] Failed to create tower: ", selected_tower_data.tower_id)
+		return
 	tower_layer.add_child(tower)
 	tower.position = grid_system.get_cell_center(cell)
-	tower.initialize(selected_tower_data, cell, enemy_layer)
 	grid_system.place_tower(cell, tower)
 
 	SignalBus.tower_placed.emit(selected_tower_data.tower_id, cell)

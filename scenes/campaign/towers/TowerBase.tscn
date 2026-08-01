@@ -1,0 +1,23 @@
+[gd_scene format=3 uid="uid://tower_base_scene"]
+
+[ext_resource type="Script" path="res://scenes/campaign/towers/TowerBase.gd" id="1_tower_base"]
+
+[node name="TowerBase" type="Node2D" unique_id=525101982]
+script = ExtResource("1_tower_base")
+
+[node name="BaseSprite" type="Node2D" parent="." unique_id=1001]
+position = Vector2(0, 0)
+rotation = 0.0
+scale = Vector2(1, 1)
+
+[node name="TurretHead" type="Node2D" parent="." unique_id=1002]
+position = Vector2(0, -14)
+rotation = -1.5707963267948966  # -PI/2 (pointing up)
+scale = Vector2(1, 1)
+
+[node name="MuzzlePoint" type="Node2D" parent="TurretHead" unique_id=1003]
+position = Vector2(0, 0)
+rotation = 0.0
+scale = Vector2(1, 1)
+
+[node name="ProjectileLayer" type="Node2D" parent="." unique_id=1004]

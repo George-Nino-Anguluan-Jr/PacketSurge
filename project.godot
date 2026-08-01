@@ -32,6 +32,8 @@ PythonTranspiler="*res://autoloads/PythonTranspiler.gd"
 VizUtil="*res://autoloads/VizUtil.gd"
 TowerIntroData="*res://autoloads/TowerIntroData.gd"
 EnemyIntroData="*res://autoloads/EnemyIntroData.gd"
+TowerFactory="*res://autoloads/TowerFactory.gd"
+EnemyFactory="*res://autoloads/EnemyFactory.gd"
 
 [display]
 

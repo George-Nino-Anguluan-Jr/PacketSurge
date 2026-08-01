@@ -1,0 +1,21 @@
+[gd_scene format=3 uid="uid://enemy_base_scene"]
+
+[ext_resource type="Script" path="res://scenes/campaign/enemies/EnemyBase.gd" id="1_enemy_base"]
+
+[sub_resource type="CircleShape2D" id="CircleShape2D_enemy_base"]
+radius = 20.0
+
+[node name="EnemyBase" type="CharacterBody2D" unique_id=1614113876]
+script = ExtResource("1_enemy_base")
+
+[node name="Collider" type="CollisionShape2D" parent="." unique_id=1010]
+shape = SubResource("CircleShape2D_enemy_base")
+
+[node name="Sprite" type="Node2D" parent="." unique_id=1011]
+position = Vector2(0, 0)
+
+[node name="HealthBar" type="Node2D" parent="." unique_id=1012]
+position = Vector2(0, 0)
+
+[node name="StatusEffectLayer" type="Node2D" parent="." unique_id=1013]
+position = Vector2(0, 0)

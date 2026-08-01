@@ -98,25 +98,23 @@ func _instantiate_tower_model(def: Dictionary) -> void:
 	if tower_instance:
 		tower_instance.queue_free()
 		tower_instance = null
-		
-	var tower_scene = load("res://scenes/campaign/towers/Tower.tscn")
-	if tower_scene:
-		tower_instance = tower_scene.instantiate()
+
+	var data = TowerData.new()
+	data.tower_id = tower_id
+	data.tower_name = tower_name
+	data.ram_cost = ram_cost
+	data.damage = def.get("damage", 10.0)
+	data.attack_speed = def.get("attack_speed", 1.0)
+	data.attack_range = def.get("attack_range", 150.0)
+	data.color = tower_color
+	data.icon_text = icon_text
+
+	tower_instance = TowerFactory.create_preview_tower(data)
+	if tower_instance:
 		tower_container.add_child(tower_instance)
-		
-		var data = TowerData.new()
-		data.tower_id = tower_id
-		data.tower_name = tower_name
-		data.ram_cost = ram_cost
-		data.damage = def.get("damage", 10.0)
-		data.attack_speed = def.get("attack_speed", 1.0)
-		data.attack_range = def.get("attack_range", 150.0)
-		data.color = tower_color
-		data.icon_text = icon_text
-		
-		# Initialize without cell and enemy layer
-		tower_instance.initialize(data, Vector2i.ZERO, null)
-		
+		tower_instance.preview_mode = true
+		tower_instance.set_process(false)
+		tower_instance.set_physics_process(false)
 		# Set custom scale to fit nicely in our viewport area
 		tower_instance.scale = Vector2(0.65, 0.65)
 

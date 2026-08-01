@@ -15,7 +15,6 @@ var enemies_alive: int     = 0
 var wave_in_progress: bool = false
 var level_completed: bool  = false
 
-var enemy_scene: PackedScene        = null
 var enemy_layer: Node2D             = null
 var path_waypoints: Array[Vector2]  = []
 var difficulty_modifier: float      = 1.0
@@ -25,13 +24,11 @@ var _spawn_index: int = 0
 
 func initialize(
 		waves: int,
-		e_scene: PackedScene,
 		e_layer: Node2D,
 		waypoints: Array[Vector2],
 		modifier: float,
 		pool: Array = []) -> void:
 	total_waves         = waves
-	enemy_scene         = e_scene
 	enemy_layer         = e_layer
 	path_waypoints      = waypoints
 	difficulty_modifier = modifier
@@ -123,28 +120,27 @@ func _base_stats_for(enemy_type: String) -> Dictionary:
 	return {"max_health": 100.0, "speed": 80.0, "ram_reward": 10}
 
 func _spawn_enemy(wave_num: int, index: int) -> void:
-	if enemy_scene == null or enemy_layer == null:
+	if enemy_layer == null:
 		return
-	var enemy      = enemy_scene.instantiate()
-	enemy_layer.add_child(enemy)
-
 	var enemy_type = _get_enemy_type(wave_num, index)
 
-	if enemy.has_method("initialize"):
-		var stats = _base_stats_for(enemy_type)
-		var health = float(stats["max_health"]) * difficulty_modifier * (1.0 + wave_num * 0.3)
-		var speed  = float(stats["speed"]) * difficulty_modifier
-		enemy.initialize(path_waypoints, health, speed, enemy_type)
+	var stats = _base_stats_for(enemy_type)
+	var health = float(stats["max_health"]) * difficulty_modifier * (1.0 + wave_num * 0.3)
+	var speed  = float(stats["speed"]) * difficulty_modifier
+	var enemy = EnemyFactory.create(enemy_type, path_waypoints, health, speed)
+	if enemy == null:
+		return
+	enemy_layer.add_child(enemy)
 
-		# Spread enemies perpendicular to the path direction at spawn
-		if path_waypoints.size() >= 2:
-			var spawn_dir = (path_waypoints[1] - path_waypoints[0]).normalized()
-			var perp = Vector2(-spawn_dir.y, spawn_dir.x)
-			var spawn_offset = (_spawn_index % 5 - 2) * 10.0
-			_spawn_index += 1
-			enemy.position += perp * spawn_offset
+	# Spread enemies perpendicular to the path direction at spawn
+	if path_waypoints.size() >= 2:
+		var spawn_dir = (path_waypoints[1] - path_waypoints[0]).normalized()
+		var perp = Vector2(-spawn_dir.y, spawn_dir.x)
+		var spawn_offset = (_spawn_index % 5 - 2) * 10.0
+		_spawn_index += 1
+		enemy.position += perp * spawn_offset
 
-	enemy.connect("enemy_defeated",    _on_enemy_defeated)
+	enemy.connect("enemy_defeated", _on_enemy_defeated)
 	enemy.connect("enemy_reached_end", _on_enemy_reached_end)
 	enemies_alive += 1
 	enemy_spawned.emit(enemy)
@@ -162,15 +158,16 @@ func _get_spawn_perp() -> Vector2:
 	return Vector2.RIGHT
 
 func _spawn_linked_partner(enemy: Node, wave_num: int) -> void:
-	var partner = enemy_scene.instantiate()
-	enemy_layer.add_child(partner)
-
 	var stats = _base_stats_for("linked_drain")
 	var health = float(stats["max_health"]) * difficulty_modifier * (1.0 + wave_num * 0.3)
 	var speed  = float(stats["speed"]) * difficulty_modifier
 	var part_data = {"partner": enemy}
-	partner.initialize(path_waypoints, health * 0.8, speed, "linked_drain", part_data)
-	enemy.type_data["partner"] = partner
+	var partner = EnemyFactory.create("linked_drain", path_waypoints, health * 0.8, speed, part_data)
+	if partner == null:
+		return
+	enemy_layer.add_child(partner)
+	partner.set_partner(enemy)
+	enemy.set_partner(partner)
 
 	# Place partner on the path and skip waypoints[0] so it doesn't converge
 	# on the same point as the enemy — prevents collision overlap
@@ -182,15 +179,16 @@ func _spawn_linked_partner(enemy: Node, wave_num: int) -> void:
 	enemy_spawned.emit(partner)
 
 func _spawn_merge_twin(enemy: Node, wave_num: int) -> void:
-	var partner = enemy_scene.instantiate()
-	enemy_layer.add_child(partner)
-
 	var stats = _base_stats_for("merge_twin")
 	var health = float(stats["max_health"]) * difficulty_modifier * (1.0 + wave_num * 0.3)
 	var speed  = float(stats["speed"]) * difficulty_modifier
 	var part_data = {"partner": enemy}
-	partner.initialize(path_waypoints, health, speed, "merge_twin", part_data)
-	enemy.type_data["partner"] = partner
+	var partner = EnemyFactory.create("merge_twin", path_waypoints, health, speed, part_data)
+	if partner == null:
+		return
+	enemy_layer.add_child(partner)
+	partner.set_partner(enemy)
+	enemy.set_partner(partner)
 
 	# Place partner on the path and skip waypoints[0]
 	partner.current_waypoint = 1 if path_waypoints.size() > 1 else 0

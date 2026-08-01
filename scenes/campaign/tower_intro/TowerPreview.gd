@@ -19,8 +19,7 @@ var spawn_timer: float = 0.0
 var cycle_done: bool = false
 var _initialized: bool = false
 
-const ENEMY_SCENE = preload("res://scenes/campaign/enemies/Enemy.tscn")
-const TOWER_SCENE = preload("res://scenes/campaign/towers/Tower.tscn")
+# (autoloads are registered in project.godot)
 
 func _ready() -> void:
 	mouse_filter = MOUSE_FILTER_IGNORE
@@ -76,7 +75,6 @@ func setup(t_id: String) -> void:
 func _build_tower() -> void:
 	if _tower_instance:
 		_tower_instance.queue_free()
-	_tower_instance = TOWER_SCENE.instantiate()
 	var td = TowerData.new()
 	td.tower_id = tower_id
 	td.tower_name = tower_name
@@ -85,7 +83,7 @@ func _build_tower() -> void:
 	td.attack_range = 600.0
 	td.color = tower_color
 	td.icon_text = tower_icon
-	_tower_instance.initialize(td, Vector2i.ZERO, _enemy_layer)
+	_tower_instance = TowerFactory.create_tower(td, Vector2i.ZERO, _enemy_layer)
 	_world.add_child(_tower_instance)
 	var sw = max(size.x, 300.0)
 	var sh = max(size.y, 100.0)
@@ -117,7 +115,6 @@ func _clear_enemies() -> void:
 		c.queue_free()
 
 func _spawn_enemy(data: Dictionary) -> void:
-	var enemy = ENEMY_SCENE.instantiate()
 	var sw = max(size.x, 300.0)
 	var sh = max(size.y, 100.0)
 	var cx = sw * 0.5
@@ -128,8 +125,9 @@ func _spawn_enemy(data: Dictionary) -> void:
 		Vector2(start_x, cy),
 		Vector2(end_x, cy),
 	]
-	enemy.initialize(waypoints, data.hp, data.speed, data.type, {})
-	enemy.position = Vector2(start_x, cy)
+	var enemy = EnemyFactory.create(data.type, waypoints, data.hp, data.speed)
+	if enemy == null:
+		return
 	_enemy_layer.add_child(enemy)
 	enemy.set_meta("preview_strong", data.strong)
 	var display = data.type.replace("_", " ").capitalize()
