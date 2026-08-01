@@ -1,6 +1,7 @@
 # TowerRadix.gd
-# Radix Tower — closest targeting. Fires 3 digit orbs (1, 10, 100).
-# Targets: closest enemy.
+# Radix Tower — radix sort buckets. Fires 3 digit orbs (1, 10, 100) each
+# sorted into a different "bucket" = each orb targets a different enemy,
+# distributing damage place-value style across the group.
 
 extends TowerBase
 
@@ -20,15 +21,22 @@ func _perform_attack() -> void:
 	_recoil = 1.0
 	_flash_targets.clear()
 
-	var spawn_origin = get_muzzle_position()
+	# Radix buckets: one orb per bucket, each aiming at a different target.
 	var digits = [1, 10, 100]
-	for i in range(3):
+	var spawn_origin = get_muzzle_position()
+	var bucket_targets = _get_nearest(digits.size())
+	if bucket_targets.is_empty():
+		bucket_targets.append(current_target)
+	for i in range(digits.size()):
+		var t: Node = current_target
+		if i < bucket_targets.size():
+			t = bucket_targets[i]
 		var p = {
 			"pos": spawn_origin,
 			"start_pos": spawn_origin,
 			"draw_pos": spawn_origin,
-			"target": current_target,
-			"target_last_pos": current_target.position,
+			"target": t,
+			"target_last_pos": t.position if is_instance_valid(t) else spawn_origin,
 			"speed": 320.0,
 			"damage": damage * 0.4,
 			"style": "radix_digit",

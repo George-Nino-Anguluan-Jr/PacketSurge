@@ -14,6 +14,10 @@ signal enemy_reached_end(enemy: Node)
 
 const SQUASH: float = 0.65
 const ENEMY_RADIUS: float = 20.0
+const AIM_OFFSET: Vector2 = Vector2(0, -5)
+
+func get_aim_point() -> Vector2:
+	return position + AIM_OFFSET
 
 # ─── STATS (shared) ─────────────────────────────────────
 var max_health: float     = 100.0
@@ -42,6 +46,7 @@ var _dot_damage: float        = 0.0
 var _dot_timer: float         = 0.0
 var _dot_tick_interval: float = 0.5
 var _dot_tick_timer: float    = 0.0
+var _dot_source: String       = ""
 
 # ─── TYPE-SPECIFIC STATE ─────────────────────────────────
 # Subclasses use this for type-specific data (backward compat with original).
@@ -110,7 +115,7 @@ func _physics_process(delta: float) -> void:
 		_dot_timer      -= delta
 		if _dot_tick_timer <= 0:
 			var dot_amt = _dot_damage * _get_dot_damage_multiplier()
-			take_damage(dot_amt)
+			take_damage(dot_amt, _dot_source)
 			_dot_tick_timer = _dot_tick_interval
 
 	# Type-specific per-frame logic
@@ -169,8 +174,55 @@ func _move_toward_waypoint(delta: float) -> void:
 		if current_waypoint >= waypoints.size():
 			_reach_end()
 
+# ─── PATH UTILITIES (used by tower effects) ───────────────
+func get_path_progress() -> float:
+	# Monotonic progress along the path (total distance traveled).
+	# Used by towers to order enemies (FIFO/median/traversal/swap).
+	if waypoints.size() == 0 or is_dead:
+		return 0.0
+	var total: float = 0.0
+	for i in range(current_waypoint):
+		total += waypoints[i].distance_to(waypoints[i + 1])
+	if current_waypoint < waypoints.size():
+		var prev_pt: Vector2 = waypoints[max(0, current_waypoint - 1)]
+		total += prev_pt.distance_to(position)
+	return total
+
+func push_back(dist: float) -> void:
+	# Shifts the enemy backward along its path (used by Insertion tower).
+	if waypoints.is_empty() or is_dead:
+		return
+	var amount: float = dist
+	while amount > 0.0 and current_waypoint > 0:
+		var prev: Vector2 = waypoints[current_waypoint - 1]
+		var back_vec: Vector2 = prev - position
+		var back_len: float = back_vec.length()
+		if back_len <= amount:
+			position = prev
+			current_waypoint -= 1
+			amount -= back_len
+		else:
+			position += back_vec.normalized() * amount
+			amount = 0.0
+	queue_redraw()
+
+func swap_progress(other) -> void:
+	# Swaps two enemies' positions along the shared path (used by Bubble tower).
+	if other == null or not is_instance_valid(other):
+		return
+	var my_pos: Vector2 = position
+	var my_wp: int = current_waypoint
+	position = other.position
+	current_waypoint = other.current_waypoint
+	other.position = my_pos
+	other.current_waypoint = my_wp
+	queue_redraw()
+	if other.has_method("queue_redraw"):
+		other.queue_redraw()
+
 # ─── DAMAGE (framework) ───────────────────────────────────
-func apply_dot(total_damage: float, duration: float) -> void:
+func apply_dot(total_damage: float, duration: float, source: String = "") -> void:
+	_dot_source = source
 	_dot_damage = total_damage / (duration / _dot_tick_interval)
 	_dot_damage *= _get_dot_scaling_on_apply()
 	_dot_timer  = duration
@@ -181,11 +233,11 @@ func _get_dot_scaling_on_apply() -> float:
 	# (e.g., insertion_stack: 1.5x on apply AND 1.5x on tick = 2.25x total)
 	return 1.0
 
-func take_damage(amount: float) -> void:
+func take_damage(amount: float, source: String = "") -> void:
 	if is_dead:
 		return
 
-	var final_damage = _modify_damage(amount)
+	var final_damage = _modify_damage(amount) * _get_source_damage_multiplier(source)
 
 	# Some types (e.g., radix_digit) handle death internally in _modify_damage.
 	# If _die() was called there, skip the standard HP application.
@@ -203,6 +255,18 @@ func _modify_damage(amount: float) -> float:
 	# Virtual — subclasses override for type-specific resistance/absorption
 	# Default: no modification
 	return amount
+
+func _get_source_damage_multiplier(source: String) -> float:
+	# Per-tower damage multipliers from enemy type_data.
+	# Enemies are vulnerable to the tower matching their own data structure
+	# concept (2.0x) and resistant to all others (0.6x), forcing tower choice.
+	if source == "":
+		return 1.0
+	var mults: Dictionary = type_data.get("tower_multipliers", {})
+	var mult = mults.get(source)
+	if mult != null:
+		return float(mult)
+	return float(type_data.get("default_tower_mult", 1.0))
 
 func _notify_damage_taken(damage_dealt: float) -> void:
 	# Hook for subclasses that need to react to damage (e.g., count_meter)

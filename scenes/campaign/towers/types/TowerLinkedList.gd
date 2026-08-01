@@ -1,6 +1,6 @@
 # TowerLinkedList.gd
-# Linked List Tower — closest targeting. Fires chain lightning.
-# Targets: closest enemy. Chain lightning jumps to nearby enemies.
+# Linked List Tower — fires chain lightning that walks the enemy list in path
+# order (one node to the next), like following linked list pointers.
 
 extends TowerBase
 
@@ -34,6 +34,8 @@ func _perform_attack() -> void:
 		"total_dist": (current_target.position - spawn_origin).length(),
 		"chains_left": 3,
 		"chained_targets": [],
+		"chain_radius": 60.0,
+		"traverse_path": true,
 	}
 	_spawn_custom_projectile(p)
 

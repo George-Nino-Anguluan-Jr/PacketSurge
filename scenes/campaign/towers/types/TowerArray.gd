@@ -1,6 +1,7 @@
 # TowerArray.gd
-# Array Tower — fires up to 5 index bolts at nearest enemies simultaneously.
-# Targets: 5 closest enemies. O(1) access.
+# Array Tower — O(1) random access. Fires a volley of indexed bolts at the
+# nearest N enemies simultaneously (direct index access, no search cost).
+# Higher level = more indices fired at once.
 
 extends TowerBase
 
@@ -20,19 +21,15 @@ func _perform_attack() -> void:
 	_recoil = 1.0
 	_flash_targets.clear()
 
-	var hit_list = [current_target]
-	var nearby = _get_nearby(2)
-	for e in nearby:
-		if e != current_target and not hit_list.has(e):
+	# O(1) indexed access: fire at N fixed slots (indices), N grows with level.
+	var index_count: int = clamp(1 + current_level, 1, 5)
+	var hit_list: Array = []
+	var nearest = _get_nearest(index_count)
+	for e in nearest:
+		if is_instance_valid(e) and not hit_list.has(e):
 			hit_list.append(e)
-			if hit_list.size() >= 3:
-				break
-	for t in hit_list:
-		_spawn_projectile("index_bolt", damage * 0.4, 350.0, t, {"index": _array_bolt_index()})
-
-func _array_bolt_index() -> int:
-	# Incremental index for visual labeling
-	return randi() % 5
+	for i in range(hit_list.size()):
+		_spawn_projectile("index_bolt", damage * 0.4, 350.0, hit_list[i], {"index": i})
 
 func _get_upgrade_stats(level: int) -> Dictionary:
 	return {"damage": 1.3, "speed": 1.15, "range": 1.1}
@@ -40,7 +37,6 @@ func _get_upgrade_stats(level: int) -> Dictionary:
 func _get_ability_targets() -> Array:
 	if targets.is_empty():
 		return []
-	# Single target, double damage
 	return [targets[0]]
 
 func _draw_base_geometry(color: Color, height: float) -> void:

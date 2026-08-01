@@ -11,6 +11,9 @@ func _init_type_state() -> void:
 	type_data["scan_phase"] = 0.0
 	type_data["scan_amplitude"] = 30.0
 	type_data["vulnerable"] = true
+	# Vulnerable to Linear tower (linear scan covers the whole sweep)
+	type_data["tower_multipliers"] = {"tower_linear": 2.0}
+	type_data["default_tower_mult"] = 0.6
 
 func _modify_damage(amount: float) -> float:
 	if not type_data["vulnerable"]:

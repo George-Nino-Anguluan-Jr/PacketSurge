@@ -21,11 +21,11 @@ How it works on [3, 6, 8, 10, 1, 2, 1]:
 
 Step 1 — Pick a pivot. (Common choices: first, last, middle, or random.) Let's say we pick the middle: 10.
 
-Step 2 — Partition. Move all items smaller than 10 to the LEFT, and all items larger than 10 to the RIGHT.
+Step 2 — Parter):  []ition. Move all items smaller than 10 to the LEFT, and all items larger than 10 to the RIGHT.
 
 Left (smaller):  [3, 6, 8, 1, 2, 1]
 Pivot:            [10]
-Right (larger):  []
+Right (larg
 
 Step 3 — Recursively sort the LEFT and RIGHT sides.
 

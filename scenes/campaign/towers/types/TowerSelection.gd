@@ -1,8 +1,12 @@
 # TowerSelection.gd
-# Selection Tower — targets lowest HP enemy. Fires high-damage seeker.
-# Targets: enemy with lowest current health.
+# Selection Tower — selection sort. Repeatedly selects the lowest-HP enemy
+# and fires a seeker that grows in damage with each consecutive kill it lands
+# (the selected minimum is removed; the next minimum becomes the target).
 
 extends TowerBase
+
+var _kill_streak: int = 0
+var _streak_target: Node = null
 
 func get_type_id() -> String:
 	return "tower_selection"
@@ -22,7 +26,14 @@ func _perform_attack() -> void:
 	SoundManager.play_tower_attack(tower_id)
 	_recoil = 1.0
 	_flash_targets.clear()
-	_spawn_projectile("selection_sniper", damage * 1.8, 500.0, current_target)
+	# Escalation: stay-on-target damage grows with each hit (selecting the min).
+	if _streak_target == current_target:
+		_kill_streak += 1
+	else:
+		_kill_streak = 0
+	_streak_target = current_target
+	var mult: float = 1.8 + _kill_streak * 0.25
+	_spawn_projectile("selection_sniper", damage * mult, 500.0, current_target)
 
 func _get_upgrade_stats(level: int) -> Dictionary:
 	return {"damage": 1.35, "speed": 1.0, "range": 1.15}

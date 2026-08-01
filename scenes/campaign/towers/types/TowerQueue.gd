@@ -20,7 +20,26 @@ func _perform_attack() -> void:
 	SoundManager.play_tower_attack(tower_id)
 	_recoil = 1.0
 	_flash_targets.clear()
-	_spawn_projectile("queue_rail", damage, 400.0, current_target)
+	var spawn_origin = get_muzzle_position()
+	var dir = (current_target.global_position - global_position).normalized()
+	var p = {
+		"pos": spawn_origin,
+		"start_pos": spawn_origin,
+		"draw_pos": spawn_origin,
+		"beam_dir": dir,
+		"speed": 500.0,
+		"damage": damage,
+		"style": "queue_pierce",
+		"elapsed_time": 0.0,
+		"traveled": 0.0,
+		"max_range": attack_range,
+		"hit_list": [],
+		"falloff": 1.0,
+		"decay": 0.7,
+		"beam_width": 10.0,
+	}
+	_spawn_custom_projectile(p)
+	queue_redraw()
 
 func _get_upgrade_stats(level: int) -> Dictionary:
 	return {"damage": 1.25, "speed": 1.2, "range": 1.1}

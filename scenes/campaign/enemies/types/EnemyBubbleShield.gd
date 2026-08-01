@@ -10,6 +10,9 @@ func get_type_id() -> String:
 func _init_type_state() -> void:
 	type_data["shield_hp"] = 3
 	type_data["shield_max"] = 3
+	# Vulnerable to Bubble tower (bubble sort "bubbles" through the shield)
+	type_data["tower_multipliers"] = {"tower_bubble": 2.0}
+	type_data["default_tower_mult"] = 0.6
 
 func _modify_damage(amount: float) -> float:
 	if type_data.get("shield_hp", 0) > 0:

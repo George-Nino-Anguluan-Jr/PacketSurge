@@ -1,6 +1,6 @@
 # TowerCounting.gd
-# Count Tower — closest targeting. Fires 5 sequential numbered pellets.
-# Targets: closest enemy.
+# Count Tower — counting sort. Fires 1..N numbered pellets, where N is the
+# number of enemies counted in range (one pellet per enemy, capped at 5).
 
 extends TowerBase
 
@@ -20,8 +20,10 @@ func _perform_attack() -> void:
 	_recoil = 1.0
 	_flash_targets.clear()
 
+	# Counting sort counts occurrences: one pellet per enemy in range.
+	var count: int = clamp(_count_live_enemies(), 1, 5)
 	var spawn_origin = get_muzzle_position()
-	for i in range(5):
+	for i in range(count):
 		var p = {
 			"pos": spawn_origin,
 			"start_pos": spawn_origin,
@@ -37,6 +39,13 @@ func _perform_attack() -> void:
 		}
 		_spawn_custom_projectile(p)
 	queue_redraw()
+
+func _count_live_enemies() -> int:
+	var n: int = 0
+	for e in targets:
+		if is_instance_valid(e) and not e.is_dead:
+			n += 1
+	return n
 
 func _get_upgrade_stats(level: int) -> Dictionary:
 	return {"damage": 1.2, "speed": 1.25, "range": 1.0}

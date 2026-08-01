@@ -14,6 +14,9 @@ func _select_target() -> Node:
 	return _get_closest(targets)
 
 func _perform_attack() -> void:
+	if targets.is_empty():
+		return
+	current_target = _get_closest(targets)
 	if not current_target:
 		return
 	SoundManager.play_tower_attack(tower_id)
@@ -21,17 +24,21 @@ func _perform_attack() -> void:
 	_flash_targets.clear()
 
 	var spawn_origin = get_muzzle_position()
+	var dir = (current_target.global_position - global_position).normalized()
 	var p = {
 		"pos": spawn_origin,
 		"start_pos": spawn_origin,
 		"draw_pos": spawn_origin,
-		"target": current_target,
-		"target_last_pos": current_target.position,
-		"speed": 350.0,
-		"damage": damage,
-		"style": "linear_scan",
+		"beam_dir": dir,
+		"speed": 520.0,
+		"damage": damage * 0.7,
+		"style": "linear_beam",
 		"elapsed_time": 0.0,
-		"total_dist": (current_target.position - spawn_origin).length()
+		"traveled": 0.0,
+		"max_range": attack_range,
+		"hit_list": [],
+		"falloff": 1.0,
+		"decay": 0.8,
 	}
 	_spawn_custom_projectile(p)
 	queue_redraw()

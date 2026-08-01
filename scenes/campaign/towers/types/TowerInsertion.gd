@@ -1,6 +1,6 @@
 # TowerInsertion.gd
-# Insertion Tower — closest targeting. Fires a needle projectile + applies DoT.
-# Targets: closest enemy.
+# Insertion Tower — insertion sort "shift". Fires a needle that on impact
+# PUSHES the target backward along the path (shifting elements) + applies DoT.
 
 extends TowerBase
 
@@ -19,9 +19,17 @@ func _perform_attack() -> void:
 	SoundManager.play_tower_attack(tower_id)
 	_recoil = 1.0
 	_flash_targets.clear()
-	_spawn_projectile("insertion_needle", damage, 350.0, current_target)
+	_spawn_projectile("insertion_needle", damage, 350.0, current_target, {"on_hit": _insert_shift})
 	if current_target.has_method("apply_dot"):
-		current_target.apply_dot(damage * 0.3, 3.0)
+		current_target.apply_dot(damage * 0.3, 3.0, tower_id)
+
+func _insert_shift(p: Dictionary) -> void:
+	# Insertion sort inserts by shifting elements right / pushing back.
+	var target = p["target"]
+	if is_instance_valid(target) and not target.is_dead and target.has_method("push_back"):
+		target.push_back(40.0)
+		var aim = target.get_aim_point() if target.has_method("get_aim_point") else target.position
+		_spawn_impact_explosion(aim, "insertion_needle", target)
 
 func _get_upgrade_stats(level: int) -> Dictionary:
 	return {"damage": 1.3, "speed": 1.15, "range": 1.0}
