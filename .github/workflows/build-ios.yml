@@ -71,16 +71,15 @@ jobs:
                      DEVELOPMENT_TEAM="" \
                      build
 
-# Step 8: Package Simulator .app into .zip for Appetize.io
-      - name: Create Appetize Simulator Zip Package
+# Step 8: Move Simulator .app to build output directory
+      - name: Prepare Simulator App Bundle
         run: |
           cd build/ios/build_sim/Build/Products/Debug-iphonesimulator
-          zip -r PacketSurge-Simulator.zip PacketSurge.app
-          mv PacketSurge-Simulator.zip $GITHUB_WORKSPACE/build/ios/
+          mv PacketSurge.app $GITHUB_WORKSPACE/build/ios/
 
-      # Step 9: Upload Simulator Artifact
-      - name: Upload Simulator Zip
+      # Step 9: Upload Simulator .app Folder directly
+      - name: Upload Simulator Artifact
         uses: actions/upload-artifact@v4
         with:
           name: PacketSurge-Appetize-Build
-          path: build/ios/PacketSurge-Simulator.zip
+          path: build/ios/PacketSurge.app
