@@ -49,6 +49,7 @@ func get_scene_path(tower_id: String) -> String:
 func create_tower(data: TowerData, cell: Vector2i, e_layer: Node2D) -> Node2D:
 	if not _initialized:
 		_initialize_scenes()
+	_ensure_data_style(data)
 	var scene = _scene_map.get(data.tower_id, null)
 	if scene == null:
 		push_warning("[TowerFactory] No scene found for tower_id: ", data.tower_id)
@@ -61,6 +62,7 @@ func create_tower(data: TowerData, cell: Vector2i, e_layer: Node2D) -> Node2D:
 func create_preview_tower(data: TowerData) -> Node2D:
 	if not _initialized:
 		_initialize_scenes()
+	_ensure_data_style(data)
 	var scene = _scene_map.get(data.tower_id, null)
 	if scene == null:
 		push_warning("[TowerFactory] No scene found for tower_id: ", data.tower_id)
@@ -82,5 +84,13 @@ func create_tower_by_id(tower_id: String, cell: Vector2i, e_layer: Node2D) -> No
 	var tower = scene.instantiate()
 	var data: TowerData = DataRegistry.get_tower(tower_id)
 	if data and tower.has_method("initialize"):
+		_ensure_data_style(data)
 		tower.initialize(data, cell, e_layer)
 	return tower
+
+func _ensure_data_style(data: TowerData) -> void:
+	if data == null or data.style != null:
+		return
+	var canonical: TowerData = DataRegistry.get_tower(data.tower_id)
+	if canonical and canonical.style:
+		data.style = canonical.style

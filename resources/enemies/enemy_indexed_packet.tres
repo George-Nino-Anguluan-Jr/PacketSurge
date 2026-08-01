@@ -2,8 +2,11 @@
 
 [ext_resource type="Script" path="res://scripts/data/EnemyData.gd" id="1_h0v0r"]
 
+[ext_resource type="Resource" path="res://resources/styles/enemy_style_default.tres" id="2_style"]
+
 [resource]
 script = ExtResource("1_h0v0r")
+style = ExtResource("2_style")
 enemy_id = "indexed_packet"
 max_health = 100.0
 speed = 72.0
@@ -14,5 +17,5 @@ tagline = "Resistant to single hits. Array Tower's fast attack excels here."
 icon = "[0]"
 threat = "Low"
 special = "50% damage resistance. Quick, repeated hits (Array Tower) bypass it."
-lesson = "Arrays use index-based access — multiple bolts at different indices."
+lesson = "Arrays use index-based access â€” multiple bolts at different indices."
 color = Color(0, 0.83137256, 1, 1)

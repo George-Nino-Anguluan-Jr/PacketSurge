@@ -2,8 +2,11 @@
 
 [ext_resource type="Script" path="res://scripts/data/TowerData.gd" id="1_7a4bx"]
 
+[ext_resource type="Resource" path="res://resources/styles/tower_style_default.tres" id="2_style"]
+
 [resource]
 script = ExtResource("1_7a4bx")
+style = ExtResource("2_style")
 tower_id = "tower_selection"
 tower_name = "Selection Tower"
 description = "Always finishes off the weakest enemy."
@@ -17,7 +20,7 @@ color = Color(0.90588236, 0.29803923, 0.23529412, 1)
 icon_text = "->v"
 order = 6
 tagline = "Picks off the weakest target"
-mechanic = "Always targets the enemy with the lowest remaining health in range. Fires a homing seeker projectile that deals very high single-target damage — like selection sort finding the minimum element."
+mechanic = "Always targets the enemy with the lowest remaining health in range. Fires a homing seeker projectile that deals very high single-target damage â€” like selection sort finding the minimum element."
 shooting = "A homing seeker with orbiting markers tracks and strikes the lowest-HP enemy with precision."
 ability_desc = "Instantly deals massive damage to the lowest-HP enemy across the entire map."
 strong_against = Array[String](["selection_mark", "insertion_stack"])

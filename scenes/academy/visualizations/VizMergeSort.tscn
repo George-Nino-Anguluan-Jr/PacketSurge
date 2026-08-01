@@ -1,4 +1,4 @@
-﻿[gd_scene load_steps=2 format=3 uid="uid://b2vizmergesort01"]
+[gd_scene load_steps=2 format=3 uid="uid://b2vizmergesort01"]
 
 [ext_resource type="Script" path="res://scenes/academy/visualizations/VizMergeSort.gd" id="1_mergesort"]
 

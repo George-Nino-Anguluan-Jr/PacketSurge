@@ -1,4 +1,4 @@
-﻿extends "res://scripts/academy/VizBase.gd"
+extends "res://scripts/academy/VizBase.gd"
 
 var _stack: Array = []
 var _anim_type: String = ""

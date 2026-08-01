@@ -2,8 +2,11 @@
 
 [ext_resource type="Script" path="res://scripts/data/EnemyData.gd" id="1_5ms66"]
 
+[ext_resource type="Resource" path="res://resources/styles/enemy_style_default.tres" id="2_style"]
+
 [resource]
 script = ExtResource("1_5ms66")
+style = ExtResource("2_style")
 enemy_id = "overflow_packet"
 max_health = 300.0
 speed = 40.0
@@ -11,8 +14,8 @@ ram_reward = 30
 is_boss = false
 title = "Overflow Packet"
 tagline = "Grows stronger as enemies behind it die. Kill front-to-back."
-icon = "↑↓"
+icon = "â†‘â†“"
 threat = "High"
 special = "Gains HP when enemies behind it die. Must be killed LIFO."
-lesson = "Stack LIFO — last in, first out targeting."
+lesson = "Stack LIFO â€” last in, first out targeting."
 color = Color(0.5568628, 0.26666668, 0.6784314, 1)

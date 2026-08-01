@@ -2,8 +2,11 @@
 
 [ext_resource type="Script" path="res://scripts/data/TowerData.gd" id="1_vm3ak"]
 
+[ext_resource type="Resource" path="res://resources/styles/tower_style_default.tres" id="2_style"]
+
 [resource]
 script = ExtResource("1_vm3ak")
+style = ExtResource("2_style")
 tower_id = "tower_quick"
 tower_name = "Quick Tower"
 description = "Splits shot hits 2 enemies."
@@ -17,8 +20,8 @@ ability_name = "Quick Split"
 color = Color(0.9137255, 0.11764706, 0.3882353, 1)
 icon_text = "ZAP"
 order = 8
-tagline = "Splits — hits 2 enemies at once"
-mechanic = "Fires a shot that splits into two projectiles, hitting the two nearest enemies simultaneously. Like Quick Sort's partition — splitting the problem in half."
+tagline = "Splits â€” hits 2 enemies at once"
+mechanic = "Fires a shot that splits into two projectiles, hitting the two nearest enemies simultaneously. Like Quick Sort's partition â€” splitting the problem in half."
 shooting = "A split projectile divides mid-flight into two homing shots that track separate targets."
 ability_desc = "Fires 4 simultaneous split shots that cover the entire range."
 strong_against = Array[String](["merge_twin", "overflow_packet"])

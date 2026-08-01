@@ -1,4 +1,4 @@
-﻿extends "res://scripts/academy/VizBase.gd"
+extends "res://scripts/academy/VizBase.gd"
 
 var _values: Array = [72, 75, 68, 70, 73, 0, 0]
 var _highlight: int = -1

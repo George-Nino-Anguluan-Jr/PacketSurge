@@ -2,16 +2,19 @@
 
 [ext_resource type="Script" path="res://scripts/data/EnemyData.gd" id="1_6tgy8"]
 
+[ext_resource type="Resource" path="res://resources/styles/enemy_style_default.tres" id="2_style"]
+
 [resource]
 script = ExtResource("1_6tgy8")
+style = ExtResource("2_style")
 enemy_id = "linked_drain"
 max_health = 100.0
 speed = 80.0
 ram_reward = 20
 is_boss = false
 title = "Linked Drain"
-tagline = "Linked pair — damage is split between partners."
-icon = "→→"
+tagline = "Linked pair â€” damage is split between partners."
+icon = "â†’â†’"
 special = "Spawns as a linked pair connected by a line. 50/50 damage split with partner."
-lesson = "Linked Lists connect nodes — follow the pointers to damage both at once."
+lesson = "Linked Lists connect nodes â€” follow the pointers to damage both at once."
 color = Color(0.18039216, 0.8, 0.44313726, 1)
