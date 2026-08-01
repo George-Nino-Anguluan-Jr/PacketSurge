@@ -76,7 +76,7 @@ jobs:
         run: |
           cd build/ios/build_sim/Build/Products/Debug-iphonesimulator
           zip -r PacketSurge-Simulator.zip PacketSurge.app
-          mv PacketSurge-Simulator.zip ../../../../../build/ios/
+          mv PacketSurge-Simulator.zip $GITHUB_WORKSPACE/build/ios/
 
       # Step 9: Upload Simulator Artifact
       - name: Upload Simulator Zip
