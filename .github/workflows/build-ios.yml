@@ -55,7 +55,7 @@ jobs:
             sed -i '' 's/IPHONEOS_DEPLOYMENT_TARGET = .*/IPHONEOS_DEPLOYMENT_TARGET = 16.0;/g' "$PROJECT_FILE"
           fi
 
-# Step 7: Build for iOS Simulator (Appetize.io standard)
+# Step 7: Build for iOS Simulator with Ad-Hoc Signing
       - name: Build Xcode Simulator App
         run: |
           cd build/ios
@@ -65,10 +65,9 @@ jobs:
                      -configuration Debug \
                      -derivedDataPath build_sim \
                      IPHONEOS_DEPLOYMENT_TARGET=16.0 \
-                     CODE_SIGNING_ALLOWED=NO \
+                     CODE_SIGN_IDENTITY="-" \
                      CODE_SIGNING_REQUIRED=NO \
-                     CODE_SIGN_IDENTITY="" \
-                     DEVELOPMENT_TEAM="" \
+                     CODE_SIGNING_ALLOWED=YES \
                      build
 
 # Step 8: Move Simulator .app to build output directory
