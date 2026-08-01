@@ -1,75 +1,66 @@
-name: Export and Build iOS Game
+name: Build iOS
 
 on:
   push:
-    branches: [ "main", "master" ]
-  workflow_dispatch:
+    branches:
+      - main
+  pull_request:
+    branches:
+      - main
 
 jobs:
-  build-ios:
-    runs-on: macos-14
+  build:
+    runs-on: macos-latest
 
     steps:
-      # Step 1: Checkout repository
-      - name: Checkout Repository
-        uses: actions/checkout@v4
+    - name: Checkout repository
+      uses: actions/checkout@v2
 
-      # Step 2: Setup Godot Engine & Templates
-      - name: Setup Godot Engine
-        uses: chickensoft-games/setup-godot@v2
-        with:
-          version: 4.2.2 # ⚠️ Change to your exact Godot version if different
-          use-dotnet: false
-          include-templates: true
+    - name: Download Godot
+      run: |
+        wget https://github.com/godotengine/godot/releases/download/3.5.3-stable/Godot_v3.5.3-stable_osx.universal.zip
+        unzip Godot_v3.5.3-stable_osx.universal.zip -d godot
+        sudo mv godot/Godot.app /Applications/Godot.app
+        sudo ln -s /Applications/Godot.app/Contents/MacOS/Godot /usr/local/bin/godot
 
-      # Step 3: Import Godot Project Cache
-      - name: Import Godot Project Cache
-        run: |
-          godot --headless --editor --quit || true
+    - name: Download Godot Export Templates
+      run: |
+        mkdir -p ~/Library/Application\ Support/Godot/templates/3.5.3.stable
+        cd ~/Library/Application\ Support/Godot/templates/3.5.3.stable
+        wget https://github.com/godotengine/godot/releases/download/3.5.3-stable/Godot_v3.5.3-stable_export_templates.tpz
+        tar -xzf Godot_v3.5.3-stable_export_templates.tpz -C ~/Library/Application\ Support/Godot/templates/3.5.3.stable
+        cd templates
+        mv * ..
+        cd ..
+        ls
 
-      # Step 4: Clean export_presets.cfg signing identities safely
-      - name: Clear Presets Signing
-        run: |
-          if [ -f "export_presets.cfg" ]; then
-            sed -i '' 's/code_sign\/identity_release=.*/code_sign\/identity_release=""/g' export_presets.cfg
-            sed -i '' 's/code_sign\/identity_debug=.*/code_sign\/identity_debug=""/g' export_presets.cfg
-          fi
+    - name: Create build directory
+      run: mkdir -p build
 
-      # Step 5: Export Xcode Project from Godot
-      - name: Export Xcode Project
-        run: |
-          mkdir -p build/ios
-          godot --headless --export-debug "iOS" build/ios/GameExport.xcodeproj
+    - name: Export iOS project
+      run: godot --export "iOS" build/your_project_name.xcodeproj
+      env:
+        DISPLAY: :99.0
+        
+    - name: Set iOS Deployment Target
+      run: sed -i '' 's/IPHONEOS_DEPLOYMENT_TARGET = 10.0;/IPHONEOS_DEPLOYMENT_TARGET = 12.0;/' build/your_project_name.xcodeproj/project.pbxproj
 
-      # Step 6: Fix Xcode project settings to allow build without Apple Account
-      - name: Patch Xcode Project Settings
-        run: |
-          PROJECT_FILE="build/ios/GameExport.xcodeproj/project.pbxproj"
-          if [ -f "$PROJECT_FILE" ]; then
-            sed -i '' 's/CODE_SIGNING_ALLOWED = YES/CODE_SIGNING_ALLOWED = NO/g' "$PROJECT_FILE"
-            sed -i '' 's/CODE_SIGNING_REQUIRED = YES/CODE_SIGNING_REQUIRED = NO/g' "$PROJECT_FILE"
-            sed -i '' 's/CODE_SIGN_IDENTITY = ".*";/CODE_SIGN_IDENTITY = "";/g' "$PROJECT_FILE"
-            sed -i '' 's/DevelopmentTeam = ".*";/DevelopmentTeam = "";/g' "$PROJECT_FILE"
-          fi
 
-      # Step 7: Build the project using xcodebuild
-      - name: Build Xcode Project
-        run: |
-          cd build/ios
-          xcodebuild -project GameExport.xcodeproj \
-                     -scheme "GameExport" \
-                     -sdk iphoneos \
-                     -configuration Debug \
-                     CODE_SIGNING_ALLOWED=NO \
-                     CODE_SIGNING_REQUIRED=NO \
-                     CODE_SIGN_IDENTITY="" \
-                     PROVISIONING_PROFILE_SPECIFIER="" \
-                     DEVELOPMENT_TEAM="" \
-                     build
+    - name: Build iOS project
+      run: xcodebuild -project build/your_project_name.xcodeproj -scheme your_project_name -configuration Development -archivePath build/your_project_name.xcarchive archive \ CODE_SIGN_IDENTITY="" CODE_SIGNING_REQUIRED=NO CODE_SIGNING_ALLOWED=NO
 
-      # Step 8: Upload build artifact
-      - name: Upload iOS Xcode Artifact
-        uses: actions/upload-artifact@v4
-        with:
-          name: ios-xcode-build
-          path: build/ios/
+    - name: Export IPA
+      run: | 
+        cd build
+        cd your_project_name.xcarchive
+        cd Products
+        cd Applications
+        mkdir Payload
+        mv your_project_name.app Payload/
+        zip -r App.ipa Payload/
+        mv App.ipa ../../../
+    - name: Upload IPA to GitHub Artifacts
+      uses: actions/upload-artifact@v4
+      with:
+        name: Ipa
+        path: build/App.ipa
