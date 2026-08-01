@@ -71,12 +71,12 @@ jobs:
                      DEVELOPMENT_TEAM="" \
                      build
 
-      # Step 8: Package Simulator .app into .zip for Appetize.io
+# Step 8: Package Simulator .app into .zip for Appetize.io
       - name: Create Appetize Simulator Zip Package
         run: |
           cd build/ios/build_sim/Build/Products/Debug-iphonesimulator
           zip -r PacketSurge-Simulator.zip PacketSurge.app
-          mv PacketSurge-Simulator.zip ../../../../../
+          mv PacketSurge-Simulator.zip ../../../../../build/ios/
 
       # Step 9: Upload Simulator Artifact
       - name: Upload Simulator Zip
