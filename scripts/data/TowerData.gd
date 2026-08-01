@@ -37,3 +37,4 @@ extends Resource
 # Visual
 @export var color: Color             = Color("#00D4FF")
 @export var icon_text: String        = "[ ]"
+@export var style: TowerStyle          # Shared visual style resource (optional)

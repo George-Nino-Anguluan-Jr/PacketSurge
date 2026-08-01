@@ -37,10 +37,6 @@ func _process(_delta: float) -> void:
 			if slot:
 				card.global_position = slot.global_position
 
-# ─── TOWER DEFINITIONS ─────────────────────────────────
-# ─── PRELOADS ──────────────────────────────────────────
-const ENEMY_SCENE = preload("res://scenes/campaign/enemies/Enemy.tscn")
-
 # ─── READY ─────────────────────────────────────────────
 func _ready() -> void:
 	level_number    = GameManager.current_level
@@ -535,17 +531,9 @@ func _make_enemy_preview_cell(enemy_id: String, tint: Color, intro: Dictionary) 
 	frame.add_child(container)
 
 	# Live, frozen 3D enemy
-	var e = ENEMY_SCENE.instantiate()
-	e.enemy_type    = enemy_id
-	e.preview_mode  = true
-	e.max_health    = 1.0
-	e.current_health = 1.0
-	e.move_speed    = 0.0
-	e.damage_to_base = 0
-	e.ram_reward    = 0
-	e.waypoints     = [] as Array[Vector2]
-	e._setup_type()
-	e.enemy_color = tint
+	var e = EnemyFactory.create_preview_enemy(enemy_id, tint)
+	if e == null:
+		return cell
 	e.position = Vector2(sub_vp.size) * 0.5 + Vector2(0, 8)
 	sub_vp.add_child(e)
 

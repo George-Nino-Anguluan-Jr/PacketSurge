@@ -16,10 +16,6 @@ var active_tab: String   = "towers"
 var search_query: String = ""
 var _last_device: String = ""
 
-# ─── CACHED SCENES (preloaded once) ─────────────────────
-const TOWER_SCENE  = preload("res://scenes/campaign/towers/Tower.tscn")
-const ENEMY_SCENE  = preload("res://scenes/campaign/enemies/Enemy.tscn")
-
 # ─── THEME COLORS ──────────────────────────────────────
 const C_BG          := Color("#0A1628")
 const C_BG_DARK     := Color("#080F1E")
@@ -330,8 +326,8 @@ func _matches_search(name: String, ds: String) -> bool:
 	return name.to_lower().contains(q) or ds.to_lower().contains(q)
 
 # ─── 3D PREVIEW WIDGET ─────────────────────────────────
-# Builds a SubViewportContainer hosting the actual Tower.tscn
-# or Enemy.tscn instance in preview mode (frozen, no game logic).
+# Builds a SubViewportContainer hosting the actual tower or enemy
+# instance in preview mode (frozen, no game logic).
 func _make_preview_panel(
 		entity_id: String,
 		is_tower: bool,
@@ -378,38 +374,27 @@ func _make_preview_panel(
 	return wrapper
 
 func _instantiate_tower_preview(vp: SubViewport, tower_id: String, color: Color) -> void:
-	var t = TOWER_SCENE.instantiate()
-	t.tower_id    = tower_id
-	t.tower_color = color
-	t.tower_name  = TowerIntroData.get_tower_name(tower_id)
-	t.damage      = 0.0
-	t.attack_speed = 0.0
-	t.attack_range = 0.0
-	t.current_target = null
-	t.enemy_layer = null
-	t.preview_mode = true
-	# Hide the placeholder sprite (matches Tower._ready behavior)
-	if t.has_node("TowerSprite"):
-		t.get_node("TowerSprite").visible = false
-	# Center the tower in the preview viewport
+	var def = GameManager.TOWER_DEFINITIONS.get(tower_id, {})
+	var td = TowerData.new()
+	td.tower_id = tower_id
+	td.tower_name = def.get("tower_name", tower_id)
+	td.damage = 0.0
+	td.attack_speed = 0.0
+	td.attack_range = 0.0
+	td.color = color
+	td.icon_text = def.get("icon_text", "[ ]")
+	if "style" in def:
+		td.style = def["style"]
+	var t = TowerFactory.create_preview_tower(td)
+	if t == null:
+		return
 	t.position = Vector2(vp.size) * 0.5
 	vp.add_child(t)
 
 func _instantiate_enemy_preview(vp: SubViewport, enemy_id: String, color: Color) -> void:
-	var e = ENEMY_SCENE.instantiate()
-	e.enemy_type    = enemy_id
-	e.preview_mode  = true
-	e.max_health    = 1.0
-	e.current_health = 1.0
-	e.move_speed    = 0.0
-	e.damage_to_base = 0
-	e.ram_reward    = 0
-	e.waypoints     = [] as Array[Vector2]
-	# Populate type_data so the draw routine doesn't crash on missing keys.
-	e._setup_type()
-	# Override the hardcoded color set by _setup_type with the intro-data tint.
-	e.enemy_color = color
-	# Center the enemy in the preview viewport
+	var e = EnemyFactory.create_preview_enemy(enemy_id, color)
+	if e == null:
+		return
 	e.position = Vector2(vp.size) * 0.5 + Vector2(0, 12)  # slight downward bias
 	vp.add_child(e)
 

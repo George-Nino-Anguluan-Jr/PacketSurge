@@ -18,3 +18,4 @@ extends Resource
 
 # Visual identity
 @export var color: Color        = Color("#FF3366")
+@export var style: EnemyStyle   # Shared visual style resource (optional)
