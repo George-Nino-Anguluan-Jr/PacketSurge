@@ -1,4 +1,4 @@
-name: Export and Build iOS Game
+name: Build iOS IPA
 
 on:
   push:
@@ -7,48 +7,79 @@ on:
 
 jobs:
   build-ios:
-    runs-on: macos-14
+    runs-on: macos-15 # Updated to macos-15 (Xcode 16+ support)
 
     steps:
       # Step 1: Checkout repository
       - name: Checkout Repository
         uses: actions/checkout@v4
 
-      # Step 2: Setup Godot and download templates automatically
+      # Step 2: Setup Godot Engine
       - name: Setup Godot Engine
         uses: chickensoft-games/setup-godot@v2
         with:
-          version: 4.2.2 # ⚠️ Change to your exact Godot version if different
+          version: 4.3.0 # Godot export template setup
           use-dotnet: false
           include-templates: true
 
-      # Step 3: Import project resources/autoloads BEFORE exporting
-      - name: Import Godot Project Cache
+      # Step 3: Import Godot Project Cache
+      - name: Import Godot Cache
         run: |
           godot --headless --editor --quit || true
 
-      # Step 4: Export the Xcode Project from Godot
+      # Step 4: Configure App Identifier & Clear Signing IDs in Presets
+      - name: Patch Bundle Identifier & Preset Settings
+        run: |
+          if [ -f "export_presets.cfg" ]; then
+            sed -i '' 's/application\/bundle_identifier=.*/application\/bundle_identifier="com.thesisteam.packetsurge"/g' export_presets.cfg
+            sed -i '' 's/code_sign\/identity_release=.*/code_sign\/identity_release=""/g' export_presets.cfg
+            sed -i '' 's/code_sign\/identity_debug=.*/code_sign\/identity_debug=""/g' export_presets.cfg
+            sed -i '' 's/code_sign\/apple_team_id=.*/code_sign\/apple_team_id=""/g' export_presets.cfg
+          fi
+
+      # Step 5: Export Xcode Project from Godot
       - name: Export Xcode Project
         run: |
           mkdir -p build/ios
-          godot --headless --export-release "iOS" build/ios/GameExport.xcodeproj
+          godot --headless --export-debug "iOS" build/ios/PacketSurge.xcodeproj || true
 
-      # Step 5: Build Xcode Project
-      - name: Build Xcode Project
+      # Step 6: Configure Xcode project deployment target and signing flags
+      - name: Patch Xcode Project Settings
+        run: |
+          PROJECT_FILE="build/ios/PacketSurge.xcodeproj/project.pbxproj"
+          if [ -f "$PROJECT_FILE" ]; then
+            sed -i '' 's/CODE_SIGNING_ALLOWED = YES/CODE_SIGNING_ALLOWED = NO/g' "$PROJECT_FILE"
+            sed -i '' 's/CODE_SIGNING_REQUIRED = YES/CODE_SIGNING_REQUIRED = NO/g' "$PROJECT_FILE"
+            sed -i '' 's/CODE_SIGN_IDENTITY = ".*";/CODE_SIGN_IDENTITY = "";/g' "$PROJECT_FILE"
+            sed -i '' 's/DevelopmentTeam = ".*";/DevelopmentTeam = "";/g' "$PROJECT_FILE"
+            sed -i '' 's/IPHONEOS_DEPLOYMENT_TARGET = .*/IPHONEOS_DEPLOYMENT_TARGET = 16.0;/g' "$PROJECT_FILE"
+          fi
+
+# Step 7: Build for iOS Simulator (Appetize.io standard)
+      - name: Build Xcode Simulator App
         run: |
           cd build/ios
-          xcodebuild -project GameExport.xcodeproj \
-                     -scheme "GameExport" \
-                     -sdk iphoneos \
-                     -configuration Release \
-                     CODE_SIGN_IDENTITY="" \
-                     CODE_SIGNING_REQUIRED=NO \
+          xcodebuild -project PacketSurge.xcodeproj \
+                     -scheme "PacketSurge" \
+                     -sdk iphonesimulator \
+                     -configuration Debug \
+                     -derivedDataPath build_sim \
+                     IPHONEOS_DEPLOYMENT_TARGET=16.0 \
                      CODE_SIGNING_ALLOWED=NO \
+                     CODE_SIGNING_REQUIRED=NO \
+                     CODE_SIGN_IDENTITY="" \
+                     DEVELOPMENT_TEAM="" \
                      build
 
-      # Step 6: Upload build artifact
-      - name: Upload iOS Xcode Artifact
+# Step 8: Move Simulator .app to build output directory
+      - name: Prepare Simulator App Bundle
+        run: |
+          cd build/ios/build_sim/Build/Products/Debug-iphonesimulator
+          mv PacketSurge.app $GITHUB_WORKSPACE/build/ios/
+
+      # Step 9: Upload Simulator .app Folder directly
+      - name: Upload Simulator Artifact
         uses: actions/upload-artifact@v4
         with:
-          name: ios-xcode-build
-          path: build/ios/
+          name: PacketSurge-Appetize-Build
+          path: build/ios/PacketSurge.app
