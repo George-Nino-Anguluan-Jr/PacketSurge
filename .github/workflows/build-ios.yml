@@ -55,34 +55,32 @@ jobs:
             sed -i '' 's/IPHONEOS_DEPLOYMENT_TARGET = .*/IPHONEOS_DEPLOYMENT_TARGET = 16.0;/g' "$PROJECT_FILE"
           fi
 
-      # Step 7: Build unsigned .xcarchive via xcodebuild
-      - name: Build Xcode Archive
+# Step 7: Build for iOS Simulator (Appetize.io standard)
+      - name: Build Xcode Simulator App
         run: |
           cd build/ios
           xcodebuild -project PacketSurge.xcodeproj \
                      -scheme "PacketSurge" \
-                     -sdk iphoneos \
+                     -sdk iphonesimulator \
                      -configuration Debug \
-                     -archivePath PacketSurge.xcarchive \
+                     -derivedDataPath build_sim \
                      IPHONEOS_DEPLOYMENT_TARGET=16.0 \
                      CODE_SIGNING_ALLOWED=NO \
                      CODE_SIGNING_REQUIRED=NO \
                      CODE_SIGN_IDENTITY="" \
                      DEVELOPMENT_TEAM="" \
-                     archive
+                     build
 
-      # Step 8: Package into an unsigned .ipa
-      - name: Create Unsigned IPA Package
+      # Step 8: Package Simulator .app into .zip for Appetize.io
+      - name: Create Appetize Simulator Zip Package
         run: |
-          cd build/ios/PacketSurge.xcarchive/Products/Applications
-          mkdir Payload
-          mv *.app Payload/
-          zip -r PacketSurge.ipa Payload
-          mv PacketSurge.ipa ../../../
+          cd build/ios/build_sim/Build/Products/Debug-iphonesimulator
+          zip -r PacketSurge-Simulator.zip PacketSurge.app
+          mv PacketSurge-Simulator.zip ../../../../../
 
-      # Step 9: Upload IPA Artifact to GitHub
-      - name: Upload IPA Artifact
+      # Step 9: Upload Simulator Artifact
+      - name: Upload Simulator Zip
         uses: actions/upload-artifact@v4
         with:
-          name: PacketSurge-Unsigned-IPA
-          path: build/ios/PacketSurge.ipa
+          name: PacketSurge-Appetize-Build
+          path: build/ios/PacketSurge-Simulator.zip
