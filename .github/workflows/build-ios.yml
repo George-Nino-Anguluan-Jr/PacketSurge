@@ -14,7 +14,7 @@ jobs:
       - name: Checkout Repository
         uses: actions/checkout@v4
 
-      # Step 2: Setup Godot Engine
+      # Step 2: Setup Godot Engine & Templates
       - name: Setup Godot Engine
         uses: chickensoft-games/setup-godot@v2
         with:
@@ -27,15 +27,12 @@ jobs:
         run: |
           godot --headless --editor --quit || true
 
-      # Step 4: Force disable signing & archiving inside export_presets.cfg
-      - name: Disable Auto-Archiving in Presets
+      # Step 4: Clean export_presets.cfg signing identities safely
+      - name: Clear Presets Signing
         run: |
           if [ -f "export_presets.cfg" ]; then
             sed -i '' 's/code_sign\/identity_release=.*/code_sign\/identity_release=""/g' export_presets.cfg
             sed -i '' 's/code_sign\/identity_debug=.*/code_sign\/identity_debug=""/g' export_presets.cfg
-            sed -i '' 's/code_sign\/provisioning_profile_uuid_release=.*/code_sign\/provisioning_profile_uuid_release=""/g' export_presets.cfg
-            sed -i '' 's/code_sign\/provisioning_profile_uuid_debug=.*/code_sign\/provisioning_profile_uuid_debug=""/g' export_presets.cfg
-            sed -i '' 's/application/export_method=.*/application\/export_method=0/g' export_presets.cfg
           fi
 
       # Step 5: Export Xcode Project from Godot
@@ -44,14 +41,18 @@ jobs:
           mkdir -p build/ios
           godot --headless --export-debug "iOS" build/ios/GameExport.xcodeproj
 
-      # Step 6: Force Xcode project configuration to build without signing/accounts
-      - name: Patch Xcode Project File
+      # Step 6: Fix Xcode project settings to allow build without Apple Account
+      - name: Patch Xcode Project Settings
         run: |
-          sed -i '' 's/CODE_SIGNING_ALLOWED = YES/CODE_SIGNING_ALLOWED = NO/g' build/ios/GameExport.xcodeproj/project.pbxproj
-          sed -i '' 's/CODE_SIGNING_REQUIRED = YES/CODE_SIGNING_REQUIRED = NO/g' build/ios/GameExport.xcodeproj/project.pbxproj
-          sed -i '' 's/CODE_SIGN_IDENTITY = ".*";/CODE_SIGN_IDENTITY = "";/g' build/ios/GameExport.xcodeproj/project.pbxproj
+          PROJECT_FILE="build/ios/GameExport.xcodeproj/project.pbxproj"
+          if [ -f "$PROJECT_FILE" ]; then
+            sed -i '' 's/CODE_SIGNING_ALLOWED = YES/CODE_SIGNING_ALLOWED = NO/g' "$PROJECT_FILE"
+            sed -i '' 's/CODE_SIGNING_REQUIRED = YES/CODE_SIGNING_REQUIRED = NO/g' "$PROJECT_FILE"
+            sed -i '' 's/CODE_SIGN_IDENTITY = ".*";/CODE_SIGN_IDENTITY = "";/g' "$PROJECT_FILE"
+            sed -i '' 's/DevelopmentTeam = ".*";/DevelopmentTeam = "";/g' "$PROJECT_FILE"
+          fi
 
-      # Step 7: Compile Xcode Project via xcodebuild
+      # Step 7: Build the project using xcodebuild
       - name: Build Xcode Project
         run: |
           cd build/ios
@@ -59,12 +60,14 @@ jobs:
                      -scheme "GameExport" \
                      -sdk iphoneos \
                      -configuration Debug \
-                     CODE_SIGN_IDENTITY="" \
-                     CODE_SIGNING_REQUIRED=NO \
                      CODE_SIGNING_ALLOWED=NO \
+                     CODE_SIGNING_REQUIRED=NO \
+                     CODE_SIGN_IDENTITY="" \
+                     PROVISIONING_PROFILE_SPECIFIER="" \
+                     DEVELOPMENT_TEAM="" \
                      build
 
-      # Step 8: Upload generated project artifacts
+      # Step 8: Upload build artifact
       - name: Upload iOS Xcode Artifact
         uses: actions/upload-artifact@v4
         with:
