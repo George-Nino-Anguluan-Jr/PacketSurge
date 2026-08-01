@@ -27,13 +27,27 @@ jobs:
         run: |
           godot --headless --editor --quit || true
 
-      # Step 4: Export the Xcode Project from Godot
+      # Step 4: Fix Godot iOS Code Signing Settings before export
+      - name: Clear Conflicting Signing Identity in Presets
+        run: |
+          if [ -f "export_presets.cfg" ]; then
+            sed -i '' 's/iPhone Distribution//g' export_presets.cfg
+            sed -i '' 's/iPhone Developer//g' export_presets.cfg
+          fi
+
+      # Step 5: Export the Xcode Project from Godot
       - name: Export Xcode Project
         run: |
           mkdir -p build/ios
           godot --headless --export-release "iOS" build/ios/GameExport.xcodeproj
 
-      # Step 5: Build Xcode Project
+      # Step 6: Fix generated Xcode project file to disable signing conflicts
+      - name: Patch Xcode Project File
+        run: |
+          sed -i '' 's/CODE_SIGN_IDENTITY = "iPhone Distribution";/CODE_SIGN_IDENTITY = "";/g' build/ios/GameExport.xcodeproj/project.pbxproj || true
+          sed -i '' 's/CODE_SIGN_IDENTITY = "iPhone Developer";/CODE_SIGN_IDENTITY = "";/g' build/ios/GameExport.xcodeproj/project.pbxproj || true
+
+      # Step 7: Build Xcode Project
       - name: Build Xcode Project
         run: |
           cd build/ios
@@ -46,7 +60,7 @@ jobs:
                      CODE_SIGNING_ALLOWED=NO \
                      build
 
-      # Step 6: Upload build artifact
+      # Step 8: Upload build artifact
       - name: Upload iOS Xcode Artifact
         uses: actions/upload-artifact@v4
         with:
