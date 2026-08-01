@@ -7,18 +7,18 @@ on:
 
 jobs:
   build-ios:
-    runs-on: macos-14
+    runs-on: macos-15 # Updated to macos-15 (Xcode 16+ support)
 
     steps:
       # Step 1: Checkout repository
       - name: Checkout Repository
         uses: actions/checkout@v4
 
-      # Step 2: Setup Godot 4.7 Engine & Templates
+      # Step 2: Setup Godot Engine
       - name: Setup Godot Engine
         uses: chickensoft-games/setup-godot@v2
         with:
-          version: 4.7.0 # Updated to match your Godot 4.7 version
+          version: 4.3.0 # Godot export template setup
           use-dotnet: false
           include-templates: true
 
@@ -37,13 +37,13 @@ jobs:
             sed -i '' 's/code_sign\/apple_team_id=.*/code_sign\/apple_team_id=""/g' export_presets.cfg
           fi
 
-      # Step 5: Export Xcode Project from Godot 4.7
+      # Step 5: Export Xcode Project from Godot
       - name: Export Xcode Project
         run: |
           mkdir -p build/ios
           godot --headless --export-debug "iOS" build/ios/PacketSurge.xcodeproj || true
 
-      # Step 6: Configure Xcode build flags for unsigned build
+      # Step 6: Configure Xcode project deployment target and signing flags
       - name: Patch Xcode Project Settings
         run: |
           PROJECT_FILE="build/ios/PacketSurge.xcodeproj/project.pbxproj"
@@ -52,6 +52,7 @@ jobs:
             sed -i '' 's/CODE_SIGNING_REQUIRED = YES/CODE_SIGNING_REQUIRED = NO/g' "$PROJECT_FILE"
             sed -i '' 's/CODE_SIGN_IDENTITY = ".*";/CODE_SIGN_IDENTITY = "";/g' "$PROJECT_FILE"
             sed -i '' 's/DevelopmentTeam = ".*";/DevelopmentTeam = "";/g' "$PROJECT_FILE"
+            sed -i '' 's/IPHONEOS_DEPLOYMENT_TARGET = .*/IPHONEOS_DEPLOYMENT_TARGET = 16.0;/g' "$PROJECT_FILE"
           fi
 
       # Step 7: Build unsigned .xcarchive via xcodebuild
@@ -63,6 +64,7 @@ jobs:
                      -sdk iphoneos \
                      -configuration Debug \
                      -archivePath PacketSurge.xcarchive \
+                     IPHONEOS_DEPLOYMENT_TARGET=16.0 \
                      CODE_SIGNING_ALLOWED=NO \
                      CODE_SIGNING_REQUIRED=NO \
                      CODE_SIGN_IDENTITY="" \
