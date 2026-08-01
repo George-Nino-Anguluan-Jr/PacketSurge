@@ -10,28 +10,30 @@ jobs:
     runs-on: macos-14
 
     steps:
+      # Step 1: Checkout repository
       - name: Checkout Repository
         uses: actions/checkout@v4
 
+      # Step 2: Setup Godot and download templates automatically
       - name: Setup Godot Engine
         uses: chickensoft-games/setup-godot@v2
         with:
           version: 4.2.2 # ⚠️ Change to your exact Godot version if different
+          use-dotnet: false
+          include-templates: true
 
-      - name: Download Export Templates
+      # Step 3: Import project resources/autoloads BEFORE exporting
+      - name: Import Godot Project Cache
         run: |
-          GODOT_VERSION="4.2.2.stable" # ⚠️ Change to your exact Godot version if different
-          mkdir -p ~/.local/share/godot/export_templates/${GODOT_VERSION}
-          curl -LO https://github.com/godotengine/godot/releases/download/${GODOT_VERSION}/Godot_v${GODOT_VERSION}_export_templates.tpz
-          unzip Godot_v${GODOT_VERSION}_export_templates.tpz
-          mv templates/* ~/.local/share/godot/export_templates/${GODOT_VERSION}/
-          rm -rf templates Godot_v${GODOT_VERSION}_export_templates.tpz
+          godot --headless --editor --quit || true
 
+      # Step 4: Export the Xcode Project from Godot
       - name: Export Xcode Project
         run: |
           mkdir -p build/ios
           godot --headless --export-release "iOS" build/ios/GameExport.xcodeproj
 
+      # Step 5: Build Xcode Project
       - name: Build Xcode Project
         run: |
           cd build/ios
@@ -44,6 +46,7 @@ jobs:
                      CODE_SIGNING_ALLOWED=NO \
                      build
 
+      # Step 6: Upload build artifact
       - name: Upload iOS Xcode Artifact
         uses: actions/upload-artifact@v4
         with:
