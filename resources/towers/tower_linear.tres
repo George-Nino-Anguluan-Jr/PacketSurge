@@ -2,8 +2,11 @@
 
 [ext_resource type="Script" path="res://scripts/data/TowerData.gd" id="1_d7bdu"]
 
+[ext_resource type="Resource" path="res://resources/styles/tower_style_default.tres" id="2_style"]
+
 [resource]
 script = ExtResource("1_d7bdu")
+style = ExtResource("2_style")
 tower_id = "tower_linear"
 tower_name = "Linear Tower"
 description = "Wide scan, guaranteed hit."
@@ -16,10 +19,10 @@ ability_name = "Linear Sweep"
 color = Color(0.3764706, 0.49019608, 0.54509807, 1)
 icon_text = "->?"
 order = 12
-tagline = "Wide scan — never misses"
-mechanic = "Scans a wide straight line and hits every enemy along that line. Has much longer effective range than other towers but in a narrow cone. Never misses a target in its scan path — like linear search checking every element."
+tagline = "Wide scan â€” never misses"
+mechanic = "Scans a wide straight line and hits every enemy along that line. Has much longer effective range than other towers but in a narrow cone. Never misses a target in its scan path â€” like linear search checking every element."
 shooting = "A horizontal scan line sweeps across the range, hitting all enemies it passes through."
-ability_desc = "Rotates the scan line 360°, hitting every enemy in the full radius."
+ability_desc = "Rotates the scan line 360Â°, hitting every enemy in the full radius."
 strong_against = Array[String](["queue_jumper", "scan_wave"])
 weak_against = Array[String](["overflow_packet", "selection_mark"])
 targeting = "Hits all enemies along a wide horizontal scan line within range."

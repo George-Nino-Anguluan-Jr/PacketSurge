@@ -2,8 +2,11 @@
 
 [ext_resource type="Script" path="res://scripts/data/TowerData.gd" id="1_tpn42"]
 
+[ext_resource type="Resource" path="res://resources/styles/tower_style_default.tres" id="2_style"]
+
 [resource]
 script = ExtResource("1_tpn42")
+style = ExtResource("2_style")
 tower_id = "tower_counting"
 tower_name = "Count Tower"
 description = "Stronger vs groups."
@@ -18,7 +21,7 @@ color = Color(0, 0.5882353, 0.53333336, 1)
 icon_text = "#"
 order = 10
 tagline = "More enemies = more damage"
-mechanic = "Fires a barrage of 5 counting pellets at the nearest target. Damage scales with the number of enemies in range — each enemy counted adds power. Like counting sort tallying occurrences."
+mechanic = "Fires a barrage of 5 counting pellets at the nearest target. Damage scales with the number of enemies in range â€” each enemy counted adds power. Like counting sort tallying occurrences."
 shooting = "A stream of numbered pellets (1 through 5) fly at the target in rapid succession, leaving counting trails."
 ability_desc = "Unleashes 10 pellets at once, each hitting for full damage."
 strong_against = Array[String](["count_meter", "basic_packet"])

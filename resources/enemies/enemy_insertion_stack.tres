@@ -2,8 +2,11 @@
 
 [ext_resource type="Script" path="res://scripts/data/EnemyData.gd" id="1_fwkuj"]
 
+[ext_resource type="Resource" path="res://resources/styles/enemy_style_default.tres" id="2_style"]
+
 [resource]
 script = ExtResource("1_fwkuj")
+style = ExtResource("2_style")
 enemy_id = "insertion_stack"
 max_health = 100.0
 speed = 64.0
@@ -11,7 +14,7 @@ ram_reward = 25
 is_boss = false
 title = "Insertion Stack"
 tagline = "Takes 50% extra damage from damage-over-time effects."
-icon = "◀|"
+icon = "â—€|"
 special = "1.5x damage from any DoT source. Direct hits are normal."
-lesson = "Insertion Sort inserts one at a time — Insertion Tower's DoT stacks."
+lesson = "Insertion Sort inserts one at a time â€” Insertion Tower's DoT stacks."
 color = Color(0.101960786, 0.7372549, 0.6117647, 1)

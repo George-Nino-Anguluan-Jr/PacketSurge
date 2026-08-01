@@ -1,0 +1,27 @@
+[gd_resource type="Resource" script_class="EnemyStyle" format=3]
+
+[ext_resource type="Script" uid="uid://hcl3h0pa6jjj" path="res://scripts/data/styles/EnemyStyle.gd" id="1_style"]
+
+[resource]
+script = ExtResource("1_style")
+squash_ratio = 0.65
+bob_amplitude = 2.0
+bob_speed = 3.0
+shadow_alpha = 0.25
+shadow_scale = Vector2(1, 0.35)
+health_bar_width = 36.0
+health_bar_height = 5.0
+health_bar_offset = Vector2(0, -32)
+health_bg_color = Color(0.101961, 0.039216, 0.039216, 1)
+health_border_alpha = 0.3
+health_outline = Color(1, 1, 1, 0.3)
+health_full_color = Color(0, 1, 0.533333, 1)
+health_mid_color = Color(1, 0.721569, 0, 1)
+health_low_color = Color(1, 0.2, 0.4, 1)
+dot_indicator_color = Color(0.101961, 0.737255, 0.611765, 0.8)
+dot_indicator_size = 3.0
+shield_bar_color = Color(0, 0.831373, 1, 1)
+shield_bar_offset = -3.0
+shield_bar_height = 2.0
+flash_duration = 0.15
+flash_color = Color(1, 1, 1, 1)

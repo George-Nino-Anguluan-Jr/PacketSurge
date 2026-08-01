@@ -2,8 +2,11 @@
 
 [ext_resource type="Script" path="res://scripts/data/TowerData.gd" id="1_ad6y5"]
 
+[ext_resource type="Resource" path="res://resources/styles/tower_style_default.tres" id="2_style"]
+
 [resource]
 script = ExtResource("1_ad6y5")
+style = ExtResource("2_style")
 tower_id = "tower_insertion"
 tower_name = "Insertion Tower"
 description = "Applies stacking damage-over-time."
@@ -18,7 +21,7 @@ color = Color(0.101960786, 0.7372549, 0.6117647, 1)
 icon_text = "<-^"
 order = 7
 tagline = "Stacks damage over time"
-mechanic = "Shoots a stake that deals initial damage plus a stacking damage-over-time (DoT) effect. Each new application increases the DoT — like inserting elements one by one into a sorted position."
+mechanic = "Shoots a stake that deals initial damage plus a stacking damage-over-time (DoT) effect. Each new application increases the DoT â€” like inserting elements one by one into a sorted position."
 shooting = "A glowing stake embeds into the target, leaving a venomous DoT trail."
 ability_desc = "Applies a massive instant DoT stack to the target enemy."
 strong_against = Array[String](["insertion_stack", "overflow_packet"])

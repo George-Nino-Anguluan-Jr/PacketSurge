@@ -2,8 +2,11 @@
 
 [ext_resource type="Script" path="res://scripts/data/TowerData.gd" id="1_qf76d"]
 
+[ext_resource type="Resource" path="res://resources/styles/tower_style_default.tres" id="2_style"]
+
 [resource]
 script = ExtResource("1_qf76d")
+style = ExtResource("2_style")
 tower_id = "tower_queue"
 tower_name = "Queue Tower"
 description = "Pierces 2 enemies in line. FIFO targeting."
@@ -16,10 +19,10 @@ ability_name = "FIFO Pierce"
 color = Color(0.60784316, 0.34901962, 0.7137255, 1)
 icon_text = "->"
 order = 3
-tagline = "FIFO — first in, first out railgun"
+tagline = "FIFO â€” first in, first out railgun"
 mechanic = "Targets the enemy that entered its range first (First-In-First-Out). Shots pierce through to hit a second enemy behind the first."
 shooting = "A piercing rail shot that cuts through the first target and continues to the next enemy in line."
 ability_desc = "Fires a wide blast that hits ALL enemies in range with reduced damage."
 strong_against = Array[String](["overflow_packet", "basic_packet"])
 weak_against = Array[String](["selection_mark", "merge_twin"])
-targeting = "FIFO — always hits the oldest (first-entered) enemy, then pierces to a second."
+targeting = "FIFO â€” always hits the oldest (first-entered) enemy, then pierces to a second."

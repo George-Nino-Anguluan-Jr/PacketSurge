@@ -2,8 +2,11 @@
 
 [ext_resource type="Script" path="res://scripts/data/EnemyData.gd" id="1_k6aro"]
 
+[ext_resource type="Resource" path="res://resources/styles/enemy_style_default.tres" id="2_style"]
+
 [resource]
 script = ExtResource("1_k6aro")
+style = ExtResource("2_style")
 enemy_id = "queue_jumper"
 max_health = 100.0
 speed = 40.0
@@ -11,7 +14,7 @@ ram_reward = 15
 is_boss = false
 title = "Queue Jumper"
 tagline = "Speeds up as enemies ahead of it die."
-icon = "▶▶"
-special = "Speed scales with the number of enemies ahead — near the front = fast."
-lesson = "Queue FIFO — handle the oldest arrival first."
+icon = "â–¶â–¶"
+special = "Speed scales with the number of enemies ahead â€” near the front = fast."
+lesson = "Queue FIFO â€” handle the oldest arrival first."
 color = Color(1, 0.41960785, 0.20784314, 1)

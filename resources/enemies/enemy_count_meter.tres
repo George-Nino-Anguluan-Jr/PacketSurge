@@ -2,8 +2,11 @@
 
 [ext_resource type="Script" path="res://scripts/data/EnemyData.gd" id="1_7dmo0"]
 
+[ext_resource type="Resource" path="res://resources/styles/enemy_style_default.tres" id="2_style"]
+
 [resource]
 script = ExtResource("1_7dmo0")
+style = ExtResource("2_style")
 enemy_id = "count_meter"
 max_health = 100.0
 speed = 80.0
@@ -12,6 +15,6 @@ is_boss = false
 title = "Count Meter"
 tagline = "Resists damage until a counter fills."
 icon = "###"
-special = "80% damage resistance until 5 hits land — then the counter resets."
-lesson = "Counting Sort tallies occurrences — Count Tower's rapid hits fill it fast."
+special = "80% damage resistance until 5 hits land â€” then the counter resets."
+lesson = "Counting Sort tallies occurrences â€” Count Tower's rapid hits fill it fast."
 color = Color(0, 0.5882353, 0.53333336, 1)

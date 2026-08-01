@@ -1,4 +1,4 @@
-﻿extends "res://scripts/academy/VizBase.gd"
+extends "res://scripts/academy/VizBase.gd"
 
 var _counter: int = 0
 var _output_lines: Array = []

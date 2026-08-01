@@ -1,4 +1,4 @@
-﻿[gd_scene load_steps=2 format=3 uid="uid://b2vizbinarysearch01"]
+[gd_scene load_steps=2 format=3 uid="uid://b2vizbinarysearch01"]
 
 [ext_resource type="Script" path="res://scenes/academy/visualizations/VizBinarySearch.gd" id="1_binarysearch"]
 

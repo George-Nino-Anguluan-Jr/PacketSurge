@@ -1,4 +1,4 @@
-﻿extends "res://scripts/academy/VizBase.gd"
+extends "res://scripts/academy/VizBase.gd"
 
 var _current_name: String = ""
 var _current_value: String = ""

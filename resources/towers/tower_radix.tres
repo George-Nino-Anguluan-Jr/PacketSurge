@@ -2,8 +2,11 @@
 
 [ext_resource type="Script" path="res://scripts/data/TowerData.gd" id="1_7wngw"]
 
+[ext_resource type="Resource" path="res://resources/styles/tower_style_default.tres" id="2_style"]
+
 [resource]
 script = ExtResource("1_7wngw")
+style = ExtResource("2_style")
 tower_id = "tower_radix"
 tower_name = "Radix Tower"
 description = "Rapid multi-pass bursts."
@@ -18,7 +21,7 @@ color = Color(1, 0.34117648, 0.13333334, 1)
 icon_text = "0->9"
 order = 11
 tagline = "Multi-pass digit-based volley"
-mechanic = "Fires 3 passes of digit-orbiting projectiles (ones, tens, hundreds place). Each pass deals damage — like Radix Sort processing each digit position separately."
+mechanic = "Fires 3 passes of digit-orbiting projectiles (ones, tens, hundreds place). Each pass deals damage â€” like Radix Sort processing each digit position separately."
 shooting = "Three glowing digit orbs spiral outward in sequence, each labeled with its place value (1s, 10s, 100s)."
 ability_desc = "Fires 9 orbs covering all digits at once for massive burst damage."
 strong_against = Array[String](["radix_digit", "scan_wave"])

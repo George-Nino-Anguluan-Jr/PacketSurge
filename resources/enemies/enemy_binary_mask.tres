@@ -2,8 +2,11 @@
 
 [ext_resource type="Script" path="res://scripts/data/EnemyData.gd" id="1_x2b53"]
 
+[ext_resource type="Resource" path="res://resources/styles/enemy_style_default.tres" id="2_style"]
+
 [resource]
 script = ExtResource("1_x2b53")
+style = ExtResource("2_style")
 enemy_id = "binary_mask"
 max_health = 100.0
 speed = 64.0
@@ -11,8 +14,8 @@ ram_reward = 40
 is_boss = false
 title = "Binary Mask"
 tagline = "Alternates vulnerable half every few seconds."
-icon = "½"
+icon = "Â½"
 threat = "Extreme"
 special = "Only the highlighted half takes full damage. Switches every 2-3 seconds."
-lesson = "Binary Search halves the search space — Binary Tower's precision hits the right side."
+lesson = "Binary Search halves the search space â€” Binary Tower's precision hits the right side."
 color = Color(0.54509807, 0.7647059, 0.2901961, 1)

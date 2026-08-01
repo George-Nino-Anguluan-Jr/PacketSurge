@@ -2,8 +2,11 @@
 
 [ext_resource type="Script" path="res://scripts/data/TowerData.gd" id="1_newh4"]
 
+[ext_resource type="Resource" path="res://resources/styles/tower_style_default.tres" id="2_style"]
+
 [resource]
 script = ExtResource("1_newh4")
+style = ExtResource("2_style")
 tower_id = "tower_binary"
 tower_name = "Binary Tower"
 description = "Precision sniper. O(log n)."
@@ -17,7 +20,7 @@ ability_name = "Binary Snipe"
 color = Color(0.54509807, 0.7647059, 0.2901961, 1)
 icon_text = "1/2"
 order = 13
-tagline = "Precision sniper — divide and conquer"
+tagline = "Precision sniper â€” divide and conquer"
 mechanic = "Deals massive single-target damage with every shot but fires very slowly. Perfect for taking down high-HP priority targets. Like binary search splitting the search space and zeroing in on the target."
 shooting = "A high-velocity binary sniper round with a crosshair reticle, dealing enormous impact damage."
 ability_desc = "Fires an ultra-powerful shot dealing 5x normal damage to a single target."

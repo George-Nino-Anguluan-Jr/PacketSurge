@@ -49,6 +49,7 @@ func create(enemy_type: String, waypoints: Array[Vector2], health: float,
 		return null
 	var enemy = scene.instantiate() as Enemy
 	if enemy:
+		_apply_enemy_style(enemy, enemy_type)
 		enemy.initialize(waypoints, health, speed, enemy_type, type_data)
 	return enemy
 
@@ -67,6 +68,7 @@ func create_preview_enemy(enemy_id: String, color: Color) -> Enemy:
 	e.damage_to_base = 0
 	e.ram_reward = 0
 	e.waypoints = [] as Array[Vector2]
+	_apply_enemy_style(e, enemy_id)
 	e._setup_type()
 	e.enemy_color = color
 	return e
@@ -78,3 +80,10 @@ func get_all_types() -> Array[String]:
 	for type_id in _scene_map.keys():
 		result.append(type_id)
 	return result
+
+func _apply_enemy_style(enemy: Enemy, enemy_type: String) -> void:
+	if enemy == null or enemy.style != null:
+		return
+	var canonical: EnemyData = DataRegistry.get_enemy(enemy_type)
+	if canonical and canonical.style:
+		enemy.style = canonical.style

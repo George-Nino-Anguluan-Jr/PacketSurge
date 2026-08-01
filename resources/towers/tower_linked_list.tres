@@ -2,8 +2,11 @@
 
 [ext_resource type="Script" path="res://scripts/data/TowerData.gd" id="1_ljvxj"]
 
+[ext_resource type="Resource" path="res://resources/styles/tower_style_default.tres" id="2_style"]
+
 [resource]
 script = ExtResource("1_ljvxj")
+style = ExtResource("2_style")
 tower_id = "tower_linked_list"
 tower_name = "Linked Tower"
 description = "Chain damage across 3 nearby enemies."
@@ -16,8 +19,8 @@ ability_name = "Chain Link"
 color = Color(0, 1, 0.53333336, 1)
 icon_text = "->->"
 order = 4
-tagline = "Chain lightning — jumps between enemies"
-mechanic = "Fires chain lightning that hits a primary target then bounces to up to 2 more nearby enemies. Each chain jump deals reduced damage — like traversing nodes in a linked list."
+tagline = "Chain lightning â€” jumps between enemies"
+mechanic = "Fires chain lightning that hits a primary target then bounces to up to 2 more nearby enemies. Each chain jump deals reduced damage â€” like traversing nodes in a linked list."
 shooting = "A crackling lightning bolt arcs from the tower to the first target, then chains to adjacent enemies."
 ability_desc = "Unleashes a triple-chain burst hitting 3 enemies with full damage."
 strong_against = Array[String](["merge_twin", "linked_drain"])
