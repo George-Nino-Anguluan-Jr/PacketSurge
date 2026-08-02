@@ -228,7 +228,7 @@ func _make_entry_card(
 
 	var section_label := Label.new()
 	section_label.text = entry.get("section", "")
-	section_label.add_theme_font_size_override("font_size", int(clampf(min_dim * 0.014, 16.0, 15.0)))
+	section_label.add_theme_font_size_override("font_size", int(clampf(min_dim * 0.014, 16.0, 18.0)))
 	section_label.add_theme_color_override("font_color", Color("#4A7FA5"))
 	name_section.add_child(section_label)
 
@@ -274,7 +274,7 @@ func _add_stat_column(
 
 	var lbl := Label.new()
 	lbl.text = label
-	lbl.add_theme_font_size_override("font_size", int(clampf(min_dim * 0.014, 16.0, 15.0)))
+	lbl.add_theme_font_size_override("font_size", int(clampf(min_dim * 0.014, 16.0, 18.0)))
 	lbl.add_theme_color_override("font_color", Color("#4A7FA5"))
 	lbl.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	col.add_child(lbl)
