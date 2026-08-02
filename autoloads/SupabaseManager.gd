@@ -23,6 +23,7 @@ var _auto_meta: Dictionary = {}
 # ─── SIGNALS ───────────────────────────────────────────
 signal register_completed(success: bool, message: String)
 signal login_completed(success: bool, message: String)
+signal resend_completed(success: bool, message: String)
 signal logout_completed()
 signal progress_saved(success: bool)
 signal leaderboard_loaded(data: Array)
@@ -114,25 +115,38 @@ func _on_auth_created(
 		p_year: String, p_section: String) -> void:
 	http.queue_free()
 	var parsed = JSON.parse_string(body.get_string_from_utf8())
-	if code == 200 and parsed.has("access_token"):
-		access_token = parsed["access_token"]
-		student_id   = parsed["user"]["id"]
-		full_name    = p_full_name
-		username     = p_username
-		email        = p_email
-		year_level   = p_year
-		section      = p_section
-		is_logged_in = true
-		_save_student_profile()
-		register_completed.emit(true, "Account created! Welcome.")
-		print("[Supabase] Registered: ", username)
-	else:
-		var msg = "Registration failed."
-		if parsed.has("msg"):
-			msg = parsed["msg"]
-		elif parsed.has("message"):
-			msg = parsed["message"]
-		register_completed.emit(false, msg)
+	if code == 200:
+		var has_token = parsed.has("access_token") and \
+			parsed["access_token"] != null and \
+			str(parsed["access_token"]) != ""
+		if has_token:
+			access_token = parsed["access_token"]
+			student_id   = parsed["user"]["id"]
+			full_name    = p_full_name
+			username     = p_username
+			email        = p_email
+			year_level   = p_year
+			section      = p_section
+			is_logged_in = true
+			_save_student_profile()
+			register_completed.emit(true, "Account created! Welcome.")
+			print("[Supabase] Registered: ", username)
+		else:
+			# Email confirmation is enabled — the account exists but is
+			# not verified yet. Do NOT log in or save the profile until
+			# the user confirms their email.
+			register_completed.emit(
+				true,
+				"Verification email sent! Check your inbox to confirm your account."
+			)
+			print("[Supabase] Account created, awaiting email confirmation: ", p_username)
+		return
+	var msg = "Registration failed."
+	if parsed.has("msg"):
+		msg = parsed["msg"]
+	elif parsed.has("message"):
+		msg = parsed["message"]
+	register_completed.emit(false, msg)
 
 func _save_student_profile(with_email := true) -> void:
 	var url  = SUPABASE_URL + "/rest/v1/students"
@@ -232,7 +246,33 @@ func _on_login_response(
 		_auto_meta["email"] = user_data.get("email", "")
 		_load_student_profile()
 	else:
-		login_completed.emit(false, "Invalid email or password.")
+		var msg = "Invalid email or password."
+		if parsed.has("error_code") and parsed["error_code"] == "email_not_confirmed":
+			msg = "Please verify your email before logging in."
+		login_completed.emit(false, msg)
+
+# Re-sends the signup confirmation email for an unverified account.
+func resend_verification(p_email: String) -> void:
+	var url  = SUPABASE_URL + "/auth/v1/resend"
+	var body = JSON.stringify({
+		"type":  "signup",
+		"email": p_email,
+	})
+	var http := HTTPRequest.new()
+	add_child(http)
+	http.request_completed.connect(_on_resend_response.bind(http))
+	http.request(url, _get_headers(false), HTTPClient.METHOD_POST, body)
+
+func _on_resend_response(
+		result: int, code: int,
+		headers: PackedStringArray, body: PackedByteArray,
+		http: HTTPRequest) -> void:
+	http.queue_free()
+	if code == 200:
+		resend_completed.emit(true, "Verification email sent! Check your inbox.")
+	else:
+		resend_completed.emit(false, "Could not send verification email. Check the address and try again.")
+
 
 func _load_student_profile() -> void:
 	var url  = SUPABASE_URL + \
