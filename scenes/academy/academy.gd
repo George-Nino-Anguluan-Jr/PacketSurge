@@ -36,6 +36,17 @@ const STEP_NAMES: Array[String] = [
 var topic_buttons: Dictionary = {}
 var _lesson_start_time: float = 0.0
 
+# ─── HELPERS ───────────────────────────────────────────
+func _min_dim() -> float:
+	var vp := get_viewport().get_visible_rect().size
+	return minf(maxf(vp.x, 320.0), maxf(vp.y, 240.0))
+
+func _fs(ratio: float, floor_v: float, cap_v: float) -> int:
+	return int(clampf(_min_dim() * ratio, floor_v, cap_v))
+
+func _is_mobile_view() -> bool:
+	return _min_dim() < 600.0
+
 # ─── READY ─────────────────────────────────────────────
 func _ready() -> void:
 	# Guarantee base state before building UI
@@ -161,13 +172,13 @@ func _style_topic_button(btn: Button, state: String) -> void:
 			btn.disabled = false
 
 	btn.add_theme_stylebox_override("normal", style)
-	btn.add_theme_font_size_override("font_size", 15)
-	btn.custom_minimum_size = Vector2(0, 44)
+	btn.add_theme_font_size_override("font_size", _fs(0.032, 16.0, 18.0))
+	btn.custom_minimum_size = Vector2(0, _fs(0.090, 36.0, 48.0))
 
 # ─── TOPIC SELECTED ────────────────────────────────────
 func _on_topic_selected(topic_id: String) -> void:
 	# Auto close sidebar on mobile after selecting
-	if ScreenManager.is_mobile() and _sidebar_visible:
+	if _is_mobile_view() and _sidebar_visible:
 		_toggle_sidebar()
 
 	for lesson in all_lessons:
@@ -197,7 +208,7 @@ func _build_step_indicator() -> void:
 		child.queue_free()
 	for i in range(total_steps):
 		var dot   := Panel.new()
-		dot.custom_minimum_size = Vector2(24, 6)
+		dot.custom_minimum_size = Vector2(_fs(0.058, 16.0, 28.0), _fs(0.013, 4.0, 6.0))
 		var style := StyleBoxFlat.new()
 		style.bg_color               = Color("#00D4FF") if i == 0 else Color("#2A3A4A")
 		style.corner_radius_top_left     = 3
@@ -256,69 +267,69 @@ func _show_current_step() -> void:
 # ─── STEP CONTENT ──────────────────────────────────────
 func _show_concept_step() -> void:
 	var layout := VBoxContainer.new()
-	layout.add_theme_constant_override("separation", 16)
+	layout.add_theme_constant_override("separation", _fs(0.030, 12.0, 16.0))
 	var title := Label.new()
 	title.text = "📖 Concept"
 	title.add_theme_color_override("font_color", Color("#00D4FF"))
-	title.add_theme_font_size_override("font_size", 20)
+	title.add_theme_font_size_override("font_size", _fs(0.045, 18.0, 22.0))
 	layout.add_child(title)
 	layout.add_child(_make_step_label(current_lesson.concept_text))
 	scroll_content.add_child(layout)
 
 func _show_visualization_step() -> void:
 	var layout := VBoxContainer.new()
-	layout.add_theme_constant_override("separation", 12)
+	layout.add_theme_constant_override("separation", _fs(0.025, 8.0, 12.0))
 	var title := Label.new()
 	title.text = "🎨 Visualization"
 	title.add_theme_color_override("font_color", Color("#00D4FF"))
-	title.add_theme_font_size_override("font_size", 20)
+	title.add_theme_font_size_override("font_size", _fs(0.045, 18.0, 22.0))
 	layout.add_child(title)
 	if current_lesson.visualization_scene != null:
 		var viz = current_lesson.visualization_scene.instantiate()
 		viz.size_flags_horizontal     = Control.SIZE_EXPAND_FILL
 		viz.size_flags_vertical       = Control.SIZE_EXPAND_FILL
-		viz.custom_minimum_size       = Vector2(0, 620)
+		# Skipped: visualization-specific sizing intentionally left alone
 		layout.add_child(viz)
 	else:
 		var fallback := Label.new()
 		fallback.text = "⚙️ Visualization coming soon for this topic."
 		fallback.add_theme_color_override("font_color", Color("#4A7FA5"))
-		fallback.add_theme_font_size_override("font_size", 16)
+		fallback.add_theme_font_size_override("font_size", _fs(0.032, 16.0, 16.0))
 		fallback.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 		layout.add_child(fallback)
 	scroll_content.add_child(layout)
 
 func _show_real_world_step() -> void:
 	var layout := VBoxContainer.new()
-	layout.add_theme_constant_override("separation", 12)
+	layout.add_theme_constant_override("separation", _fs(0.025, 8.0, 12.0))
 	var title := Label.new()
 	title.text = "🌐 Real World Example"
 	title.add_theme_color_override("font_color", Color("#00D4FF"))
-	title.add_theme_font_size_override("font_size", 20)
+	title.add_theme_font_size_override("font_size", _fs(0.045, 18.0, 22.0))
 	layout.add_child(title)
 	layout.add_child(_make_step_label(current_lesson.real_world_example))
 	scroll_content.add_child(layout)
 
 func _show_guided_step() -> void:
 	var layout := VBoxContainer.new()
-	layout.add_theme_constant_override("separation", 12)
+	layout.add_theme_constant_override("separation", _fs(0.025, 8.0, 12.0))
 	var title := Label.new()
 	title.text = "🧭 Guided Example"
 	title.add_theme_color_override("font_color", Color("#00D4FF"))
-	title.add_theme_font_size_override("font_size", 20)
+	title.add_theme_font_size_override("font_size", _fs(0.045, 18.0, 22.0))
 	layout.add_child(title)
 	layout.add_child(_make_step_label(current_lesson.guided_example))
 	scroll_content.add_child(layout)
 
 func _show_block_puzzle_step() -> void:
 	var layout := VBoxContainer.new()
-	layout.add_theme_constant_override("separation", 12)
+	layout.add_theme_constant_override("separation", _fs(0.025, 8.0, 12.0))
 
 	var instruction := Label.new()
 	instruction.text          = current_lesson.challenge_instruction
 	instruction.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 	instruction.add_theme_color_override("font_color", Color("#E8F4FD"))
-	instruction.add_theme_font_size_override("font_size", 18)
+	instruction.add_theme_font_size_override("font_size", _fs(0.038, 16.0, 20.0))
 	layout.add_child(instruction)
 
 	_show_block_puzzle(layout)
@@ -327,11 +338,12 @@ func _show_block_puzzle_step() -> void:
 
 func _show_code_editor_step() -> void:
 	var layout := VBoxContainer.new()
-	layout.add_theme_constant_override("separation", 12)
+	layout.add_theme_constant_override("separation", _fs(0.025, 8.0, 12.0))
 	if current_lesson.challenge_code.is_empty():
 		var label := Label.new()
 		label.text = "No coding challenge for this lesson."
 		label.add_theme_color_override("font_color", Color("#4A7FA5"))
+		label.add_theme_font_size_override("font_size", _fs(0.032, 16.0, 16.0))
 		label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 		layout.add_child(label)
 		scroll_content.add_child(layout)
@@ -340,7 +352,7 @@ func _show_code_editor_step() -> void:
 	instruction.text = "Type your code below. Fill in the blanks (___), then press Run to test."
 	instruction.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 	instruction.add_theme_color_override("font_color", Color("#E8F4FD"))
-	instruction.add_theme_font_size_override("font_size", 18)
+	instruction.add_theme_font_size_override("font_size", _fs(0.038, 16.0, 20.0))
 	layout.add_child(instruction)
 	_show_code_editor(layout)
 	scroll_content.add_child(layout)
@@ -348,12 +360,13 @@ func _show_code_editor_step() -> void:
 func _show_code_editor(layout: VBoxContainer) -> void:
 	var editor := TextEdit.new()
 	editor.name = "CodeEditor"
-	editor.custom_minimum_size = Vector2(0, 250)
+	editor.custom_minimum_size = Vector2(0, _fs(0.50, 200.0, 280.0))
 	editor.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	editor.add_theme_color_override("background_color", Color("#0A1628"))
 	editor.add_theme_color_override("font_color", Color("#E8F4FD"))
 	editor.add_theme_color_override("caret_color", Color("#00D4FF"))
 	editor.add_theme_color_override("selection_color", Color("#003366"))
+	editor.add_theme_font_size_override("font_size", _fs(0.034, 16.0, 18.0))
 	editor.text = current_lesson.code_template if not current_lesson.code_template.is_empty() else ""
 	editor.placeholder_text = "# Write your Python code here"
 	layout.add_child(editor)
@@ -362,13 +375,13 @@ func _show_code_editor(layout: VBoxContainer) -> void:
 	hint_line.text = "💡 Write Python code. Press Run to test, then Check Answer when output matches expected."
 	hint_line.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 	hint_line.add_theme_color_override("font_color", Color("#4A7FA5"))
-	hint_line.add_theme_font_size_override("font_size", 14)
+	hint_line.add_theme_font_size_override("font_size", _fs(0.030, 16.0, 16.0))
 	layout.add_child(hint_line)
 
 	# Run button
 	var run_btn := Button.new()
 	run_btn.text = "▶ Run Code"
-	run_btn.custom_minimum_size = Vector2(160, 44)
+	run_btn.custom_minimum_size = Vector2(_fs(0.40, 140.0, 180.0), _fs(0.075, 40.0, 48.0))
 	_style_accent_button(run_btn)
 	run_btn.pressed.connect(_on_run_code.bind(editor))
 	layout.add_child(run_btn)
@@ -376,7 +389,7 @@ func _show_code_editor(layout: VBoxContainer) -> void:
 	# Check answer button
 	var check_btn := Button.new()
 	check_btn.text = "✔ Check Answer"
-	check_btn.custom_minimum_size = Vector2(160, 44)
+	check_btn.custom_minimum_size = Vector2(_fs(0.40, 140.0, 180.0), _fs(0.075, 40.0, 48.0))
 	_style_accent_button(check_btn)
 	check_btn.pressed.connect(_on_check_code_answer.bind(editor))
 	layout.add_child(check_btn)
@@ -386,8 +399,8 @@ func _show_code_editor(layout: VBoxContainer) -> void:
 	output_label.name = "OutputLabel"
 	output_label.text = ""
 	output_label.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
-	output_label.add_theme_font_size_override("font_size", 15)
-	output_label.custom_minimum_size = Vector2(0, 60)
+	output_label.add_theme_font_size_override("font_size", _fs(0.032, 16.0, 16.0))
+	output_label.custom_minimum_size = Vector2(0, _fs(0.12, 48.0, 72.0))
 	var output_bg := StyleBoxFlat.new()
 	output_bg.bg_color = Color("#080F1E")
 	output_bg.border_color = Color("#1A2A3A")
@@ -405,7 +418,7 @@ func _show_code_editor(layout: VBoxContainer) -> void:
 	var result_label := Label.new()
 	result_label.name = "CodeResultLabel"
 	result_label.text = ""
-	result_label.add_theme_font_size_override("font_size", 16)
+	result_label.add_theme_font_size_override("font_size", _fs(0.034, 16.0, 18.0))
 	result_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	layout.add_child(result_label)
 
@@ -468,13 +481,13 @@ func _show_block_puzzle(layout: VBoxContainer) -> void:
 	var answer_label := Label.new()
 	answer_label.text = "Your Answer:"
 	answer_label.add_theme_color_override("font_color", Color("#4A7FA5"))
-	answer_label.add_theme_font_size_override("font_size", 15)
+	answer_label.add_theme_font_size_override("font_size", _fs(0.032, 16.0, 16.0))
 	layout.add_child(answer_label)
 
 	var answer_area := VBoxContainer.new()
 	answer_area.name = "AnswerArea"
-	answer_area.add_theme_constant_override("separation", 6)
-	answer_area.custom_minimum_size = Vector2(0, 120)
+	answer_area.add_theme_constant_override("separation", _fs(0.012, 4.0, 6.0))
+	answer_area.custom_minimum_size = Vector2(0, _fs(0.24, 96.0, 140.0))
 	layout.add_child(answer_area)
 
 	layout.add_child(HSeparator.new())
@@ -482,13 +495,13 @@ func _show_block_puzzle(layout: VBoxContainer) -> void:
 	var blocks_label := Label.new()
 	blocks_label.text = "Available Blocks — tap to add/remove:"
 	blocks_label.add_theme_color_override("font_color", Color("#4A7FA5"))
-	blocks_label.add_theme_font_size_override("font_size", 15)
+	blocks_label.add_theme_font_size_override("font_size", _fs(0.032, 16.0, 16.0))
 	layout.add_child(blocks_label)
 
 	var blocks_area := VBoxContainer.new()
 	blocks_area.name = "BlocksArea"
-	blocks_area.add_theme_constant_override("separation", 6)
-	blocks_area.custom_minimum_size = Vector2(0, 80)
+	blocks_area.add_theme_constant_override("separation", _fs(0.012, 4.0, 6.0))
+	blocks_area.custom_minimum_size = Vector2(0, _fs(0.16, 64.0, 96.0))
 	layout.add_child(blocks_area)
 
 	var shuffled = current_lesson.challenge_blocks.duplicate()
@@ -498,7 +511,7 @@ func _show_block_puzzle(layout: VBoxContainer) -> void:
 
 	var check_btn := Button.new()
 	check_btn.text = "✔ Check Answer"
-	check_btn.custom_minimum_size = Vector2(160, 44)
+	check_btn.custom_minimum_size = Vector2(_fs(0.40, 140.0, 180.0), _fs(0.075, 40.0, 48.0))
 	_style_accent_button(check_btn)
 	check_btn.pressed.connect(_check_code_answer.bind(answer_area))
 	layout.add_child(check_btn)
@@ -506,7 +519,7 @@ func _show_block_puzzle(layout: VBoxContainer) -> void:
 	var result_label := Label.new()
 	result_label.name = "ResultLabel"
 	result_label.text = ""
-	result_label.add_theme_font_size_override("font_size", 16)
+	result_label.add_theme_font_size_override("font_size", _fs(0.034, 16.0, 18.0))
 	result_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	layout.add_child(result_label)
 
@@ -514,7 +527,7 @@ func _make_code_block(text: String, answer_area: VBoxContainer, blocks_area: VBo
 	var btn := Button.new()
 	btn.text      = text
 	btn.alignment = HORIZONTAL_ALIGNMENT_LEFT
-	btn.custom_minimum_size = Vector2(0, 40)
+	btn.custom_minimum_size = Vector2(0, _fs(0.080, 32.0, 44.0))
 	btn.set_meta("answer_area", answer_area)
 	btn.set_meta("blocks_area", blocks_area)
 	btn.set_meta("in_answer",   false)
@@ -531,7 +544,7 @@ func _make_code_block(text: String, answer_area: VBoxContainer, blocks_area: VBo
 	style.corner_radius_bottom_right = 4
 	btn.add_theme_stylebox_override("normal", style)
 	btn.add_theme_color_override("font_color", Color("#00D4FF"))
-	btn.add_theme_font_size_override("font_size", 15)
+	btn.add_theme_font_size_override("font_size", _fs(0.032, 16.0, 18.0))
 	btn.pressed.connect(_on_block_tapped.bind(btn))
 	return btn
 
@@ -596,20 +609,20 @@ func _check_code_answer(answer_area: VBoxContainer) -> void:
 
 func _show_practice_step() -> void:
 	var layout := VBoxContainer.new()
-	layout.add_theme_constant_override("separation", 12)
+	layout.add_theme_constant_override("separation", _fs(0.025, 8.0, 12.0))
 
 	var question := Label.new()
 	question.text          = current_lesson.practice_question
 	question.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 	question.add_theme_color_override("font_color", Color("#E8F4FD"))
-	question.add_theme_font_size_override("font_size", 20)
+	question.add_theme_font_size_override("font_size", _fs(0.045, 18.0, 22.0))
 	layout.add_child(question)
 
 	for i in range(current_lesson.practice_options.size()):
 		var option_btn := Button.new()
 		option_btn.text           = current_lesson.practice_options[i]
 		option_btn.alignment      = HORIZONTAL_ALIGNMENT_LEFT
-		option_btn.custom_minimum_size = Vector2(0, 44)
+		option_btn.custom_minimum_size = Vector2(0, _fs(0.090, 36.0, 48.0))
 		_style_option_button(option_btn)
 		option_btn.pressed.connect(_check_practice_answer.bind(i, layout))
 		layout.add_child(option_btn)
@@ -618,7 +631,7 @@ func _show_practice_step() -> void:
 	explanation.name          = "ExplanationLabel"
 	explanation.text          = ""
 	explanation.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
-	explanation.add_theme_font_size_override("font_size", 16)
+	explanation.add_theme_font_size_override("font_size", _fs(0.034, 16.0, 18.0))
 	layout.add_child(explanation)
 
 	scroll_content.add_child(layout)
@@ -643,38 +656,38 @@ func _check_practice_answer(index: int, layout: VBoxContainer) -> void:
 
 func _show_recap_step() -> void:
 	var layout := VBoxContainer.new()
-	layout.add_theme_constant_override("separation", 12)
+	layout.add_theme_constant_override("separation", _fs(0.025, 8.0, 12.0))
 	var title := Label.new()
 	title.text = "📝 Recap"
 	title.add_theme_color_override("font_color", Color("#00D4FF"))
-	title.add_theme_font_size_override("font_size", 20)
+	title.add_theme_font_size_override("font_size", _fs(0.045, 18.0, 22.0))
 	layout.add_child(title)
 	layout.add_child(_make_step_label(current_lesson.recap_text))
 	scroll_content.add_child(layout)
 
 func _show_complete_step() -> void:
 	var layout := VBoxContainer.new()
-	layout.add_theme_constant_override("separation", 16)
+	layout.add_theme_constant_override("separation", _fs(0.030, 12.0, 16.0))
 
 	var congrats := Label.new()
 	congrats.text                 = "🎉 Lesson Complete!"
 	congrats.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	congrats.add_theme_color_override("font_color", Color("#00FF88"))
-	congrats.add_theme_font_size_override("font_size", 34)
+	congrats.add_theme_font_size_override("font_size", _fs(0.075, 26.0, 34.0))
 	layout.add_child(congrats)
 
 	var message := Label.new()
 	message.text = "You've mastered: " + current_lesson.title
 	message.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	message.add_theme_color_override("font_color", Color("#E8F4FD"))
-	message.add_theme_font_size_override("font_size", 20)
+	message.add_theme_font_size_override("font_size", _fs(0.045, 18.0, 22.0))
 	layout.add_child(message)
 
 	# Show unlock info using new PROGRESSION_CHAIN format
 	var unlock_label := Label.new()
 	unlock_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	unlock_label.add_theme_color_override("font_color", Color("#00D4FF"))
-	unlock_label.add_theme_font_size_override("font_size", 17)
+	unlock_label.add_theme_font_size_override("font_size", _fs(0.038, 16.0, 18.0))
 	unlock_label.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 
 	if ProgressManager.PROGRESSION_CHAIN.has(current_lesson.lesson_id):
@@ -687,7 +700,7 @@ func _show_complete_step() -> void:
 
 	var complete_btn := Button.new()
 	complete_btn.text = "✔ Complete Lesson"
-	complete_btn.custom_minimum_size = Vector2(200, 52)
+	complete_btn.custom_minimum_size = Vector2(_fs(0.45, 180.0, 220.0), _fs(0.075, 44.0, 52.0))
 	_style_accent_button(complete_btn)
 	complete_btn.pressed.connect(_on_lesson_complete_pressed)
 	layout.add_child(complete_btn)
@@ -801,7 +814,7 @@ func _make_step_label(text: String) -> Label:
 	label.text           = text
 	label.autowrap_mode  = TextServer.AUTOWRAP_WORD_SMART
 	label.add_theme_color_override("font_color", Color("#E8F4FD"))
-	label.add_theme_font_size_override("font_size", 18)
+	label.add_theme_font_size_override("font_size", _fs(0.038, 16.0, 20.0))
 	return label
 
 func _style_accent_button(btn: Button) -> void:
@@ -813,7 +826,7 @@ func _style_accent_button(btn: Button) -> void:
 	style.corner_radius_bottom_right = 4
 	btn.add_theme_stylebox_override("normal", style)
 	btn.add_theme_color_override("font_color", Color("#050D1A"))
-	btn.add_theme_font_size_override("font_size", 17)
+	btn.add_theme_font_size_override("font_size", _fs(0.038, 16.0, 18.0))
 
 func _style_option_button(btn: Button) -> void:
 	var style := StyleBoxFlat.new()
@@ -829,7 +842,7 @@ func _style_option_button(btn: Button) -> void:
 	style.corner_radius_bottom_right = 4
 	btn.add_theme_stylebox_override("normal", style)
 	btn.add_theme_color_override("font_color", Color("#E8F4FD"))
-	btn.add_theme_font_size_override("font_size", 16)
+	btn.add_theme_font_size_override("font_size", _fs(0.034, 16.0, 18.0))
 
 func _apply_styles() -> void:
 	var top_style := StyleBoxFlat.new()
@@ -863,7 +876,7 @@ func _apply_styles() -> void:
 	back_style.corner_radius_bottom_right = 4
 	back_btn.add_theme_stylebox_override("normal", back_style)
 	back_btn.add_theme_color_override("font_color", Color("#00D4FF"))
-	back_btn.add_theme_font_size_override("font_size", 16 if ScreenManager.is_mobile() else 17)
+	back_btn.add_theme_font_size_override("font_size", _fs(0.045, 16.0, 18.0))
 
 	for btn in [back_step_btn, next_step_btn]:
 		_style_accent_button(btn)
@@ -881,7 +894,7 @@ func _apply_styles() -> void:
 	hint_style.corner_radius_bottom_right = 4
 	hint_button.add_theme_stylebox_override("normal", hint_style)
 	hint_button.add_theme_color_override("font_color", Color("#FFB800"))
-	hint_button.add_theme_font_size_override("font_size", 16)
+	hint_button.add_theme_font_size_override("font_size", _fs(0.034, 16.0, 18.0))
 	
 	# Style scrollbar in the lesson step area
 	var scroll_grabber_style := StyleBoxFlat.new()
@@ -895,7 +908,7 @@ func _apply_styles() -> void:
 		v_sb.add_theme_stylebox_override("grabber", scroll_grabber_style)
 		v_sb.add_theme_stylebox_override("grabber_highlight", scroll_grabber_style)
 		v_sb.add_theme_stylebox_override("grabber_pressed", scroll_grabber_style)
-		v_sb.custom_minimum_size = Vector2(8, 0)
+		v_sb.custom_minimum_size = Vector2(_fs(0.020, 6.0, 10.0), 0)
 	
 	# Style menu button
 	var menu_style := StyleBoxFlat.new()
@@ -911,77 +924,56 @@ func _apply_styles() -> void:
 	menu_style.corner_radius_bottom_right = 4
 	menu_btn.add_theme_stylebox_override("normal", menu_style)
 	menu_btn.add_theme_color_override("font_color", Color("#00D4FF"))
-	menu_btn.add_theme_font_size_override("font_size", 18)
+	menu_btn.add_theme_font_size_override("font_size", _fs(0.045, 18.0, 22.0))
 
 # ─── RESPONSIVE ────────────────────────────────────────
 func _apply_responsive_layout() -> void:
+	var vp: Vector2 = get_viewport().get_visible_rect().size
+	var w := maxf(vp.x, 320.0)
+	var h := maxf(vp.y, 240.0)
+	var min_dim := minf(w, h)
+
 	var top_bar = $TopBar
 	var content_area = $ContentArea
 	var bottom_bar = $BottomBar
-	
-	if ScreenManager.is_mobile():
-		ScreenManager.apply_panel_padding(top_bar, 20)
-		content_area.offset_left = 20
-		content_area.offset_right = -20
-		ScreenManager.apply_panel_padding(bottom_bar, 20)
-		_apply_mobile_layout()
-	elif ScreenManager.is_tablet():
-		ScreenManager.apply_panel_padding(top_bar, 24)
-		content_area.offset_left = 24
-		content_area.offset_right = -24
-		ScreenManager.apply_panel_padding(bottom_bar, 24)
-		_apply_tablet_layout()
+	var sidebar = $ContentArea/Sidebar
+
+	# Fluid TopBar height + offset
+	var top_h := clampf(h * 0.065, 52.0, 64.0)
+	top_bar.custom_minimum_size = Vector2(0, top_h)
+	content_area.offset_top = top_h
+
+	# Fluid BottomBar height + offset
+	var bottom_h := clampf(h * 0.080, 56.0, 68.0)
+	bottom_bar.custom_minimum_size = Vector2(0, bottom_h)
+	content_area.offset_bottom = -bottom_h
+
+	# Fluid typography
+	scene_title.add_theme_font_size_override("font_size", int(clampf(min_dim * 0.045, 18.0, 26.0)))
+	progress_label.add_theme_font_size_override("font_size", _fs(0.030, 16.0, 18.0))
+	lesson_title.add_theme_font_size_override("font_size", int(clampf(min_dim * 0.060, 22.0, 32.0)))
+	lesson_category.add_theme_font_size_override("font_size", _fs(0.030, 16.0, 18.0))
+
+	# Fluid button sizes
+	var btn_h := clampf(h * 0.080, 44.0, 56.0)
+	back_btn.custom_minimum_size = Vector2(clampf(w * 0.18, 80.0, 110.0), btn_h)
+	back_step_btn.custom_minimum_size = Vector2(clampf(w * 0.20, 100.0, 130.0), btn_h)
+	next_step_btn.custom_minimum_size = Vector2(clampf(w * 0.20, 100.0, 130.0), btn_h)
+	hint_button.custom_minimum_size   = Vector2(clampf(w * 0.18, 90.0, 110.0), btn_h)
+	menu_btn.custom_minimum_size = Vector2(_fs(0.075, 44.0, 48.0), _fs(0.075, 44.0, 48.0))
+
+	# Fluid sidebar width and visibility
+	sidebar.custom_minimum_size = Vector2(clampf(min_dim * 0.32, 180.0, 260.0), 0)
+
+	# Auto-hide sidebar on small screens, show menu button
+	if min_dim < 600:
+		menu_btn.visible = true
+		sidebar.visible  = _sidebar_visible
 	else:
-		_apply_desktop_layout()
+		menu_btn.visible = false
+		sidebar.visible  = true
+		_sidebar_visible = true
 
-func _apply_desktop_layout() -> void:
-	# Sidebar always visible on desktop
-	$ContentArea/Sidebar.visible              = true
-	$ContentArea/Sidebar.custom_minimum_size  = Vector2(240, 0)
-	menu_btn.visible                          = false
-	_sidebar_visible                          = true
-	scene_title.add_theme_font_size_override("font_size", 24)
-	progress_label.add_theme_font_size_override("font_size", 16)
-	lesson_title.add_theme_font_size_override("font_size", 32)
-	lesson_category.add_theme_font_size_override("font_size", 16)
-	back_btn.custom_minimum_size = Vector2(110, 52)
-	back_step_btn.custom_minimum_size = Vector2(120, 52)
-	next_step_btn.custom_minimum_size = Vector2(120, 52)
-	hint_button.custom_minimum_size   = Vector2(100, 52)
-
-func _apply_tablet_layout() -> void:
-	# Sidebar narrower on tablet
-	$ContentArea/Sidebar.visible              = true
-	$ContentArea/Sidebar.custom_minimum_size  = Vector2(200, 0)
-	menu_btn.visible                          = false
-	_sidebar_visible                          = true
-	scene_title.add_theme_font_size_override("font_size", 22)
-	progress_label.add_theme_font_size_override("font_size", 15)
-	lesson_title.add_theme_font_size_override("font_size", 28)
-	lesson_category.add_theme_font_size_override("font_size", 15)
-	back_btn.custom_minimum_size = Vector2(95, 52)
-	back_step_btn.custom_minimum_size = Vector2(110, 52)
-	next_step_btn.custom_minimum_size = Vector2(110, 52)
-	hint_button.custom_minimum_size   = Vector2(90, 52)
-
-func _apply_mobile_layout() -> void:
-	# Sidebar hidden by default on mobile
-	$ContentArea/Sidebar.visible              = false
-	$ContentArea/Sidebar.custom_minimum_size  = Vector2(220, 0)
-	menu_btn.visible                          = true
-	_sidebar_visible                          = false
-	scene_title.add_theme_font_size_override("font_size", 20)
-	progress_label.add_theme_font_size_override("font_size", 14)
-	lesson_title.add_theme_font_size_override("font_size", 24)
-	lesson_category.add_theme_font_size_override("font_size", 14)
-	# Bigger touch targets for buttons
-	back_btn.custom_minimum_size = Vector2(85, 52)
-	menu_btn.custom_minimum_size = Vector2(48, 48)
-	menu_btn.add_theme_font_size_override("font_size", 20)
-	back_step_btn.custom_minimum_size = Vector2(100, 56)
-	next_step_btn.custom_minimum_size = Vector2(100, 56)
-	hint_button.custom_minimum_size   = Vector2(90, 56)
-	
 func _toggle_sidebar() -> void:
 	_sidebar_visible = !_sidebar_visible
 	$ContentArea/Sidebar.visible = _sidebar_visible
