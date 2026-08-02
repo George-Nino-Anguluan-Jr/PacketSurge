@@ -14,6 +14,7 @@ func _ready() -> void:
 	_apply_responsive_layout()
 	get_tree().root.size_changed.connect(_apply_responsive_layout)
 	ScreenManager.make_scroll_touch_friendly(scroll_container)
+	SupabaseManager.reset_completed.connect(_on_reset_completed)
 	_maybe_show_tutorial()
 
 func _is_compact() -> bool:
@@ -380,9 +381,16 @@ func _make_action_btn(text: String, callback: Callable) -> Button:
 	return btn
 
 func _on_reset_password_pressed() -> void:
-	SignalBus.hud_message_requested.emit(
-		"Password reset email sent! Check your inbox.", 4.0
-	)
+	var email = SupabaseManager.email.strip_edges()
+	if email == "":
+		SignalBus.hud_message_requested.emit(
+			"No email on file. Contact support to reset your password.", 4.0
+		)
+		return
+	SupabaseManager.reset_password(email)
+
+func _on_reset_completed(success: bool, message: String) -> void:
+	SignalBus.hud_message_requested.emit(message, 4.0)
 
 func _on_logout_pressed() -> void:
 	SupabaseManager.logout()

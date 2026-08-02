@@ -90,13 +90,10 @@ custom_minimum_size = Vector2(0, 48)
 layout_mode = 2
 text = "LOGIN"
 
-[node name="ForgotLabel" type="Label" parent="CenterContainer/MainLayout/FormCard/CardLayout/LoginForm" unique_id=1904697883]
+[node name="ForgotBtn" type="Button" parent="CenterContainer/MainLayout/FormCard/CardLayout/LoginForm" unique_id=1904697883]
 layout_mode = 2
-theme_override_colors/font_color = Color(0.2901961, 0.49803922, 0.64705884, 1)
 theme_override_font_sizes/font_size = 12
-text = "Forgot password? Check your email after requesting reset."
-horizontal_alignment = 1
-autowrap_mode = 3
+text = "Forgot password?"
 
 [node name="ResendVerificationBtn" type="Button" parent="CenterContainer/MainLayout/FormCard/CardLayout/LoginForm" unique_id=1904697884]
 layout_mode = 2
