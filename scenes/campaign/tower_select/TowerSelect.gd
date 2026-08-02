@@ -28,7 +28,13 @@ var active_cards: Array = []
 # Intro popup
 var _intro_popup: Control = null
 
-var _last_device: String = ""
+# ─── HELPERS ───────────────────────────────────────────
+func _min_dim() -> float:
+	var vp := get_viewport().get_visible_rect().size
+	return minf(maxf(vp.x, 320.0), maxf(vp.y, 240.0))
+
+func _fs(ratio: float, floor_v: float, cap_v: float) -> int:
+	return int(clampf(_min_dim() * ratio, floor_v, cap_v))
 
 func _process(_delta: float) -> void:
 	for card in active_cards:
@@ -61,7 +67,7 @@ func _ready() -> void:
 	_refresh_start_btn()
 	_setup_intro_popup()
 	
-	get_tree().root.size_changed.connect(_on_size_changed)
+	get_tree().root.size_changed.connect(_apply_responsive_layout)
 	_maybe_show_tutorial()
 
 # ─── LEFT PANEL ────────────────────────────────────────
@@ -75,14 +81,14 @@ func _build_left_panel() -> void:
 
 	var concept_title := Label.new()
 	concept_title.text = "📚 " + level_config.get("concept", "")
-	concept_title.add_theme_font_size_override("font_size", 18)
+	concept_title.add_theme_font_size_override("font_size", _fs(0.042, 16.0, 18.0))
 	concept_title.add_theme_color_override("font_color", Color("#00D4FF"))
 	concept_content.add_child(concept_title)
 
 	var concept_desc := Label.new()
 	concept_desc.text = level_config.get("concept_desc", "")
 	concept_desc.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
-	concept_desc.add_theme_font_size_override("font_size", 15)
+	concept_desc.add_theme_font_size_override("font_size", _fs(0.032, 16.0, 16.0))
 	concept_desc.add_theme_color_override("font_color", Color("#E8F4FD"))
 	concept_content.add_child(concept_desc)
 
@@ -92,14 +98,14 @@ func _build_left_panel() -> void:
 
 	var tip_title := Label.new()
 	tip_title.text = "⚠️ Enemy Warning"
-	tip_title.add_theme_font_size_override("font_size", 16)
+	tip_title.add_theme_font_size_override("font_size", _fs(0.040, 16.0, 18.0))
 	tip_title.add_theme_color_override("font_color", Color("#FFB800"))
 	enemy_tip_content.add_child(tip_title)
 
 	var tip_desc := Label.new()
 	tip_desc.text = level_config.get("enemy_tip", "")
 	tip_desc.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
-	tip_desc.add_theme_font_size_override("font_size", 15)
+	tip_desc.add_theme_font_size_override("font_size", _fs(0.032, 16.0, 16.0))
 	tip_desc.add_theme_color_override("font_color", Color("#E8F4FD"))
 	enemy_tip_content.add_child(tip_desc)
 
@@ -133,14 +139,14 @@ func _add_stat(
 
 	var val := Label.new()
 	val.text = value
-	val.add_theme_font_size_override("font_size", 22)
+	val.add_theme_font_size_override("font_size", _fs(0.048, 18.0, 22.0))
 	val.add_theme_color_override("font_color", color)
 	val.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	col.add_child(val)
 
 	var lbl := Label.new()
 	lbl.text = label
-	lbl.add_theme_font_size_override("font_size", 12)
+	lbl.add_theme_font_size_override("font_size", _fs(0.032, 16.0, 16.0))
 	lbl.add_theme_color_override("font_color", Color("#4A7FA5"))
 	lbl.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	col.add_child(lbl)
@@ -165,7 +171,7 @@ func _build_placeholders() -> void:
 	# Selected Slot Placeholders (Exactly 5 slots)
 	for i in range(max_slots):
 		var p_slot := PanelContainer.new()
-		p_slot.custom_minimum_size = Vector2(96, 130)
+		p_slot.custom_minimum_size = Vector2(_fs(0.18, 96.0, 130.0), _fs(0.22, 96.0, 130.0))
 		p_slot.name = "SelectedSlot_" + str(i)
 		
 		var style := StyleBoxFlat.new()
@@ -185,7 +191,7 @@ func _build_placeholders() -> void:
 		lbl.text = "+"
 		lbl.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 		lbl.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
-		lbl.add_theme_font_size_override("font_size", 24)
+		lbl.add_theme_font_size_override("font_size", _fs(0.048, 18.0, 22.0))
 		lbl.add_theme_color_override("font_color", Color("#1A3A5A"))
 		p_slot.add_child(lbl)
 		
@@ -414,7 +420,7 @@ func _apply_styles() -> void:
 	back_style.corner_radius_bottom_right = 4
 	back_btn.add_theme_stylebox_override("normal", back_style)
 	back_btn.add_theme_color_override("font_color", Color("#00D4FF"))
-	back_btn.add_theme_font_size_override("font_size", 16)
+	back_btn.add_theme_font_size_override("font_size", _fs(0.045, 16.0, 18.0))
 
 	# Concept panel
 	var concept_style := StyleBoxFlat.new()
@@ -473,7 +479,7 @@ func _apply_styles() -> void:
 	start_style.corner_radius_bottom_right = 6
 	start_btn.add_theme_stylebox_override("normal", start_style)
 	start_btn.add_theme_color_override("font_color", Color("#050D1A"))
-	start_btn.add_theme_font_size_override("font_size", 18)
+	start_btn.add_theme_font_size_override("font_size", _fs(0.042, 16.0, 18.0))
 
 # ─── ENEMY 3D PREVIEW ROW ──────────────────────────────
 # Builds an HBoxContainer that hosts a live, frozen 3D model of
@@ -495,11 +501,12 @@ func _make_enemy_preview_row(enemy_types: Array) -> Control:
 func _make_enemy_preview_cell(enemy_id: String, tint: Color, intro: Dictionary) -> Control:
 	var cell := VBoxContainer.new()
 	cell.add_theme_constant_override("separation", 4)
-	cell.custom_minimum_size = Vector2(72, 0)
+	var cell_size = _fs(0.19, 72.0, 96.0)
+	cell.custom_minimum_size = Vector2(cell_size, 0)
 
 	# Frame around the SubViewport
 	var frame := PanelContainer.new()
-	frame.custom_minimum_size = Vector2(72, 72)
+	frame.custom_minimum_size = Vector2(cell_size, cell_size)
 	var fs := StyleBoxFlat.new()
 	fs.bg_color = Color("#080F1E")
 	fs.border_color = Color(tint, 0.4)
@@ -514,14 +521,14 @@ func _make_enemy_preview_cell(enemy_id: String, tint: Color, intro: Dictionary) 
 	frame.add_theme_stylebox_override("panel", fs)
 
 	var sub_vp := SubViewport.new()
-	sub_vp.size = Vector2i(72, 72)
+	sub_vp.size = Vector2i(int(cell_size), int(cell_size))
 	sub_vp.transparent_bg = true
 	sub_vp.render_target_update_mode = SubViewport.UPDATE_ALWAYS
 	sub_vp.handle_input_locally = false
 	sub_vp.disable_3d = false
 
 	var container := SubViewportContainer.new()
-	container.custom_minimum_size = Vector2(72, 72)
+	container.custom_minimum_size = Vector2(cell_size, cell_size)
 	container.stretch = true
 	container.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	var mat := CanvasItemMaterial.new()
@@ -543,7 +550,7 @@ func _make_enemy_preview_cell(enemy_id: String, tint: Color, intro: Dictionary) 
 	var lbl := Label.new()
 	lbl.text = intro.get("title", enemy_id).replace(" Packet", "").replace(" Tower", "")
 	lbl.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
-	lbl.add_theme_font_size_override("font_size", 11)
+	lbl.add_theme_font_size_override("font_size", _fs(0.028, 16.0, 16.0))
 	lbl.add_theme_color_override("font_color", tint)
 	lbl.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 	cell.add_child(lbl)
@@ -552,70 +559,52 @@ func _make_enemy_preview_cell(enemy_id: String, tint: Color, intro: Dictionary) 
 
 # ─── RESPONSIVE ────────────────────────────────────────
 func _apply_responsive_layout() -> void:
-	var current = "mobile" if ScreenManager.is_mobile() else "tablet" if ScreenManager.is_tablet() else "desktop"
-	_last_device = current
-	
+	var vp: Vector2 = get_viewport().get_visible_rect().size
+	var w := maxf(vp.x, 320.0)
+	var h := maxf(vp.y, 240.0)
+	var min_dim := minf(w, h)
+	var inset := clampf(min_dim * 0.025, 16.0, 24.0)
+
+	var top_bar = $TopBar
 	var left_margin = $OuterScroll/ContentArea/LeftMargin
 	var right_margin = $OuterScroll/ContentArea/RightMargin
-	var top_bar = $TopBar
-	
-	if ScreenManager.is_mobile():
-		left_margin.visible = true
-		left_margin.custom_minimum_size = Vector2(180, 0)
-		ScreenManager.apply_panel_padding(top_bar, 20)
-		right_margin.add_theme_constant_override("margin_left", 20)
-		right_margin.add_theme_constant_override("margin_right", 20)
-		right_margin.add_theme_constant_override("margin_top", 20)
-		right_margin.add_theme_constant_override("margin_bottom", 20)
-		available_grid.columns = 2
-		title_label.add_theme_font_size_override("font_size", 20)
-		slot_label.add_theme_font_size_override("font_size", 14)
-		level_name_label.add_theme_font_size_override("font_size", 18)
-		back_btn.custom_minimum_size = Vector2(85, 52)
-		start_btn.custom_minimum_size = Vector2(0, 52)
-	elif ScreenManager.is_tablet():
-		left_margin.visible = true
-		left_margin.custom_minimum_size = Vector2(260, 0)
-		ScreenManager.apply_panel_padding(top_bar, 24)
-		left_margin.add_theme_constant_override("margin_left", 24)
-		left_margin.add_theme_constant_override("margin_right", 24)
-		left_margin.add_theme_constant_override("margin_top", 24)
-		left_margin.add_theme_constant_override("margin_bottom", 24)
-		right_margin.add_theme_constant_override("margin_left", 24)
-		right_margin.add_theme_constant_override("margin_right", 24)
-		right_margin.add_theme_constant_override("margin_top", 24)
-		right_margin.add_theme_constant_override("margin_bottom", 24)
-		available_grid.columns = 3
-		title_label.add_theme_font_size_override("font_size", 22)
-		slot_label.add_theme_font_size_override("font_size", 15)
-		level_name_label.add_theme_font_size_override("font_size", 20)
-		back_btn.custom_minimum_size = Vector2(95, 52)
-	else:
-		left_margin.visible = true
-		left_margin.custom_minimum_size = Vector2(380, 0)
-		ScreenManager.apply_panel_padding(top_bar, 8)
-		left_margin.add_theme_constant_override("margin_left", 32)
-		left_margin.add_theme_constant_override("margin_right", 32)
-		left_margin.add_theme_constant_override("margin_top", 32)
-		left_margin.add_theme_constant_override("margin_bottom", 32)
-		right_margin.add_theme_constant_override("margin_left", 32)
-		right_margin.add_theme_constant_override("margin_right", 32)
-		right_margin.add_theme_constant_override("margin_top", 32)
-		right_margin.add_theme_constant_override("margin_bottom", 32)
-		available_grid.columns = 5
-		title_label.add_theme_font_size_override("font_size", 24)
-		slot_label.add_theme_font_size_override("font_size", 16)
-		level_name_label.add_theme_font_size_override("font_size", 22)
-		back_btn.custom_minimum_size = Vector2(110, 52)
 
-func _on_size_changed() -> void:
-	var current = "mobile" if ScreenManager.is_mobile() else "tablet" if ScreenManager.is_tablet() else "desktop"
-	if current != _last_device:
-		_apply_responsive_layout()
-		_determine_unlocked_towers()
-		_build_placeholders()
-		await get_tree().process_frame
-		_build_tower_cards()
+	# Fluid TopBar height
+	var top_h := clampf(h * 0.065, 52.0, 64.0)
+	top_bar.custom_minimum_size = Vector2(0, top_h)
+	$OuterScroll.offset_top = top_h
+
+	# Fluid typography
+	title_label.add_theme_font_size_override("font_size", int(clampf(min_dim * 0.032, 18.0, 28.0)))
+	level_name_label.add_theme_font_size_override("font_size", int(clampf(min_dim * 0.042, 18.0, 24.0)))
+	slot_label.add_theme_font_size_override("font_size", _fs(0.032, 16.0, 16.0))
+	back_btn.add_theme_font_size_override("font_size", _fs(0.045, 16.0, 18.0))
+
+	# Fluid button sizes
+	var btn_h := clampf(h * 0.075, 44.0, 52.0)
+	back_btn.custom_minimum_size = Vector2(clampf(w * 0.12, 80.0, 100.0), btn_h)
+	start_btn.custom_minimum_size = Vector2(0, btn_h)
+
+	# Fluid column count based on min dimension
+	var col_count := 2
+	if min_dim > 600:
+		col_count = 3
+	if min_dim > 800:
+		col_count = 4
+	available_grid.columns = col_count
+
+	# Fluid margins
+	left_margin.add_theme_constant_override("margin_left", inset)
+	left_margin.add_theme_constant_override("margin_right", inset)
+	left_margin.add_theme_constant_override("margin_top", clampf(min_dim * 0.010, 8.0, 16.0))
+	left_margin.add_theme_constant_override("margin_bottom", inset)
+	right_margin.add_theme_constant_override("margin_left", inset)
+	right_margin.add_theme_constant_override("margin_right", inset)
+	right_margin.add_theme_constant_override("margin_top", clampf(min_dim * 0.010, 8.0, 16.0))
+	right_margin.add_theme_constant_override("margin_bottom", inset)
+
+	# Fluid left margin width
+	left_margin.custom_minimum_size = Vector2(clampf(min_dim * 0.32, 180.0, 380.0), 0)
 
 
 # ─── TUTORIAL ──────────────────────────────────────────
