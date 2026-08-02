@@ -87,7 +87,7 @@ func _show_loading(list: VBoxContainer) -> void:
 	loading.text = "Loading..."
 	loading.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	loading.add_theme_color_override("font_color", Color("#4A7FA5"))
-	loading.add_theme_font_size_override("font_size", int(clampf(_current_min_dim() * 0.018, 14.0, 18.0)))
+	loading.add_theme_font_size_override("font_size", int(clampf(_current_min_dim() * 0.018, 16.0, 18.0)))
 	list.add_child(loading)
 
 func _show_error(list: VBoxContainer, message: String) -> void:
@@ -97,7 +97,7 @@ func _show_error(list: VBoxContainer, message: String) -> void:
 	error.text = message
 	error.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	error.add_theme_color_override("font_color", Color("#FF3366"))
-	error.add_theme_font_size_override("font_size", int(clampf(_current_min_dim() * 0.018, 14.0, 18.0)))
+	error.add_theme_font_size_override("font_size", int(clampf(_current_min_dim() * 0.018, 16.0, 18.0)))
 	list.add_child(error)
 
 # ─── DATA RECEIVED ─────────────────────────────────────
@@ -129,7 +129,7 @@ func _build_list(list: VBoxContainer, data: Array) -> void:
 		empty.text = "No data yet. Complete lessons to appear here!"
 		empty.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 		empty.add_theme_color_override("font_color", Color("#4A7FA5"))
-		empty.add_theme_font_size_override("font_size", int(clampf(_current_min_dim() * 0.018, 14.0, 18.0)))
+		empty.add_theme_font_size_override("font_size", int(clampf(_current_min_dim() * 0.018, 16.0, 18.0)))
 		list.add_child(empty)
 		return
 
@@ -219,7 +219,7 @@ func _make_entry_card(
 	name_label.text = entry.get("username", "Unknown")
 	if is_me:
 		name_label.text += " (You)"
-	name_label.add_theme_font_size_override("font_size", int(clampf(min_dim * 0.021, 15.0, 19.0)))
+	name_label.add_theme_font_size_override("font_size", int(clampf(min_dim * 0.021, 16.0, 19.0)))
 	name_label.add_theme_color_override(
 		"font_color",
 		Color("#00FF88") if is_me else Color("#E8F4FD")
@@ -228,7 +228,7 @@ func _make_entry_card(
 
 	var section_label := Label.new()
 	section_label.text = entry.get("section", "")
-	section_label.add_theme_font_size_override("font_size", int(clampf(min_dim * 0.014, 11.0, 15.0)))
+	section_label.add_theme_font_size_override("font_size", int(clampf(min_dim * 0.014, 16.0, 15.0)))
 	section_label.add_theme_color_override("font_color", Color("#4A7FA5"))
 	name_section.add_child(section_label)
 
@@ -274,14 +274,14 @@ func _add_stat_column(
 
 	var lbl := Label.new()
 	lbl.text = label
-	lbl.add_theme_font_size_override("font_size", int(clampf(min_dim * 0.014, 11.0, 15.0)))
+	lbl.add_theme_font_size_override("font_size", int(clampf(min_dim * 0.014, 16.0, 15.0)))
 	lbl.add_theme_color_override("font_color", Color("#4A7FA5"))
 	lbl.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	col.add_child(lbl)
 
 	var val := Label.new()
 	val.text = value
-	val.add_theme_font_size_override("font_size", int(clampf(min_dim * 0.019, 14.0, 19.0)))
+	val.add_theme_font_size_override("font_size", int(clampf(min_dim * 0.019, 16.0, 19.0)))
 	val.add_theme_color_override("font_color", color)
 	val.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	col.add_child(val)
@@ -370,6 +370,7 @@ func _apply_responsive_layout() -> void:
 	# Continuous typography
 	$TopBar/TopBarLayout/TitleLabel.add_theme_font_size_override("font_size", int(clampf(min_dim * 0.032, 20.0, 28.0)))
 	back_btn.add_theme_font_size_override("font_size", int(clampf(min_dim * 0.025, 16.0, 20.0)))
+	my_rank_label.add_theme_font_size_override("font_size", int(clampf(min_dim * 0.022, 16.0, 20.0)))
 	back_btn.custom_minimum_size = Vector2(clampf(w * 0.12, 80.0, 120.0), clampf(h * 0.07, 44.0, 56.0))
 
 	# Tab bar sizing
