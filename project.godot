@@ -13,7 +13,7 @@ vconfig_version=5
 [application]
 
 config/name="Packet Surge"
-run/main_scene="uid://crbm2w57pccxo"
+run/main_scene="res://scenes/splash/Splash.tscn"
 config/features=PackedStringArray("4.7", "Forward Plus")
 run/max_fps=60
 run/delta_smoothing=false
