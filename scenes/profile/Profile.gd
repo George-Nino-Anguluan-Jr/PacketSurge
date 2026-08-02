@@ -15,6 +15,8 @@ func _ready() -> void:
 	get_tree().root.size_changed.connect(_apply_responsive_layout)
 	ScreenManager.make_scroll_touch_friendly(scroll_container)
 	SupabaseManager.reset_completed.connect(_on_reset_completed)
+	SupabaseManager.otp_verified.connect(_on_otp_verified)
+	SupabaseManager.password_set_completed.connect(_on_password_set_completed)
 	_maybe_show_tutorial()
 
 func _is_compact() -> bool:
@@ -26,7 +28,11 @@ func _setup_buttons() -> void:
 
 func _input(event: InputEvent) -> void:
 	if event.is_action_pressed("ui_cancel"):
-		GameManager.go_to("main_menu")
+		if _reset_dialog and _reset_dialog.visible:
+			_hide_reset_dialog()
+			get_viewport().set_input_as_handled()
+		else:
+			GameManager.go_to("main_menu")
 
 func _build_content() -> void:
 	for child in content.get_children():
@@ -325,7 +331,7 @@ func _make_account_actions() -> PanelContainer:
 	layout.add_theme_constant_override("separation", 10)
 
 	layout.add_child(_make_action_btn(
-		"📧 Send Password Reset Email",
+		"📧 Send Password Reset Code",
 		_on_reset_password_pressed
 	))
 	layout.add_child(_make_action_btn(
@@ -387,10 +393,299 @@ func _on_reset_password_pressed() -> void:
 			"No email on file. Contact support to reset your password.", 4.0
 		)
 		return
+	# Send a 6-digit OTP to the account email and open the in-game wizard
+	# so the user can enter the code and choose a new password here.
+	_show_reset_dialog(email)
 	SupabaseManager.reset_password(email)
 
 func _on_reset_completed(success: bool, message: String) -> void:
-	SignalBus.hud_message_requested.emit(message, 4.0)
+	if _reset_dialog and _reset_dialog.visible:
+		_set_reset_busy(false)
+		if success:
+			_reset_desc_label.text = "Code sent to " + _reset_email + ". Enter it below."
+			_reset_code_field.grab_focus()
+		else:
+			_show_reset_error(message)
+	else:
+		SignalBus.hud_message_requested.emit(message, 4.0)
+
+func _on_otp_verified(success: bool, session_token: String) -> void:
+	if _reset_dialog and _reset_dialog.visible:
+		_set_reset_busy(false)
+		if success:
+			_reset_session_token = session_token
+			_go_to_reset_step(1)
+		else:
+			_show_reset_error(session_token)
+	else:
+		SignalBus.hud_message_requested.emit(session_token, 4.0)
+
+func _on_password_set_completed(success: bool, message: String) -> void:
+	if _reset_dialog and _reset_dialog.visible:
+		_set_reset_busy(false)
+		if success:
+			_hide_reset_dialog()
+			SignalBus.hud_message_requested.emit(message, 4.0)
+		else:
+			_show_reset_error(message)
+	else:
+		SignalBus.hud_message_requested.emit(message, 4.0)
+
+# ─── RESET PASSWORD DIALOG (OTP WIZARD) ────────────────
+# Step 0: enter code → Step 1: new password. The email is already known
+# (the logged-in account), so unlike the login screen there's no email step.
+var _reset_dialog: Control = null
+var _reset_step: int = 0
+var _reset_email: String = ""
+var _reset_session_token: String = ""
+var _reset_title_label: Label = null
+var _reset_desc_label: Label = null
+var _reset_code_field: LineEdit = null
+var _reset_password_field: LineEdit = null
+var _reset_confirm_field: LineEdit = null
+var _reset_error_label: Label = null
+var _reset_submit_btn: Button = null
+var _reset_back_btn: Button = null
+
+func _show_reset_dialog(email: String) -> void:
+	if _reset_dialog == null:
+		_build_reset_dialog()
+	_reset_step = 0
+	_reset_email = email
+	_reset_session_token = ""
+	_reset_code_field.text = ""
+	_reset_password_field.text = ""
+	_reset_confirm_field.text = ""
+	_reset_error_label.text = ""
+	_reset_dialog.visible = true
+	_reset_dialog.move_to_front()
+	_apply_reset_step()
+	_reset_code_field.grab_focus()
+
+func _hide_reset_dialog() -> void:
+	if _reset_dialog:
+		_reset_dialog.visible = false
+
+func _build_reset_dialog() -> void:
+	var dim := ColorRect.new()
+	dim.color = Color("#050D1A", 0.78)
+	dim.set_anchors_preset(Control.PRESET_FULL_RECT)
+	dim.mouse_filter = Control.MOUSE_FILTER_STOP
+	dim.visible = false
+	_reset_dialog = dim
+	add_child(dim)
+
+	var center := CenterContainer.new()
+	center.set_anchors_preset(Control.PRESET_FULL_RECT)
+	dim.add_child(center)
+
+	var card := PanelContainer.new()
+	card.custom_minimum_size = Vector2(420, 0)
+	var card_style := StyleBoxFlat.new()
+	card_style.bg_color               = Color("#0A1628")
+	card_style.border_color           = Color("#00D4FF")
+	card_style.border_width_left      = 1
+	card_style.border_width_right     = 1
+	card_style.border_width_top       = 1
+	card_style.border_width_bottom    = 1
+	card_style.corner_radius_top_left     = 8
+	card_style.corner_radius_top_right    = 8
+	card_style.corner_radius_bottom_left  = 8
+	card_style.corner_radius_bottom_right = 8
+	card_style.content_margin_left   = 24
+	card_style.content_margin_right  = 24
+	card_style.content_margin_top    = 20
+	card_style.content_margin_bottom = 20
+	card.add_theme_stylebox_override("panel", card_style)
+	center.add_child(card)
+
+	var layout := VBoxContainer.new()
+	layout.add_theme_constant_override("separation", 12)
+	card.add_child(layout)
+
+	_reset_title_label = Label.new()
+	_reset_title_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	_reset_title_label.add_theme_font_size_override("font_size", 18)
+	_reset_title_label.add_theme_color_override("font_color", Color("#00D4FF"))
+	layout.add_child(_reset_title_label)
+
+	_reset_desc_label = Label.new()
+	_reset_desc_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	_reset_desc_label.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+	_reset_desc_label.add_theme_font_size_override("font_size", 13)
+	_reset_desc_label.add_theme_color_override("font_color", Color("#4A7FA5"))
+	layout.add_child(_reset_desc_label)
+
+	_reset_code_field = LineEdit.new()
+	_reset_code_field.placeholder_text = "Verification code"
+	_reset_code_field.custom_minimum_size = Vector2(0, 44)
+	_reset_code_field.max_length = 10
+	_style_input_field(_reset_code_field)
+	_reset_code_field.text_submitted.connect(func(_t): _submit_reset_step())
+	layout.add_child(_reset_code_field)
+
+	_reset_password_field = LineEdit.new()
+	_reset_password_field.placeholder_text = "New Password"
+	_reset_password_field.secret = true
+	_reset_password_field.custom_minimum_size = Vector2(0, 44)
+	_style_input_field(_reset_password_field)
+	layout.add_child(_reset_password_field)
+
+	_reset_confirm_field = LineEdit.new()
+	_reset_confirm_field.placeholder_text = "Confirm New Password"
+	_reset_confirm_field.secret = true
+	_reset_confirm_field.custom_minimum_size = Vector2(0, 44)
+	_style_input_field(_reset_confirm_field)
+	_reset_confirm_field.text_submitted.connect(func(_t): _submit_reset_step())
+	layout.add_child(_reset_confirm_field)
+
+	_reset_error_label = Label.new()
+	_reset_error_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	_reset_error_label.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+	_reset_error_label.add_theme_font_size_override("font_size", 13)
+	layout.add_child(_reset_error_label)
+
+	var btns := HBoxContainer.new()
+	btns.add_theme_constant_override("separation", 10)
+	layout.add_child(btns)
+
+	_reset_back_btn = Button.new()
+	_reset_back_btn.text = "BACK"
+	_reset_back_btn.custom_minimum_size = Vector2(0, 46)
+	_reset_back_btn.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	_style_dialog_btn(_reset_back_btn, Color("#4A7FA5"))
+	_reset_back_btn.pressed.connect(_go_back_reset_step)
+	btns.add_child(_reset_back_btn)
+
+	_reset_submit_btn = Button.new()
+	_reset_submit_btn.custom_minimum_size = Vector2(0, 46)
+	_reset_submit_btn.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	_style_dialog_btn(_reset_submit_btn, Color("#00D4FF"))
+	_reset_submit_btn.pressed.connect(_submit_reset_step)
+	btns.add_child(_reset_submit_btn)
+
+	var cancel_btn := Button.new()
+	cancel_btn.text = "CANCEL"
+	cancel_btn.custom_minimum_size = Vector2(0, 46)
+	cancel_btn.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	_style_dialog_btn(cancel_btn, Color("#4A7FA5"))
+	cancel_btn.pressed.connect(_hide_reset_dialog)
+	btns.add_child(cancel_btn)
+
+	var sfx = get_node_or_null("/root/SoundManager")
+	if sfx:
+		for b in [_reset_submit_btn, _reset_back_btn, cancel_btn]:
+			b.mouse_entered.connect(sfx.play_hover)
+			b.pressed.connect(sfx.play_click)
+
+func _style_dialog_btn(btn: Button, color: Color) -> void:
+	btn.add_theme_font_size_override("font_size", 16 if _is_compact() else 17)
+	btn.add_theme_color_override("font_color", color)
+	var s := StyleBoxFlat.new()
+	s.bg_color               = Color("#0A1628")
+	s.border_color           = color
+	s.border_width_left      = 1
+	s.border_width_right     = 1
+	s.border_width_top       = 1
+	s.border_width_bottom    = 1
+	s.corner_radius_top_left     = 4
+	s.corner_radius_top_right    = 4
+	s.corner_radius_bottom_left  = 4
+	s.corner_radius_bottom_right = 4
+	btn.add_theme_stylebox_override("normal", s)
+
+func _style_input_field(field: LineEdit) -> void:
+	var style := StyleBoxFlat.new()
+	style.bg_color               = Color("#080F1E")
+	style.border_color           = Color("#1A3A5A")
+	style.border_width_left      = 1
+	style.border_width_right     = 1
+	style.border_width_top       = 1
+	style.border_width_bottom    = 1
+	style.corner_radius_top_left     = 4
+	style.corner_radius_top_right    = 4
+	style.corner_radius_bottom_left  = 4
+	style.corner_radius_bottom_right = 4
+	style.content_margin_left   = 12
+	style.content_margin_right  = 12
+	style.content_margin_top    = 8
+	style.content_margin_bottom = 8
+	field.add_theme_stylebox_override("normal", style)
+
+	var focus := StyleBoxFlat.new()
+	focus.bg_color               = Color("#080F1E")
+	focus.border_color           = Color("#00D4FF")
+	focus.border_width_left      = 1
+	focus.border_width_right     = 1
+	focus.border_width_top       = 1
+	focus.border_width_bottom    = 1
+	focus.corner_radius_top_left     = 4
+	focus.corner_radius_top_right    = 4
+	focus.corner_radius_bottom_left  = 4
+	focus.corner_radius_bottom_right = 4
+	focus.content_margin_left   = 12
+	focus.content_margin_right  = 12
+	focus.content_margin_top    = 8
+	focus.content_margin_bottom = 8
+	field.add_theme_stylebox_override("focus", focus)
+	field.add_theme_color_override("font_color",             Color("#E8F4FD"))
+	field.add_theme_color_override("font_placeholder_color", Color("#4A7FA5"))
+	field.add_theme_font_size_override("font_size", 16)
+
+func _go_to_reset_step(step: int) -> void:
+	_reset_step = step
+	_apply_reset_step()
+
+func _apply_reset_step() -> void:
+	_reset_code_field.visible      = _reset_step == 0
+	_reset_password_field.visible  = _reset_step == 1
+	_reset_confirm_field.visible   = _reset_step == 1
+	_reset_back_btn.visible        = _reset_step > 0
+	_reset_error_label.text        = ""
+	if _reset_step == 0:
+		_reset_title_label.text = "ENTER CODE"
+		_reset_desc_label.text  = "Enter the code we emailed to " + _reset_email
+		_reset_submit_btn.text  = "VERIFY CODE"
+		_reset_code_field.grab_focus()
+	else:
+		_reset_title_label.text = "NEW PASSWORD"
+		_reset_desc_label.text  = "Choose a new password."
+		_reset_submit_btn.text  = "SET PASSWORD"
+		_reset_password_field.grab_focus()
+
+func _go_back_reset_step() -> void:
+	if _reset_step > 0:
+		_go_to_reset_step(_reset_step - 1)
+
+func _submit_reset_step() -> void:
+	if _reset_step == 0:
+		var code = _reset_code_field.text.strip_edges()
+		if not code.is_valid_int() or code.length() < 6 or code.length() > 10:
+			_show_reset_error("Enter the code from your email.")
+			return
+		_reset_error_label.text = ""
+		_set_reset_busy(true)
+		SupabaseManager.verify_reset_otp(_reset_email, code)
+	else:
+		var password = _reset_password_field.text
+		var confirm  = _reset_confirm_field.text
+		if password.length() < 6:
+			_show_reset_error("Password must be at least 6 characters.")
+			return
+		if password != confirm:
+			_show_reset_error("Passwords do not match.")
+			return
+		_reset_error_label.text = ""
+		_set_reset_busy(true)
+		SupabaseManager.set_new_password(_reset_session_token, password)
+
+func _set_reset_busy(busy: bool) -> void:
+	_reset_submit_btn.disabled = busy
+	_reset_submit_btn.text = "WORKING..." if busy else ("VERIFY CODE" if _reset_step == 0 else "SET PASSWORD")
+
+func _show_reset_error(message: String) -> void:
+	_reset_error_label.text = message
+	_reset_error_label.add_theme_color_override("font_color", Color("#FF3366"))
 
 func _on_logout_pressed() -> void:
 	SupabaseManager.logout()
