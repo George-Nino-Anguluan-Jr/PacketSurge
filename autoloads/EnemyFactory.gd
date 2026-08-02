@@ -11,6 +11,27 @@ extends Node
 const TYPES_DIR = "res://scenes/campaign/enemies/types/"
 const DEFAULT_ENEMY_SCENE = preload("res://scenes/campaign/enemies/types/EnemyBasicPacket.tscn")
 
+# Static manifest: enemy_type → scene path.
+# DirAccess cannot enumerate packed PCK folders in exported builds,
+# so we ship a hardcoded manifest. Editor auto-discovery still works
+# via DirAccess.get_files_at() as a verification step.
+const ENEMY_SCENES = {
+	"basic_packet":     "res://scenes/campaign/enemies/types/EnemyBasicPacket.tscn",
+	"bubble_shield":    "res://scenes/campaign/enemies/types/EnemyBubbleShield.tscn",
+	"binary_mask":      "res://scenes/campaign/enemies/types/EnemyBinaryMask.tscn",
+	"indexed_packet":   "res://scenes/campaign/enemies/types/EnemyIndexedPacket.tscn",
+	"count_meter":      "res://scenes/campaign/enemies/types/EnemyCountMeter.tscn",
+	"insertion_stack":  "res://scenes/campaign/enemies/types/EnemyInsertionStack.tscn",
+	"linked_drain":     "res://scenes/campaign/enemies/types/EnemyLinkedDrain.tscn",
+	"merge_twin":       "res://scenes/campaign/enemies/types/EnemyMergeTwin.tscn",
+	"overflow_packet":  "res://scenes/campaign/enemies/types/EnemyOverflowPacket.tscn",
+	"pivot_splitter":   "res://scenes/campaign/enemies/types/EnemyPivotSplitter.tscn",
+	"queue_jumper":     "res://scenes/campaign/enemies/types/EnemyQueueJumper.tscn",
+	"radix_digit":      "res://scenes/campaign/enemies/types/EnemyRadixDigit.tscn",
+	"scan_wave":        "res://scenes/campaign/enemies/types/EnemyScanWave.tscn",
+	"selection_mark":   "res://scenes/campaign/enemies/types/EnemySelectionMark.tscn",
+}
+
 var _scene_map: Dictionary = {}   # enemy_type -> PackedScene
 var _initialized: bool = false
 
@@ -20,6 +41,32 @@ func _ready() -> void:
 func _initialize_scenes() -> void:
 	if _initialized:
 		return
+	# Editor builds: use DirAccess to verify manifest matches filesystem.
+	# Exported builds: DirAccess returns empty array on packed PCK, so we
+	# fall back to the static manifest for actual loading.
+	var discovered := _discover_scenes()
+	if discovered.is_empty():
+		# Use static manifest
+		for enemy_type in ENEMY_SCENES:
+			var scene = load(ENEMY_SCENES[enemy_type]) as PackedScene
+			if scene:
+				_scene_map[enemy_type] = scene
+	else:
+		# Editor path: use discovered, optionally enriched by manifest
+		for enemy_type in discovered:
+			var scene = load(discovered[enemy_type]) as PackedScene
+			if scene:
+				_scene_map[enemy_type] = scene
+		# Pick up any scene in manifest but not discovered
+		for enemy_type in ENEMY_SCENES:
+			if not _scene_map.has(enemy_type):
+				var scene = load(ENEMY_SCENES[enemy_type]) as PackedScene
+				if scene:
+					_scene_map[enemy_type] = scene
+	_initialized = true
+
+func _discover_scenes() -> Dictionary:
+	var scenes: Dictionary = {}
 	var dir = DirAccess.get_files_at(TYPES_DIR)
 	for f in dir:
 		if f.ends_with(".tscn"):
@@ -29,9 +76,10 @@ func _initialize_scenes() -> void:
 				var inst = scene.instantiate()
 				if inst.has_method("get_type_id"):
 					var type_id = inst.get_type_id()
-					_scene_map[type_id] = scene
+					if type_id != "":
+						scenes[type_id] = full_path
 				inst.queue_free()
-	_initialized = true
+	return scenes
 
 func get_scene(enemy_type: String) -> PackedScene:
 	if not _initialized:
