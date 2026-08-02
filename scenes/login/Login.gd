@@ -20,6 +20,7 @@ extends Control
 @onready var first_name_field: LineEdit = $CenterContainer/MainLayout/FormCard/CardLayout/RegisterForm/NameFieldsLayout/FirstNameField
 @onready var last_name_field: LineEdit  = $CenterContainer/MainLayout/FormCard/CardLayout/RegisterForm/NameFieldsLayout/LastNameField
 @onready var username_field: LineEdit   = $CenterContainer/MainLayout/FormCard/CardLayout/RegisterForm/UsernameField
+@onready var email_field: LineEdit      = $CenterContainer/MainLayout/FormCard/CardLayout/RegisterForm/EmailField
 @onready var reg_password_field: LineEdit = $CenterContainer/MainLayout/FormCard/CardLayout/RegisterForm/RegPasswordField
 @onready var confirm_field: LineEdit    = $CenterContainer/MainLayout/FormCard/CardLayout/RegisterForm/ConfirmField
 @onready var year_field: LineEdit       = $CenterContainer/MainLayout/FormCard/CardLayout/RegisterForm/ClassFieldsLayout/YearField
@@ -111,17 +112,20 @@ func _show_register_tab() -> void:
 
 # ─── LOGIN ─────────────────────────────────────────────
 func _on_login_pressed() -> void:
-	var uname    = login_username_field.text.strip_edges()
-	var password = password_field.text
+	var identifier = login_username_field.text.strip_edges()
+	var password   = password_field.text
 
-	if uname == "" or password == "":
+	if identifier == "" or password == "":
 		_show_status("Please fill in all fields.", false)
 		return
 
-	var email = uname.to_lower() + "@packetsurge.com"
-
 	_show_loading(true)
-	SupabaseManager.login_student(email, password)
+	if _is_valid_email(identifier):
+		# User entered an email address directly
+		SupabaseManager.login_student(identifier.to_lower(), password)
+	else:
+		# User entered a username — resolve it to an email first
+		SupabaseManager.login_with_username(identifier, password)
 
 func _on_login_completed(success: bool, message: String) -> void:
 	_show_loading(false)
@@ -145,13 +149,14 @@ func _on_register_pressed() -> void:
 	var first_name = first_name_field.text.strip_edges()
 	var last_name  = last_name_field.text.strip_edges()
 	var uname      = username_field.text.strip_edges()
+	var email      = email_field.text.strip_edges()
 	var password   = reg_password_field.text
 	var confirm    = confirm_field.text
 	var year_text  = year_field.text.strip_edges()
 	var sec_idx    = section_option.selected
 
 	# Validation
-	if first_name == "" or last_name == "" or uname == "" or \
+	if first_name == "" or last_name == "" or uname == "" or email == "" or \
 	   password == "" or confirm == "":
 		_show_status("Please fill in all fields.", false)
 		return
@@ -166,6 +171,10 @@ func _on_register_pressed() -> void:
 		_show_status("Username must be at least 3 characters.", false)
 		return
 
+	if not _is_valid_email(email):
+		_show_status("Please enter a valid email address.", false)
+		return
+
 	if password.length() < 6:
 		_show_status("Password must be at least 6 characters.", false)
 		return
@@ -175,11 +184,10 @@ func _on_register_pressed() -> void:
 		return
 
 	var full_name = first_name + " " + last_name
-	var email     = uname.to_lower() + "@packetsurge.com"
 
 	_show_loading(true)
 	SupabaseManager.register_student(
-		full_name, uname, email, password, year_text, section_text
+		full_name, uname, email.to_lower(), password, year_text, section_text
 	)
 
 # ─── VALIDATION ────────────────────────────────────────
@@ -228,7 +236,7 @@ func _apply_styles() -> void:
 	for field in [
 		login_username_field, password_field,
 		first_name_field, last_name_field,
-		username_field, reg_password_field,
+		username_field, email_field, reg_password_field,
 		confirm_field, year_field
 	]:
 		_style_input_field(field)

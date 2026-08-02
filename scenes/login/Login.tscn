@@ -77,7 +77,7 @@ theme_override_constants/separation = 12
 [node name="LoginUsernameField" type="LineEdit" parent="CenterContainer/MainLayout/FormCard/CardLayout/LoginForm" unique_id=1303829887]
 custom_minimum_size = Vector2(0, 44)
 layout_mode = 2
-placeholder_text = "Username"
+placeholder_text = "Username or Email"
 
 [node name="PasswordField" type="LineEdit" parent="CenterContainer/MainLayout/FormCard/CardLayout/LoginForm" unique_id=1204440678]
 custom_minimum_size = Vector2(0, 44)
@@ -123,6 +123,11 @@ placeholder_text = "Last Name"
 custom_minimum_size = Vector2(0, 44)
 layout_mode = 2
 placeholder_text = "Username"
+
+[node name="EmailField" type="LineEdit" parent="CenterContainer/MainLayout/FormCard/CardLayout/RegisterForm" unique_id=1303829888]
+custom_minimum_size = Vector2(0, 44)
+layout_mode = 2
+placeholder_text = "Email"
 
 [node name="RegPasswordField" type="LineEdit" parent="CenterContainer/MainLayout/FormCard/CardLayout/RegisterForm" unique_id=354885275]
 custom_minimum_size = Vector2(0, 44)
