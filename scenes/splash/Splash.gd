@@ -23,15 +23,21 @@ func _ready() -> void:
 	title_label.add_theme_constant_override("shadow_offset_x", 5)
 	title_label.add_theme_constant_override("shadow_offset_y", 5)
 
-	modulate.a = 0.0
+	# Keep the navy background fully visible from frame one (same color as the
+	# engine boot splash) so there's no visible "second splash" gap.
+	# Only the text content fades in.
+	for node in [title_label, tagline_label, status_label]:
+		node.modulate.a = 0.0
 	_run_splash_sequence()
 
 func _run_splash_sequence() -> void:
-	# 1. Fade everything in
 	var tween := create_tween()
 	tween.set_trans(Tween.TRANS_CUBIC)
 	tween.set_ease(Tween.EASE_OUT)
-	tween.tween_property(self, "modulate:a", 1.0, FADE_IN_DURATION)
+
+	# 1. Fade the title + tagline in
+	tween.tween_property(title_label, "modulate:a", 1.0, FADE_IN_DURATION)
+	tween.parallel().tween_property(tagline_label, "modulate:a", 1.0, FADE_IN_DURATION)
 
 	# 2. Hold on the title (with a subtle status ticker)
 	var status_dots: Array[String] = [".", "..", "..."]
@@ -43,7 +49,7 @@ func _run_splash_sequence() -> void:
 		)
 		tween.tween_interval(0.4)
 
-	# 3. Fade out and go to login
+	# 3. Fade everything out and go to login
 	tween.tween_property(self, "modulate:a", 0.0, FADE_OUT_DURATION)
 	tween.tween_callback(_go_to_login)
 
