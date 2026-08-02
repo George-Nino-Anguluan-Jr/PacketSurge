@@ -1,11 +1,20 @@
 extends Control
 
+# ─── NODE REFERENCES ───────────────────────────────────
 @onready var back_btn: Button       = $TopBar/TopBarLayout/BackBtn
 @onready var analytics_btn: Button  = $TopBar/TopBarLayout/AnalyticsBtn
 @onready var scroll_container: ScrollContainer = $ContentArea/ScrollContainer
 @onready var content: VBoxContainer  = $ContentArea/ScrollContainer/Content
 
-var _last_device: String = ""
+# ─── STATE ─────────────────────────────────────────────
+
+# ─── HELPERS ───────────────────────────────────────────
+func _min_dim() -> float:
+	var vp := get_viewport().get_visible_rect().size
+	return minf(maxf(vp.x, 320.0), maxf(vp.y, 240.0))
+
+func _fs(ratio: float, floor_v: float, cap_v: float) -> int:
+	return int(clampf(_min_dim() * ratio, floor_v, cap_v))
 
 func _ready() -> void:
 	_setup_buttons()
@@ -18,9 +27,6 @@ func _ready() -> void:
 	SupabaseManager.otp_verified.connect(_on_otp_verified)
 	SupabaseManager.password_set_completed.connect(_on_password_set_completed)
 	_maybe_show_tutorial()
-
-func _is_compact() -> bool:
-	return ScreenManager.is_mobile() or ScreenManager.is_tablet()
 
 func _setup_buttons() -> void:
 	back_btn.pressed.connect(func(): GameManager.go_to("main_menu"))
@@ -64,7 +70,7 @@ func _build_content() -> void:
 func _make_section_title(text: String, color: Color = Color("#00D4FF")) -> Label:
 	var lbl := Label.new()
 	lbl.text = text
-	lbl.add_theme_font_size_override("font_size", 16 if _is_compact() else 17)
+	lbl.add_theme_font_size_override("font_size", _fs(0.045, 16.0, 18.0))
 	lbl.add_theme_color_override("font_color", color)
 	return lbl
 
@@ -125,10 +131,10 @@ func _make_info_row(label: String, value: String) -> PanelContainer:
 	style.corner_radius_top_right    = 4
 	style.corner_radius_bottom_left  = 4
 	style.corner_radius_bottom_right = 4
-	style.content_margin_left    = 12 if _is_compact() else 16
-	style.content_margin_right   = 12 if _is_compact() else 16
-	style.content_margin_top     = 8 if _is_compact() else 12
-	style.content_margin_bottom  = 8 if _is_compact() else 12
+	style.content_margin_left    = _fs(0.034, 12.0, 16.0)
+	style.content_margin_right   = _fs(0.034, 12.0, 16.0)
+	style.content_margin_top     = _fs(0.025, 10.0, 12.0)
+	style.content_margin_bottom  = _fs(0.025, 10.0, 12.0)
 	card.add_theme_stylebox_override("panel", style)
 
 	var row := HBoxContainer.new()
@@ -136,15 +142,15 @@ func _make_info_row(label: String, value: String) -> PanelContainer:
 
 	var lbl := Label.new()
 	lbl.text = label
-	lbl.custom_minimum_size = Vector2(110 if _is_compact() else 130, 0)
-	lbl.add_theme_font_size_override("font_size", 16 if _is_compact() else 17)
+	lbl.custom_minimum_size = Vector2(_fs(0.35, 110.0, 130.0), 0)
+	lbl.add_theme_font_size_override("font_size", _fs(0.045, 16.0, 18.0))
 	lbl.add_theme_color_override("font_color", Color("#4A7FA5"))
 	row.add_child(lbl)
 
 	var val := Label.new()
 	val.text = value
 	val.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-	val.add_theme_font_size_override("font_size", 16 if _is_compact() else 17)
+	val.add_theme_font_size_override("font_size", _fs(0.045, 16.0, 18.0))
 	val.add_theme_color_override("font_color", Color("#E8F4FD"))
 	row.add_child(val)
 
@@ -196,7 +202,7 @@ func _make_stat_card(label: String, value: String, color: Color) -> PanelContain
 	var val_lbl := Label.new()
 	val_lbl.text = value
 	val_lbl.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
-	val_lbl.add_theme_font_size_override("font_size", 24)
+	val_lbl.add_theme_font_size_override("font_size", _fs(0.055, 20.0, 30.0))
 	val_lbl.add_theme_color_override("font_color", color)
 	layout.add_child(val_lbl)
 
@@ -204,7 +210,7 @@ func _make_stat_card(label: String, value: String, color: Color) -> PanelContain
 	lbl.text = label
 	lbl.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	lbl.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
-	lbl.add_theme_font_size_override("font_size", 14)
+	lbl.add_theme_font_size_override("font_size", _fs(0.032, 16.0, 16.0))
 	lbl.add_theme_color_override("font_color", Color("#4A7FA5"))
 	layout.add_child(lbl)
 
@@ -253,15 +259,15 @@ func _make_session_row(label: String, value: String) -> HBoxContainer:
 
 	var lbl := Label.new()
 	lbl.text = label
-	lbl.custom_minimum_size = Vector2(100 if _is_compact() else 120, 0)
-	lbl.add_theme_font_size_override("font_size", 16 if _is_compact() else 17)
+	lbl.custom_minimum_size = Vector2(_fs(0.31, 100.0, 140.0), 0)
+	lbl.add_theme_font_size_override("font_size", _fs(0.045, 16.0, 18.0))
 	lbl.add_theme_color_override("font_color", Color("#4A7FA5"))
 	row.add_child(lbl)
 
 	var val := Label.new()
 	val.text = value
 	val.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-	val.add_theme_font_size_override("font_size", 16 if _is_compact() else 17)
+	val.add_theme_font_size_override("font_size", _fs(0.045, 16.0, 18.0))
 	val.add_theme_color_override("font_color", Color("#E8F4FD"))
 	row.add_child(val)
 
@@ -344,11 +350,11 @@ func _make_account_actions() -> PanelContainer:
 
 func _make_action_btn(text: String, callback: Callable) -> Button:
 	var btn := Button.new()
-	btn.custom_minimum_size = Vector2(0, 46)
+	btn.custom_minimum_size = Vector2(0, _fs(0.13, 44.0, 52.0))
 	btn.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	btn.text = text
 	btn.pressed.connect(callback)
-	btn.add_theme_font_size_override("font_size", 16 if _is_compact() else 17)
+	btn.add_theme_font_size_override("font_size", _fs(0.045, 16.0, 18.0))
 
 	var normal := StyleBoxFlat.new()
 	normal.bg_color               = Color("#0A1628")
@@ -480,7 +486,7 @@ func _build_reset_dialog() -> void:
 	dim.add_child(center)
 
 	var card := PanelContainer.new()
-	card.custom_minimum_size = Vector2(420, 0)
+	card.custom_minimum_size = Vector2(_fs(0.42, 320.0, 520.0), 0)
 	var card_style := StyleBoxFlat.new()
 	card_style.bg_color               = Color("#0A1628")
 	card_style.border_color           = Color("#00D4FF")
@@ -505,20 +511,20 @@ func _build_reset_dialog() -> void:
 
 	_reset_title_label = Label.new()
 	_reset_title_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
-	_reset_title_label.add_theme_font_size_override("font_size", 18)
+	_reset_title_label.add_theme_font_size_override("font_size", _fs(0.048, 18.0, 22.0))
 	_reset_title_label.add_theme_color_override("font_color", Color("#00D4FF"))
 	layout.add_child(_reset_title_label)
 
 	_reset_desc_label = Label.new()
 	_reset_desc_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	_reset_desc_label.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
-	_reset_desc_label.add_theme_font_size_override("font_size", 13)
+	_reset_desc_label.add_theme_font_size_override("font_size", _fs(0.032, 16.0, 16.0))
 	_reset_desc_label.add_theme_color_override("font_color", Color("#4A7FA5"))
 	layout.add_child(_reset_desc_label)
 
 	_reset_code_field = LineEdit.new()
 	_reset_code_field.placeholder_text = "Verification code"
-	_reset_code_field.custom_minimum_size = Vector2(0, 44)
+	_reset_code_field.custom_minimum_size = Vector2(0, _fs(0.13, 44.0, 48.0))
 	_reset_code_field.max_length = 10
 	_style_input_field(_reset_code_field)
 	_reset_code_field.text_submitted.connect(func(_t): _submit_reset_step())
@@ -527,14 +533,14 @@ func _build_reset_dialog() -> void:
 	_reset_password_field = LineEdit.new()
 	_reset_password_field.placeholder_text = "New Password"
 	_reset_password_field.secret = true
-	_reset_password_field.custom_minimum_size = Vector2(0, 44)
+	_reset_password_field.custom_minimum_size = Vector2(0, _fs(0.13, 44.0, 48.0))
 	_style_input_field(_reset_password_field)
 	layout.add_child(_reset_password_field)
 
 	_reset_confirm_field = LineEdit.new()
 	_reset_confirm_field.placeholder_text = "Confirm New Password"
 	_reset_confirm_field.secret = true
-	_reset_confirm_field.custom_minimum_size = Vector2(0, 44)
+	_reset_confirm_field.custom_minimum_size = Vector2(0, _fs(0.13, 44.0, 48.0))
 	_style_input_field(_reset_confirm_field)
 	_reset_confirm_field.text_submitted.connect(func(_t): _submit_reset_step())
 	layout.add_child(_reset_confirm_field)
@@ -542,7 +548,7 @@ func _build_reset_dialog() -> void:
 	_reset_error_label = Label.new()
 	_reset_error_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	_reset_error_label.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
-	_reset_error_label.add_theme_font_size_override("font_size", 13)
+	_reset_error_label.add_theme_font_size_override("font_size", _fs(0.032, 16.0, 16.0))
 	layout.add_child(_reset_error_label)
 
 	var btns := HBoxContainer.new()
@@ -551,14 +557,14 @@ func _build_reset_dialog() -> void:
 
 	_reset_back_btn = Button.new()
 	_reset_back_btn.text = "BACK"
-	_reset_back_btn.custom_minimum_size = Vector2(0, 46)
+	_reset_back_btn.custom_minimum_size = Vector2(0, _fs(0.13, 44.0, 52.0))
 	_reset_back_btn.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	_style_dialog_btn(_reset_back_btn, Color("#4A7FA5"))
 	_reset_back_btn.pressed.connect(_go_back_reset_step)
 	btns.add_child(_reset_back_btn)
 
 	_reset_submit_btn = Button.new()
-	_reset_submit_btn.custom_minimum_size = Vector2(0, 46)
+	_reset_submit_btn.custom_minimum_size = Vector2(0, _fs(0.13, 44.0, 52.0))
 	_reset_submit_btn.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	_style_dialog_btn(_reset_submit_btn, Color("#00D4FF"))
 	_reset_submit_btn.pressed.connect(_submit_reset_step)
@@ -566,7 +572,7 @@ func _build_reset_dialog() -> void:
 
 	var cancel_btn := Button.new()
 	cancel_btn.text = "CANCEL"
-	cancel_btn.custom_minimum_size = Vector2(0, 46)
+	cancel_btn.custom_minimum_size = Vector2(0, _fs(0.13, 44.0, 52.0))
 	cancel_btn.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	_style_dialog_btn(cancel_btn, Color("#4A7FA5"))
 	cancel_btn.pressed.connect(_hide_reset_dialog)
@@ -579,7 +585,7 @@ func _build_reset_dialog() -> void:
 			b.pressed.connect(sfx.play_click)
 
 func _style_dialog_btn(btn: Button, color: Color) -> void:
-	btn.add_theme_font_size_override("font_size", 16 if _is_compact() else 17)
+	btn.add_theme_font_size_override("font_size", _fs(0.045, 16.0, 18.0))
 	btn.add_theme_color_override("font_color", color)
 	var s := StyleBoxFlat.new()
 	s.bg_color               = Color("#0A1628")
@@ -630,7 +636,7 @@ func _style_input_field(field: LineEdit) -> void:
 	field.add_theme_stylebox_override("focus", focus)
 	field.add_theme_color_override("font_color",             Color("#E8F4FD"))
 	field.add_theme_color_override("font_placeholder_color", Color("#4A7FA5"))
-	field.add_theme_font_size_override("font_size", 16)
+	field.add_theme_font_size_override("font_size", _fs(0.045, 16.0, 20.0))
 
 func _go_to_reset_step(step: int) -> void:
 	_reset_step = step
@@ -717,16 +723,16 @@ func _make_danger_zone() -> PanelContainer:
 	var warning_lbl := Label.new()
 	warning_lbl.text = "These actions are destructive and cannot be undone."
 	warning_lbl.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
-	warning_lbl.add_theme_font_size_override("font_size", 14)
+	warning_lbl.add_theme_font_size_override("font_size", _fs(0.032, 16.0, 16.0))
 	warning_lbl.add_theme_color_override("font_color", Color("#FF6680"))
 	layout.add_child(warning_lbl)
 
 	var reset_btn := Button.new()
-	reset_btn.custom_minimum_size = Vector2(0, 46)
+	reset_btn.custom_minimum_size = Vector2(0, _fs(0.13, 44.0, 52.0))
 	reset_btn.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	reset_btn.text = "🗑 Reset All Progress"
 	reset_btn.pressed.connect(_on_reset_progress_pressed)
-	reset_btn.add_theme_font_size_override("font_size", 16 if _is_compact() else 17)
+	reset_btn.add_theme_font_size_override("font_size", _fs(0.045, 16.0, 18.0))
 
 	var reset_normal := StyleBoxFlat.new()
 	reset_normal.bg_color            = Color("#FF3366", 0.15)
@@ -801,7 +807,7 @@ func _apply_styles() -> void:
 	back_style.corner_radius_bottom_right = 4
 	back_btn.add_theme_stylebox_override("normal", back_style)
 	back_btn.add_theme_color_override("font_color", Color("#00D4FF"))
-	back_btn.add_theme_font_size_override("font_size", 16 if _is_compact() else 17)
+	back_btn.add_theme_font_size_override("font_size", _fs(0.045, 16.0, 18.0))
 
 	var analytics_style := StyleBoxFlat.new()
 	analytics_style.bg_color               = Color("#0A1628")
@@ -816,7 +822,7 @@ func _apply_styles() -> void:
 	analytics_style.corner_radius_bottom_right = 4
 	analytics_btn.add_theme_stylebox_override("normal", analytics_style)
 	analytics_btn.add_theme_color_override("font_color", Color("#00FF88"))
-	analytics_btn.add_theme_font_size_override("font_size", 16 if _is_compact() else 17)
+	analytics_btn.add_theme_font_size_override("font_size", _fs(0.045, 16.0, 18.0))
 
 	var analytics_hover := StyleBoxFlat.new()
 	analytics_hover.bg_color                = Color("#00FF88", 0.1)
@@ -833,37 +839,28 @@ func _apply_styles() -> void:
 	analytics_btn.add_theme_color_override("font_hover_color", Color("#E8F4FD"))
 
 func _apply_responsive_layout() -> void:
-	var current = "mobile" if ScreenManager.is_mobile() else "tablet" if ScreenManager.is_tablet() else "desktop"
-	if current != _last_device:
-		_last_device = current
-		_build_content()
+	var vp: Vector2 = get_viewport().get_visible_rect().size
+	var w := maxf(vp.x, 320.0)
+	var h := maxf(vp.y, 240.0)
+	var min_dim := minf(w, h)
 
-	var top_bar = $TopBar
+	# Fluid typography for top bar
+	$TopBar/TopBarLayout/TitleLabel.add_theme_font_size_override("font_size", int(clampf(min_dim * 0.030, 18.0, 28.0)))
+	back_btn.add_theme_font_size_override("font_size", _fs(0.045, 16.0, 20.0))
+	analytics_btn.add_theme_font_size_override("font_size", _fs(0.045, 16.0, 20.0))
+
+	# Fluid button sizes
+	var btn_h := clampf(h * 0.075, 44.0, 52.0)
+	back_btn.custom_minimum_size = Vector2(clampf(w * 0.12, 80.0, 120.0), btn_h)
+	analytics_btn.custom_minimum_size = Vector2(clampf(w * 0.22, 100.0, 150.0), btn_h)
+
+	# Content area margins — fluid inset
 	var content_area = $ContentArea
-	var title_label = $TopBar/TopBarLayout/TitleLabel
-
-	if ScreenManager.is_mobile():
-		ScreenManager.apply_panel_padding(top_bar, 20)
-		content_area.add_theme_constant_override("margin_left", 20)
-		content_area.add_theme_constant_override("margin_right", 20)
-		content_area.add_theme_constant_override("margin_top", 20)
-		content_area.add_theme_constant_override("margin_bottom", 20)
-		back_btn.custom_minimum_size = Vector2(85, 52)
-		title_label.add_theme_font_size_override("font_size", 20)
-		analytics_btn.custom_minimum_size = Vector2(120, 44)
-	elif ScreenManager.is_tablet():
-		ScreenManager.apply_panel_padding(top_bar, 24)
-		content_area.add_theme_constant_override("margin_left", 24)
-		content_area.add_theme_constant_override("margin_right", 24)
-		content_area.add_theme_constant_override("margin_top", 24)
-		content_area.add_theme_constant_override("margin_bottom", 24)
-		back_btn.custom_minimum_size = Vector2(95, 52)
-		title_label.add_theme_font_size_override("font_size", 22)
-		analytics_btn.custom_minimum_size = Vector2(130, 44)
-	else:
-		back_btn.custom_minimum_size = Vector2(110, 52)
-		title_label.add_theme_font_size_override("font_size", 24)
-		analytics_btn.custom_minimum_size = Vector2(150, 44)
+	var inset := clampf(min_dim * 0.020, 16.0, 24.0)
+	content_area.add_theme_constant_override("margin_left", inset)
+	content_area.add_theme_constant_override("margin_right", inset)
+	content_area.add_theme_constant_override("margin_top", clampf(min_dim * 0.010, 8.0, 16.0))
+	content_area.add_theme_constant_override("margin_bottom", inset)
 
 # ─── TUTORIAL ──────────────────────────────────────────
 const TutorialOverlay = preload("res://scenes/core/TutorialOverlay.gd")
