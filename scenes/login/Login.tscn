@@ -98,6 +98,11 @@ text = "Forgot password? Check your email after requesting reset."
 horizontal_alignment = 1
 autowrap_mode = 3
 
+[node name="ResendVerificationBtn" type="Button" parent="CenterContainer/MainLayout/FormCard/CardLayout/LoginForm" unique_id=1904697884]
+layout_mode = 2
+theme_override_font_sizes/font_size = 12
+text = "Resend verification email"
+
 [node name="RegisterForm" type="VBoxContainer" parent="CenterContainer/MainLayout/FormCard/CardLayout" unique_id=13911272]
 visible = false
 layout_mode = 2

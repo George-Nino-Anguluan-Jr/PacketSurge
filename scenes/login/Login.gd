@@ -15,6 +15,7 @@ extends Control
 @onready var password_field: LineEdit   = $CenterContainer/MainLayout/FormCard/CardLayout/LoginForm/PasswordField
 @onready var login_btn: Button          = $CenterContainer/MainLayout/FormCard/CardLayout/LoginForm/LoginBtn
 @onready var forgot_label: Label        = $CenterContainer/MainLayout/FormCard/CardLayout/LoginForm/ForgotLabel
+@onready var resend_verification_btn: Button = $CenterContainer/MainLayout/FormCard/CardLayout/LoginForm/ResendVerificationBtn
 
 # Register form fields
 @onready var first_name_field: LineEdit = $CenterContainer/MainLayout/FormCard/CardLayout/RegisterForm/NameFieldsLayout/FirstNameField
@@ -62,6 +63,7 @@ func _ready() -> void:
 	# Listen for Supabase responses
 	SupabaseManager.login_completed.connect(_on_login_completed)
 	SupabaseManager.register_completed.connect(_on_register_completed)
+	SupabaseManager.resend_completed.connect(_on_resend_completed)
 	_connect_button_sounds(self)
 
 func _connect_button_sounds(node: Node) -> void:
@@ -88,6 +90,7 @@ func _setup_buttons() -> void:
 	register_tab.pressed.connect(_show_register_tab)
 	login_btn.pressed.connect(_on_login_pressed)
 	register_btn.pressed.connect(_on_register_pressed)
+	resend_verification_btn.pressed.connect(_on_resend_verification_pressed)
 
 	# Allow Enter key to submit
 	login_username_field.text_submitted.connect(func(_t): _on_login_pressed())
@@ -140,9 +143,23 @@ func _on_register_completed(success: bool, message: String) -> void:
 	_show_loading(false)
 	if success:
 		_show_status(message, true)
-		# Navigation is now handled by SupabaseManager after loading progress from cloud
+		# If email confirmation is enabled, SupabaseManager won't navigate
+		# (the account still needs verification). The user logs in after
+		# confirming their email.
 	else:
 		_show_status(message, false)
+
+func _on_resend_verification_pressed() -> void:
+	var identifier = login_username_field.text.strip_edges()
+	if identifier == "" or not _is_valid_email(identifier):
+		_show_status("Enter your email address to resend the verification email.", false)
+		return
+	_show_loading(true)
+	SupabaseManager.resend_verification(identifier.to_lower())
+
+func _on_resend_completed(success: bool, message: String) -> void:
+	_show_loading(false)
+	_show_status(message, success)
 
 # ─── REGISTER ──────────────────────────────────────────
 func _on_register_pressed() -> void:
@@ -247,6 +264,7 @@ func _apply_styles() -> void:
 	# Style buttons
 	_style_accent_button(login_btn)
 	_style_accent_button(register_btn)
+	_style_ghost_button(resend_verification_btn)
 	_style_active_tab(login_tab, true)
 	_style_active_tab(register_tab, false)
 
@@ -323,6 +341,35 @@ func _style_accent_button(btn: Button) -> void:
 	btn.add_theme_stylebox_override("hover",   hover)
 	btn.add_theme_color_override("font_color", Color("#050D1A"))
 	btn.add_theme_font_size_override("font_size", 17)
+
+func _style_ghost_button(btn: Button) -> void:
+	var normal := StyleBoxFlat.new()
+	normal.bg_color          = Color(0, 0, 0, 0)
+	normal.border_color      = Color("#1A3A5A")
+	normal.border_width_left   = 1
+	normal.border_width_right  = 1
+	normal.border_width_top    = 1
+	normal.border_width_bottom = 1
+	normal.corner_radius_top_left     = 4
+	normal.corner_radius_top_right    = 4
+	normal.corner_radius_bottom_left  = 4
+	normal.corner_radius_bottom_right = 4
+	var hover := StyleBoxFlat.new()
+	hover.bg_color           = Color("#00D4FF", 0.1)
+	hover.border_color       = Color("#00D4FF")
+	hover.border_width_left   = 1
+	hover.border_width_right  = 1
+	hover.border_width_top    = 1
+	hover.border_width_bottom = 1
+	hover.corner_radius_top_left     = 4
+	hover.corner_radius_top_right    = 4
+	hover.corner_radius_bottom_left  = 4
+	hover.corner_radius_bottom_right = 4
+	btn.add_theme_stylebox_override("normal", normal)
+	btn.add_theme_stylebox_override("hover",  hover)
+	btn.add_theme_stylebox_override("pressed", hover)
+	btn.add_theme_color_override("font_color", Color("#4A7FA5"))
+	btn.add_theme_font_size_override("font_size", 13)
 
 func _style_active_tab(btn: Button, active: bool) -> void:
 	var style := StyleBoxFlat.new()
