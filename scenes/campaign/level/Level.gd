@@ -21,6 +21,7 @@ const GridSystem = preload("res://scenes/campaign/level/GridSystem.gd")
 
 @onready var pause_btn: Button               = $HUD/HUDControl/TopHUD/TopLayout/PauseBtn
 @onready var pause_menu: PanelContainer      = $HUD/HUDControl/PauseMenu
+@onready var pause_title: Label              = $HUD/HUDControl/PauseMenu/PauseMenuLayout/PauseTitle
 @onready var resume_btn: Button              = $HUD/HUDControl/PauseMenu/PauseMenuLayout/ResumeBtn
 @onready var retry_btn: Button               = $HUD/HUDControl/PauseMenu/PauseMenuLayout/RetryBtn
 @onready var select_level_btn: Button        = $HUD/HUDControl/PauseMenu/PauseMenuLayout/SelectLevelBtn
@@ -140,7 +141,7 @@ func _ready() -> void:
 	_setup_buttons()
 	_connect_signals()
 	_apply_hud_styles()
-	
+
 	# Dynamically handle auto-centering of the grid system on any viewport screen size
 	get_viewport().size_changed.connect(_on_viewport_size_changed)
 	_on_viewport_size_changed()
@@ -148,6 +149,8 @@ func _ready() -> void:
 	_setup_sounds()
 	SoundManager.play_level_music(level_number)
 	_build_challenge_panel()
+	_apply_responsive_challenge()
+	get_tree().root.size_changed.connect(_apply_responsive_challenge)
 	if level_number == 1:
 		if ProgressManager.has_seen_tutorial("level"):
 			call_deferred("_show_challenge")
@@ -339,10 +342,12 @@ func _generate_beep(freq: float, dur: float) -> AudioStreamWAV:
 	wav.stereo = false
 	return wav
 
-func _spawn_floating_text(text: String, global_pos: Vector2, color: Color, size := 13) -> void:
+func _spawn_floating_text(text: String, global_pos: Vector2, color: Color, size := -1) -> void:
 	var lbl = Label.new()
 	lbl.text = text
 	lbl.add_theme_color_override("font_color", color)
+	if size <= 0:
+		size = _fs(0.030, 16.0, 18.0)
 	lbl.add_theme_font_size_override("font_size", size)
 	lbl.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	$HUD/HUDControl.add_child(lbl)
@@ -890,7 +895,7 @@ func _setup_diff_badge() -> void:
 	_diff_badge = Button.new()
 	_diff_badge.text = label
 	_diff_badge.add_theme_color_override("font_color", _get_diff_color(mod))
-	_diff_badge.add_theme_font_size_override("font_size", 11)
+	_diff_badge.add_theme_font_size_override("font_size", _fs(0.025, 16.0, 16.0))
 	_diff_badge.flat = true
 	_diff_badge.pressed.connect(_show_diff_popup.bind(mod))
 	skip_wave_btn.add_sibling(_diff_badge)
@@ -925,6 +930,7 @@ func _show_wave_splash_animation(wave_num: int) -> void:
 		print("[AdaptiveAI] Difficulty: ", label, " (", snapped(mod, 0.01), "x)")
 		_diff_badge.text = label
 		_diff_badge.add_theme_color_override("font_color", _get_diff_color(mod))
+		_diff_badge.add_theme_font_size_override("font_size", _fs(0.025, 16.0, 16.0))
 	wave_splash_label.text = text
 	wave_splash_label.modulate = Color("#00FF88")
 	wave_splash_label.scale = Vector2(0.5, 0.5)
@@ -1095,12 +1101,12 @@ func _show_result_panel(victory: bool) -> void:
 	game_over_panel.process_mode = Node.PROCESS_MODE_ALWAYS
 
 	var layout := VBoxContainer.new()
-	layout.add_theme_constant_override("separation", 16)
+	layout.add_theme_constant_override("separation", _fs(0.030, 12.0, 16.0))
 	layout.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
 
 	var title := Label.new()
 	title.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
-	title.add_theme_font_size_override("font_size", 32)
+	title.add_theme_font_size_override("font_size", _fs(0.070, 22.0, 32.0))
 	if victory:
 		title.text = "🎉 VICTORY!"
 		title.add_theme_color_override("font_color", Color("#00FF88"))
@@ -1113,14 +1119,14 @@ func _show_result_panel(victory: bool) -> void:
 	score_lbl.text = "Score: " + str(score)
 	score_lbl.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	score_lbl.add_theme_color_override("font_color", Color("#E8F4FD"))
-	score_lbl.add_theme_font_size_override("font_size", 20)
+	score_lbl.add_theme_font_size_override("font_size", _fs(0.045, 16.0, 20.0))
 	layout.add_child(score_lbl)
 
 	var grade     = _get_grade()
 	var grade_lbl := Label.new()
 	grade_lbl.text = "Grade: " + grade["letter"]
 	grade_lbl.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
-	grade_lbl.add_theme_font_size_override("font_size", 48)
+	grade_lbl.add_theme_font_size_override("font_size", _fs(0.105, 24.0, 48.0))
 	grade_lbl.add_theme_color_override("font_color", grade["color"])
 	layout.add_child(grade_lbl)
 
@@ -1132,7 +1138,7 @@ func _show_result_panel(victory: bool) -> void:
 		var star_lbl := Label.new()
 		star_lbl.text = star_str
 		star_lbl.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
-		star_lbl.add_theme_font_size_override("font_size", 28)
+		star_lbl.add_theme_font_size_override("font_size", _fs(0.060, 22.0, 28.0))
 		layout.add_child(star_lbl)
 		SignalBus.level_complete.emit(level_number, score, stars)
 
@@ -1140,7 +1146,7 @@ func _show_result_panel(victory: bool) -> void:
 		var unlock_lbl := Label.new()
 		unlock_lbl.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 		unlock_lbl.add_theme_color_override("font_color", Color("#00D4FF"))
-		unlock_lbl.add_theme_font_size_override("font_size", 14)
+		unlock_lbl.add_theme_font_size_override("font_size", _fs(0.030, 16.0, 16.0))
 		if ProgressManager.LEVEL_UNLOCKS_LESSON.has(level_number):
 			var next_lesson = ProgressManager.LEVEL_UNLOCKS_LESSON[level_number]
 			unlock_lbl.text = "🔓 New lesson unlocked: " + next_lesson
@@ -1148,7 +1154,7 @@ func _show_result_panel(victory: bool) -> void:
 
 	var stats_row := HBoxContainer.new()
 	stats_row.alignment = BoxContainer.ALIGNMENT_CENTER
-	stats_row.add_theme_constant_override("separation", 24)
+	stats_row.add_theme_constant_override("separation", _fs(0.045, 16.0, 24.0))
 	_add_result_stat(stats_row, "BASE HP",  str(base_health) + "/10")
 	_add_result_stat(stats_row, "WAVES",
 		str(wave_manager.current_wave) + "/" + str(wave_manager.total_waves))
@@ -1158,17 +1164,20 @@ func _show_result_panel(victory: bool) -> void:
 
 	var btn_row := HBoxContainer.new()
 	btn_row.alignment = BoxContainer.ALIGNMENT_CENTER
-	btn_row.add_theme_constant_override("separation", 12)
+	btn_row.add_theme_constant_override("separation", _fs(0.025, 8.0, 12.0))
 
+	var btn_h := _fs(0.075, 44.0, 52.0)
 	var retry_btn := Button.new()
 	retry_btn.text = "↺ Retry"
-	retry_btn.custom_minimum_size = Vector2(120, 44)
+	retry_btn.custom_minimum_size = Vector2(_fs(0.25, 120.0, 140.0), btn_h)
+	retry_btn.add_theme_font_size_override("font_size", _fs(0.035, 16.0, 18.0))
 	retry_btn.pressed.connect(_on_retry_pressed)
 	btn_row.add_child(retry_btn)
 
 	var menu_btn := Button.new()
 	menu_btn.text = "🏠 Level Select"
-	menu_btn.custom_minimum_size = Vector2(140, 44)
+	menu_btn.custom_minimum_size = Vector2(_fs(0.30, 140.0, 160.0), btn_h)
+	menu_btn.add_theme_font_size_override("font_size", _fs(0.035, 16.0, 18.0))
 	menu_btn.pressed.connect(_on_menu_pressed)
 	btn_row.add_child(menu_btn)
 
@@ -1207,19 +1216,19 @@ func _add_result_stat(
 		label: String,
 		value: String) -> void:
 	var col := VBoxContainer.new()
-	col.add_theme_constant_override("separation", 4)
+	col.add_theme_constant_override("separation", _fs(0.008, 2.0, 4.0))
 
 	var lbl := Label.new()
 	lbl.text = label
 	lbl.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
-	lbl.add_theme_font_size_override("font_size", 10)
+	lbl.add_theme_font_size_override("font_size", _fs(0.025, 16.0, 16.0))
 	lbl.add_theme_color_override("font_color", Color("#4A7FA5"))
 	col.add_child(lbl)
 
 	var val := Label.new()
 	val.text = value
 	val.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
-	val.add_theme_font_size_override("font_size", 16)
+	val.add_theme_font_size_override("font_size", _fs(0.030, 16.0, 18.0))
 	val.add_theme_color_override("font_color", Color("#E8F4FD"))
 	col.add_child(val)
 
@@ -1376,6 +1385,34 @@ func _add_icon_before_label(parent: Node, icon_tex: ImageTexture, label: Label, 
 	label.add_theme_constant_override("margin_left", 4)
 
 # ─── HUD STYLES ────────────────────────────────────────
+# ─── HELPERS ───────────────────────────────────────────
+func _min_dim() -> float:
+	var vp := get_viewport().get_visible_rect().size
+	return minf(maxf(vp.x, 320.0), maxf(vp.y, 240.0))
+
+func _fs(ratio: float, floor_v: float, cap_v: float) -> int:
+	return int(clampf(_min_dim() * ratio, floor_v, cap_v))
+
+func _apply_responsive_challenge() -> void:
+	if _challenge_title == null or not is_instance_valid(_challenge_title):
+		return
+	# Fluid typography for HUD labels
+	level_label.add_theme_font_size_override("font_size", _fs(0.030, 16.0, 18.0))
+	ram_label.add_theme_font_size_override("font_size", _fs(0.030, 16.0, 18.0))
+	wave_label.add_theme_font_size_override("font_size", _fs(0.030, 16.0, 18.0))
+	base_health_label.add_theme_font_size_override("font_size", _fs(0.030, 16.0, 18.0))
+	score_label.add_theme_font_size_override("font_size", _fs(0.030, 16.0, 18.0))
+	# Fluid typography for pause menu
+	pause_title.add_theme_font_size_override("font_size", _fs(0.055, 20.0, 28.0))
+	# Fluid typography for challenge panel
+	_challenge_title.add_theme_font_size_override("font_size", _fs(0.045, 18.0, 24.0))
+	_challenge_desc.add_theme_font_size_override("font_size", _fs(0.032, 16.0, 18.0))
+	_challenge_code_edit.add_theme_font_size_override("font_size", _fs(0.034, 16.0, 18.0))
+	_challenge_output.add_theme_font_size_override("font_size", _fs(0.030, 16.0, 16.0))
+	_challenge_result.add_theme_font_size_override("font_size", _fs(0.034, 16.0, 18.0))
+	# Fluid typography for wave splash
+	wave_splash_label.add_theme_font_size_override("font_size", _fs(0.105, 24.0, 48.0))
+
 func _apply_hud_styles() -> void:
 	var top_style := StyleBoxEmpty.new()
 	$HUD/HUDControl/TopHUD.add_theme_stylebox_override("panel", top_style)
@@ -1448,7 +1485,7 @@ func _style_neon_btn(btn: Button, color: Color) -> void:
 	normal.corner_radius_bottom_right = 4
 	btn.add_theme_stylebox_override("normal", normal)
 	btn.add_theme_color_override("font_color", color)
-	btn.add_theme_font_size_override("font_size", 11)
+	btn.add_theme_font_size_override("font_size", _fs(0.025, 16.0, 16.0))
 
 	var hover := StyleBoxFlat.new()
 	hover.bg_color = color
@@ -1496,7 +1533,7 @@ func _style_challenge_btn(btn: Button, color: Color) -> void:
 	s.corner_radius_bottom_right = 4
 	btn.add_theme_stylebox_override("normal", s)
 	btn.add_theme_color_override("font_color", color)
-	btn.add_theme_font_size_override("font_size", 11)
+	btn.add_theme_font_size_override("font_size", _fs(0.030, 16.0, 16.0))
 	var hover := StyleBoxFlat.new()
 	hover.bg_color = color
 	hover.bg_color.a = 0.15
@@ -1538,7 +1575,7 @@ func _build_challenge_panel() -> void:
 
 	var header = HBoxContainer.new()
 	_challenge_title = Label.new()
-	_challenge_title.add_theme_font_size_override("font_size", 14)
+	_challenge_title.add_theme_font_size_override("font_size", _fs(0.045, 18.0, 24.0))
 	_challenge_title.add_theme_color_override("font_color", Color("#00D4FF"))
 	header.add_child(_challenge_title)
 	var hspacer = Control.new()
@@ -1547,16 +1584,16 @@ func _build_challenge_panel() -> void:
 	layout.add_child(header)
 
 	_challenge_desc = Label.new()
-	_challenge_desc.add_theme_font_size_override("font_size", 10)
+	_challenge_desc.add_theme_font_size_override("font_size", _fs(0.032, 16.0, 18.0))
 	_challenge_desc.add_theme_color_override("font_color", Color("#A0B8D0"))
 	_challenge_desc.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 	layout.add_child(_challenge_desc)
 
 	_challenge_code_edit = TextEdit.new()
-	_challenge_code_edit.custom_minimum_size = Vector2(0, 120)
+	_challenge_code_edit.custom_minimum_size = Vector2(0, _fs(0.30, 100.0, 160.0))
 	_challenge_code_edit.size_flags_vertical = Control.SIZE_EXPAND_FILL
 	_challenge_code_edit.add_theme_font_override("font", ThemeDB.fallback_font)
-	_challenge_code_edit.add_theme_font_size_override("font_size", 11)
+	_challenge_code_edit.add_theme_font_size_override("font_size", _fs(0.034, 16.0, 18.0))
 	_challenge_code_edit.add_theme_color_override("background_color", Color("#030812"))
 	_challenge_code_edit.add_theme_color_override("font_color", Color("#FFFFFF"))
 	_challenge_code_edit.add_theme_color_override("caret_color", Color("#00D4FF"))
@@ -1566,21 +1603,22 @@ func _build_challenge_panel() -> void:
 	layout.add_child(_challenge_code_edit)
 
 	var btn_row = HBoxContainer.new()
+	var btn_h := _fs(0.055, 36.0, 44.0)
 	var run_btn = Button.new()
 	run_btn.text = "▶ Run Code"
-	run_btn.custom_minimum_size = Vector2(110, 28)
+	run_btn.custom_minimum_size = Vector2(_fs(0.22, 110.0, 140.0), btn_h)
 	run_btn.pressed.connect(_on_challenge_run)
 	_style_challenge_btn(run_btn, Color("#00FF88"))
 	btn_row.add_child(run_btn)
 	var submit_btn = Button.new()
 	submit_btn.text = "✔ Submit"
-	submit_btn.custom_minimum_size = Vector2(110, 28)
+	submit_btn.custom_minimum_size = Vector2(_fs(0.22, 110.0, 140.0), btn_h)
 	submit_btn.pressed.connect(_on_challenge_submit)
 	_style_challenge_btn(submit_btn, Color("#00D4FF"))
 	btn_row.add_child(submit_btn)
 	var skip_btn = Button.new()
 	skip_btn.text = "⏭ Skip"
-	skip_btn.custom_minimum_size = Vector2(90, 28)
+	skip_btn.custom_minimum_size = Vector2(_fs(0.18, 90.0, 120.0), btn_h)
 	skip_btn.pressed.connect(_on_challenge_skip)
 	_style_challenge_btn(skip_btn, Color("#4A7FA5"))
 	btn_row.add_child(skip_btn)
@@ -1588,14 +1626,14 @@ func _build_challenge_panel() -> void:
 	layout.add_child(btn_row)
 
 	_challenge_output = Label.new()
-	_challenge_output.add_theme_font_size_override("font_size", 10)
+	_challenge_output.add_theme_font_size_override("font_size", _fs(0.030, 16.0, 16.0))
 	_challenge_output.add_theme_color_override("font_color", Color("#4A7FA5"))
 	_challenge_output.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
-	_challenge_output.custom_minimum_size = Vector2(0, 40)
+	_challenge_output.custom_minimum_size = Vector2(0, _fs(0.10, 36.0, 48.0))
 	layout.add_child(_challenge_output)
 
 	_challenge_result = Label.new()
-	_challenge_result.add_theme_font_size_override("font_size", 11)
+	_challenge_result.add_theme_font_size_override("font_size", _fs(0.034, 16.0, 18.0))
 	_challenge_result.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	layout.add_child(_challenge_result)
 
