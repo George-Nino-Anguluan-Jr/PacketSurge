@@ -252,7 +252,7 @@ func _build_reset_dialog() -> void:
 	dim.add_child(center)
 
 	var card := PanelContainer.new()
-	card.custom_minimum_size = Vector2(420, 0)
+	card.custom_minimum_size = Vector2(_fs(0.42, 320.0, 520.0), 0)
 	var card_style := StyleBoxFlat.new()
 	card_style.bg_color               = Color("#0A1628")
 	card_style.border_color           = Color("#00D4FF")
@@ -278,14 +278,14 @@ func _build_reset_dialog() -> void:
 	_reset_title_label = Label.new()
 	_reset_title_label.text = "RESET PASSWORD"
 	_reset_title_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
-	_reset_title_label.add_theme_font_size_override("font_size", 18)
+	_reset_title_label.add_theme_font_size_override("font_size", _fs(0.048, 18.0, 22.0))
 	_reset_title_label.add_theme_color_override("font_color", Color("#00D4FF"))
 	layout.add_child(_reset_title_label)
 
 	_reset_desc_label = Label.new()
 	_reset_desc_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	_reset_desc_label.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
-	_reset_desc_label.add_theme_font_size_override("font_size", 13)
+	_reset_desc_label.add_theme_font_size_override("font_size", _fs(0.032, 13.0, 16.0))
 	_reset_desc_label.add_theme_color_override("font_color", Color("#4A7FA5"))
 	layout.add_child(_reset_desc_label)
 
@@ -322,7 +322,7 @@ func _build_reset_dialog() -> void:
 	_reset_error_label = Label.new()
 	_reset_error_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	_reset_error_label.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
-	_reset_error_label.add_theme_font_size_override("font_size", 13)
+	_reset_error_label.add_theme_font_size_override("font_size", _fs(0.032, 13.0, 16.0))
 	layout.add_child(_reset_error_label)
 
 	var btns := HBoxContainer.new()
@@ -472,7 +472,7 @@ func _build_confirm_dialog() -> void:
 	dim.add_child(center)
 
 	var card := PanelContainer.new()
-	card.custom_minimum_size = Vector2(420, 0)
+	card.custom_minimum_size = Vector2(_fs(0.42, 320.0, 520.0), 0)
 	var card_style := StyleBoxFlat.new()
 	card_style.bg_color               = Color("#0A1628")
 	card_style.border_color           = Color("#00D4FF")
@@ -498,7 +498,7 @@ func _build_confirm_dialog() -> void:
 	var title := Label.new()
 	title.text = "CONFIRM EMAIL"
 	title.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
-	title.add_theme_font_size_override("font_size", 18)
+	title.add_theme_font_size_override("font_size", _fs(0.048, 18.0, 22.0))
 	title.add_theme_color_override("font_color", Color("#00D4FF"))
 	layout.add_child(title)
 
@@ -506,7 +506,7 @@ func _build_confirm_dialog() -> void:
 	desc.text = "Enter the 6-digit code we emailed you to confirm your account."
 	desc.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	desc.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
-	desc.add_theme_font_size_override("font_size", 13)
+	desc.add_theme_font_size_override("font_size", _fs(0.032, 13.0, 16.0))
 	desc.add_theme_color_override("font_color", Color("#4A7FA5"))
 	layout.add_child(desc)
 
@@ -521,7 +521,7 @@ func _build_confirm_dialog() -> void:
 	_confirm_error_label = Label.new()
 	_confirm_error_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	_confirm_error_label.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
-	_confirm_error_label.add_theme_font_size_override("font_size", 13)
+	_confirm_error_label.add_theme_font_size_override("font_size", _fs(0.032, 13.0, 16.0))
 	layout.add_child(_confirm_error_label)
 
 	var btns := HBoxContainer.new()
@@ -656,6 +656,12 @@ func _animate_title() -> void:
 
 
 # ─── STYLES ────────────────────────────────────────────
+func _min_dim() -> float:
+	var vp := get_viewport().get_visible_rect().size
+	return minf(maxf(vp.x, 320.0), maxf(vp.y, 240.0))
+
+func _fs(ratio: float, floor_v: float, cap_v: float) -> int:
+	return int(clampf(_min_dim() * ratio, floor_v, cap_v))
 func _apply_styles() -> void:
 	# Form card glass style
 	var card_style := StyleBoxFlat.new()
@@ -712,7 +718,7 @@ func _style_input_field(field: LineEdit) -> void:
 	field.add_theme_stylebox_override("focus",  _make_focused_style())
 	field.add_theme_color_override("font_color",             Color("#E8F4FD"))
 	field.add_theme_color_override("font_placeholder_color", Color("#4A7FA5"))
-	field.add_theme_font_size_override("font_size", 16)
+	field.add_theme_font_size_override("font_size", _fs(0.045, 16.0, 20.0))
 
 func _make_focused_style() -> StyleBoxFlat:
 	var style := StyleBoxFlat.new()
@@ -746,7 +752,7 @@ func _style_option_button(btn: OptionButton) -> void:
 	style.corner_radius_bottom_right = 4
 	btn.add_theme_stylebox_override("normal", style)
 	btn.add_theme_color_override("font_color", Color("#E8F4FD"))
-	btn.add_theme_font_size_override("font_size", 16)
+	btn.add_theme_font_size_override("font_size", _fs(0.045, 16.0, 20.0))
 
 func _style_accent_button(btn: Button) -> void:
 	var normal := StyleBoxFlat.new()
@@ -764,7 +770,7 @@ func _style_accent_button(btn: Button) -> void:
 	btn.add_theme_stylebox_override("normal",  normal)
 	btn.add_theme_stylebox_override("hover",   hover)
 	btn.add_theme_color_override("font_color", Color("#050D1A"))
-	btn.add_theme_font_size_override("font_size", 17)
+	btn.add_theme_font_size_override("font_size", _fs(0.048, 17.0, 20.0))
 
 func _style_ghost_button(btn: Button) -> void:
 	var normal := StyleBoxFlat.new()
@@ -793,7 +799,7 @@ func _style_ghost_button(btn: Button) -> void:
 	btn.add_theme_stylebox_override("hover",  hover)
 	btn.add_theme_stylebox_override("pressed", hover)
 	btn.add_theme_color_override("font_color", Color("#4A7FA5"))
-	btn.add_theme_font_size_override("font_size", 13)
+	btn.add_theme_font_size_override("font_size", _fs(0.032, 16.0, 18.0))
 
 func _style_active_tab(btn: Button, active: bool) -> void:
 	var style := StyleBoxFlat.new()
@@ -814,7 +820,7 @@ func _style_active_tab(btn: Button, active: bool) -> void:
 	btn.add_theme_stylebox_override("normal",   style)
 	btn.add_theme_stylebox_override("hover",    style)
 	btn.add_theme_stylebox_override("pressed",  style)
-	btn.add_theme_font_size_override("font_size", 16)
+	btn.add_theme_font_size_override("font_size", _fs(0.045, 16.0, 20.0))
 
 # ─── RESPONSIVE ────────────────────────────────────────
 func _apply_responsive_layout() -> void:
@@ -834,11 +840,11 @@ func _apply_responsive_layout() -> void:
 	var card_w := clampf(w * 0.42, 360.0, 560.0)
 	card_w = minf(card_w, w - 40.0)
 	card.custom_minimum_size = Vector2(maxf(card_w, 280.0), 0)
-	title_label.add_theme_font_size_override("font_size", int(clampf(min_dim * 0.050, 32.0, 56.0)))
-	main_layout.add_theme_constant_override("separation", clampf(min_dim * 0.024, 16.0, 26.0))
-	login_form.add_theme_constant_override("separation", clampf(min_dim * 0.013, 10.0, 14.0))
-	register_form.add_theme_constant_override("separation", clampf(min_dim * 0.011, 8.0, 12.0))
-	status_label.add_theme_font_size_override("font_size", int(clampf(min_dim * 0.014, 13.0, 15.0)))
+	title_label.add_theme_font_size_override("font_size", int(clampf(min_dim * 0.050, 36.0, 56.0)))
+	main_layout.add_theme_constant_override("separation", clampf(min_dim * 0.024, 18.0, 26.0))
+	login_form.add_theme_constant_override("separation", clampf(min_dim * 0.013, 12.0, 16.0))
+	register_form.add_theme_constant_override("separation", clampf(min_dim * 0.011, 10.0, 14.0))
+	status_label.add_theme_font_size_override("font_size", int(clampf(min_dim * 0.018, 16.0, 18.0)))
 
 	# Fluid input heights so fields stay tappable on touch devices
 	var field_h := clampf(h * 0.068, 40.0, 48.0)
@@ -852,3 +858,18 @@ func _apply_responsive_layout() -> void:
 		field.custom_minimum_size.y = field_h
 	login_btn.custom_minimum_size.y = btn_h
 	register_btn.custom_minimum_size.y = btn_h
+
+	# Keep dialog cards sized correctly after viewport changes.
+	_apply_dialog_responsive()
+
+func _apply_dialog_responsive() -> void:
+	if _reset_dialog and _reset_dialog.visible:
+		var cards := _reset_dialog.find_children("*", "PanelContainer", true, false)
+		for c in cards:
+			if c is PanelContainer:
+				c.custom_minimum_size.x = clampf(_min_dim() * 0.42, 320.0, 520.0)
+	if _confirm_dialog and _confirm_dialog.visible:
+		var cards := _confirm_dialog.find_children("*", "PanelContainer", true, false)
+		for c in cards:
+			if c is PanelContainer:
+				c.custom_minimum_size.x = clampf(_min_dim() * 0.42, 320.0, 520.0)

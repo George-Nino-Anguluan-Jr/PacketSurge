@@ -345,14 +345,14 @@ func _apply_responsive_layout() -> void:
 
 	# Profile card typography
 	username_label.add_theme_font_size_override("font_size", int(clampf(min_dim * 0.020, 16.0, 22.0)))
-	class_label.add_theme_font_size_override("font_size", int(clampf(min_dim * 0.016, 14.0, 18.0)))
+	class_label.add_theme_font_size_override("font_size", int(clampf(min_dim * 0.016, 16.0, 18.0)))
 	avatar_label.add_theme_font_size_override("font_size", int(clampf(min_dim * 0.025, 22.0, 28.0)))
 	var icon_font := int(clampf(min_dim * 0.022, 20.0, 26.0))
 	leaderboard_button.add_theme_font_size_override("font_size", icon_font)
 	settings_button.add_theme_font_size_override("font_size", icon_font)
 
 	# Version label (bottom bar)
-	version_label.add_theme_font_size_override("font_size", int(clampf(min_dim * 0.011, 12.0, 14.0)))
+	version_label.add_theme_font_size_override("font_size", int(clampf(min_dim * 0.011, 16.0, 18.0)))
 
 	# Fluid corner positioning + spacing
 	var inset := clampf(min_dim * 0.022, 10.0, 24.0)
@@ -363,6 +363,11 @@ func _apply_responsive_layout() -> void:
 	var icon_size := clampf(min_dim * 0.046, 44.0, 52.0)
 	leaderboard_button.custom_minimum_size = Vector2(icon_size, icon_size)
 	settings_button.custom_minimum_size = Vector2(icon_size, icon_size)
+
+	# Bottom bar — keep it inset from the edges by the same fluid margin
+	var bottom_bar := $BottomBar
+	bottom_bar.offset_left = inset
+	bottom_bar.offset_bottom = -inset
 
 	# Continue button dynamic size (already in _all_buttons loop above)
 

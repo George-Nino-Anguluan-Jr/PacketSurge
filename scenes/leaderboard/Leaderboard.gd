@@ -26,6 +26,7 @@ func _ready() -> void:
 	_show_global_tab()
 	_fetch_global()
 	_apply_responsive_layout()
+	ScreenManager.make_scroll_touch_friendly($ContentArea/ScrollArea)
 	get_tree().root.size_changed.connect(_apply_responsive_layout)
 	SupabaseManager.leaderboard_loaded.connect(_on_leaderboard_loaded)
 	_maybe_show_tutorial()
@@ -50,8 +51,9 @@ func _show_global_tab() -> void:
 	active_tab             = "global"
 	global_panel.visible   = true
 	section_panel.visible  = false
-	_style_active_tab(global_tab,  true)
-	_style_active_tab(section_tab, false)
+	var tab_font := int(clampf(_current_min_dim() * 0.024, 18.0, 24.0))
+	_style_active_tab(global_tab,  true, tab_font)
+	_style_active_tab(section_tab, false, tab_font)
 	if global_data.is_empty():
 		_fetch_global()
 
@@ -59,8 +61,9 @@ func _show_section_tab() -> void:
 	active_tab             = "section"
 	global_panel.visible   = false
 	section_panel.visible  = true
-	_style_active_tab(global_tab,  false)
-	_style_active_tab(section_tab, true)
+	var tab_font := int(clampf(_current_min_dim() * 0.024, 18.0, 24.0))
+	_style_active_tab(global_tab,  false, tab_font)
+	_style_active_tab(section_tab, true, tab_font)
 	if section_data.is_empty():
 		_fetch_section()
 
@@ -84,7 +87,7 @@ func _show_loading(list: VBoxContainer) -> void:
 	loading.text = "Loading..."
 	loading.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	loading.add_theme_color_override("font_color", Color("#4A7FA5"))
-	loading.add_theme_font_size_override("font_size", 14)
+	loading.add_theme_font_size_override("font_size", int(clampf(_current_min_dim() * 0.018, 14.0, 18.0)))
 	list.add_child(loading)
 
 func _show_error(list: VBoxContainer, message: String) -> void:
@@ -94,7 +97,7 @@ func _show_error(list: VBoxContainer, message: String) -> void:
 	error.text = message
 	error.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	error.add_theme_color_override("font_color", Color("#FF3366"))
-	error.add_theme_font_size_override("font_size", 14)
+	error.add_theme_font_size_override("font_size", int(clampf(_current_min_dim() * 0.018, 14.0, 18.0)))
 	list.add_child(error)
 
 # ─── DATA RECEIVED ─────────────────────────────────────
@@ -126,7 +129,7 @@ func _build_list(list: VBoxContainer, data: Array) -> void:
 		empty.text = "No data yet. Complete lessons to appear here!"
 		empty.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 		empty.add_theme_color_override("font_color", Color("#4A7FA5"))
-		empty.add_theme_font_size_override("font_size", 14)
+		empty.add_theme_font_size_override("font_size", int(clampf(_current_min_dim() * 0.018, 14.0, 18.0)))
 		list.add_child(empty)
 		return
 
@@ -141,7 +144,8 @@ func _make_entry_card(
 		entry: Dictionary,
 		is_me: bool) -> PanelContainer:
 
-	var compact = ScreenManager.is_mobile()
+	var compact = _is_layout_compact(get_viewport().get_visible_rect().size.x)
+	var min_dim = _current_min_dim()
 	var card  := PanelContainer.new()
 	card.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 
@@ -156,15 +160,15 @@ func _make_entry_card(
 	style.border_width_top       = 1
 	style.border_width_bottom    = 1
 	if compact:
-		style.content_margin_left    = 10
-		style.content_margin_right   = 10
-		style.content_margin_top     = 8
-		style.content_margin_bottom  = 8
+		style.content_margin_left    = 8
+		style.content_margin_right   = 8
+		style.content_margin_top     = 6
+		style.content_margin_bottom  = 6
 	else:
-		style.content_margin_left    = 16
-		style.content_margin_right   = 16
-		style.content_margin_top     = 12
-		style.content_margin_bottom  = 12
+		style.content_margin_left    = clampf(min_dim * 0.012, 12.0, 16.0)
+		style.content_margin_right   = style.content_margin_left
+		style.content_margin_top     = clampf(min_dim * 0.010, 8.0, 12.0)
+		style.content_margin_bottom  = style.content_margin_top
 
 	if is_me:
 		style.bg_color     = Color("#0D2A1A")
@@ -185,13 +189,13 @@ func _make_entry_card(
 	card.add_theme_stylebox_override("panel", style)
 
 	var layout := HBoxContainer.new()
-	layout.add_theme_constant_override("separation", 8 if compact else 16)
+	layout.add_theme_constant_override("separation", clampf(min_dim * 0.009, 6.0, 16.0))
 
 	# ── Rank ──
 	var rank_label := Label.new()
-	rank_label.custom_minimum_size = Vector2(32 if compact else 40, 0)
+	rank_label.custom_minimum_size = Vector2(clampf(min_dim * 0.045, 30.0, 40.0), 0)
 	rank_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
-	rank_label.add_theme_font_size_override("font_size", 16 if compact else 20)
+	rank_label.add_theme_font_size_override("font_size", int(clampf(min_dim * 0.022, 16.0, 22.0)))
 
 	match rank:
 		1: rank_label.text = "🥇"
@@ -201,8 +205,8 @@ func _make_entry_card(
 
 	if rank > 3:
 		rank_label.add_theme_color_override(
-			"font_color",
-			Color("#00FF88") if is_me else Color("#4A7FA5")
+				"font_color",
+				Color("#00FF88") if is_me else Color("#4A7FA5")
 		)
 	layout.add_child(rank_label)
 
@@ -215,7 +219,7 @@ func _make_entry_card(
 	name_label.text = entry.get("username", "Unknown")
 	if is_me:
 		name_label.text += " (You)"
-	name_label.add_theme_font_size_override("font_size", 17 if compact else 18)
+	name_label.add_theme_font_size_override("font_size", int(clampf(min_dim * 0.021, 15.0, 19.0)))
 	name_label.add_theme_color_override(
 		"font_color",
 		Color("#00FF88") if is_me else Color("#E8F4FD")
@@ -224,7 +228,7 @@ func _make_entry_card(
 
 	var section_label := Label.new()
 	section_label.text = entry.get("section", "")
-	section_label.add_theme_font_size_override("font_size", 13 if compact else 14)
+	section_label.add_theme_font_size_override("font_size", int(clampf(min_dim * 0.014, 11.0, 15.0)))
 	section_label.add_theme_color_override("font_color", Color("#4A7FA5"))
 	name_section.add_child(section_label)
 
@@ -232,24 +236,25 @@ func _make_entry_card(
 
 	# ── Stats ──
 	var stats := HBoxContainer.new()
-	stats.add_theme_constant_override("separation", 12 if compact else 20)
+	stats.add_theme_constant_override("separation", clampf(min_dim * 0.013, 8.0, 20.0))
 
 	_add_stat_column(
 	stats, "TOPICS",
 	str(int(entry.get("topics_mastered", 0))) + "/" + str(DataRegistry.get_lesson_count()),
-	Color("#00D4FF")
+	Color("#00D4FF"), min_dim, compact
 	)
 	_add_stat_column(
 		stats, "STARS",
 		str(int(entry.get("total_stars", 0))) + "/" + str(DataRegistry.get_total_stars_possible()),
-		Color("#FFB800")
+		Color("#FFB800"), min_dim, compact
 	)
 
 	# Score — most prominent
 	_add_stat_column(
 	stats, "SCORE",
 	str(int(entry.get("score", 0))),
-	Color("#00FF88") if is_me else Color("#FFD700") if rank == 1 else Color("#E8F4FD")
+	Color("#00FF88") if is_me else Color("#FFD700") if rank == 1 else Color("#E8F4FD"),
+	min_dim, compact
 	)
 
 	layout.add_child(stats)
@@ -260,22 +265,23 @@ func _add_stat_column(
 		container: HBoxContainer,
 		label: String,
 		value: String,
-		color: Color) -> void:
-	var compact = ScreenManager.is_mobile()
+		color: Color,
+		min_dim: float,
+		compact: bool) -> void:
 	var col := VBoxContainer.new()
 	col.add_theme_constant_override("separation", 2)
-	col.custom_minimum_size = Vector2(60 if compact else 70, 0)
+	col.custom_minimum_size = Vector2(clampf(min_dim * 0.045, 40.0, 70.0), 0)
 
 	var lbl := Label.new()
 	lbl.text = label
-	lbl.add_theme_font_size_override("font_size", 12 if compact else 13)
+	lbl.add_theme_font_size_override("font_size", int(clampf(min_dim * 0.014, 11.0, 15.0)))
 	lbl.add_theme_color_override("font_color", Color("#4A7FA5"))
 	lbl.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	col.add_child(lbl)
 
 	var val := Label.new()
 	val.text = value
-	val.add_theme_font_size_override("font_size", 15 if compact else 17)
+	val.add_theme_font_size_override("font_size", int(clampf(min_dim * 0.019, 14.0, 19.0)))
 	val.add_theme_color_override("font_color", color)
 	val.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	col.add_child(val)
@@ -315,7 +321,7 @@ func _apply_styles() -> void:
 	back_style.corner_radius_bottom_right = 4
 	back_btn.add_theme_stylebox_override("normal", back_style)
 	back_btn.add_theme_color_override("font_color", Color("#00D4FF"))
-	back_btn.add_theme_font_size_override("font_size", 16)
+	# font_size set dynamically in _apply_responsive_layout()
 
 	# Refresh buttons
 	for btn in [refresh_btn, section_refresh_btn]:
@@ -332,9 +338,8 @@ func _apply_styles() -> void:
 		r_style.corner_radius_bottom_right = 4
 		btn.add_theme_stylebox_override("normal", r_style)
 		btn.add_theme_color_override("font_color", Color("#4A7FA5"))
-		btn.add_theme_font_size_override("font_size", 16)
 
-func _style_active_tab(btn: Button, active: bool) -> void:
+func _style_active_tab(btn: Button, active: bool, font_size: int) -> void:
 	var style := StyleBoxFlat.new()
 	style.corner_radius_top_left     = 0
 	style.corner_radius_top_right    = 0
@@ -353,44 +358,66 @@ func _style_active_tab(btn: Button, active: bool) -> void:
 	btn.add_theme_stylebox_override("normal",  style)
 	btn.add_theme_stylebox_override("hover",   style)
 	btn.add_theme_stylebox_override("pressed", style)
-	btn.add_theme_font_size_override("font_size", 18)
+	btn.add_theme_font_size_override("font_size", font_size)
 
 # ─── RESPONSIVE ────────────────────────────────────────
 func _apply_responsive_layout() -> void:
-	var top_bar = $TopBar
-	var content_area = $ContentArea
-	var title_label = $TopBar/TopBarLayout/TitleLabel
+	var vp := get_viewport().get_visible_rect().size
+	var w := maxf(vp.x, 320.0)
+	var h := maxf(vp.y, 240.0)
+	var min_dim := minf(w, h)
+
+	# Continuous typography
+	$TopBar/TopBarLayout/TitleLabel.add_theme_font_size_override("font_size", int(clampf(min_dim * 0.032, 20.0, 28.0)))
+	back_btn.add_theme_font_size_override("font_size", int(clampf(min_dim * 0.025, 16.0, 20.0)))
+	back_btn.custom_minimum_size = Vector2(clampf(w * 0.12, 80.0, 120.0), clampf(h * 0.07, 44.0, 56.0))
+
+	# Tab bar sizing
 	var tab_bar = $TabBar
-	
-	if ScreenManager.is_mobile():
-		my_rank_label.visible = true
-		ScreenManager.apply_panel_padding(top_bar, 20)
-		tab_bar.offset_left = 20
-		tab_bar.offset_right = -20
-		content_area.add_theme_constant_override("margin_left", 20)
-		content_area.add_theme_constant_override("margin_right", 20)
-		content_area.add_theme_constant_override("margin_top", 20)
-		content_area.add_theme_constant_override("margin_bottom", 20)
-		title_label.add_theme_font_size_override("font_size", 20)
-		back_btn.custom_minimum_size = Vector2(85, 52)
-		back_btn.add_theme_font_size_override("font_size", 18)
-	elif ScreenManager.is_tablet():
-		my_rank_label.visible = true
-		ScreenManager.apply_panel_padding(top_bar, 24)
-		tab_bar.offset_left = 24
-		tab_bar.offset_right = -24
-		content_area.add_theme_constant_override("margin_left", 24)
-		content_area.add_theme_constant_override("margin_right", 24)
-		content_area.add_theme_constant_override("margin_top", 24)
-		content_area.add_theme_constant_override("margin_bottom", 24)
-		title_label.add_theme_font_size_override("font_size", 22)
-		back_btn.custom_minimum_size = Vector2(95, 52)
-		back_btn.add_theme_font_size_override("font_size", 18)
+	tab_bar.add_theme_constant_override("separation", clampf(min_dim * 0.010, 6.0, 12.0))
+	for btn in [global_tab, section_tab]:
+		btn.custom_minimum_size = Vector2(0, clampf(min_dim * 0.065, 44.0, 52.0))
+
+	# Content area margins — fluid inset
+	var inset := clampf(min_dim * 0.020, 16.0, 24.0)
+	$ContentArea.add_theme_constant_override("margin_left", inset)
+	$ContentArea.add_theme_constant_override("margin_right", inset)
+	$ContentArea.add_theme_constant_override("margin_top", clampf(min_dim * 0.010, 8.0, 16.0))
+	$ContentArea.add_theme_constant_override("margin_bottom", inset)
+
+	# Tab button font sizes
+	var tab_font := int(clampf(min_dim * 0.024, 18.0, 24.0))
+	_style_active_tab(global_tab, active_tab == "global", tab_font)
+	_style_active_tab(section_tab, active_tab == "section", tab_font)
+
+	# Refresh button sizing
+	var refresh_font := int(clampf(min_dim * 0.022, 16.0, 20.0))
+	for btn in [refresh_btn, section_refresh_btn]:
+		btn.add_theme_font_size_override("font_size", refresh_font)
+		btn.custom_minimum_size = Vector2(clampf(w * 0.15, 100.0, 130.0), clampf(h * 0.08, 42.0, 52.0))
+
+	# Rebuild cards if compact mode changed
+	var new_compact = _is_layout_compact(w)
+	if new_compact != _last_compact:
+		_last_compact = new_compact
+		var list = global_list if active_tab == "global" else section_list
+		if not list.get_children().is_empty():
+			_rebuild_current_list()
+
+var _last_compact: bool = false
+
+func _is_layout_compact(viewport_w: float) -> bool:
+	return viewport_w < 600.0
+
+func _rebuild_current_list() -> void:
+	if active_tab == "global":
+		_build_list(global_list, global_data)
 	else:
-		my_rank_label.visible = true
-		title_label.add_theme_font_size_override("font_size", 24)
-		back_btn.custom_minimum_size = Vector2(110, 52)
-		back_btn.add_theme_font_size_override("font_size", 18)
+		_build_list(section_list, section_data)
+
+func _current_min_dim() -> float:
+	var vp := get_viewport().get_visible_rect().size
+	return minf(maxf(vp.x, 320.0), maxf(vp.y, 240.0))
 
 # ─── TUTORIAL ──────────────────────────────────────────
 const TutorialOverlay = preload("res://scenes/core/TutorialOverlay.gd")
