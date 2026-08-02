@@ -16,6 +16,16 @@ var tower_id: String = ""
 @onready var weak_container: VBoxContainer = $Backdrop/Margin/Panel/Content/Body/BodyContent/WeakBox/WeakContainer
 @onready var close_btn: Button = $Backdrop/Margin/Panel/Content/Footer/CloseBtn
 @onready var preview: Control = $Backdrop/Margin/Panel/Content/PreviewWrap/Preview
+@onready var backdrop: ColorRect = $Backdrop
+@onready var back_margin: MarginContainer = $Backdrop/Margin
+
+# ─── HELPERS ───────────────────────────────────────────
+func _min_dim() -> float:
+	var vp := get_viewport().get_visible_rect().size
+	return minf(maxf(vp.x, 320.0), maxf(vp.y, 240.0))
+
+func _fs(ratio: float, floor_v: float, cap_v: float) -> int:
+	return int(clampf(_min_dim() * ratio, floor_v, cap_v))
 
 func _ready() -> void:
 	close_btn.pressed.connect(_on_close)
@@ -42,8 +52,10 @@ func _ready() -> void:
 	panel_style.corner_radius_bottom_right = 10
 	panel.add_theme_stylebox_override("panel", panel_style)
 
-	var backdrop = $Backdrop
 	backdrop.gui_input.connect(_on_backdrop_input)
+
+	_apply_responsive_layout()
+	get_tree().root.size_changed.connect(_apply_responsive_layout)
 
 func show_for(t_id: String) -> void:
 	tower_id = t_id
@@ -82,7 +94,7 @@ func _populate_enemy_list(container: VBoxContainer, enemies: Array, label: Strin
 
 	var header = Label.new()
 	header.text = label
-	header.add_theme_font_size_override("font_size", 12)
+	header.add_theme_font_size_override("font_size", _fs(0.028, 16.0, 16.0))
 	header.add_theme_color_override("font_color", color)
 	container.add_child(header)
 
@@ -91,7 +103,7 @@ func _populate_enemy_list(container: VBoxContainer, enemies: Array, label: Strin
 		# Convert enemy_id to display name
 		var display = e.replace("_", " ").capitalize()
 		lbl.text = "- " + display
-		lbl.add_theme_font_size_override("font_size", 11)
+		lbl.add_theme_font_size_override("font_size", _fs(0.028, 16.0, 16.0))
 		lbl.add_theme_color_override("font_color", Color("#C0D8E8"))
 		container.add_child(lbl)
 
@@ -139,3 +151,36 @@ func _on_close() -> void:
 	hide()
 	panel.scale = Vector2(1, 1)
 	closed.emit()
+
+# ─── RESPONSIVE ────────────────────────────────────────
+func _apply_responsive_layout() -> void:
+	var vp: Vector2 = get_viewport().get_visible_rect().size
+	var w := maxf(vp.x, 320.0)
+	var h := maxf(vp.y, 240.0)
+	var min_dim := minf(w, h)
+
+	# Fluid backdrop margin (smaller on mobile)
+	back_margin.add_theme_constant_override("margin_left", clampf(min_dim * 0.05, 12.0, 120.0))
+	back_margin.add_theme_constant_override("margin_right", clampf(min_dim * 0.05, 12.0, 120.0))
+	back_margin.add_theme_constant_override("margin_top", clampf(min_dim * 0.025, 8.0, 40.0))
+	back_margin.add_theme_constant_override("margin_bottom", clampf(min_dim * 0.025, 8.0, 40.0))
+
+	# Fluid panel content margins
+	panel.add_theme_constant_override("margin_left", clampf(min_dim * 0.030, 12.0, 28.0))
+	panel.add_theme_constant_override("margin_right", clampf(min_dim * 0.030, 12.0, 28.0))
+	panel.add_theme_constant_override("margin_top", clampf(min_dim * 0.020, 8.0, 20.0))
+	panel.add_theme_constant_override("margin_bottom", clampf(min_dim * 0.020, 8.0, 20.0))
+
+	# Fluid typography
+	icon_label.add_theme_font_size_override("font_size", _fs(0.080, 24.0, 36.0))
+	title_label.add_theme_font_size_override("font_size", _fs(0.055, 18.0, 26.0))
+	tagline_label.add_theme_font_size_override("font_size", _fs(0.030, 16.0, 16.0))
+	mechanic_label.add_theme_font_size_override("font_size", _fs(0.030, 16.0, 16.0))
+	targeting_label.add_theme_font_size_override("font_size", _fs(0.030, 16.0, 16.0))
+	shooting_label.add_theme_font_size_override("font_size", _fs(0.030, 16.0, 16.0))
+	ability_label.add_theme_font_size_override("font_size", _fs(0.030, 16.0, 16.0))
+	close_btn.add_theme_font_size_override("font_size", _fs(0.030, 16.0, 16.0))
+
+	# Fluid close button size
+	var btn_h := clampf(h * 0.075, 36.0, 48.0)
+	close_btn.custom_minimum_size = Vector2(clampf(w * 0.30, 120.0, 180.0), btn_h)

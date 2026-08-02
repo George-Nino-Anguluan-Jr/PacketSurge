@@ -41,6 +41,9 @@ func _process(_delta: float) -> void:
 		if card.is_selected and is_instance_valid(card):
 			var slot = selected_row.get_child(card.current_slot_idx)
 			if slot:
+				var target_size: Vector2 = card.custom_minimum_size
+				if card.size != target_size:
+					card.size = target_size
 				card.global_position = slot.global_position
 
 # ─── READY ─────────────────────────────────────────────
@@ -120,7 +123,7 @@ func _build_left_panel() -> void:
 		child.queue_free()
 
 	var stats_row := HBoxContainer.new()
-	stats_row.add_theme_constant_override("separation", 24)
+	stats_row.add_theme_constant_override("separation", _fs(0.045, 16.0, 24.0))
 	_add_stat(stats_row, "WAVES",
 		str(level_config.get("waves", 3)), Color("#00D4FF"))
 	_add_stat(stats_row, "START RAM",
@@ -135,7 +138,7 @@ func _add_stat(
 		value: String,
 		color: Color) -> void:
 	var col := VBoxContainer.new()
-	col.add_theme_constant_override("separation", 4)
+	col.add_theme_constant_override("separation", _fs(0.008, 2.0, 4.0))
 
 	var val := Label.new()
 	val.text = value
@@ -171,7 +174,9 @@ func _build_placeholders() -> void:
 	# Selected Slot Placeholders (Exactly 5 slots)
 	for i in range(max_slots):
 		var p_slot := PanelContainer.new()
-		p_slot.custom_minimum_size = Vector2(_fs(0.18, 96.0, 130.0), _fs(0.22, 96.0, 130.0))
+		var slot_w = _fs(0.22, 110.0, 160.0)
+		var slot_h = _fs(0.27, 130.0, 180.0)
+		p_slot.custom_minimum_size = Vector2(slot_w, slot_h)
 		p_slot.name = "SelectedSlot_" + str(i)
 		
 		var style := StyleBoxFlat.new()
@@ -287,7 +292,7 @@ func _on_card_drag_started(card) -> void:
 
 func _on_card_drag_ended(card, _release_pos: Vector2) -> void:
 	var closest_slot_idx = -1
-	var min_dist = 64.0
+	var min_dist = _fs(0.12, 48.0, 80.0)
 	
 	for i in range(max_slots):
 		var placeholder = selected_row.get_child(i)
@@ -487,7 +492,7 @@ func _apply_styles() -> void:
 # Enemy.tscn set to preview_mode (no pathing, no DoT).
 func _make_enemy_preview_row(enemy_types: Array) -> Control:
 	var row := HBoxContainer.new()
-	row.add_theme_constant_override("separation", 8)
+	row.add_theme_constant_override("separation", _fs(0.015, 6.0, 10.0))
 	row.alignment = BoxContainer.ALIGNMENT_CENTER
 
 	for enemy_id in enemy_types:
@@ -500,7 +505,7 @@ func _make_enemy_preview_row(enemy_types: Array) -> Control:
 
 func _make_enemy_preview_cell(enemy_id: String, tint: Color, intro: Dictionary) -> Control:
 	var cell := VBoxContainer.new()
-	cell.add_theme_constant_override("separation", 4)
+	cell.add_theme_constant_override("separation", _fs(0.008, 2.0, 4.0))
 	var cell_size = _fs(0.19, 72.0, 96.0)
 	cell.custom_minimum_size = Vector2(cell_size, 0)
 
@@ -541,7 +546,7 @@ func _make_enemy_preview_cell(enemy_id: String, tint: Color, intro: Dictionary) 
 	var e = EnemyFactory.create_preview_enemy(enemy_id, tint)
 	if e == null:
 		return cell
-	e.position = Vector2(sub_vp.size) * 0.5 + Vector2(0, 8)
+	e.position = Vector2(sub_vp.size) * 0.5 + Vector2(0, _fs(0.015, 6.0, 10.0))
 	sub_vp.add_child(e)
 
 	cell.add_child(frame)
@@ -592,6 +597,15 @@ func _apply_responsive_layout() -> void:
 	if min_dim > 800:
 		col_count = 4
 	available_grid.columns = col_count
+
+	# Fluid selected row separation (smaller gap for cramped mobile rows)
+	var slot_sep := clampf(min_dim * 0.025, 8.0, 16.0)
+	selected_row.add_theme_constant_override("separation", slot_sep)
+
+	# Fluid available grid separation
+	var grid_sep := clampf(min_dim * 0.025, 10.0, 16.0)
+	available_grid.add_theme_constant_override("h_separation", grid_sep)
+	available_grid.add_theme_constant_override("v_separation", grid_sep)
 
 	# Fluid margins
 	left_margin.add_theme_constant_override("margin_left", inset)

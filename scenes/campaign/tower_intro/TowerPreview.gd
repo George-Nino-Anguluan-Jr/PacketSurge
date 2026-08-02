@@ -19,6 +19,14 @@ var spawn_timer: float = 0.0
 var cycle_done: bool = false
 var _initialized: bool = false
 
+# ─── HELPERS ───────────────────────────────────────────
+func _min_dim() -> float:
+	var vp := get_viewport().get_visible_rect().size
+	return minf(maxf(vp.x, 320.0), maxf(vp.y, 240.0))
+
+func _fs(ratio: float, floor_v: float, cap_v: float) -> int:
+	return int(clampf(_min_dim() * ratio, floor_v, cap_v))
+
 # (autoloads are registered in project.godot)
 
 func _ready() -> void:
@@ -38,11 +46,11 @@ func _ready() -> void:
 	_world.add_child(_enemy_layer)
 
 	_info_label = Label.new()
-	_info_label.add_theme_font_size_override("font_size", 10)
+	_info_label.add_theme_font_size_override("font_size", _fs(0.025, 16.0, 16.0))
 	_info_label.add_theme_color_override("font_color", Color("#4A7FA5"))
 	_info_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	_info_label.set_anchors_preset(Control.PRESET_BOTTOM_WIDE)
-	_info_label.offset_top = -18
+	_info_label.offset_top = -_fs(0.034, 14.0, 18.0)
 	_info_label.offset_bottom = 0
 	add_child(_info_label)
 
@@ -134,6 +142,7 @@ func _spawn_enemy(data: Dictionary) -> void:
 	var tag = " ? STRONG" if data.strong else " ? WEAK"
 	var col = Color("#00FF88") if data.strong else Color("#FF3366")
 	_info_label.text = display + tag
+	_info_label.add_theme_font_size_override("font_size", _fs(0.030, 16.0, 18.0))
 	_info_label.add_theme_color_override("font_color", col)
 
 func _process(delta: float) -> void:
