@@ -15,8 +15,6 @@ extends Control
 @onready var password_field: LineEdit   = $CenterContainer/MainLayout/FormCard/CardLayout/LoginForm/PasswordField
 @onready var login_btn: Button          = $CenterContainer/MainLayout/FormCard/CardLayout/LoginForm/LoginBtn
 @onready var forgot_btn: Button         = $CenterContainer/MainLayout/FormCard/CardLayout/LoginForm/ForgotBtn
-@onready var resend_verification_btn: Button = $CenterContainer/MainLayout/FormCard/CardLayout/LoginForm/ResendVerificationBtn
-
 # Register form fields
 @onready var first_name_field: LineEdit = $CenterContainer/MainLayout/FormCard/CardLayout/RegisterForm/NameFieldsLayout/FirstNameField
 @onready var last_name_field: LineEdit  = $CenterContainer/MainLayout/FormCard/CardLayout/RegisterForm/NameFieldsLayout/LastNameField
@@ -63,8 +61,10 @@ func _ready() -> void:
 	# Listen for Supabase responses
 	SupabaseManager.login_completed.connect(_on_login_completed)
 	SupabaseManager.register_completed.connect(_on_register_completed)
-	SupabaseManager.resend_completed.connect(_on_resend_completed)
 	SupabaseManager.reset_completed.connect(_on_reset_completed)
+	SupabaseManager.otp_verified.connect(_on_otp_verified)
+	SupabaseManager.password_set_completed.connect(_on_password_set_completed)
+	SupabaseManager.signup_verified.connect(_on_signup_verified)
 	_connect_button_sounds(self)
 
 func _connect_button_sounds(node: Node) -> void:
@@ -92,7 +92,6 @@ func _setup_buttons() -> void:
 	login_btn.pressed.connect(_on_login_pressed)
 	register_btn.pressed.connect(_on_register_pressed)
 	forgot_btn.pressed.connect(_on_forgot_pressed)
-	resend_verification_btn.pressed.connect(_on_resend_verification_pressed)
 
 	# Allow Enter key to submit
 	login_username_field.text_submitted.connect(func(_t): _on_login_pressed())
@@ -138,49 +137,82 @@ func _on_login_completed(success: bool, message: String) -> void:
 		_show_status(message, true)
 		# Don't navigate here — SupabaseManager navigates
 		# after loading cloud progress
+	elif message == "Please verify your email before logging in.":
+		var identifier = login_username_field.text.strip_edges()
+		if _is_valid_email(identifier):
+			# Unconfirmed account — let them enter the code in-game.
+			_show_confirm_dialog(identifier.to_lower())
+		else:
+			_show_status(message, false)
 	else:
 		_show_status(message, false)
 
 func _on_register_completed(success: bool, message: String) -> void:
 	_show_loading(false)
 	if success:
-		_show_status(message, true)
-		# If email confirmation is enabled, SupabaseManager won't navigate
-		# (the account still needs verification). The user logs in after
-		# confirming their email.
+		if SupabaseManager.awaiting_email_confirmation:
+			# Email confirmation is enabled — show the in-game code entry
+			# so the user confirms without touching a browser.
+			_show_confirm_dialog(email_field.text.strip_edges().to_lower())
+		else:
+			_show_status(message, true)
 	else:
 		_show_status(message, false)
-
-func _on_resend_verification_pressed() -> void:
-	var identifier = login_username_field.text.strip_edges()
-	if identifier == "" or not _is_valid_email(identifier):
-		_show_status("Enter your email address to resend the verification email.", false)
-		return
-	_show_loading(true)
-	SupabaseManager.resend_verification(identifier.to_lower())
-
-func _on_resend_completed(success: bool, message: String) -> void:
-	_show_loading(false)
-	_show_status(message, success)
 
 func _on_forgot_pressed() -> void:
 	_show_reset_dialog()
 
 func _on_reset_completed(success: bool, message: String) -> void:
 	_show_loading(false)
-	_show_status(message, success)
+	if _reset_dialog and _reset_dialog.visible:
+		if success:
+			_go_to_reset_step(1)
+		else:
+			_reset_error_label.text = message
+			_reset_error_label.add_theme_color_override("font_color", Color("#FF3366"))
+	else:
+		_show_status(message, success)
 
-# ─── FORGOT PASSWORD DIALOG ─────────────────────────────
+func _on_otp_verified(success: bool, session_token: String) -> void:
+	_show_loading(false)
+	if _reset_dialog and _reset_dialog.visible:
+		if success:
+			_reset_session_token = session_token
+			_go_to_reset_step(2)
+		else:
+			# On failure the second arg carries the error message.
+			_reset_error_label.text = session_token
+			_reset_error_label.add_theme_color_override("font_color", Color("#FF3366"))
+
+# ─── FORGOT PASSWORD DIALOG (OTP WIZARD) ────────────────
+# Step 0: email → Step 1: 6-digit code → Step 2: new password.
 var _reset_dialog: Control = null
+var _reset_step: int = 0
+var _reset_email: String = ""
+var _reset_session_token: String = ""
+var _reset_title_label: Label = null
+var _reset_desc_label: Label = null
 var _reset_email_field: LineEdit = null
+var _reset_code_field: LineEdit = null
+var _reset_password_field: LineEdit = null
+var _reset_confirm_field: LineEdit = null
 var _reset_error_label: Label = null
+var _reset_submit_btn: Button = null
+var _reset_back_btn: Button = null
 
 func _show_reset_dialog() -> void:
 	if _reset_dialog == null:
 		_build_reset_dialog()
+	_reset_step = 0
+	_reset_email = ""
+	_reset_session_token = ""
 	_reset_email_field.text = ""
+	_reset_code_field.text = ""
+	_reset_password_field.text = ""
+	_reset_confirm_field.text = ""
 	_reset_error_label.text = ""
 	_reset_dialog.visible = true
+	_apply_reset_step()
 	_reset_email_field.grab_focus()
 
 func _hide_reset_dialog() -> void:
@@ -188,9 +220,13 @@ func _hide_reset_dialog() -> void:
 		_reset_dialog.visible = false
 
 func _input(event: InputEvent) -> void:
-	if _reset_dialog and _reset_dialog.visible and event.is_action_pressed("ui_cancel"):
-		_hide_reset_dialog()
-		get_viewport().set_input_as_handled()
+	if event.is_action_pressed("ui_cancel"):
+		if _reset_dialog and _reset_dialog.visible:
+			_hide_reset_dialog()
+			get_viewport().set_input_as_handled()
+		elif _confirm_dialog and _confirm_dialog.visible:
+			_hide_confirm_dialog()
+			get_viewport().set_input_as_handled()
 
 func _build_reset_dialog() -> void:
 	# Full-screen dim + centered card
@@ -230,27 +266,49 @@ func _build_reset_dialog() -> void:
 	layout.add_theme_constant_override("separation", 12)
 	card.add_child(layout)
 
-	var title := Label.new()
-	title.text = "RESET PASSWORD"
-	title.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
-	title.add_theme_font_size_override("font_size", 18)
-	title.add_theme_color_override("font_color", Color("#00D4FF"))
-	layout.add_child(title)
+	_reset_title_label = Label.new()
+	_reset_title_label.text = "RESET PASSWORD"
+	_reset_title_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	_reset_title_label.add_theme_font_size_override("font_size", 18)
+	_reset_title_label.add_theme_color_override("font_color", Color("#00D4FF"))
+	layout.add_child(_reset_title_label)
 
-	var desc := Label.new()
-	desc.text = "Enter your email and we'll send a link to reset your password."
-	desc.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
-	desc.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
-	desc.add_theme_font_size_override("font_size", 13)
-	desc.add_theme_color_override("font_color", Color("#4A7FA5"))
-	layout.add_child(desc)
+	_reset_desc_label = Label.new()
+	_reset_desc_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	_reset_desc_label.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+	_reset_desc_label.add_theme_font_size_override("font_size", 13)
+	_reset_desc_label.add_theme_color_override("font_color", Color("#4A7FA5"))
+	layout.add_child(_reset_desc_label)
 
 	_reset_email_field = LineEdit.new()
 	_reset_email_field.placeholder_text = "Email"
 	_reset_email_field.custom_minimum_size = Vector2(0, 44)
 	_style_input_field(_reset_email_field)
-	_reset_email_field.text_submitted.connect(func(_t): _submit_reset())
+	_reset_email_field.text_submitted.connect(func(_t): _submit_reset_step())
 	layout.add_child(_reset_email_field)
+
+	_reset_code_field = LineEdit.new()
+	_reset_code_field.placeholder_text = "Verification code"
+	_reset_code_field.custom_minimum_size = Vector2(0, 44)
+	_reset_code_field.max_length = 10
+	_style_input_field(_reset_code_field)
+	_reset_code_field.text_submitted.connect(func(_t): _submit_reset_step())
+	layout.add_child(_reset_code_field)
+
+	_reset_password_field = LineEdit.new()
+	_reset_password_field.placeholder_text = "New Password"
+	_reset_password_field.secret = true
+	_reset_password_field.custom_minimum_size = Vector2(0, 44)
+	_style_input_field(_reset_password_field)
+	layout.add_child(_reset_password_field)
+
+	_reset_confirm_field = LineEdit.new()
+	_reset_confirm_field.placeholder_text = "Confirm New Password"
+	_reset_confirm_field.secret = true
+	_reset_confirm_field.custom_minimum_size = Vector2(0, 44)
+	_style_input_field(_reset_confirm_field)
+	_reset_confirm_field.text_submitted.connect(func(_t): _submit_reset_step())
+	layout.add_child(_reset_confirm_field)
 
 	_reset_error_label = Label.new()
 	_reset_error_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
@@ -262,13 +320,21 @@ func _build_reset_dialog() -> void:
 	btns.add_theme_constant_override("separation", 10)
 	layout.add_child(btns)
 
-	var send_btn := Button.new()
-	send_btn.text = "SEND RESET LINK"
-	send_btn.custom_minimum_size = Vector2(0, 46)
-	send_btn.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-	_style_accent_button(send_btn)
-	send_btn.pressed.connect(_submit_reset)
-	btns.add_child(send_btn)
+	_reset_back_btn = Button.new()
+	_reset_back_btn.text = "BACK"
+	_reset_back_btn.custom_minimum_size = Vector2(0, 46)
+	_reset_back_btn.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	_style_ghost_button(_reset_back_btn)
+	_reset_back_btn.pressed.connect(_go_back_reset_step)
+	btns.add_child(_reset_back_btn)
+
+	_reset_submit_btn = Button.new()
+	_reset_submit_btn.text = "SEND CODE"
+	_reset_submit_btn.custom_minimum_size = Vector2(0, 46)
+	_reset_submit_btn.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	_style_accent_button(_reset_submit_btn)
+	_reset_submit_btn.pressed.connect(_submit_reset_step)
+	btns.add_child(_reset_submit_btn)
 
 	var cancel_btn := Button.new()
 	cancel_btn.text = "CANCEL"
@@ -280,19 +346,223 @@ func _build_reset_dialog() -> void:
 
 	var sfx = get_node_or_null("/root/SoundManager")
 	if sfx:
-		for b in [send_btn, cancel_btn]:
+		for b in [_reset_submit_btn, _reset_back_btn, cancel_btn]:
 			b.mouse_entered.connect(sfx.play_hover)
 			b.pressed.connect(sfx.play_click)
 
-func _submit_reset() -> void:
-	var email = _reset_email_field.text.strip_edges()
-	if not _is_valid_email(email):
-		_reset_error_label.text = "Please enter a valid email address."
-		_reset_error_label.add_theme_color_override("font_color", Color("#FF3366"))
+func _go_to_reset_step(step: int) -> void:
+	_reset_step = step
+	_apply_reset_step()
+
+func _apply_reset_step() -> void:
+	_reset_email_field.visible    = _reset_step == 0
+	_reset_code_field.visible     = _reset_step == 1
+	_reset_password_field.visible = _reset_step == 2
+	_reset_confirm_field.visible  = _reset_step == 2
+	_reset_back_btn.visible       = _reset_step > 0
+	_reset_error_label.text       = ""
+	match _reset_step:
+		0:
+			_reset_title_label.text = "RESET PASSWORD"
+			_reset_desc_label.text  = "Enter your email. If it's registered, we'll send a code."
+			_reset_submit_btn.text  = "SEND CODE"
+			_reset_email_field.grab_focus()
+		1:
+			_reset_title_label.text = "ENTER CODE"
+			_reset_desc_label.text  = "Enter the code we emailed to " + _reset_email
+			_reset_submit_btn.text  = "VERIFY CODE"
+			_reset_code_field.grab_focus()
+		2:
+			_reset_title_label.text = "NEW PASSWORD"
+			_reset_desc_label.text  = "Choose a new password."
+			_reset_submit_btn.text  = "SET PASSWORD"
+			_reset_password_field.grab_focus()
+
+func _go_back_reset_step() -> void:
+	if _reset_step > 0:
+		_go_to_reset_step(_reset_step - 1)
+
+func _submit_reset_step() -> void:
+	if _reset_step == 0:
+		var email = _reset_email_field.text.strip_edges()
+		if not _is_valid_email(email):
+			_reset_error_label.text = "Please enter a valid email address."
+			_reset_error_label.add_theme_color_override("font_color", Color("#FF3366"))
+			return
+		_reset_email = email.to_lower()
+		_reset_error_label.text = ""
+		_show_loading(true)
+		SupabaseManager.reset_password(_reset_email)
+	elif _reset_step == 1:
+		var code = _reset_code_field.text.strip_edges()
+		if not code.is_valid_int() or code.length() < 6 or code.length() > 10:
+			_reset_error_label.text = "Enter the code from your email."
+			_reset_error_label.add_theme_color_override("font_color", Color("#FF3366"))
+			return
+		_reset_error_label.text = ""
+		_show_loading(true)
+		SupabaseManager.verify_reset_otp(_reset_email, code)
+	elif _reset_step == 2:
+		var password = _reset_password_field.text
+		var confirm  = _reset_confirm_field.text
+		if password.length() < 6:
+			_reset_error_label.text = "Password must be at least 6 characters."
+			_reset_error_label.add_theme_color_override("font_color", Color("#FF3366"))
+			return
+		if password != confirm:
+			_reset_error_label.text = "Passwords do not match."
+			_reset_error_label.add_theme_color_override("font_color", Color("#FF3366"))
+			return
+		_reset_error_label.text = ""
+		_show_loading(true)
+		SupabaseManager.set_new_password(_reset_session_token, password)
+
+func _on_password_set_completed(success: bool, message: String) -> void:
+	_show_loading(false)
+	if _reset_dialog and _reset_dialog.visible:
+		if success:
+			_hide_reset_dialog()
+			_show_status(message, true)
+			_show_login_tab()
+		else:
+			_reset_error_label.text = message
+			_reset_error_label.add_theme_color_override("font_color", Color("#FF3366"))
+	else:
+		_show_status(message, success)
+
+# ─── CONFIRM EMAIL DIALOG (signup code) ────────────────
+var _confirm_dialog: Control = null
+var _confirm_code_field: LineEdit = null
+var _confirm_error_label: Label = null
+var _confirm_email: String = ""
+
+func _show_confirm_dialog(email: String) -> void:
+	if _confirm_dialog == null:
+		_build_confirm_dialog()
+	_confirm_email = email
+	_confirm_code_field.text = ""
+	_confirm_error_label.text = ""
+	_confirm_dialog.visible = true
+	_confirm_code_field.grab_focus()
+
+func _hide_confirm_dialog() -> void:
+	if _confirm_dialog:
+		_confirm_dialog.visible = false
+
+func _build_confirm_dialog() -> void:
+	var dim := ColorRect.new()
+	dim.color = Color("#050D1A", 0.78)
+	dim.set_anchors_preset(Control.PRESET_FULL_RECT)
+	dim.mouse_filter = Control.MOUSE_FILTER_STOP
+	dim.visible = false
+	_confirm_dialog = dim
+	add_child(dim)
+
+	var center := CenterContainer.new()
+	center.set_anchors_preset(Control.PRESET_FULL_RECT)
+	dim.add_child(center)
+
+	var card := PanelContainer.new()
+	card.custom_minimum_size = Vector2(420, 0)
+	var card_style := StyleBoxFlat.new()
+	card_style.bg_color               = Color("#0A1628")
+	card_style.border_color           = Color("#00D4FF")
+	card_style.border_width_left      = 1
+	card_style.border_width_right     = 1
+	card_style.border_width_top       = 1
+	card_style.border_width_bottom    = 1
+	card_style.corner_radius_top_left     = 8
+	card_style.corner_radius_top_right    = 8
+	card_style.corner_radius_bottom_left  = 8
+	card_style.corner_radius_bottom_right = 8
+	card_style.content_margin_left   = 24
+	card_style.content_margin_right  = 24
+	card_style.content_margin_top    = 20
+	card_style.content_margin_bottom = 20
+	card.add_theme_stylebox_override("panel", card_style)
+	center.add_child(card)
+
+	var layout := VBoxContainer.new()
+	layout.add_theme_constant_override("separation", 12)
+	card.add_child(layout)
+
+	var title := Label.new()
+	title.text = "CONFIRM EMAIL"
+	title.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	title.add_theme_font_size_override("font_size", 18)
+	title.add_theme_color_override("font_color", Color("#00D4FF"))
+	layout.add_child(title)
+
+	var desc := Label.new()
+	desc.text = "Enter the 6-digit code we emailed you to confirm your account."
+	desc.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	desc.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+	desc.add_theme_font_size_override("font_size", 13)
+	desc.add_theme_color_override("font_color", Color("#4A7FA5"))
+	layout.add_child(desc)
+
+	_confirm_code_field = LineEdit.new()
+	_confirm_code_field.placeholder_text = "Verification code"
+	_confirm_code_field.custom_minimum_size = Vector2(0, 44)
+	_confirm_code_field.max_length = 10
+	_style_input_field(_confirm_code_field)
+	_confirm_code_field.text_submitted.connect(func(_t): _submit_confirm_code())
+	layout.add_child(_confirm_code_field)
+
+	_confirm_error_label = Label.new()
+	_confirm_error_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	_confirm_error_label.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+	_confirm_error_label.add_theme_font_size_override("font_size", 13)
+	layout.add_child(_confirm_error_label)
+
+	var btns := HBoxContainer.new()
+	btns.add_theme_constant_override("separation", 10)
+	layout.add_child(btns)
+
+	var verify_btn := Button.new()
+	verify_btn.text = "CONFIRM"
+	verify_btn.custom_minimum_size = Vector2(0, 46)
+	verify_btn.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	_style_accent_button(verify_btn)
+	verify_btn.pressed.connect(_submit_confirm_code)
+	btns.add_child(verify_btn)
+
+	var cancel_btn := Button.new()
+	cancel_btn.text = "CANCEL"
+	cancel_btn.custom_minimum_size = Vector2(0, 46)
+	cancel_btn.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	_style_ghost_button(cancel_btn)
+	cancel_btn.pressed.connect(_hide_confirm_dialog)
+	btns.add_child(cancel_btn)
+
+	var sfx = get_node_or_null("/root/SoundManager")
+	if sfx:
+		for b in [verify_btn, cancel_btn]:
+			b.mouse_entered.connect(sfx.play_hover)
+			b.pressed.connect(sfx.play_click)
+
+func _submit_confirm_code() -> void:
+	var code = _confirm_code_field.text.strip_edges()
+	if not code.is_valid_int() or code.length() < 6 or code.length() > 10:
+		_confirm_error_label.text = "Enter the code from your email."
+		_confirm_error_label.add_theme_color_override("font_color", Color("#FF3366"))
 		return
-	_hide_reset_dialog()
+	_confirm_error_label.text = ""
 	_show_loading(true)
-	SupabaseManager.reset_password(email.to_lower())
+	SupabaseManager.verify_signup(code, _confirm_email)
+
+func _on_signup_verified(success: bool, message: String) -> void:
+	_show_loading(false)
+	if _confirm_dialog and _confirm_dialog.visible:
+		if success:
+			_hide_confirm_dialog()
+			_show_status(message, true)
+			_show_login_tab()
+		else:
+			_confirm_error_label.text = message
+			_confirm_error_label.add_theme_color_override("font_color", Color("#FF3366"))
+	else:
+		_show_status(message, success)
 
 # ─── REGISTER ──────────────────────────────────────────
 func _on_register_pressed() -> void:
@@ -352,10 +622,14 @@ func _show_status(message: String, success: bool) -> void:
 
 func _show_loading(show: bool) -> void:
 	loading_overlay.visible = show
+	if show:
+		# Dialog windows are added at runtime and end up above the
+		# LoadingOverlay in draw order, so pull the overlay to the front
+		# to keep "Connecting..." visible on top of any dialog.
+		loading_overlay.move_to_front()
 	login_btn.disabled      = show
 	register_btn.disabled   = show
 	forgot_btn.disabled     = show
-	resend_verification_btn.disabled = show
 
 # ─── TITLE ANIMATION ───────────────────────────────────
 func _animate_title() -> void:
@@ -400,7 +674,6 @@ func _apply_styles() -> void:
 	_style_accent_button(login_btn)
 	_style_accent_button(register_btn)
 	_style_ghost_button(forgot_btn)
-	_style_ghost_button(resend_verification_btn)
 	_style_active_tab(login_tab, true)
 	_style_active_tab(register_tab, false)
 

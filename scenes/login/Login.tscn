@@ -95,11 +95,6 @@ layout_mode = 2
 theme_override_font_sizes/font_size = 12
 text = "Forgot password?"
 
-[node name="ResendVerificationBtn" type="Button" parent="CenterContainer/MainLayout/FormCard/CardLayout/LoginForm" unique_id=1904697884]
-layout_mode = 2
-theme_override_font_sizes/font_size = 12
-text = "Resend verification email"
-
 [node name="RegisterForm" type="VBoxContainer" parent="CenterContainer/MainLayout/FormCard/CardLayout" unique_id=13911272]
 visible = false
 layout_mode = 2

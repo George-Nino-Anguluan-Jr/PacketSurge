@@ -20,11 +20,20 @@ var is_logged_in: bool   = false
 # missing students row at login (e.g. registration was interrupted).
 var _auto_meta: Dictionary = {}
 
+# True while an unconfirmed signup is waiting for its email code. The
+# register UI uses this to switch to the in-game confirmation step.
+var awaiting_email_confirmation: bool = false
+var _pending_signup_email: String = ""
+var _pending_signup_meta: Dictionary = {}
+
 # ─── SIGNALS ───────────────────────────────────────────
 signal register_completed(success: bool, message: String)
 signal login_completed(success: bool, message: String)
 signal resend_completed(success: bool, message: String)
 signal reset_completed(success: bool, message: String)
+signal otp_verified(success: bool, session_token: String)
+signal password_set_completed(success: bool, message: String)
+signal signup_verified(success: bool, message: String)
 signal logout_completed()
 signal progress_saved(success: bool)
 signal leaderboard_loaded(data: Array)
@@ -121,6 +130,7 @@ func _on_auth_created(
 			parsed["access_token"] != null and \
 			str(parsed["access_token"]) != ""
 		if has_token:
+			awaiting_email_confirmation = false
 			access_token = parsed["access_token"]
 			student_id   = parsed["user"]["id"]
 			full_name    = p_full_name
@@ -134,11 +144,19 @@ func _on_auth_created(
 			print("[Supabase] Registered: ", username)
 		else:
 			# Email confirmation is enabled — the account exists but is
-			# not verified yet. Do NOT log in or save the profile until
-			# the user confirms their email.
+			# not verified yet. Remember the registration data so the
+			# profile can be saved once the user enters the code.
+			awaiting_email_confirmation = true
+			_pending_signup_email = p_email
+			_pending_signup_meta = {
+				"full_name":  p_full_name,
+				"username":   p_username,
+				"year_level": p_year,
+				"section":    p_section,
+			}
 			register_completed.emit(
 				true,
-				"Verification email sent! Check your inbox to confirm your account."
+				"We sent a 6-digit code to your email. Enter it in the game to confirm your account."
 			)
 			print("[Supabase] Account created, awaiting email confirmation: ", p_username)
 		return
@@ -146,6 +164,52 @@ func _on_auth_created(
 	if msg == "":
 		msg = "Registration failed."
 	register_completed.emit(false, msg)
+
+# Confirms a new account with the 6-digit code from the signup email, then
+# logs the user in and saves their profile (progress, leaderboard, etc.).
+func verify_signup(p_code: String, p_email := "") -> void:
+	var email = p_email if p_email != "" else _pending_signup_email
+	if email == "":
+		signup_verified.emit(false, "No pending signup. Please register again.")
+		return
+	var url  = SUPABASE_URL + "/auth/v1/verify"
+	var body = JSON.stringify({
+		"type":  "signup",
+		"email": email,
+		"token": p_code,
+	})
+	var http := HTTPRequest.new()
+	add_child(http)
+	http.request_completed.connect(_on_signup_verified.bind(http))
+	http.request(url, _get_headers(false), HTTPClient.METHOD_POST, body)
+
+func _on_signup_verified(
+		result: int, code: int,
+		headers: PackedStringArray, body: PackedByteArray,
+		http: HTTPRequest) -> void:
+	http.queue_free()
+	if code == 200:
+		var parsed = JSON.parse_string(body.get_string_from_utf8())
+		access_token = str(parsed.get("access_token", ""))
+		student_id   = str(parsed.get("user", {}).get("id", ""))
+		is_logged_in = true
+		awaiting_email_confirmation = false
+		full_name  = str(_pending_signup_meta.get("full_name",  full_name))
+		username   = str(_pending_signup_meta.get("username",   username))
+		year_level = str(_pending_signup_meta.get("year_level", year_level))
+		section    = str(_pending_signup_meta.get("section",    section))
+		email      = _pending_signup_email if _pending_signup_email != "" else email
+		_pending_signup_email = ""
+		_pending_signup_meta = {}
+		# Profile save triggers progress/leaderboard creation + navigation.
+		_save_student_profile()
+		signup_verified.emit(true, "Account confirmed! Welcome, " + full_name + ".")
+		print("[Supabase] Email confirmed and logged in: ", username)
+	else:
+		var specific = _extract_auth_error(body)
+		if specific == "":
+			specific = "Invalid or expired code. Please try again."
+		signup_verified.emit(false, specific)
 
 func _save_student_profile(with_email := true) -> void:
 	var url  = SUPABASE_URL + "/rest/v1/students"
@@ -277,9 +341,15 @@ func _on_resend_response(
 			specific = "Could not send verification email. Check the address and try again."
 		resend_completed.emit(false, specific)
 
-# Sends a password reset email to the given address. First verifies the
-# email belongs to a registered student, so we don't claim a reset was sent
-# for an address we have no account for.
+# ─── PASSWORD RESET (OTP) ─────────────────────────────
+# Flow:
+#   1. reset_password(email)  — verifies the email is a registered student,
+#      then requests a 6-digit OTP from GoTrue.
+#   2. verify_reset_otp(email, code) — exchanges the code for a session.
+#   3. set_new_password(session_token, new_password) — sets the password.
+
+# Step 1: check the email is truly registered, then ask GoTrue to send a
+# 6-digit one-time password to it.
 func reset_password(p_email: String) -> void:
 	var check_url = SUPABASE_URL + \
 		"/rest/v1/students?email=eq." + p_email.uri_encode() + \
@@ -294,40 +364,100 @@ func _on_reset_email_check(
 		headers: PackedStringArray, body: PackedByteArray,
 		http: HTTPRequest, p_email: String) -> void:
 	http.queue_free()
-	if code == 200:
-		var parsed = JSON.parse_string(body.get_string_from_utf8())
-		if parsed is Array and parsed.size() > 0:
-			_send_password_reset_email(p_email)
-			return
-		# Email not found in the students table. A brand-new account that
-		# hasn't confirmed and logged in yet won't have a student row, so
-		# we still attempt the reset rather than hard-failing.
-		_send_password_reset_email(p_email)
+	if code != 200:
+		reset_completed.emit(false, "Connection error. Try again.")
 		return
-	# Lookup failed (network error etc.) — don't falsely claim "no account",
-	# just attempt the reset and surface whatever the recover endpoint says.
-	_send_password_reset_email(p_email)
+	var parsed = JSON.parse_string(body.get_string_from_utf8())
+	if not (parsed is Array) or parsed.size() == 0:
+		# No student row with that email — tell the user the account
+		# doesn't exist instead of pretending we sent anything.
+		reset_completed.emit(
+			false, "No account found with that email address."
+		)
+		return
+	_request_otp(p_email)
 
-func _send_password_reset_email(p_email: String) -> void:
-	var url  = SUPABASE_URL + "/auth/v1/recover"
+func _request_otp(p_email: String) -> void:
+	var url  = SUPABASE_URL + "/auth/v1/otp"
 	var body = JSON.stringify({"email": p_email})
 	var http := HTTPRequest.new()
 	add_child(http)
-	http.request_completed.connect(_on_reset_response.bind(http))
+	http.request_completed.connect(_on_otp_requested.bind(http))
 	http.request(url, _get_headers(false), HTTPClient.METHOD_POST, body)
 
-func _on_reset_response(
+func _on_otp_requested(
 		result: int, code: int,
 		headers: PackedStringArray, body: PackedByteArray,
 		http: HTTPRequest) -> void:
 	http.queue_free()
 	if code == 200:
-		reset_completed.emit(true, "Password reset email sent! Check your inbox.")
+		reset_completed.emit(
+			true, "We sent a 6-digit code to your email. Check your inbox."
+		)
 	else:
 		var specific = _extract_auth_error(body)
 		if specific == "":
-			specific = "Could not send reset email. Check the address and try again."
+			specific = "Could not send the code. Check the address and try again."
 		reset_completed.emit(false, specific)
+
+# Step 2: exchange the 6-digit code for a session token.
+func verify_reset_otp(p_email: String, p_code: String) -> void:
+	var url  = SUPABASE_URL + "/auth/v1/verify"
+	var body = JSON.stringify({
+		"type":  "email",
+		"email": p_email,
+		"token": p_code,
+	})
+	var http := HTTPRequest.new()
+	add_child(http)
+	http.request_completed.connect(_on_otp_verified.bind(http))
+	http.request(url, _get_headers(false), HTTPClient.METHOD_POST, body)
+
+func _on_otp_verified(
+		result: int, code: int,
+		headers: PackedStringArray, body: PackedByteArray,
+		http: HTTPRequest) -> void:
+	http.queue_free()
+	if code == 200:
+		var parsed = JSON.parse_string(body.get_string_from_utf8())
+		var token := ""
+		if parsed is Dictionary:
+			token = str(parsed.get("access_token", ""))
+		otp_verified.emit(token != "", token)
+	else:
+		var specific = _extract_auth_error(body)
+		if specific == "":
+			specific = "Invalid or expired code. Please try again."
+		otp_verified.emit(false, specific)
+
+# Step 3: set the new password using the session token from step 2.
+func set_new_password(session_token: String, new_password: String) -> void:
+	var url  = SUPABASE_URL + "/auth/v1/user"
+	var body = JSON.stringify({"password": new_password})
+	var headers := PackedStringArray([
+		"apikey: " + ANON_KEY,
+		"Authorization: Bearer " + session_token,
+		"Content-Type: application/json",
+	])
+	var http := HTTPRequest.new()
+	add_child(http)
+	http.request_completed.connect(_on_password_set.bind(http))
+	http.request(url, headers, HTTPClient.METHOD_PUT, body)
+
+func _on_password_set(
+		result: int, code: int,
+		headers: PackedStringArray, body: PackedByteArray,
+		http: HTTPRequest) -> void:
+	http.queue_free()
+	if code == 200:
+		password_set_completed.emit(
+			true, "Password updated! Log in with your new password."
+		)
+	else:
+		var specific = _extract_auth_error(body)
+		if specific == "":
+			specific = "Could not update the password. Please try again."
+		password_set_completed.emit(false, specific)
 
 # Pulls a friendly message out of a Supabase GoTrue error body so the UI
 # shows the real reason (rate limit, etc.) instead of a generic fallback.
@@ -417,6 +547,9 @@ func logout() -> void:
 	access_token = ""
 	is_logged_in = false
 	_auto_meta   = {}
+	awaiting_email_confirmation = false
+	_pending_signup_email = ""
+	_pending_signup_meta = {}
 	ProgressManager.reset_all_progress()
 	logout_completed.emit()
 	GameManager.go_to("login")
