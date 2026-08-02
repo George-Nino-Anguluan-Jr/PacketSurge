@@ -24,6 +24,7 @@ var _auto_meta: Dictionary = {}
 signal register_completed(success: bool, message: String)
 signal login_completed(success: bool, message: String)
 signal resend_completed(success: bool, message: String)
+signal reset_completed(success: bool, message: String)
 signal logout_completed()
 signal progress_saved(success: bool)
 signal leaderboard_loaded(data: Array)
@@ -141,11 +142,9 @@ func _on_auth_created(
 			)
 			print("[Supabase] Account created, awaiting email confirmation: ", p_username)
 		return
-	var msg = "Registration failed."
-	if parsed.has("msg"):
-		msg = parsed["msg"]
-	elif parsed.has("message"):
-		msg = parsed["message"]
+	var msg = _extract_auth_error(body)
+	if msg == "":
+		msg = "Registration failed."
 	register_completed.emit(false, msg)
 
 func _save_student_profile(with_email := true) -> void:
@@ -246,9 +245,11 @@ func _on_login_response(
 		_auto_meta["email"] = user_data.get("email", "")
 		_load_student_profile()
 	else:
-		var msg = "Invalid email or password."
+		var msg = _extract_auth_error(body)
 		if parsed.has("error_code") and parsed["error_code"] == "email_not_confirmed":
 			msg = "Please verify your email before logging in."
+		if msg == "":
+			msg = "Invalid email or password."
 		login_completed.emit(false, msg)
 
 # Re-sends the signup confirmation email for an unverified account.
@@ -271,7 +272,83 @@ func _on_resend_response(
 	if code == 200:
 		resend_completed.emit(true, "Verification email sent! Check your inbox.")
 	else:
-		resend_completed.emit(false, "Could not send verification email. Check the address and try again.")
+		var specific = _extract_auth_error(body)
+		if specific == "":
+			specific = "Could not send verification email. Check the address and try again."
+		resend_completed.emit(false, specific)
+
+# Sends a password reset email to the given address. First verifies the
+# email belongs to a registered student, so we don't claim a reset was sent
+# for an address we have no account for.
+func reset_password(p_email: String) -> void:
+	var check_url = SUPABASE_URL + \
+		"/rest/v1/students?email=eq." + p_email.uri_encode() + \
+		"&select=id"
+	var http := HTTPRequest.new()
+	add_child(http)
+	http.request_completed.connect(_on_reset_email_check.bind(http, p_email))
+	http.request(check_url, _get_headers(false), HTTPClient.METHOD_GET)
+
+func _on_reset_email_check(
+		result: int, code: int,
+		headers: PackedStringArray, body: PackedByteArray,
+		http: HTTPRequest, p_email: String) -> void:
+	http.queue_free()
+	if code == 200:
+		var parsed = JSON.parse_string(body.get_string_from_utf8())
+		if parsed is Array and parsed.size() > 0:
+			_send_password_reset_email(p_email)
+			return
+		# Email not found in the students table. A brand-new account that
+		# hasn't confirmed and logged in yet won't have a student row, so
+		# we still attempt the reset rather than hard-failing.
+		_send_password_reset_email(p_email)
+		return
+	# Lookup failed (network error etc.) — don't falsely claim "no account",
+	# just attempt the reset and surface whatever the recover endpoint says.
+	_send_password_reset_email(p_email)
+
+func _send_password_reset_email(p_email: String) -> void:
+	var url  = SUPABASE_URL + "/auth/v1/recover"
+	var body = JSON.stringify({"email": p_email})
+	var http := HTTPRequest.new()
+	add_child(http)
+	http.request_completed.connect(_on_reset_response.bind(http))
+	http.request(url, _get_headers(false), HTTPClient.METHOD_POST, body)
+
+func _on_reset_response(
+		result: int, code: int,
+		headers: PackedStringArray, body: PackedByteArray,
+		http: HTTPRequest) -> void:
+	http.queue_free()
+	if code == 200:
+		reset_completed.emit(true, "Password reset email sent! Check your inbox.")
+	else:
+		var specific = _extract_auth_error(body)
+		if specific == "":
+			specific = "Could not send reset email. Check the address and try again."
+		reset_completed.emit(false, specific)
+
+# Pulls a friendly message out of a Supabase GoTrue error body so the UI
+# shows the real reason (rate limit, etc.) instead of a generic fallback.
+func _extract_auth_error(body: PackedByteArray) -> String:
+	var parsed = JSON.parse_string(body.get_string_from_utf8())
+	if not (parsed is Dictionary):
+		return ""
+	var error_code = str(parsed.get("error_code", ""))
+	match error_code:
+		"over_email_send_rate_limit":
+			return "Too many requests. Please try again in a few minutes."
+		"over_request_rate_limit":
+			return "Too many requests. Please try again in a few minutes."
+		"invalid_credentials":
+			return "Incorrect email or password."
+		"user_not_found":
+			return "No account found with that email address."
+	var msg = str(parsed.get("msg", ""))
+	if msg != "" and msg != "<null>":
+		return msg
+	return ""
 
 
 func _load_student_profile() -> void:

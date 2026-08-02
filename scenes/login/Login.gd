@@ -14,7 +14,7 @@ extends Control
 @onready var login_username_field: LineEdit = $CenterContainer/MainLayout/FormCard/CardLayout/LoginForm/LoginUsernameField
 @onready var password_field: LineEdit   = $CenterContainer/MainLayout/FormCard/CardLayout/LoginForm/PasswordField
 @onready var login_btn: Button          = $CenterContainer/MainLayout/FormCard/CardLayout/LoginForm/LoginBtn
-@onready var forgot_label: Label        = $CenterContainer/MainLayout/FormCard/CardLayout/LoginForm/ForgotLabel
+@onready var forgot_btn: Button         = $CenterContainer/MainLayout/FormCard/CardLayout/LoginForm/ForgotBtn
 @onready var resend_verification_btn: Button = $CenterContainer/MainLayout/FormCard/CardLayout/LoginForm/ResendVerificationBtn
 
 # Register form fields
@@ -64,6 +64,7 @@ func _ready() -> void:
 	SupabaseManager.login_completed.connect(_on_login_completed)
 	SupabaseManager.register_completed.connect(_on_register_completed)
 	SupabaseManager.resend_completed.connect(_on_resend_completed)
+	SupabaseManager.reset_completed.connect(_on_reset_completed)
 	_connect_button_sounds(self)
 
 func _connect_button_sounds(node: Node) -> void:
@@ -90,6 +91,7 @@ func _setup_buttons() -> void:
 	register_tab.pressed.connect(_show_register_tab)
 	login_btn.pressed.connect(_on_login_pressed)
 	register_btn.pressed.connect(_on_register_pressed)
+	forgot_btn.pressed.connect(_on_forgot_pressed)
 	resend_verification_btn.pressed.connect(_on_resend_verification_pressed)
 
 	# Allow Enter key to submit
@@ -161,6 +163,137 @@ func _on_resend_completed(success: bool, message: String) -> void:
 	_show_loading(false)
 	_show_status(message, success)
 
+func _on_forgot_pressed() -> void:
+	_show_reset_dialog()
+
+func _on_reset_completed(success: bool, message: String) -> void:
+	_show_loading(false)
+	_show_status(message, success)
+
+# ─── FORGOT PASSWORD DIALOG ─────────────────────────────
+var _reset_dialog: Control = null
+var _reset_email_field: LineEdit = null
+var _reset_error_label: Label = null
+
+func _show_reset_dialog() -> void:
+	if _reset_dialog == null:
+		_build_reset_dialog()
+	_reset_email_field.text = ""
+	_reset_error_label.text = ""
+	_reset_dialog.visible = true
+	_reset_email_field.grab_focus()
+
+func _hide_reset_dialog() -> void:
+	if _reset_dialog:
+		_reset_dialog.visible = false
+
+func _input(event: InputEvent) -> void:
+	if _reset_dialog and _reset_dialog.visible and event.is_action_pressed("ui_cancel"):
+		_hide_reset_dialog()
+		get_viewport().set_input_as_handled()
+
+func _build_reset_dialog() -> void:
+	# Full-screen dim + centered card
+	var dim := ColorRect.new()
+	dim.color = Color("#050D1A", 0.78)
+	dim.set_anchors_preset(Control.PRESET_FULL_RECT)
+	dim.mouse_filter = Control.MOUSE_FILTER_STOP
+	dim.visible = false
+	_reset_dialog = dim
+	add_child(dim)
+
+	var center := CenterContainer.new()
+	center.set_anchors_preset(Control.PRESET_FULL_RECT)
+	dim.add_child(center)
+
+	var card := PanelContainer.new()
+	card.custom_minimum_size = Vector2(420, 0)
+	var card_style := StyleBoxFlat.new()
+	card_style.bg_color               = Color("#0A1628")
+	card_style.border_color           = Color("#00D4FF")
+	card_style.border_width_left      = 1
+	card_style.border_width_right     = 1
+	card_style.border_width_top       = 1
+	card_style.border_width_bottom    = 1
+	card_style.corner_radius_top_left     = 8
+	card_style.corner_radius_top_right    = 8
+	card_style.corner_radius_bottom_left  = 8
+	card_style.corner_radius_bottom_right = 8
+	card_style.content_margin_left   = 24
+	card_style.content_margin_right  = 24
+	card_style.content_margin_top    = 20
+	card_style.content_margin_bottom = 20
+	card.add_theme_stylebox_override("panel", card_style)
+	center.add_child(card)
+
+	var layout := VBoxContainer.new()
+	layout.add_theme_constant_override("separation", 12)
+	card.add_child(layout)
+
+	var title := Label.new()
+	title.text = "RESET PASSWORD"
+	title.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	title.add_theme_font_size_override("font_size", 18)
+	title.add_theme_color_override("font_color", Color("#00D4FF"))
+	layout.add_child(title)
+
+	var desc := Label.new()
+	desc.text = "Enter your email and we'll send a link to reset your password."
+	desc.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	desc.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+	desc.add_theme_font_size_override("font_size", 13)
+	desc.add_theme_color_override("font_color", Color("#4A7FA5"))
+	layout.add_child(desc)
+
+	_reset_email_field = LineEdit.new()
+	_reset_email_field.placeholder_text = "Email"
+	_reset_email_field.custom_minimum_size = Vector2(0, 44)
+	_style_input_field(_reset_email_field)
+	_reset_email_field.text_submitted.connect(func(_t): _submit_reset())
+	layout.add_child(_reset_email_field)
+
+	_reset_error_label = Label.new()
+	_reset_error_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	_reset_error_label.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+	_reset_error_label.add_theme_font_size_override("font_size", 13)
+	layout.add_child(_reset_error_label)
+
+	var btns := HBoxContainer.new()
+	btns.add_theme_constant_override("separation", 10)
+	layout.add_child(btns)
+
+	var send_btn := Button.new()
+	send_btn.text = "SEND RESET LINK"
+	send_btn.custom_minimum_size = Vector2(0, 46)
+	send_btn.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	_style_accent_button(send_btn)
+	send_btn.pressed.connect(_submit_reset)
+	btns.add_child(send_btn)
+
+	var cancel_btn := Button.new()
+	cancel_btn.text = "CANCEL"
+	cancel_btn.custom_minimum_size = Vector2(0, 46)
+	cancel_btn.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	_style_ghost_button(cancel_btn)
+	cancel_btn.pressed.connect(_hide_reset_dialog)
+	btns.add_child(cancel_btn)
+
+	var sfx = get_node_or_null("/root/SoundManager")
+	if sfx:
+		for b in [send_btn, cancel_btn]:
+			b.mouse_entered.connect(sfx.play_hover)
+			b.pressed.connect(sfx.play_click)
+
+func _submit_reset() -> void:
+	var email = _reset_email_field.text.strip_edges()
+	if not _is_valid_email(email):
+		_reset_error_label.text = "Please enter a valid email address."
+		_reset_error_label.add_theme_color_override("font_color", Color("#FF3366"))
+		return
+	_hide_reset_dialog()
+	_show_loading(true)
+	SupabaseManager.reset_password(email.to_lower())
+
 # ─── REGISTER ──────────────────────────────────────────
 func _on_register_pressed() -> void:
 	var first_name = first_name_field.text.strip_edges()
@@ -221,6 +354,8 @@ func _show_loading(show: bool) -> void:
 	loading_overlay.visible = show
 	login_btn.disabled      = show
 	register_btn.disabled   = show
+	forgot_btn.disabled     = show
+	resend_verification_btn.disabled = show
 
 # ─── TITLE ANIMATION ───────────────────────────────────
 func _animate_title() -> void:
@@ -264,6 +399,7 @@ func _apply_styles() -> void:
 	# Style buttons
 	_style_accent_button(login_btn)
 	_style_accent_button(register_btn)
+	_style_ghost_button(forgot_btn)
 	_style_ghost_button(resend_verification_btn)
 	_style_active_tab(login_tab, true)
 	_style_active_tab(register_tab, false)
