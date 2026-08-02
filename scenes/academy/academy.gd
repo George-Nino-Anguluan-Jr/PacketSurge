@@ -971,22 +971,29 @@ func _apply_responsive_layout() -> void:
 	hint_button.custom_minimum_size   = Vector2(clampf(w * 0.18, 90.0, 110.0), btn_h)
 	menu_btn.custom_minimum_size = Vector2(_fs(0.075, 44.0, 48.0), _fs(0.075, 44.0, 48.0))
 
-	# Fluid sidebar width and visibility
-	sidebar.custom_minimum_size = Vector2(clampf(min_dim * 0.32, 180.0, 260.0), 0)
+	# Fixed sidebar width
+	sidebar.custom_minimum_size = Vector2(220, 0)
 
 	# Auto-hide sidebar on small screens, show menu button
 	if min_dim < 600:
 		menu_btn.visible = true
-		sidebar.visible  = _sidebar_visible
+		if _sidebar_visible:
+			sidebar.show()
+		else:
+			sidebar.hide()
 	else:
 		menu_btn.visible = false
-		sidebar.visible  = true
+		sidebar.show()
 		_sidebar_visible = true
 
 func _toggle_sidebar() -> void:
 	_sidebar_visible = !_sidebar_visible
-	$ContentArea/Sidebar.visible = _sidebar_visible
+	if _sidebar_visible:
+		$ContentArea/Sidebar.show()
+	else:
+		$ContentArea/Sidebar.hide()
 	menu_btn.text = "✕" if _sidebar_visible else "☰"
+	_apply_responsive_layout()
 
 # ─── ESC KEY ───────────────────────────────────────────
 func _input(event: InputEvent) -> void:
