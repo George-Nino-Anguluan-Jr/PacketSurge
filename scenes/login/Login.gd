@@ -2,30 +2,31 @@
 extends Control
 
 # ─── NODE REFERENCES ───────────────────────────────────
-@onready var title_label: Label         = $CenterContainer/MainLayout/TitleSection/TitleLabel
-@onready var login_tab: Button          = $CenterContainer/MainLayout/FormCard/CardLayout/TabBar/LoginTab
-@onready var register_tab: Button       = $CenterContainer/MainLayout/FormCard/CardLayout/TabBar/RegisterTab
-@onready var login_form: VBoxContainer  = $CenterContainer/MainLayout/FormCard/CardLayout/LoginForm
-@onready var register_form: VBoxContainer = $CenterContainer/MainLayout/FormCard/CardLayout/RegisterForm
-@onready var status_label: Label        = $CenterContainer/MainLayout/StatusLabel
+@onready var scroll_container: ScrollContainer = $ScrollContainer
+@onready var title_label: Label         = $ScrollContainer/CenterContainer/MainLayout/TitleSection/TitleLabel
+@onready var login_tab: Button          = $ScrollContainer/CenterContainer/MainLayout/FormCard/CardLayout/TabBar/LoginTab
+@onready var register_tab: Button       = $ScrollContainer/CenterContainer/MainLayout/FormCard/CardLayout/TabBar/RegisterTab
+@onready var login_form: VBoxContainer  = $ScrollContainer/CenterContainer/MainLayout/FormCard/CardLayout/LoginForm
+@onready var register_form: VBoxContainer = $ScrollContainer/CenterContainer/MainLayout/FormCard/CardLayout/RegisterForm
+@onready var status_label: Label        = $ScrollContainer/CenterContainer/MainLayout/StatusLabel
 @onready var loading_overlay: ColorRect = $LoadingOverlay
 @onready var loading_label: Label       = $LoadingOverlay/LoadingLabel
 
 # Login form fields
-@onready var login_username_field: LineEdit = $CenterContainer/MainLayout/FormCard/CardLayout/LoginForm/LoginUsernameField
-@onready var password_field: LineEdit   = $CenterContainer/MainLayout/FormCard/CardLayout/LoginForm/PasswordField
-@onready var login_btn: Button          = $CenterContainer/MainLayout/FormCard/CardLayout/LoginForm/LoginBtn
-@onready var forgot_btn: Button         = $CenterContainer/MainLayout/FormCard/CardLayout/LoginForm/ForgotBtn
+@onready var login_username_field: LineEdit = $ScrollContainer/CenterContainer/MainLayout/FormCard/CardLayout/LoginForm/LoginUsernameField
+@onready var password_field: LineEdit   = $ScrollContainer/CenterContainer/MainLayout/FormCard/CardLayout/LoginForm/PasswordField
+@onready var login_btn: Button          = $ScrollContainer/CenterContainer/MainLayout/FormCard/CardLayout/LoginForm/LoginBtn
+@onready var forgot_btn: Button         = $ScrollContainer/CenterContainer/MainLayout/FormCard/CardLayout/LoginForm/ForgotBtn
 # Register form fields
-@onready var first_name_field: LineEdit = $CenterContainer/MainLayout/FormCard/CardLayout/RegisterForm/NameFieldsLayout/FirstNameField
-@onready var last_name_field: LineEdit  = $CenterContainer/MainLayout/FormCard/CardLayout/RegisterForm/NameFieldsLayout/LastNameField
-@onready var username_field: LineEdit   = $CenterContainer/MainLayout/FormCard/CardLayout/RegisterForm/UsernameField
-@onready var email_field: LineEdit      = $CenterContainer/MainLayout/FormCard/CardLayout/RegisterForm/EmailField
-@onready var reg_password_field: LineEdit = $CenterContainer/MainLayout/FormCard/CardLayout/RegisterForm/RegPasswordField
-@onready var confirm_field: LineEdit    = $CenterContainer/MainLayout/FormCard/CardLayout/RegisterForm/ConfirmField
-@onready var year_field: LineEdit       = $CenterContainer/MainLayout/FormCard/CardLayout/RegisterForm/ClassFieldsLayout/YearField
-@onready var section_option: OptionButton = $CenterContainer/MainLayout/FormCard/CardLayout/RegisterForm/ClassFieldsLayout/SectionOptionButton
-@onready var register_btn: Button       = $CenterContainer/MainLayout/FormCard/CardLayout/RegisterForm/RegisterBtn
+@onready var first_name_field: LineEdit = $ScrollContainer/CenterContainer/MainLayout/FormCard/CardLayout/RegisterForm/NameFieldsLayout/FirstNameField
+@onready var last_name_field: LineEdit  = $ScrollContainer/CenterContainer/MainLayout/FormCard/CardLayout/RegisterForm/NameFieldsLayout/LastNameField
+@onready var username_field: LineEdit   = $ScrollContainer/CenterContainer/MainLayout/FormCard/CardLayout/RegisterForm/UsernameField
+@onready var email_field: LineEdit      = $ScrollContainer/CenterContainer/MainLayout/FormCard/CardLayout/RegisterForm/EmailField
+@onready var reg_password_field: LineEdit = $ScrollContainer/CenterContainer/MainLayout/FormCard/CardLayout/RegisterForm/RegPasswordField
+@onready var confirm_field: LineEdit    = $ScrollContainer/CenterContainer/MainLayout/FormCard/CardLayout/RegisterForm/ConfirmField
+@onready var year_field: LineEdit       = $ScrollContainer/CenterContainer/MainLayout/FormCard/CardLayout/RegisterForm/ClassFieldsLayout/YearField
+@onready var section_option: OptionButton = $ScrollContainer/CenterContainer/MainLayout/FormCard/CardLayout/RegisterForm/ClassFieldsLayout/SectionOptionButton
+@onready var register_btn: Button       = $ScrollContainer/CenterContainer/MainLayout/FormCard/CardLayout/RegisterForm/RegisterBtn
 
 # ─── STATE ─────────────────────────────────────────────
 var _time: float = 0.0
@@ -58,6 +59,7 @@ func _ready() -> void:
 	_animate_title()
 	_apply_responsive_layout()
 	get_tree().root.size_changed.connect(_apply_responsive_layout)
+	ScreenManager.make_scroll_touch_friendly(scroll_container)
 
 	# Listen for Supabase responses
 	SupabaseManager.login_completed.connect(_on_login_completed)
@@ -667,7 +669,7 @@ func _apply_styles() -> void:
 	card_style.corner_radius_top_right    = 8
 	card_style.corner_radius_bottom_left  = 8
 	card_style.corner_radius_bottom_right = 8
-	$CenterContainer/MainLayout/FormCard.add_theme_stylebox_override(
+	$ScrollContainer/CenterContainer/MainLayout/FormCard.add_theme_stylebox_override(
 		"panel", card_style
 	)
 
@@ -816,29 +818,37 @@ func _style_active_tab(btn: Button, active: bool) -> void:
 
 # ─── RESPONSIVE ────────────────────────────────────────
 func _apply_responsive_layout() -> void:
-	var card = $CenterContainer/MainLayout/FormCard
-	var main_layout = $CenterContainer/MainLayout
-	var login_form = $CenterContainer/MainLayout/FormCard/CardLayout/LoginForm
-	var register_form = $CenterContainer/MainLayout/FormCard/CardLayout/RegisterForm
-	
-	if ScreenManager.is_mobile():
-		card.custom_minimum_size = Vector2(380, 0)
-		title_label.add_theme_font_size_override("font_size", 34)
-		main_layout.add_theme_constant_override("separation", 18)
-		login_form.add_theme_constant_override("separation", 12)
-		register_form.add_theme_constant_override("separation", 10)
-		status_label.add_theme_font_size_override("font_size", 13)
-	elif ScreenManager.is_tablet():
-		card.custom_minimum_size = Vector2(460, 0)
-		title_label.add_theme_font_size_override("font_size", 42)
-		main_layout.add_theme_constant_override("separation", 22)
-		login_form.add_theme_constant_override("separation", 14)
-		register_form.add_theme_constant_override("separation", 12)
-		status_label.add_theme_font_size_override("font_size", 14)
-	else:
-		card.custom_minimum_size = Vector2(520, 0)
-		title_label.add_theme_font_size_override("font_size", 56)
-		main_layout.add_theme_constant_override("separation", 26)
-		login_form.add_theme_constant_override("separation", 14)
-		register_form.add_theme_constant_override("separation", 12)
-		status_label.add_theme_font_size_override("font_size", 15)
+	var card = $ScrollContainer/CenterContainer/MainLayout/FormCard
+	var main_layout = $ScrollContainer/CenterContainer/MainLayout
+	var login_form = $ScrollContainer/CenterContainer/MainLayout/FormCard/CardLayout/LoginForm
+	var register_form = $ScrollContainer/CenterContainer/MainLayout/FormCard/CardLayout/RegisterForm
+
+	# Canvas size in design coordinates (works under stretch mode + expand).
+	var vp: Vector2 = get_viewport().get_visible_rect().size
+	var w := maxf(vp.x, 320.0)
+	var h := maxf(vp.y, 240.0)
+	var min_dim := minf(w, h)
+
+	# Fluid card width — grows with the screen but never overflows it.
+	# The ScrollContainer handles vertical overflow, so nothing gets cut off.
+	var card_w := clampf(w * 0.42, 360.0, 560.0)
+	card_w = minf(card_w, w - 40.0)
+	card.custom_minimum_size = Vector2(maxf(card_w, 280.0), 0)
+	title_label.add_theme_font_size_override("font_size", int(clampf(min_dim * 0.050, 32.0, 56.0)))
+	main_layout.add_theme_constant_override("separation", clampf(min_dim * 0.024, 16.0, 26.0))
+	login_form.add_theme_constant_override("separation", clampf(min_dim * 0.013, 10.0, 14.0))
+	register_form.add_theme_constant_override("separation", clampf(min_dim * 0.011, 8.0, 12.0))
+	status_label.add_theme_font_size_override("font_size", int(clampf(min_dim * 0.014, 13.0, 15.0)))
+
+	# Fluid input heights so fields stay tappable on touch devices
+	var field_h := clampf(h * 0.068, 40.0, 48.0)
+	var btn_h := clampf(h * 0.075, 44.0, 52.0)
+	for field in [
+		login_username_field, password_field,
+		first_name_field, last_name_field,
+		username_field, email_field, reg_password_field,
+		confirm_field, year_field
+	]:
+		field.custom_minimum_size.y = field_h
+	login_btn.custom_minimum_size.y = btn_h
+	register_btn.custom_minimum_size.y = btn_h
