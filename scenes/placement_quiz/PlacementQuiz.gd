@@ -83,7 +83,14 @@ const QUESTIONS = [
 var current_question: int = 0
 var correct_count: int    = 0
 var answered: bool        = false
-var _last_device: String = ""
+
+# ─── HELPERS ───────────────────────────────────────────
+func _min_dim() -> float:
+	var vp := get_viewport().get_visible_rect().size
+	return minf(maxf(vp.x, 320.0), maxf(vp.y, 240.0))
+
+func _fs(ratio: float, floor_v: float, cap_v: float) -> int:
+	return int(clampf(_min_dim() * ratio, floor_v, cap_v))
 
 # ─── READY ─────────────────────────────────────────────
 func _ready() -> void:
@@ -109,14 +116,14 @@ func _build_intro() -> void:
 	var icon := Label.new()
 	icon.text = "🧠"
 	icon.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
-	icon.add_theme_font_size_override("font_size", 56)
+	icon.add_theme_font_size_override("font_size", _fs(0.125, 36.0, 56.0))
 	content.add_child(icon)
 
 	# Title
 	var title := Label.new()
 	title.text = "Python Knowledge Check"
 	title.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
-	title.add_theme_font_size_override("font_size", 26)
+	title.add_theme_font_size_override("font_size", _fs(0.058, 20.0, 28.0))
 	title.add_theme_color_override("font_color", Color("#E8F4FD"))
 	content.add_child(title)
 
@@ -128,25 +135,26 @@ func _build_intro() -> void:
 		"This takes about 2 minutes."
 	desc.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	desc.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
-	desc.add_theme_font_size_override("font_size", 14)
+	desc.add_theme_font_size_override("font_size", _fs(0.032, 16.0, 18.0))
 	desc.add_theme_color_override("font_color", Color("#4A7FA5"))
 	content.add_child(desc)
 
 	# Buttons
 	var btn_row := HBoxContainer.new()
 	btn_row.alignment = BoxContainer.ALIGNMENT_CENTER
-	btn_row.add_theme_constant_override("separation", 16)
+	btn_row.add_theme_constant_override("separation", _fs(0.025, 12.0, 16.0))
 
+	var btn_h := _fs(0.075, 44.0, 52.0)
 	var start_btn := Button.new()
 	start_btn.text = "▶ START QUIZ"
-	start_btn.custom_minimum_size = Vector2(180, 52)
+	start_btn.custom_minimum_size = Vector2(_fs(0.42, 160.0, 200.0), btn_h)
 	_style_primary_btn(start_btn)
 	start_btn.pressed.connect(_start_quiz)
 	btn_row.add_child(start_btn)
 
 	var skip_btn := Button.new()
 	skip_btn.text = "Skip — Start from Beginning"
-	skip_btn.custom_minimum_size = Vector2(220, 52)
+	skip_btn.custom_minimum_size = Vector2(_fs(0.55, 200.0, 260.0), btn_h)
 	_style_secondary_btn(skip_btn)
 	skip_btn.pressed.connect(_skip_quiz)
 	btn_row.add_child(skip_btn)
@@ -179,7 +187,7 @@ func _show_question() -> void:
 	for i in range(q["options"].size()):
 		var btn := Button.new()
 		btn.text = letters[i] + ")   " + q["options"][i]
-		btn.custom_minimum_size  = Vector2(0, 52)
+		btn.custom_minimum_size  = Vector2(0, _fs(0.10, 44.0, 60.0))
 		btn.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 		btn.autowrap_mode        = TextServer.AUTOWRAP_WORD_SMART
 		_style_option_btn(btn, "default")
@@ -236,7 +244,7 @@ func _show_result() -> void:
 	var score_pct = float(correct_count) / float(QUESTIONS.size()) * 100.0
 	var passed    = score_pct >= 80.0
 
-	result_icon.add_theme_font_size_override("font_size", 64)
+	result_icon.add_theme_font_size_override("font_size", _fs(0.150, 36.0, 64.0))
 
 	if passed:
 		result_icon.text  = "🎉"
@@ -319,19 +327,19 @@ func _apply_styles() -> void:
 	top_style.border_width_bottom = 1
 	$TopBar.add_theme_stylebox_override("panel", top_style)
 
-	title_label.add_theme_font_size_override("font_size", 16)
+	title_label.add_theme_font_size_override("font_size", _fs(0.040, 16.0, 20.0))
 	title_label.add_theme_color_override("font_color", Color("#00D4FF"))
 
-	progress_label.add_theme_font_size_override("font_size", 13)
+	progress_label.add_theme_font_size_override("font_size", _fs(0.030, 16.0, 16.0))
 	progress_label.add_theme_color_override("font_color", Color("#4A7FA5"))
 
-	question_label.add_theme_font_size_override("font_size", 18)
+	question_label.add_theme_font_size_override("font_size", _fs(0.042, 16.0, 20.0))
 	question_label.add_theme_color_override("font_color", Color("#E8F4FD"))
 
-	feedback_label.add_theme_font_size_override("font_size", 13)
+	feedback_label.add_theme_font_size_override("font_size", _fs(0.030, 16.0, 16.0))
 
-	result_title.add_theme_font_size_override("font_size", 22)
-	result_desc.add_theme_font_size_override("font_size", 14)
+	result_title.add_theme_font_size_override("font_size", _fs(0.052, 18.0, 24.0))
+	result_desc.add_theme_font_size_override("font_size", _fs(0.032, 16.0, 18.0))
 	result_desc.add_theme_color_override("font_color", Color("#4A7FA5"))
 
 	_style_primary_btn(continue_btn)
@@ -360,10 +368,10 @@ func _style_option_btn(btn: Button, state: String) -> void:
 	style.border_width_right         = 2
 	style.border_width_top           = 2
 	style.border_width_bottom        = 2
-	style.content_margin_left        = 16
-	style.content_margin_right       = 16
-	style.content_margin_top         = 12
-	style.content_margin_bottom      = 12
+	style.content_margin_left        = _fs(0.030, 12.0, 16.0)
+	style.content_margin_right       = _fs(0.030, 12.0, 16.0)
+	style.content_margin_top         = _fs(0.025, 8.0, 12.0)
+	style.content_margin_bottom      = _fs(0.025, 8.0, 12.0)
 
 	match state:
 		"correct":
@@ -382,7 +390,7 @@ func _style_option_btn(btn: Button, state: String) -> void:
 	btn.add_theme_stylebox_override("normal",   style)
 	btn.add_theme_stylebox_override("hover",    style)
 	btn.add_theme_stylebox_override("pressed",  style)
-	btn.add_theme_font_size_override("font_size", 13)
+	btn.add_theme_font_size_override("font_size", _fs(0.030, 16.0, 18.0))
 
 func _style_primary_btn(btn: Button) -> void:
 	var style := StyleBoxFlat.new()
@@ -393,7 +401,7 @@ func _style_primary_btn(btn: Button) -> void:
 	style.corner_radius_bottom_right = 6
 	btn.add_theme_stylebox_override("normal", style)
 	btn.add_theme_color_override("font_color", Color("#050D1A"))
-	btn.add_theme_font_size_override("font_size", 14)
+	btn.add_theme_font_size_override("font_size", _fs(0.032, 16.0, 18.0))
 
 func _style_secondary_btn(btn: Button) -> void:
 	var style := StyleBoxFlat.new()
@@ -409,53 +417,45 @@ func _style_secondary_btn(btn: Button) -> void:
 	style.corner_radius_bottom_right = 6
 	btn.add_theme_stylebox_override("normal", style)
 	btn.add_theme_color_override("font_color", Color("#4A7FA5"))
-	btn.add_theme_font_size_override("font_size", 14)
+	btn.add_theme_font_size_override("font_size", _fs(0.032, 16.0, 18.0))
 
 # ─── RESPONSIVE ────────────────────────────────────────
 func _apply_responsive_layout() -> void:
-	var content_area = $ContentArea
+	var vp: Vector2 = get_viewport().get_visible_rect().size
+	var w := maxf(vp.x, 320.0)
+	var h := maxf(vp.y, 240.0)
+	var min_dim := minf(w, h)
+	var inset := clampf(min_dim * 0.025, 16.0, 32.0)
+
 	var top_bar = $TopBar
-	
-	if ScreenManager.is_mobile():
-		ScreenManager.apply_panel_padding(top_bar, 20)
-		content_area.add_theme_constant_override("margin_left", 20)
-		content_area.add_theme_constant_override("margin_right", 20)
-		content_area.add_theme_constant_override("margin_top", 20)
-		content_area.add_theme_constant_override("margin_bottom", 20)
-		title_label.add_theme_font_size_override("font_size", 14)
-		progress_label.add_theme_font_size_override("font_size", 12)
-		question_label.add_theme_font_size_override("font_size", 15)
-		result_title.add_theme_font_size_override("font_size", 18)
-		result_desc.add_theme_font_size_override("font_size", 13)
-		continue_btn.custom_minimum_size = Vector2(180, 48)
-		intro_panel.add_theme_constant_override("margin_left", 12)
-		intro_panel.add_theme_constant_override("margin_right", 12)
-		intro_panel.add_theme_constant_override("margin_top", 12)
-		intro_panel.add_theme_constant_override("margin_bottom", 12)
-	elif ScreenManager.is_tablet():
-		ScreenManager.apply_panel_padding(top_bar, 24)
-		content_area.add_theme_constant_override("margin_left", 24)
-		content_area.add_theme_constant_override("margin_right", 24)
-		content_area.add_theme_constant_override("margin_top", 24)
-		content_area.add_theme_constant_override("margin_bottom", 24)
-		title_label.add_theme_font_size_override("font_size", 15)
-		progress_label.add_theme_font_size_override("font_size", 13)
-		question_label.add_theme_font_size_override("font_size", 17)
-		result_title.add_theme_font_size_override("font_size", 20)
-		result_desc.add_theme_font_size_override("font_size", 14)
-		continue_btn.custom_minimum_size = Vector2(200, 50)
-		intro_panel.add_theme_constant_override("margin_left", 16)
-		intro_panel.add_theme_constant_override("margin_right", 16)
-		intro_panel.add_theme_constant_override("margin_top", 16)
-		intro_panel.add_theme_constant_override("margin_bottom", 16)
-	else:
-		title_label.add_theme_font_size_override("font_size", 16)
-		progress_label.add_theme_font_size_override("font_size", 13)
-		question_label.add_theme_font_size_override("font_size", 18)
-		result_title.add_theme_font_size_override("font_size", 22)
-		result_desc.add_theme_font_size_override("font_size", 14)
-		continue_btn.custom_minimum_size = Vector2(200, 52)
-		intro_panel.add_theme_constant_override("margin_left", 24)
-		intro_panel.add_theme_constant_override("margin_right", 24)
-		intro_panel.add_theme_constant_override("margin_top", 24)
-		intro_panel.add_theme_constant_override("margin_bottom", 24)
+	var content_area = $ContentArea
+
+	# Fluid TopBar height
+	var top_h := clampf(h * 0.065, 52.0, 64.0)
+	top_bar.custom_minimum_size = Vector2(0, top_h)
+	content_area.offset_top = top_h
+
+	# Fluid typography
+	title_label.add_theme_font_size_override("font_size", int(clampf(min_dim * 0.040, 16.0, 20.0)))
+	progress_label.add_theme_font_size_override("font_size", _fs(0.030, 16.0, 16.0))
+	question_label.add_theme_font_size_override("font_size", int(clampf(min_dim * 0.042, 16.0, 22.0)))
+	feedback_label.add_theme_font_size_override("font_size", _fs(0.030, 16.0, 16.0))
+	result_title.add_theme_font_size_override("font_size", int(clampf(min_dim * 0.052, 18.0, 26.0)))
+	result_desc.add_theme_font_size_override("font_size", _fs(0.032, 16.0, 18.0))
+
+	# Fluid continue button
+	var btn_h := clampf(h * 0.075, 44.0, 52.0)
+	continue_btn.custom_minimum_size = Vector2(clampf(w * 0.40, 180.0, 220.0), btn_h)
+
+	# Fluid content area margins
+	content_area.add_theme_constant_override("margin_left", inset)
+	content_area.add_theme_constant_override("margin_right", inset)
+	content_area.add_theme_constant_override("margin_top", clampf(min_dim * 0.020, 12.0, 24.0))
+	content_area.add_theme_constant_override("margin_bottom", inset)
+
+	# Fluid intro panel margins
+	var intro_mgn := clampf(min_dim * 0.020, 12.0, 24.0)
+	intro_panel.add_theme_constant_override("margin_left", intro_mgn)
+	intro_panel.add_theme_constant_override("margin_right", intro_mgn)
+	intro_panel.add_theme_constant_override("margin_top", intro_mgn)
+	intro_panel.add_theme_constant_override("margin_bottom", intro_mgn)
