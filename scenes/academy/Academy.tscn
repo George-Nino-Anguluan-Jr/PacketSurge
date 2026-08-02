@@ -67,6 +67,7 @@ offset_top = 52.0
 offset_bottom = -56.0
 grow_horizontal = 2
 grow_vertical = 2
+clip_contents = true
 theme_override_constants/separation = 0
 
 [node name="Sidebar" type="PanelContainer" parent="ContentArea" unique_id=2021795818]
