@@ -2,12 +2,14 @@
 extends Control
 
 # ─── NODE REFERENCES ───────────────────────────────────
-@onready var academy_button: Button     = $CenterContainer/MainLayout/ButtonSection/AcademyButton
-@onready var campaign_button: Button    = $CenterContainer/MainLayout/ButtonSection/CampaignButton
-@onready var index_button: Button       = $CenterContainer/MainLayout/ButtonSection/IndexButton
+@onready var scroll_container: ScrollContainer = $ScrollContainer
+@onready var academy_button: Button     = $ScrollContainer/CenterContainer/MainLayout/ButtonSection/AcademyButton
+@onready var campaign_button: Button    = $ScrollContainer/CenterContainer/MainLayout/ButtonSection/CampaignButton
+@onready var index_button: Button       = $ScrollContainer/CenterContainer/MainLayout/ButtonSection/IndexButton
 @onready var leaderboard_button: Button = $TopLeftContainer/LeaderboardButton
 @onready var settings_button: Button    = $TopLeftContainer/SettingsButton
-@onready var title_label: Label         = $CenterContainer/MainLayout/TitleSection/TitleLabel
+@onready var title_label: Label         = $ScrollContainer/CenterContainer/MainLayout/TitleSection/TitleLabel
+@onready var version_label: Label       = $BottomBar/VersionLabel
 
 # Profile UI Nodes
 @onready var profile_card: PanelContainer   = $TopLeftContainer/ProfileCard
@@ -60,18 +62,17 @@ func _ready() -> void:
 	_build_continue_button()
 	_apply_responsive_layout()
 	get_tree().root.size_changed.connect(_apply_responsive_layout)
+	ScreenManager.make_scroll_touch_friendly(scroll_container)
 	_check_placement_quiz()
 	_connect_button_sounds(self)
 	_maybe_show_tutorial()
 
 func _build_continue_button() -> void:
-	var section = $CenterContainer/MainLayout/ButtonSection
+	var section = $ScrollContainer/CenterContainer/MainLayout/ButtonSection
 	_continue_btn = Button.new()
-	_continue_btn.custom_minimum_size = Vector2(260, 52)
 	_continue_btn.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	var action = _get_next_action()
 	_continue_btn.text = action["text"]
-	_continue_btn.add_theme_font_size_override("font_size", 16)
 	var st := StyleBoxFlat.new()
 	st.bg_color = Color("#00D4FF", 0.15)
 	st.border_color = Color("#00D4FF")
@@ -197,7 +198,7 @@ func _style_menu_button(button: Button) -> void:
 	button.add_theme_color_override("font_color",         Color("#E8F4FD"))
 	button.add_theme_color_override("font_hover_color",   Color("#00D4FF"))
 	button.add_theme_color_override("font_pressed_color", Color("#050D1A"))
-	button.add_theme_font_size_override("font_size", 13)
+	# font_size set dynamically in _apply_responsive_layout()
 
 func _style_icon_button(button: Button) -> void:
 	button.icon_alignment = HORIZONTAL_ALIGNMENT_CENTER
@@ -244,7 +245,7 @@ func _style_icon_button(button: Button) -> void:
 	button.add_theme_color_override("icon_normal_color",  Color("#00D4FF"))
 	button.add_theme_color_override("icon_hover_color",   Color("#E8F4FD"))
 	button.add_theme_color_override("icon_pressed_color", Color("#050D1A"))
-	button.add_theme_font_size_override("font_size", 22)
+	# font_size set dynamically in _apply_responsive_layout()
 
 # ─── TITLE ANIMATION ───────────────────────────────────
 func _animate_title_in() -> void:
@@ -326,57 +327,44 @@ func _style_profile_card() -> void:
 # ─── RESPONSIVE ────────────────────────────────────────
 func _apply_responsive_layout() -> void:
 	var top_left_container: HBoxContainer = $TopLeftContainer
-	if ScreenManager.is_mobile():
-		title_label.add_theme_font_size_override("font_size", 48)
-		_continue_btn.add_theme_font_size_override("font_size", 19)
-		for btn in _all_buttons:
-			btn.custom_minimum_size = Vector2(320, 56)
-		for btn in _core_buttons:
-			btn.add_theme_font_size_override("font_size", 18)
-		username_label.add_theme_font_size_override("font_size", 22)
-		class_label.add_theme_font_size_override("font_size", 18)
-		avatar_label.add_theme_font_size_override("font_size", 28)
-		leaderboard_button.add_theme_font_size_override("font_size", 26)
-		settings_button.add_theme_font_size_override("font_size", 26)
-		top_left_container.offset_left = 12.0
-		top_left_container.offset_top = 12.0
-		top_left_container.add_theme_constant_override("separation", 10)
-		leaderboard_button.custom_minimum_size = Vector2(52, 52)
-		settings_button.custom_minimum_size = Vector2(52, 52)
-	elif ScreenManager.is_tablet():
-		title_label.add_theme_font_size_override("font_size", 56)
-		_continue_btn.add_theme_font_size_override("font_size", 18)
-		for btn in _all_buttons:
-			btn.custom_minimum_size = Vector2(340, 54)
-		for btn in _core_buttons:
-			btn.add_theme_font_size_override("font_size", 17)
-		username_label.add_theme_font_size_override("font_size", 20)
-		class_label.add_theme_font_size_override("font_size", 16)
-		avatar_label.add_theme_font_size_override("font_size", 26)
-		leaderboard_button.add_theme_font_size_override("font_size", 24)
-		settings_button.add_theme_font_size_override("font_size", 24)
-		top_left_container.offset_left = 18.0
-		top_left_container.offset_top = 18.0
-		top_left_container.add_theme_constant_override("separation", 10)
-		leaderboard_button.custom_minimum_size = Vector2(48, 48)
-		settings_button.custom_minimum_size = Vector2(48, 48)
-	else:
-		title_label.add_theme_font_size_override("font_size", 68)
-		_continue_btn.add_theme_font_size_override("font_size", 17)
-		for btn in _all_buttons:
-			btn.custom_minimum_size = Vector2(360, 56)
-		for btn in _core_buttons:
-			btn.add_theme_font_size_override("font_size", 16)
-		username_label.add_theme_font_size_override("font_size", 18)
-		class_label.add_theme_font_size_override("font_size", 14)
-		avatar_label.add_theme_font_size_override("font_size", 24)
-		leaderboard_button.add_theme_font_size_override("font_size", 22)
-		settings_button.add_theme_font_size_override("font_size", 22)
-		top_left_container.offset_left = 24.0
-		top_left_container.offset_top = 24.0
-		top_left_container.add_theme_constant_override("separation", 12)
-		leaderboard_button.custom_minimum_size = Vector2(48, 48)
-		settings_button.custom_minimum_size = Vector2(48, 48)
+	# Read the canvas size directly — works under stretch mode for any
+	# window/screen and adapts on every resize. No device-class guessing.
+	var vp: Vector2 = get_viewport().get_visible_rect().size
+	var w := maxf(vp.x, 320.0)
+	var h := maxf(vp.y, 240.0)
+	var min_dim := minf(w, h)
+
+	# Continuous (fluid) typography — interpolates smoothly, no tiers
+	# Floors ensure readability on tiny screens; caps prevent absurd sizes on huge displays
+	title_label.add_theme_font_size_override("font_size", int(clampf(min_dim * 0.060, 42.0, 68.0)))
+	_continue_btn.add_theme_font_size_override("font_size", int(clampf(min_dim * 0.017, 16.0, 19.0)))
+	for btn in _all_buttons:
+		btn.custom_minimum_size = Vector2(clampf(w * 0.30, 300.0, 420.0), clampf(h * 0.085, 50.0, 60.0))
+	for btn in _core_buttons:
+		btn.add_theme_font_size_override("font_size", int(clampf(min_dim * 0.016, 17.0, 18.0)))
+
+	# Profile card typography
+	username_label.add_theme_font_size_override("font_size", int(clampf(min_dim * 0.020, 16.0, 22.0)))
+	class_label.add_theme_font_size_override("font_size", int(clampf(min_dim * 0.016, 14.0, 18.0)))
+	avatar_label.add_theme_font_size_override("font_size", int(clampf(min_dim * 0.025, 22.0, 28.0)))
+	var icon_font := int(clampf(min_dim * 0.022, 20.0, 26.0))
+	leaderboard_button.add_theme_font_size_override("font_size", icon_font)
+	settings_button.add_theme_font_size_override("font_size", icon_font)
+
+	# Version label (bottom bar)
+	version_label.add_theme_font_size_override("font_size", int(clampf(min_dim * 0.011, 12.0, 14.0)))
+
+	# Fluid corner positioning + spacing
+	var inset := clampf(min_dim * 0.022, 10.0, 24.0)
+	top_left_container.offset_left = inset
+	top_left_container.offset_top = inset
+	top_left_container.offset_right = clampf(w * 0.45, 320.0, 500.0)
+	top_left_container.add_theme_constant_override("separation", clampf(min_dim * 0.012, 8.0, 12.0))
+	var icon_size := clampf(min_dim * 0.046, 44.0, 52.0)
+	leaderboard_button.custom_minimum_size = Vector2(icon_size, icon_size)
+	settings_button.custom_minimum_size = Vector2(icon_size, icon_size)
+
+	# Continue button dynamic size (already in _all_buttons loop above)
 
 # ─── TUTORIAL ──────────────────────────────────────────
 const TutorialOverlay = preload("res://scenes/core/TutorialOverlay.gd")

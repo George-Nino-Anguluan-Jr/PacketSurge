@@ -32,8 +32,19 @@ grow_horizontal = 2
 grow_vertical = 2
 color = Color(0, 0.83137256, 1, 0.03137255)
 
-[node name="CenterContainer" type="CenterContainer" parent="." unique_id=1294989996]
+[node name="ScrollContainer" type="ScrollContainer" parent="."]
 layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+horizontal_scroll_mode = 0
+
+[node name="CenterContainer" type="CenterContainer" parent="ScrollContainer" unique_id=1294989996]
+layout_mode = 1
+size_flags_horizontal = 3
+size_flags_vertical = 3
 anchors_preset = 15
 anchor_right = 1.0
 anchor_bottom = 1.0

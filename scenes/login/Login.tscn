@@ -20,146 +20,152 @@ grow_horizontal = 2
 grow_vertical = 2
 color = Color(0.019607844, 0.050980393, 0.101960786, 1)
 
-[node name="CenterContainer" type="CenterContainer" parent="." unique_id=329806508]
+[node name="ScrollContainer" type="ScrollContainer" parent="."]
 layout_mode = 1
 anchors_preset = 15
 anchor_right = 1.0
 anchor_bottom = 1.0
 grow_horizontal = 2
 grow_vertical = 2
+horizontal_scroll_mode = 0
 
-[node name="MainLayout" type="VBoxContainer" parent="CenterContainer" unique_id=378670442]
+[node name="CenterContainer" type="CenterContainer" parent="ScrollContainer" unique_id=329806508]
+layout_mode = 2
+size_flags_horizontal = 3
+size_flags_vertical = 3
+
+[node name="MainLayout" type="VBoxContainer" parent="ScrollContainer/CenterContainer" unique_id=378670442]
 layout_mode = 2
 theme_override_constants/separation = 24
 
-[node name="TitleSection" type="VBoxContainer" parent="CenterContainer/MainLayout" unique_id=1536247836]
+[node name="TitleSection" type="VBoxContainer" parent="ScrollContainer/CenterContainer/MainLayout" unique_id=1536247836]
 layout_mode = 2
 theme_override_constants/separation = 8
 
-[node name="TitleLabel" type="Label" parent="CenterContainer/MainLayout/TitleSection" unique_id=846789390]
+[node name="TitleLabel" type="Label" parent="ScrollContainer/CenterContainer/MainLayout/TitleSection" unique_id=846789390]
 layout_mode = 2
 theme_override_colors/font_color = Color(0, 0.83137256, 1, 1)
 theme_override_font_sizes/font_size = 48
 text = "PACKET SURGE"
 horizontal_alignment = 1
 
-[node name="FormCard" type="PanelContainer" parent="CenterContainer/MainLayout" unique_id=51315386]
+[node name="FormCard" type="PanelContainer" parent="ScrollContainer/CenterContainer/MainLayout" unique_id=51315386]
 custom_minimum_size = Vector2(520, 0)
 layout_mode = 2
 
-[node name="CardLayout" type="VBoxContainer" parent="CenterContainer/MainLayout/FormCard" unique_id=978206724]
+[node name="CardLayout" type="VBoxContainer" parent="ScrollContainer/CenterContainer/MainLayout/FormCard" unique_id=978206724]
 layout_mode = 2
 theme_override_constants/separation = 16
 
-[node name="TabBar" type="HBoxContainer" parent="CenterContainer/MainLayout/FormCard/CardLayout" unique_id=1057993269]
+[node name="TabBar" type="HBoxContainer" parent="ScrollContainer/CenterContainer/MainLayout/FormCard/CardLayout" unique_id=1057993269]
 layout_mode = 2
 theme_override_constants/separation = 0
 
-[node name="LoginTab" type="Button" parent="CenterContainer/MainLayout/FormCard/CardLayout/TabBar" unique_id=2006844095]
+[node name="LoginTab" type="Button" parent="ScrollContainer/CenterContainer/MainLayout/FormCard/CardLayout/TabBar" unique_id=2006844095]
 custom_minimum_size = Vector2(0, 44)
 layout_mode = 2
 size_flags_horizontal = 3
 text = "LOGIN"
 
-[node name="RegisterTab" type="Button" parent="CenterContainer/MainLayout/FormCard/CardLayout/TabBar" unique_id=714150116]
+[node name="RegisterTab" type="Button" parent="ScrollContainer/CenterContainer/MainLayout/FormCard/CardLayout/TabBar" unique_id=714150116]
 custom_minimum_size = Vector2(0, 44)
 layout_mode = 2
 size_flags_horizontal = 3
 text = "REGISTER"
 
-[node name="HSeparator" type="HSeparator" parent="CenterContainer/MainLayout/FormCard/CardLayout" unique_id=737361051]
+[node name="HSeparator" type="HSeparator" parent="ScrollContainer/CenterContainer/MainLayout/FormCard/CardLayout" unique_id=737361051]
 layout_mode = 2
 
-[node name="LoginForm" type="VBoxContainer" parent="CenterContainer/MainLayout/FormCard/CardLayout" unique_id=2024887891]
+[node name="LoginForm" type="VBoxContainer" parent="ScrollContainer/CenterContainer/MainLayout/FormCard/CardLayout" unique_id=2024887891]
 layout_mode = 2
 theme_override_constants/separation = 12
 
-[node name="LoginUsernameField" type="LineEdit" parent="CenterContainer/MainLayout/FormCard/CardLayout/LoginForm" unique_id=1303829887]
+[node name="LoginUsernameField" type="LineEdit" parent="ScrollContainer/CenterContainer/MainLayout/FormCard/CardLayout/LoginForm" unique_id=1303829887]
 custom_minimum_size = Vector2(0, 44)
 layout_mode = 2
 placeholder_text = "Username or Email"
 
-[node name="PasswordField" type="LineEdit" parent="CenterContainer/MainLayout/FormCard/CardLayout/LoginForm" unique_id=1204440678]
+[node name="PasswordField" type="LineEdit" parent="ScrollContainer/CenterContainer/MainLayout/FormCard/CardLayout/LoginForm" unique_id=1204440678]
 custom_minimum_size = Vector2(0, 44)
 layout_mode = 2
 placeholder_text = "Password"
 secret = true
 
-[node name="LoginBtn" type="Button" parent="CenterContainer/MainLayout/FormCard/CardLayout/LoginForm" unique_id=2008274191]
+[node name="LoginBtn" type="Button" parent="ScrollContainer/CenterContainer/MainLayout/FormCard/CardLayout/LoginForm" unique_id=2008274191]
 custom_minimum_size = Vector2(0, 48)
 layout_mode = 2
 text = "LOGIN"
 
-[node name="ForgotBtn" type="Button" parent="CenterContainer/MainLayout/FormCard/CardLayout/LoginForm" unique_id=1904697883]
+[node name="ForgotBtn" type="Button" parent="ScrollContainer/CenterContainer/MainLayout/FormCard/CardLayout/LoginForm" unique_id=1904697883]
 layout_mode = 2
 theme_override_font_sizes/font_size = 12
 text = "Forgot password?"
 
-[node name="RegisterForm" type="VBoxContainer" parent="CenterContainer/MainLayout/FormCard/CardLayout" unique_id=13911272]
+[node name="RegisterForm" type="VBoxContainer" parent="ScrollContainer/CenterContainer/MainLayout/FormCard/CardLayout" unique_id=13911272]
 visible = false
 layout_mode = 2
 theme_override_constants/separation = 10
 
-[node name="NameFieldsLayout" type="HBoxContainer" parent="CenterContainer/MainLayout/FormCard/CardLayout/RegisterForm" unique_id=213483369]
+[node name="NameFieldsLayout" type="HBoxContainer" parent="ScrollContainer/CenterContainer/MainLayout/FormCard/CardLayout/RegisterForm" unique_id=213483369]
 layout_mode = 2
 theme_override_constants/separation = 8
 
-[node name="FirstNameField" type="LineEdit" parent="CenterContainer/MainLayout/FormCard/CardLayout/RegisterForm/NameFieldsLayout" unique_id=502998084]
+[node name="FirstNameField" type="LineEdit" parent="ScrollContainer/CenterContainer/MainLayout/FormCard/CardLayout/RegisterForm/NameFieldsLayout" unique_id=502998084]
 custom_minimum_size = Vector2(0, 44)
 layout_mode = 2
 size_flags_horizontal = 3
 placeholder_text = "First Name"
 
-[node name="LastNameField" type="LineEdit" parent="CenterContainer/MainLayout/FormCard/CardLayout/RegisterForm/NameFieldsLayout" unique_id=203948576]
+[node name="LastNameField" type="LineEdit" parent="ScrollContainer/CenterContainer/MainLayout/FormCard/CardLayout/RegisterForm/NameFieldsLayout" unique_id=203948576]
 custom_minimum_size = Vector2(0, 44)
 layout_mode = 2
 size_flags_horizontal = 3
 placeholder_text = "Last Name"
 
-[node name="UsernameField" type="LineEdit" parent="CenterContainer/MainLayout/FormCard/CardLayout/RegisterForm" unique_id=712785445]
+[node name="UsernameField" type="LineEdit" parent="ScrollContainer/CenterContainer/MainLayout/FormCard/CardLayout/RegisterForm" unique_id=712785445]
 custom_minimum_size = Vector2(0, 44)
 layout_mode = 2
 placeholder_text = "Username"
 
-[node name="EmailField" type="LineEdit" parent="CenterContainer/MainLayout/FormCard/CardLayout/RegisterForm" unique_id=1303829888]
+[node name="EmailField" type="LineEdit" parent="ScrollContainer/CenterContainer/MainLayout/FormCard/CardLayout/RegisterForm" unique_id=1303829888]
 custom_minimum_size = Vector2(0, 44)
 layout_mode = 2
 placeholder_text = "Email"
 
-[node name="RegPasswordField" type="LineEdit" parent="CenterContainer/MainLayout/FormCard/CardLayout/RegisterForm" unique_id=354885275]
+[node name="RegPasswordField" type="LineEdit" parent="ScrollContainer/CenterContainer/MainLayout/FormCard/CardLayout/RegisterForm" unique_id=354885275]
 custom_minimum_size = Vector2(0, 44)
 layout_mode = 2
 placeholder_text = "Password"
 secret = true
 
-[node name="ConfirmField" type="LineEdit" parent="CenterContainer/MainLayout/FormCard/CardLayout/RegisterForm" unique_id=2103616375]
+[node name="ConfirmField" type="LineEdit" parent="ScrollContainer/CenterContainer/MainLayout/FormCard/CardLayout/RegisterForm" unique_id=2103616375]
 custom_minimum_size = Vector2(0, 44)
 layout_mode = 2
 placeholder_text = "Confirm Password"
 secret = true
 
-[node name="ClassFieldsLayout" type="HBoxContainer" parent="CenterContainer/MainLayout/FormCard/CardLayout/RegisterForm" unique_id=1696679797]
+[node name="ClassFieldsLayout" type="HBoxContainer" parent="ScrollContainer/CenterContainer/MainLayout/FormCard/CardLayout/RegisterForm" unique_id=1696679797]
 layout_mode = 2
 theme_override_constants/separation = 8
 
-[node name="YearField" type="LineEdit" parent="CenterContainer/MainLayout/FormCard/CardLayout/RegisterForm/ClassFieldsLayout" unique_id=1284312066]
+[node name="YearField" type="LineEdit" parent="ScrollContainer/CenterContainer/MainLayout/FormCard/CardLayout/RegisterForm/ClassFieldsLayout" unique_id=1284312066]
 custom_minimum_size = Vector2(0, 44)
 layout_mode = 2
 size_flags_horizontal = 3
 text = "1st Year"
 editable = false
 
-[node name="SectionOptionButton" type="OptionButton" parent="CenterContainer/MainLayout/FormCard/CardLayout/RegisterForm/ClassFieldsLayout" unique_id=1518419285]
+[node name="SectionOptionButton" type="OptionButton" parent="ScrollContainer/CenterContainer/MainLayout/FormCard/CardLayout/RegisterForm/ClassFieldsLayout" unique_id=1518419285]
 custom_minimum_size = Vector2(0, 44)
 layout_mode = 2
 size_flags_horizontal = 3
 
-[node name="RegisterBtn" type="Button" parent="CenterContainer/MainLayout/FormCard/CardLayout/RegisterForm" unique_id=2018770129]
+[node name="RegisterBtn" type="Button" parent="ScrollContainer/CenterContainer/MainLayout/FormCard/CardLayout/RegisterForm" unique_id=2018770129]
 custom_minimum_size = Vector2(0, 48)
 layout_mode = 2
 text = "CREATE ACCOUNT"
 
-[node name="StatusLabel" type="Label" parent="CenterContainer/MainLayout" unique_id=1580099357]
+[node name="StatusLabel" type="Label" parent="ScrollContainer/CenterContainer/MainLayout" unique_id=1580099357]
 layout_mode = 2
 theme_override_font_sizes/font_size = 14
 horizontal_alignment = 1
