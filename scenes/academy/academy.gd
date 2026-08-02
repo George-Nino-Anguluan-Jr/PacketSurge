@@ -10,9 +10,9 @@ extends Control
 @onready var topic_list_ds: VBoxContainer     = $ContentArea/Sidebar/ScrollContainer/SidebarLayout/DSSection/TopicList_DS
 @onready var topic_list_sort: VBoxContainer   = $ContentArea/Sidebar/ScrollContainer/SidebarLayout/SortSection/TopicList_Sort
 @onready var topic_list_search: VBoxContainer = $ContentArea/Sidebar/ScrollContainer/SidebarLayout/SearchSection/TopicList_Search
-@onready var lesson_title: Label           = $ContentArea/LessonArea/LessonContainer/LessonHeader/LessonTitle
-@onready var lesson_category: Label        = $ContentArea/LessonArea/LessonContainer/LessonHeader/LessonCategory
-@onready var step_indicator: HBoxContainer = $ContentArea/LessonArea/LessonContainer/StepIndicator
+@onready var lesson_title: Label           = $ContentArea/LessonArea/LessonContainer/StepContainer/ScrollArea/ScrollContent/LessonHeader/LessonTitle
+@onready var lesson_category: Label        = $ContentArea/LessonArea/LessonContainer/StepContainer/ScrollArea/ScrollContent/LessonHeader/LessonCategory
+@onready var step_indicator: HBoxContainer = $ContentArea/LessonArea/LessonContainer/StepContainer/ScrollArea/ScrollContent/StepIndicator
 @onready var step_container: MarginContainer = $ContentArea/LessonArea/LessonContainer/StepContainer
 @onready var scroll_area: ScrollContainer  = $ContentArea/LessonArea/LessonContainer/StepContainer/ScrollArea
 @onready var scroll_content: VBoxContainer = $ContentArea/LessonArea/LessonContainer/StepContainer/ScrollArea/ScrollContent
@@ -236,8 +236,12 @@ func _update_step_indicator() -> void:
 
 # ─── SHOW CURRENT STEP ─────────────────────────────────
 func _show_current_step() -> void:
+	# Keep LessonHeader in place; only remove step-specific content
+	var header = scroll_content.get_node_or_null("LessonHeader")
+	var indicator = scroll_content.get_node_or_null("StepIndicator")
 	for child in scroll_content.get_children():
-		child.queue_free()
+		if child != header and child != indicator:
+			child.queue_free()
 	_update_step_indicator()
 	_update_nav_buttons()
 	if current_lesson.challenge_code.is_empty():
@@ -262,7 +266,12 @@ func _show_current_step() -> void:
 			7: _show_recap_step()
 			8: _show_complete_step()
 	await get_tree().process_frame
-	scroll_area.scroll_vertical = 0
+	# Scroll past the persistent header so user sees the step content
+	var header_node = scroll_content.get_node_or_null("LessonHeader")
+	if header_node:
+		scroll_area.scroll_vertical = int(header_node.size.y + 16)
+	else:
+		scroll_area.scroll_vertical = 0
 
 # ─── STEP CONTENT ──────────────────────────────────────
 func _show_concept_step() -> void:
