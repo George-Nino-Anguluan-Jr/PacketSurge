@@ -7,6 +7,14 @@ extends Control
 @onready var map_canvas: Control      = %MapCanvas
 @onready var locked_label: Label      = $ContentArea/MainLayout/LockedLabel
 
+# ─── HELPERS ───────────────────────────────────────────
+func _min_dim() -> float:
+	var vp := get_viewport().get_visible_rect().size
+	return minf(maxf(vp.x, 320.0), maxf(vp.y, 240.0))
+
+func _fs(ratio: float, floor_v: float, cap_v: float) -> int:
+	return int(clampf(_min_dim() * ratio, floor_v, cap_v))
+
 # Visual zig-zag coordinates for main level groups on the 2100px wide canvas
 const MAIN_LEVEL_POSITIONS = {
 	1: Vector2(100, 180),
@@ -111,11 +119,13 @@ func _auto_scroll_to_current() -> void:
 
 # ─── floating tooltip CARD setup ───────────────────────
 func _setup_floating_tooltip() -> void:
+	var tooltip_w = _fs(0.45, 200.0, 320.0)
+	var tooltip_h = _fs(0.20, 100.0, 160.0)
 	tooltip_panel = PanelContainer.new()
-	tooltip_panel.custom_minimum_size = Vector2(200, 100)
+	tooltip_panel.custom_minimum_size = Vector2(tooltip_w, tooltip_h)
 	tooltip_panel.modulate.a = 0.0
 	tooltip_panel.scale = Vector2(0.8, 0.8)
-	tooltip_panel.pivot_offset = Vector2(100, 50)
+	tooltip_panel.pivot_offset = Vector2(tooltip_w * 0.5, tooltip_h * 0.5)
 	tooltip_panel.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	add_child(tooltip_panel)
 	
@@ -144,7 +154,7 @@ func _setup_floating_tooltip() -> void:
 	title.name = "Title"
 	title.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	title.text = "Level Info"
-	title.add_theme_font_size_override("font_size", 14)
+	title.add_theme_font_size_override("font_size", _fs(0.045, 16.0, 18.0))
 	title.add_theme_color_override("font_color", Color.WHITE)
 	layout.add_child(title)
 	
@@ -152,7 +162,7 @@ func _setup_floating_tooltip() -> void:
 	ds.name = "DS"
 	ds.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	ds.text = "Arrays"
-	ds.add_theme_font_size_override("font_size", 11)
+	ds.add_theme_font_size_override("font_size", _fs(0.030, 16.0, 16.0))
 	ds.add_theme_color_override("font_color", Color("#00D4FF"))
 	layout.add_child(ds)
 	
@@ -160,7 +170,7 @@ func _setup_floating_tooltip() -> void:
 	stats.name = "Stats"
 	stats.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	stats.text = "Waves: 3"
-	stats.add_theme_font_size_override("font_size", 11)
+	stats.add_theme_font_size_override("font_size", _fs(0.030, 16.0, 16.0))
 	stats.add_theme_color_override("font_color", Color("#4A7FA5"))
 	layout.add_child(stats)
 
@@ -190,10 +200,13 @@ func _show_tooltip(global_pos: Vector2, info: Dictionary, is_unlocked: bool, is_
 	# Adjust tooltip screen position — bounces to opposite side if off-screen
 	var tooltip_size = tooltip_panel.custom_minimum_size
 	var screen = DisplayServer.window_get_size()
-	var pos = global_pos - Vector2(100, 110)
+	var top_h = $TopBar.custom_minimum_size.y
+	var offset_x = tooltip_size.x * 0.5 + 20
+	var offset_y = tooltip_size.y * 0.5 + 20
+	var pos = global_pos - Vector2(offset_x, offset_y + 20)
 	if pos.x < 0:
 		pos.x = global_pos.x + 20
-	if pos.y < 52:
+	if pos.y < top_h:
 		pos.y = global_pos.y + 20
 	if pos.x + tooltip_size.x > screen.x:
 		pos.x = screen.x - tooltip_size.x
@@ -246,9 +259,9 @@ func _build_level_nodes() -> void:
 					s += "⭐" if i < star_count else "☆"
 					if i < 2: s += " "
 				star_lbl.text = s
-				star_lbl.add_theme_font_size_override("font_size", 8)
+				star_lbl.add_theme_font_size_override("font_size", _fs(0.030, 16.0, 16.0))
 				star_lbl.position = pos + Vector2(-26, 30)
-				star_lbl.custom_minimum_size = Vector2(52, 12)
+				star_lbl.custom_minimum_size = Vector2(_fs(0.12, 52.0, 72.0), _fs(0.026, 20.0, 28.0))
 				map_canvas.add_child(star_lbl)
 				active_nodes.append(star_lbl)
 
@@ -259,10 +272,10 @@ func _build_level_nodes() -> void:
 
 func _create_node_button(info: Dictionary, is_unlocked: bool, is_completed: bool, pos: Vector2) -> Button:
 	var btn := Button.new()
-	# Compact circular size
-	btn.custom_minimum_size = Vector2(56, 56)
-	btn.size = Vector2(56, 56)
-	btn.pivot_offset = Vector2(28, 28)
+	var node_size := _fs(0.14, 56.0, 80.0)
+	btn.custom_minimum_size = Vector2(node_size, node_size)
+	btn.size = Vector2(node_size, node_size)
+	btn.pivot_offset = Vector2(node_size * 0.5, node_size * 0.5)
 	btn.mouse_default_cursor_shape = Control.CURSOR_POINTING_HAND if is_unlocked else Control.CURSOR_ARROW
 	
 	# Center position on target vector coordinate
@@ -301,7 +314,7 @@ func _create_node_button(info: Dictionary, is_unlocked: bool, is_completed: bool
 	btn.add_theme_stylebox_override("hover", style)
 	btn.add_theme_stylebox_override("pressed", style)
 	btn.add_theme_stylebox_override("focus", StyleBoxEmpty.new())
-	btn.add_theme_font_size_override("font_size", 14)
+	btn.add_theme_font_size_override("font_size", _fs(0.042, 16.0, 18.0))
 	
 	# Hover and click logic
 	if is_unlocked:
@@ -467,7 +480,7 @@ func _draw_node_hud_brackets(pos: Vector2, lvl: int) -> void:
 # ─── HIGH-IMPACT HARDWARE AESTHETICS (OPTIMIZED) ──────
 func _draw_system_readouts() -> void:
 	var font = get_theme_font("font", "Label")
-	var font_size = 11
+	var font_size = _fs(0.028, 16.0, 16.0)
 	var color = Color("#4A7FA5", 0.45)
 	
 	# Draw technical status readout overlays on the board
@@ -481,7 +494,7 @@ func _draw_system_readouts() -> void:
 	for lvl in DataRegistry.get_level_numbers():
 		var pos = _position_for_level(lvl)
 		var hex_addr = "[" + _hex_for_level(lvl) + "]"
-		map_canvas.draw_string(font, pos + Vector2(-18, 52), hex_addr, HORIZONTAL_ALIGNMENT_LEFT, -1, 9, color * 0.8)
+		map_canvas.draw_string(font, pos + Vector2(-18, 52), hex_addr, HORIZONTAL_ALIGNMENT_LEFT, -1, _fs(0.024, 16.0, 16.0), color * 0.8)
 
 func _draw_traffic_oscillator() -> void:
 	# Subtle, beautiful rolling wave representing packet stream traffic (Highly optimized)
@@ -596,27 +609,34 @@ func _style_back_btn() -> void:
 	back_btn.add_theme_color_override("font_color", Color("#00D4FF"))
 
 func _apply_responsive_layout() -> void:
+	var vp: Vector2 = get_viewport().get_visible_rect().size
+	var w := maxf(vp.x, 320.0)
+	var h := maxf(vp.y, 240.0)
+	var min_dim := minf(w, h)
+	var inset := clampf(min_dim * 0.025, 16.0, 24.0)
+
+	# Fluid TopBar height
+	var top_h := clampf(h * 0.065, 52.0, 64.0)
+	$TopBar.custom_minimum_size = Vector2(0, top_h)
+
+	# Fluid typography
+	$TopBar/TopBarLayout/TitleLabel.add_theme_font_size_override("font_size", int(clampf(min_dim * 0.032, 18.0, 28.0)))
+	ram_label.add_theme_font_size_override("font_size", _fs(0.028, 16.0, 16.0))
+	back_btn.add_theme_font_size_override("font_size", _fs(0.045, 16.0, 18.0))
+
+	# Fluid button sizes
+	var btn_h := clampf(h * 0.075, 44.0, 52.0)
+	back_btn.custom_minimum_size = Vector2(clampf(w * 0.12, 80.0, 100.0), btn_h)
+
+	# Content area positions & margins — fluid
 	var content_area = $ContentArea
-	var top_bar = $TopBar
-	
-	if ScreenManager.is_mobile():
-		ScreenManager.apply_panel_padding(top_bar, 20)
-		content_area.offset_top = 72
-		content_area.add_theme_constant_override("margin_left", 20)
-		content_area.add_theme_constant_override("margin_right", 20)
-		content_area.add_theme_constant_override("margin_top", 0)
-		content_area.add_theme_constant_override("margin_bottom", 20)
-		back_btn.custom_minimum_size = Vector2(70, 44)
-	elif ScreenManager.is_tablet():
-		ScreenManager.apply_panel_padding(top_bar, 24)
-		content_area.offset_top = 76
-		content_area.add_theme_constant_override("margin_left", 24)
-		content_area.add_theme_constant_override("margin_right", 24)
-		content_area.add_theme_constant_override("margin_top", 0)
-		content_area.add_theme_constant_override("margin_bottom", 24)
-		back_btn.custom_minimum_size = Vector2(80, 44)
-	else:
-		back_btn.custom_minimum_size = Vector2(90, 0)
+	content_area.offset_top = top_h
+	content_area.add_theme_constant_override("margin_left", inset)
+	content_area.add_theme_constant_override("margin_right", inset)
+	content_area.add_theme_constant_override("margin_top", clampf(min_dim * 0.010, 8.0, 16.0))
+	content_area.add_theme_constant_override("margin_bottom", inset)
+
+	ScreenManager.make_scroll_touch_friendly(map_scroll)
 
 # ─── TUTORIAL ──────────────────────────────────────────
 const TutorialOverlay = preload("res://scenes/core/TutorialOverlay.gd")

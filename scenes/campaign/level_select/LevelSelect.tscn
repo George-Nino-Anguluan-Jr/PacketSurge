@@ -35,7 +35,7 @@ layout_mode = 2
 theme_override_constants/separation = 16
 
 [node name="BackBtn" type="Button" parent="TopBar/TopBarLayout" unique_id=283810885]
-custom_minimum_size = Vector2(90, 0)
+custom_minimum_size = Vector2(80, 0)
 layout_mode = 2
 text = "← BACK"
 
@@ -48,7 +48,7 @@ text = "CAMPAIGN"
 [node name="RAMLabel" type="Label" parent="TopBar/TopBarLayout" unique_id=1745604606]
 layout_mode = 2
 theme_override_colors/font_color = Color(0.2901961, 0.49803922, 0.64705884, 1)
-theme_override_font_sizes/font_size = 13
+theme_override_font_sizes/font_size = 16
 text = "0 / 13 Unlocked"
 horizontal_alignment = 2
 
@@ -60,10 +60,10 @@ anchor_bottom = 1.0
 offset_top = 52.0
 grow_horizontal = 2
 grow_vertical = 2
-theme_override_constants/margin_left = 24
-theme_override_constants/margin_top = 24
-theme_override_constants/margin_right = 24
-theme_override_constants/margin_bottom = 24
+theme_override_constants/margin_left = 16
+theme_override_constants/margin_top = 16
+theme_override_constants/margin_right = 16
+theme_override_constants/margin_bottom = 16
 
 [node name="MainLayout" type="VBoxContainer" parent="ContentArea" unique_id=980576612]
 layout_mode = 2
@@ -72,7 +72,7 @@ theme_override_constants/separation = 16
 [node name="SectionTitle" type="Label" parent="ContentArea/MainLayout" unique_id=1196978599]
 layout_mode = 2
 theme_override_colors/font_color = Color(0, 0.83137256, 1, 1)
-theme_override_font_sizes/font_size = 14
+theme_override_font_sizes/font_size = 16
 text = "TACTICAL PROGRESSION MAP"
 
 [node name="MapScroll" type="ScrollContainer" parent="ContentArea/MainLayout"]
@@ -89,7 +89,7 @@ layout_mode = 2
 [node name="LockedLabel" type="Label" parent="ContentArea/MainLayout" unique_id=778478000]
 layout_mode = 2
 theme_override_colors/font_color = Color(0.2901961, 0.49803922, 0.64705884, 1)
-theme_override_font_sizes/font_size = 13
+theme_override_font_sizes/font_size = 16
 text = "Complete lessons in the Academy to unlock more levels."
 horizontal_alignment = 1
 autowrap_mode = 3
