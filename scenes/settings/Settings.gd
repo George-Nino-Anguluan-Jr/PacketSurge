@@ -40,9 +40,9 @@ func _build_general() -> void:
 	# Compute fluid font sizes once per rebuild
 	var vp := get_viewport().get_visible_rect().size
 	var min_dim := minf(maxf(vp.x, 320.0), maxf(vp.y, 240.0))
-	var section_font := int(clampf(min_dim * 0.022, 15.0, 18.0))
+	var section_font := int(clampf(min_dim * 0.022, 16.0, 18.0))
 	var label_font   := int(clampf(min_dim * 0.020, 16.0, 20.0))
-	var desc_font    := int(clampf(min_dim * 0.015, 13.0, 16.0))
+	var desc_font    := int(clampf(min_dim * 0.015, 16.0, 16.0))
 	var value_font   := int(clampf(min_dim * 0.020, 16.0, 20.0))
 	var pct_font     := int(clampf(min_dim * 0.020, 16.0, 20.0))
 	var card_pad     := int(clampf(min_dim * 0.012, 8.0, 16.0))
@@ -135,7 +135,7 @@ func _make_toggle_row(
 	row.add_child(text_col)
 
 	var toggle := Button.new()
-	toggle.custom_minimum_size = Vector2(90, 44)
+	toggle.custom_minimum_size = Vector2(_fs(0.22, 80.0, 120.0), _fs(0.12, 44.0, 52.0))
 	toggle.text = "ON" if current_value else "OFF"
 	_style_toggle_button(toggle, current_value, label_font)
 	toggle.pressed.connect(_on_toggle_pressed.bind(toggle, on_toggle))
@@ -147,7 +147,7 @@ func _make_toggle_row(
 func _on_toggle_pressed(toggle: Button, on_toggle: Callable) -> void:
 	var new_val = toggle.text == "OFF"
 	toggle.text = "ON" if new_val else "OFF"
-	_style_toggle_button(toggle, new_val, 16)  # fallback size
+	_style_toggle_button(toggle, new_val, _fs(0.045, 16.0, 20.0))  # fallback size
 	on_toggle.call(new_val)
 
 # ─── SLIDER ROW ────────────────────────────────────────
@@ -203,7 +203,7 @@ func _make_slider_row(
 
 	var slider := HSlider.new()
 	slider.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-	slider.custom_minimum_size = Vector2(90, 0)
+	slider.custom_minimum_size = Vector2(_fs(0.22, 80.0, 120.0), 0)
 	slider.min_value = 0.0
 	slider.max_value = 1.0
 	slider.step = 0.01
@@ -214,7 +214,7 @@ func _make_slider_row(
 	slider_box.add_child(slider)
 
 	var pct_label := Label.new()
-	pct_label.custom_minimum_size = Vector2(44, 0)
+	pct_label.custom_minimum_size = Vector2(_fs(0.14, 44.0, 56.0), 0)
 	pct_label.text = str(int(current_value * 100)) + "%"
 	pct_label.add_theme_font_size_override("font_size", pct_font)
 	pct_label.add_theme_color_override("font_color", Color("#00D4FF"))
@@ -256,7 +256,7 @@ func _make_info_row(label: String, value: String, label_font: int, value_font: i
 
 	var lbl := Label.new()
 	lbl.text = label
-	lbl.custom_minimum_size = Vector2(120, 0)
+	lbl.custom_minimum_size = Vector2(_fs(0.31, 100.0, 140.0), 0)
 	lbl.add_theme_font_size_override("font_size", label_font)
 	lbl.add_theme_color_override("font_color", Color("#4A7FA5"))
 	row.add_child(lbl)
@@ -272,9 +272,6 @@ func _make_info_row(label: String, value: String, label_font: int, value_font: i
 	return card
 
 # ─── HELPERS ───────────────────────────────────────────
-func _is_compact() -> bool:
-	return ScreenManager.is_mobile() or ScreenManager.is_tablet()
-
 func _make_section_label(text: String, font_size: int) -> Label:
 	var lbl := Label.new()
 	lbl.text = text
@@ -288,6 +285,13 @@ func _make_divider() -> HSeparator:
 	return sep
 
 # ─── STYLES ────────────────────────────────────────────
+func _min_dim() -> float:
+	var vp := get_viewport().get_visible_rect().size
+	return minf(maxf(vp.x, 320.0), maxf(vp.y, 240.0))
+
+func _fs(ratio: float, floor_v: float, cap_v: float) -> int:
+	return int(clampf(_min_dim() * ratio, floor_v, cap_v))
+
 func _apply_styles() -> void:
 	var top_style := StyleBoxFlat.new()
 	top_style.bg_color            = Color("#0A1628")
