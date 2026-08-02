@@ -62,7 +62,7 @@ text = "← EXIT"
 visible = false
 layout_mode = 2
 theme_override_colors/font_color = Color(0.9098039, 0.95686275, 0.99215686, 1)
-theme_override_font_sizes/font_size = 14
+theme_override_font_sizes/font_size = 16
 text = "Level 1 — Initialization"
 
 [node name="Spacer" type="Control" parent="HUD/HUDControl/TopHUD/TopLayout" unique_id=79751596]
@@ -102,25 +102,25 @@ text = "⏩"
 [node name="RAMLabel" type="Label" parent="HUD/HUDControl/TopHUD/TopLayout" unique_id=1535171615]
 layout_mode = 2
 theme_override_colors/font_color = Color(0, 0.83137256, 1, 1)
-theme_override_font_sizes/font_size = 14
+theme_override_font_sizes/font_size = 16
 text = "💾 RAM: 150"
 
 [node name="WaveLabel" type="Label" parent="HUD/HUDControl/TopHUD/TopLayout" unique_id=824865920]
 layout_mode = 2
 theme_override_colors/font_color = Color(1, 0.72156864, 0, 1)
-theme_override_font_sizes/font_size = 14
+theme_override_font_sizes/font_size = 16
 text = "Wave: 0/3"
 
 [node name="BaseHealthLabel" type="Label" parent="HUD/HUDControl/TopHUD/TopLayout" unique_id=1640363410]
 layout_mode = 2
 theme_override_colors/font_color = Color(1, 0.2, 0.4, 1)
-theme_override_font_sizes/font_size = 14
+theme_override_font_sizes/font_size = 16
 text = "❤️ 10"
 
 [node name="ScoreLabel" type="Label" parent="HUD/HUDControl/TopHUD/TopLayout" unique_id=1594733835]
 layout_mode = 2
 theme_override_colors/font_color = Color(0, 1, 0.53333336, 1)
-theme_override_font_sizes/font_size = 14
+theme_override_font_sizes/font_size = 16
 text = "Score: 0"
 
 [node name="PauseBtn" type="Button" parent="HUD/HUDControl/TopHUD/TopLayout" unique_id=98716254]
@@ -149,7 +149,7 @@ alignment = 1
 
 [node name="PauseTitle" type="Label" parent="HUD/HUDControl/PauseMenu/PauseMenuLayout" unique_id=98716384]
 layout_mode = 2
-theme_override_font_sizes/font_size = 24
+theme_override_font_sizes/font_size = 16
 text = "GAME PAUSED"
 horizontal_alignment = 1
 
@@ -202,7 +202,7 @@ offset_bottom = 50.0
 grow_horizontal = 2
 grow_vertical = 2
 theme_override_colors/font_color = Color(0, 1, 0.53333336, 1)
-theme_override_font_sizes/font_size = 48
+theme_override_font_sizes/font_size = 16
 text = "WAVE 1"
 horizontal_alignment = 1
 vertical_alignment = 1
