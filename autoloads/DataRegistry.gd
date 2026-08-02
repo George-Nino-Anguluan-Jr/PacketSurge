@@ -20,6 +20,79 @@ const LEVELS_DIR   := "res://resources/levels"
 const ENEMIES_DIR  := "res://resources/enemies"
 const LESSONS_DIR  := "res://resources/lessons"
 
+# Static manifest of .tres files. `DirAccess` cannot enumerate folders
+# inside a packed PCK in exported builds (works only in the editor), so
+# exported games fall back to these lists. Keep them in sync when adding
+# a new .tres file under any of the resource directories.
+const RESOURCE_PATHS: Dictionary = {
+	TOWERS_DIR: [
+		"res://resources/towers/tower_array.tres",
+		"res://resources/towers/tower_binary.tres",
+		"res://resources/towers/tower_bubble.tres",
+		"res://resources/towers/tower_counting.tres",
+		"res://resources/towers/tower_insertion.tres",
+		"res://resources/towers/tower_linear.tres",
+		"res://resources/towers/tower_linked_list.tres",
+		"res://resources/towers/tower_merge.tres",
+		"res://resources/towers/tower_queue.tres",
+		"res://resources/towers/tower_quick.tres",
+		"res://resources/towers/tower_radix.tres",
+		"res://resources/towers/tower_selection.tres",
+		"res://resources/towers/tower_stack.tres",
+	],
+	LEVELS_DIR: [
+		"res://resources/levels/level_01.tres",
+		"res://resources/levels/level_02.tres",
+		"res://resources/levels/level_03.tres",
+		"res://resources/levels/level_04.tres",
+		"res://resources/levels/level_05.tres",
+		"res://resources/levels/level_06.tres",
+		"res://resources/levels/level_07.tres",
+		"res://resources/levels/level_08.tres",
+		"res://resources/levels/level_09.tres",
+		"res://resources/levels/level_10.tres",
+		"res://resources/levels/level_11.tres",
+		"res://resources/levels/level_12.tres",
+		"res://resources/levels/level_13.tres",
+	],
+	ENEMIES_DIR: [
+		"res://resources/enemies/enemy_basic_packet.tres",
+		"res://resources/enemies/enemy_binary_mask.tres",
+		"res://resources/enemies/enemy_bubble_shield.tres",
+		"res://resources/enemies/enemy_count_meter.tres",
+		"res://resources/enemies/enemy_indexed_packet.tres",
+		"res://resources/enemies/enemy_insertion_stack.tres",
+		"res://resources/enemies/enemy_linked_drain.tres",
+		"res://resources/enemies/enemy_merge_twin.tres",
+		"res://resources/enemies/enemy_overflow_packet.tres",
+		"res://resources/enemies/enemy_pivot_splitter.tres",
+		"res://resources/enemies/enemy_queue_jumper.tres",
+		"res://resources/enemies/enemy_radix_digit.tres",
+		"res://resources/enemies/enemy_scan_wave.tres",
+		"res://resources/enemies/enemy_selection_mark.tres",
+	],
+	LESSONS_DIR: [
+		"res://resources/lessons/lesson_py_variables.tres",
+		"res://resources/lessons/lesson_py_conditions.tres",
+		"res://resources/lessons/lesson_py_functions.tres",
+		"res://resources/lessons/lesson_py_lists.tres",
+		"res://resources/lessons/lesson_py_loops.tres",
+		"res://resources/lessons/lesson_ds_arrays.tres",
+		"res://resources/lessons/lesson_ds_linked_lists.tres",
+		"res://resources/lessons/lesson_ds_queues.tres",
+		"res://resources/lessons/lesson_ds_stacks.tres",
+		"res://resources/lessons/lesson_sort_bubble.tres",
+		"res://resources/lessons/lesson_sort_counting.tres",
+		"res://resources/lessons/lesson_sort_insertion.tres",
+		"res://resources/lessons/lesson_sort_merge.tres",
+		"res://resources/lessons/lesson_sort_quick.tres",
+		"res://resources/lessons/lesson_sort_radix.tres",
+		"res://resources/lessons/lesson_sort_selection.tres",
+		"res://resources/lessons/lesson_search_binary.tres",
+		"res://resources/lessons/lesson_search_linear.tres",
+	],
+}
+
 func _ready() -> void:
 	_load_towers()
 	_load_levels()
@@ -28,19 +101,19 @@ func _ready() -> void:
 
 # ─── LOADERS ────────────────────────────────────────────
 func _load_towers() -> void:
-	for path in _list_resources(TOWERS_DIR):
+	for path in _get_resource_paths(TOWERS_DIR):
 		var r = load(path) as TowerData
 		if r and r.tower_id != "":
 			towers[r.tower_id] = r
 
 func _load_levels() -> void:
-	for path in _list_resources(LEVELS_DIR):
+	for path in _get_resource_paths(LEVELS_DIR):
 		var r = load(path) as LevelData
 		if r and r.level_number > 0:
 			levels[r.level_number] = r
 
 func _load_enemies() -> void:
-	for path in _list_resources(ENEMIES_DIR):
+	for path in _get_resource_paths(ENEMIES_DIR):
 		var r = load(path) as EnemyData
 		if r and r.enemy_id != "":
 			enemies[r.enemy_id] = r
@@ -48,7 +121,7 @@ func _load_enemies() -> void:
 func _load_lessons() -> void:
 	var all: Array = []  # of LessonData
 	var path_by_id: Dictionary = {}
-	for path in _list_resources(LESSONS_DIR):
+	for path in _get_resource_paths(LESSONS_DIR):
 		var r = load(path) as LessonData
 		if r and r.lesson_id != "":
 			all.append(r)
@@ -82,6 +155,23 @@ func _list_resources(dir_path: String) -> Array[String]:
 		if not dir.current_is_dir() and f.ends_with(".tres"):
 			out.append(dir_path.path_join(f))
 		f = dir.get_next()
+	return out
+
+# Editor builds can list the real filesystem, so they keep auto-discovery.
+# Exported builds cannot enumerate packed PCK folders with DirAccess, so they
+# load the static manifest instead. Both paths must yield the same data.
+func _get_resource_paths(dir_path: String) -> Array[String]:
+	if OS.has_feature("editor"):
+		var listed := _list_resources(dir_path)
+		if listed.size() > 0:
+			return listed
+	# Const Dictionary values are untyped Array, so build a typed
+	# Array[String] here — returning the raw Array would be a runtime
+	# type error in exported builds and silently load nothing.
+	var manifest: Array = RESOURCE_PATHS.get(dir_path, [])
+	var out: Array[String] = []
+	for path in manifest:
+		out.append(str(path))
 	return out
 
 # ─── ACCESSORS ──────────────────────────────────────────

@@ -5,6 +5,10 @@ extends Node
 const SUPABASE_URL := "https://ehhngzbkzcranvygnyjo.supabase.co"
 const ANON_KEY     := "sb_publishable_G5sL9znS3rCvH4BUitElIg_cLPIeF4n"
 
+# Where the login session is persisted so players don't have to
+# re-enter their credentials every time the app opens.
+const SESSION_FILE := "user://session.json"
+
 # ─── SESSION ───────────────────────────────────────────
 var student_id:   String = ""
 var full_name:    String = ""
@@ -13,8 +17,12 @@ var email:        String = ""
 var section:      String = ""
 var year_level:   String = ""
 var access_token: String = ""
+var refresh_token: String = ""
 var last_login:  String = ""
 var is_logged_in: bool   = false
+
+# Session file contents being validated during auto-login.
+var _pending_restore: Dictionary = {}
 
 # User metadata captured from the auth response, used to restore a
 # missing students row at login (e.g. registration was interrupted).
@@ -35,6 +43,7 @@ signal otp_verified(success: bool, session_token: String)
 signal password_set_completed(success: bool, message: String)
 signal signup_verified(success: bool, message: String)
 signal logout_completed()
+signal session_restore_failed(message: String)
 signal progress_saved(success: bool)
 signal leaderboard_loaded(data: Array)
 
@@ -132,6 +141,7 @@ func _on_auth_created(
 		if has_token:
 			awaiting_email_confirmation = false
 			access_token = parsed["access_token"]
+			refresh_token = str(parsed.get("refresh_token", ""))
 			student_id   = parsed["user"]["id"]
 			full_name    = p_full_name
 			username     = p_username
@@ -139,6 +149,7 @@ func _on_auth_created(
 			year_level   = p_year
 			section      = p_section
 			is_logged_in = true
+			_save_session()
 			_save_student_profile()
 			register_completed.emit(true, "Account created! Welcome.")
 			print("[Supabase] Registered: ", username)
@@ -191,6 +202,7 @@ func _on_signup_verified(
 	if code == 200:
 		var parsed = JSON.parse_string(body.get_string_from_utf8())
 		access_token = str(parsed.get("access_token", ""))
+		refresh_token = str(parsed.get("refresh_token", ""))
 		student_id   = str(parsed.get("user", {}).get("id", ""))
 		is_logged_in = true
 		awaiting_email_confirmation = false
@@ -202,6 +214,7 @@ func _on_signup_verified(
 		_pending_signup_email = ""
 		_pending_signup_meta = {}
 		# Profile save triggers progress/leaderboard creation + navigation.
+		_save_session()
 		_save_student_profile()
 		signup_verified.emit(true, "Account confirmed! Welcome, " + full_name + ".")
 		print("[Supabase] Email confirmed and logged in: ", username)
@@ -302,6 +315,7 @@ func _on_login_response(
 	var parsed = JSON.parse_string(body.get_string_from_utf8())
 	if code == 200 and parsed.has("access_token"):
 		access_token = parsed["access_token"]
+		refresh_token = str(parsed.get("refresh_token", ""))
 		student_id   = parsed["user"]["id"]
 		is_logged_in = true
 		var user_data = parsed.get("user", {})
@@ -504,6 +518,7 @@ func _on_profile_loaded(
 			year_level = s.get("year_level", "")
 			section    = s.get("section",    "")
 			last_login = s.get("last_seen", "")
+			_save_session()
 			_update_last_seen()
 			load_progress_from_cloud()   # ← loads progress THEN navigates
 			login_completed.emit(
@@ -530,6 +545,132 @@ func _restore_profile_from_metadata() -> void:
 	_save_student_profile()
 	print("[Supabase] Restored missing student profile for: ", username)
 
+# ─── SESSION PERSISTENCE ──────────────────────────────
+func _save_session() -> void:
+	if not is_logged_in:
+		return
+	var data := {
+		"access_token":  access_token,
+		"refresh_token": refresh_token,
+		"student_id":    student_id,
+		"full_name":     full_name,
+		"username":      username,
+		"email":         email,
+		"year_level":    year_level,
+		"section":       section,
+	}
+	var f := FileAccess.open(SESSION_FILE, FileAccess.WRITE)
+	if f:
+		f.store_string(JSON.stringify(data))
+		f.close()
+
+func _clear_session() -> void:
+	if FileAccess.file_exists(SESSION_FILE):
+		DirAccess.remove_absolute(ProjectSettings.globalize_path(SESSION_FILE))
+
+# Auto-login: called by the login scene on boot. Returns true when a saved
+# session was found (validation is async). On success the normal login chain
+# runs and the app jumps straight to the main menu; on failure the session
+# is wiped and session_restore_failed is emitted so the form stays visible.
+func restore_session() -> bool:
+	if not FileAccess.file_exists(SESSION_FILE):
+		return false
+	var f := FileAccess.open(SESSION_FILE, FileAccess.READ)
+	if f == null:
+		return false
+	var parsed = JSON.parse_string(f.get_as_text())
+	f.close()
+	if not (parsed is Dictionary):
+		_clear_session()
+		return false
+	var tok = str(parsed.get("access_token", ""))
+	if tok == "":
+		_clear_session()
+		return false
+	_pending_restore = parsed
+	access_token  = tok
+	refresh_token = str(parsed.get("refresh_token", ""))
+	student_id    = str(parsed.get("student_id", ""))
+	_validate_restored_token()
+	return true
+
+func _validate_restored_token() -> void:
+	var headers := PackedStringArray([
+		"apikey: " + ANON_KEY,
+		"Authorization: Bearer " + access_token,
+	])
+	var http := HTTPRequest.new()
+	add_child(http)
+	http.request_completed.connect(_on_restore_user.bind(http))
+	http.request(SUPABASE_URL + "/auth/v1/user", headers, HTTPClient.METHOD_GET)
+
+func _on_restore_user(
+		result: int, code: int,
+		headers: PackedStringArray, body: PackedByteArray,
+		http: HTTPRequest) -> void:
+	http.queue_free()
+	if code == 200:
+		var parsed = JSON.parse_string(body.get_string_from_utf8())
+		if parsed is Dictionary:
+			_apply_restored_session(
+				str(parsed.get("id", student_id)),
+				parsed.get("user_metadata", {}),
+				str(parsed.get("email", ""))
+			)
+			return
+	_refresh_restored_token()
+
+func _refresh_restored_token() -> void:
+	if refresh_token == "":
+		_restore_failed()
+		return
+	var url  = SUPABASE_URL + "/auth/v1/token?grant_type=refresh_token"
+	var body = JSON.stringify({"refresh_token": refresh_token})
+	var http := HTTPRequest.new()
+	add_child(http)
+	http.request_completed.connect(_on_refreshed_session.bind(http))
+	http.request(url, _get_headers(false), HTTPClient.METHOD_POST, body)
+
+func _on_refreshed_session(
+		result: int, code: int,
+		headers: PackedStringArray, body: PackedByteArray,
+		http: HTTPRequest) -> void:
+	http.queue_free()
+	if code == 200:
+		var parsed = JSON.parse_string(body.get_string_from_utf8())
+		if parsed is Dictionary and parsed.has("access_token"):
+			access_token  = str(parsed["access_token"])
+			refresh_token = str(parsed.get("refresh_token", refresh_token))
+			_save_session()
+			_apply_restored_session(
+				str(parsed.get("user", {}).get("id", student_id)),
+				parsed.get("user", {}).get("user_metadata", {}),
+				str(parsed.get("user", {}).get("email", ""))
+			)
+			return
+	_restore_failed()
+
+func _apply_restored_session(uid: String, user_meta: Dictionary, user_email: String) -> void:
+	is_logged_in = true
+	student_id = uid
+	_auto_meta = user_meta
+	if user_email != "":
+		_auto_meta["email"] = user_email
+	_pending_restore = {}
+	# Loads the students row, updates last_seen, pulls cloud progress,
+	# then navigates to the main menu — same chain as a normal login.
+	_load_student_profile()
+
+func _restore_failed() -> void:
+	access_token   = ""
+	refresh_token  = ""
+	is_logged_in   = false
+	_pending_restore = {}
+	_clear_session()
+	session_restore_failed.emit(
+		"Your session has expired. Please log in again."
+	)
+
 # ─── LOGOUT ────────────────────────────────────────────
 func logout() -> void:
 	# Wait for the cloud save to complete before wiping local state.
@@ -545,11 +686,14 @@ func logout() -> void:
 	year_level   = ""
 	last_login   = ""
 	access_token = ""
+	refresh_token = ""
 	is_logged_in = false
 	_auto_meta   = {}
+	_pending_restore = {}
 	awaiting_email_confirmation = false
 	_pending_signup_email = ""
 	_pending_signup_meta = {}
+	_clear_session()
 	ProgressManager.reset_all_progress()
 	logout_completed.emit()
 	GameManager.go_to("login")
@@ -608,12 +752,14 @@ func _update_last_seen() -> void:
 func _create_initial_progress() -> void:
 	var url  = SUPABASE_URL + "/rest/v1/progress"
 	var body = JSON.stringify({"student_id": student_id})
+	var headers = _get_headers()
+	headers.append("Prefer: resolution=merge-duplicates")
 	var http := HTTPRequest.new()
 	add_child(http)
 	http.request_completed.connect(
 		func(_r, _c, _h, _b): http.queue_free()
 	)
-	http.request(url, _get_headers(), HTTPClient.METHOD_POST, body)
+	http.request(url, headers, HTTPClient.METHOD_POST, body)
 
 func save_progress_to_cloud() -> void:
 	if not is_logged_in:
@@ -652,8 +798,12 @@ func _on_progress_saved(
 func load_progress_from_cloud() -> void:
 	if not is_logged_in:
 		return
+	# Order by updated_at desc so we get the newest row; the DB can still
+	# hold duplicates (no unique constraint), so _on_progress_loaded also
+	# picks the newest defensively instead of trusting row order.
 	var url  = SUPABASE_URL + \
-		"/rest/v1/progress?student_id=eq." + student_id
+		"/rest/v1/progress?student_id=eq." + student_id + \
+		"&order=updated_at.desc&limit=1"
 	var http := HTTPRequest.new()
 	add_child(http)
 	http.request_completed.connect(_on_progress_loaded.bind(http))
@@ -671,7 +821,13 @@ func _on_progress_loaded(
 
 	var parsed = JSON.parse_string(body.get_string_from_utf8())
 	if parsed is Array and parsed.size() > 0:
-		var data = parsed[0]
+		# Pick the newest row. With duplicate rows in the table this picks
+		# the most recent save instead of the oldest (parsed[0] before the
+		# query ordering was added).
+		var data: Variant = parsed[0]
+		for row in parsed:
+			if row is Dictionary and str(row.get("updated_at", "")) > str(data.get("updated_at", "")):
+				data = row
 
 		# Cloud is a backup, NOT the source of truth. Local was
 		# already loaded from save.json in ProgressManager._ready().
