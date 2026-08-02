@@ -9,6 +9,7 @@ extends Control
 @onready var register_form: VBoxContainer = $CenterContainer/MainLayout/FormCard/CardLayout/RegisterForm
 @onready var status_label: Label        = $CenterContainer/MainLayout/StatusLabel
 @onready var loading_overlay: ColorRect = $LoadingOverlay
+@onready var loading_label: Label       = $LoadingOverlay/LoadingLabel
 
 # Login form fields
 @onready var login_username_field: LineEdit = $CenterContainer/MainLayout/FormCard/CardLayout/LoginForm/LoginUsernameField
@@ -65,7 +66,13 @@ func _ready() -> void:
 	SupabaseManager.otp_verified.connect(_on_otp_verified)
 	SupabaseManager.password_set_completed.connect(_on_password_set_completed)
 	SupabaseManager.signup_verified.connect(_on_signup_verified)
+	SupabaseManager.session_restore_failed.connect(_on_session_restore_failed)
 	_connect_button_sounds(self)
+
+	# If a session was saved last time, skip the login form entirely.
+	if SupabaseManager.restore_session():
+		_show_loading(true)
+		loading_label.text = "Restoring session..."
 
 func _connect_button_sounds(node: Node) -> void:
 	var sfx = get_node_or_null("/root/SoundManager")
@@ -627,9 +634,15 @@ func _show_loading(show: bool) -> void:
 		# LoadingOverlay in draw order, so pull the overlay to the front
 		# to keep "Connecting..." visible on top of any dialog.
 		loading_overlay.move_to_front()
+	else:
+		loading_label.text = "Connecting..."
 	login_btn.disabled      = show
 	register_btn.disabled   = show
 	forgot_btn.disabled     = show
+
+func _on_session_restore_failed(message: String) -> void:
+	_show_loading(false)
+	_show_status(message, false)
 
 # ─── TITLE ANIMATION ───────────────────────────────────
 func _animate_title() -> void:
