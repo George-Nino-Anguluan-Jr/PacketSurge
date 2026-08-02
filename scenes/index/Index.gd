@@ -14,7 +14,14 @@ extends Control
 # ─── STATE ──────────────────────────────────────────────
 var active_tab: String   = "towers"
 var search_query: String = ""
-var _last_device: String = ""
+
+# ─── HELPERS ───────────────────────────────────────────
+func _min_dim() -> float:
+	var vp := get_viewport().get_visible_rect().size
+	return minf(maxf(vp.x, 320.0), maxf(vp.y, 240.0))
+
+func _fs(ratio: float, floor_v: float, cap_v: float) -> int:
+	return int(clampf(_min_dim() * ratio, floor_v, cap_v))
 
 # ─── THEME COLORS ──────────────────────────────────────
 const C_BG          := Color("#0A1628")
@@ -138,9 +145,8 @@ func _build_towers_tab() -> void:
 			towers_content.add_child(_make_tower_card(data))
 
 func _preview_size() -> Vector2:
-	if ScreenManager.is_mobile():
-		return Vector2(100, 100)
-	return Vector2(140, 140)
+	var s := _fs(0.32, 100.0, 140.0)
+	return Vector2(s, s)
 
 func _make_tower_card(data: Dictionary) -> Control:
 	var is_unlocked = ProgressManager.is_tower_unlocked(data["id"])
@@ -173,19 +179,18 @@ func _make_tower_card(data: Dictionary) -> Control:
 
 	var ds_label = Label.new()
 	ds_label.text = "%s   •   💾 %d RAM" % [data["ds"], data["cost"]]
-	ds_label.add_theme_font_size_override("font_size", 14 if ScreenManager.is_mobile() else 15)
+	ds_label.add_theme_font_size_override("font_size", _fs(0.032, 16.0, 16.0))
 	ds_label.add_theme_color_override("font_color", color if is_unlocked else C_DIM)
 	middle.add_child(ds_label)
 
 	var tagline = Label.new()
 	tagline.text = data["tagline"]
 	tagline.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
-	tagline.add_theme_font_size_override("font_size", 14)
+	tagline.add_theme_font_size_override("font_size", _fs(0.032, 16.0, 16.0))
 	tagline.add_theme_color_override("font_color", C_MUTED)
 	middle.add_child(tagline)
 
 	if is_unlocked:
-		# Stats row
 		var stats = HBoxContainer.new()
 		stats.add_theme_constant_override("separation", 16)
 		_add_stat(stats, "DMG",   str(data["damage"]))
@@ -199,7 +204,7 @@ func _make_tower_card(data: Dictionary) -> Control:
 			var abil = Label.new()
 			abil.text = "⚡ " + data["ability"]
 			abil.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
-			abil.add_theme_font_size_override("font_size", 14)
+			abil.add_theme_font_size_override("font_size", _fs(0.032, 16.0, 16.0))
 			abil.add_theme_color_override("font_color", C_GOLD)
 			middle.add_child(abil)
 
@@ -208,7 +213,7 @@ func _make_tower_card(data: Dictionary) -> Control:
 			var mech = Label.new()
 			mech.text = data["mechanic"]
 			mech.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
-			mech.add_theme_font_size_override("font_size", 14)
+			mech.add_theme_font_size_override("font_size", _fs(0.032, 16.0, 16.0))
 			mech.add_theme_color_override("font_color", C_TEXT)
 			middle.add_child(mech)
 
@@ -223,7 +228,7 @@ func _make_tower_card(data: Dictionary) -> Control:
 		var lock = Label.new()
 		lock.text = "🔒  Complete the \"%s\" lesson to unlock." % _lesson_display_name(data["unlocked_by"])
 		lock.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
-		lock.add_theme_font_size_override("font_size", 16)
+		lock.add_theme_font_size_override("font_size", _fs(0.045, 16.0, 18.0))
 		lock.add_theme_color_override("font_color", C_MUTED)
 		middle.add_child(lock)
 
@@ -241,10 +246,10 @@ func _build_enemies_tab() -> void:
 			enemies_content.add_child(_make_enemy_card(data))
 
 func _card_separation() -> int:
-	return 8 if ScreenManager.is_mobile() else 16
+	return _fs(0.030, 10.0, 16.0)
 
 func _card_font_size() -> int:
-	return 18 if ScreenManager.is_mobile() else 22
+	return _fs(0.050, 18.0, 24.0)
 
 func _make_enemy_card(data: Dictionary) -> Control:
 	var color = data["color"]
@@ -274,14 +279,14 @@ func _make_enemy_card(data: Dictionary) -> Control:
 
 	var meta = Label.new()
 	meta.text = "%s Threat   •   💾 +%d RAM" % [data["threat"], data["reward"]]
-	meta.add_theme_font_size_override("font_size", 14 if ScreenManager.is_mobile() else 15)
+	meta.add_theme_font_size_override("font_size", _fs(0.032, 16.0, 16.0))
 	meta.add_theme_color_override("font_color", _threat_color(data["threat"]))
 	middle.add_child(meta)
 
 	var tagline = Label.new()
 	tagline.text = data["tagline"]
 	tagline.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
-	tagline.add_theme_font_size_override("font_size", 14)
+	tagline.add_theme_font_size_override("font_size", _fs(0.032, 16.0, 16.0))
 	tagline.add_theme_color_override("font_color", C_MUTED)
 	middle.add_child(tagline)
 
@@ -294,7 +299,7 @@ func _make_enemy_card(data: Dictionary) -> Control:
 	var special = Label.new()
 	special.text = "⚡ " + data["special"]
 	special.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
-	special.add_theme_font_size_override("font_size", 14)
+	special.add_theme_font_size_override("font_size", _fs(0.032, 16.0, 16.0))
 	special.add_theme_color_override("font_color", C_GOLD)
 	middle.add_child(special)
 
@@ -302,7 +307,7 @@ func _make_enemy_card(data: Dictionary) -> Control:
 		var lesson = Label.new()
 		lesson.text = "📘 " + data["lesson"]
 		lesson.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
-		lesson.add_theme_font_size_override("font_size", 14)
+		lesson.add_theme_font_size_override("font_size", _fs(0.032, 16.0, 16.0))
 		lesson.add_theme_color_override("font_color", C_TEXT)
 		middle.add_child(lesson)
 
@@ -411,16 +416,10 @@ func _make_card_style(color: Color, is_active: bool) -> StyleBoxFlat:
 	s.corner_radius_top_right    = 6
 	s.corner_radius_bottom_left  = 6
 	s.corner_radius_bottom_right = 6
-	if ScreenManager.is_mobile():
-		s.content_margin_left   = 10
-		s.content_margin_right  = 10
-		s.content_margin_top    = 8
-		s.content_margin_bottom = 8
-	else:
-		s.content_margin_left   = 16
-		s.content_margin_right  = 16
-		s.content_margin_top    = 12
-		s.content_margin_bottom = 12
+	s.content_margin_left   = _fs(0.034, 10.0, 16.0)
+	s.content_margin_right  = _fs(0.034, 10.0, 16.0)
+	s.content_margin_top    = _fs(0.025, 8.0, 12.0)
+	s.content_margin_bottom = _fs(0.025, 8.0, 12.0)
 	return s
 
 func _add_stat(container: HBoxContainer, label: String, value: String) -> void:
@@ -429,13 +428,13 @@ func _add_stat(container: HBoxContainer, label: String, value: String) -> void:
 
 	var lbl = Label.new()
 	lbl.text = label
-	lbl.add_theme_font_size_override("font_size", 12)
+	lbl.add_theme_font_size_override("font_size", _fs(0.030, 16.0, 16.0))
 	lbl.add_theme_color_override("font_color", C_MUTED)
 	vbox.add_child(lbl)
 
 	var val = Label.new()
 	val.text = value
-	val.add_theme_font_size_override("font_size", 15)
+	val.add_theme_font_size_override("font_size", _fs(0.038, 16.0, 18.0))
 	val.add_theme_color_override("font_color", C_TEXT)
 	vbox.add_child(val)
 
@@ -449,14 +448,14 @@ func _add_matchup_list(container: HBoxContainer, title: String, ids: Array, colo
 
 	var hdr = Label.new()
 	hdr.text = title
-	hdr.add_theme_font_size_override("font_size", 12)
+	hdr.add_theme_font_size_override("font_size", _fs(0.030, 16.0, 16.0))
 	hdr.add_theme_color_override("font_color", color)
 	box.add_child(hdr)
 
 	for enemy_id in ids:
 		var item = Label.new()
 		item.text = "• " + EnemyIntroData.get_enemy_name(enemy_id)
-		item.add_theme_font_size_override("font_size", 14)
+		item.add_theme_font_size_override("font_size", _fs(0.032, 16.0, 16.0))
 		item.add_theme_color_override("font_color", C_TEXT)
 		box.add_child(item)
 
@@ -494,7 +493,7 @@ func _apply_styles() -> void:
 	back_style.corner_radius_bottom_right = 4
 	back_btn.add_theme_stylebox_override("normal", back_style)
 	back_btn.add_theme_color_override("font_color", C_ACCENT)
-	back_btn.add_theme_font_size_override("font_size", 16 if ScreenManager.is_mobile() else 17)
+	back_btn.add_theme_font_size_override("font_size", _fs(0.045, 16.0, 18.0))
 
 	var search_style := StyleBoxFlat.new()
 	search_style.bg_color = C_BG_DARK
@@ -512,7 +511,7 @@ func _apply_styles() -> void:
 	search_field.add_theme_stylebox_override("normal", search_style)
 	search_field.add_theme_color_override("font_color", C_TEXT)
 	search_field.add_theme_color_override("font_placeholder_color", C_MUTED)
-	search_field.add_theme_font_size_override("font_size", 16)
+	search_field.add_theme_font_size_override("font_size", _fs(0.045, 16.0, 18.0))
 
 	var tab_bg := StyleBoxFlat.new()
 	tab_bg.bg_color = C_BG_DARK
@@ -537,51 +536,38 @@ func _style_active_tab(btn: Button, active: bool) -> void:
 	btn.add_theme_stylebox_override("normal",  style)
 	btn.add_theme_stylebox_override("hover",   style)
 	btn.add_theme_stylebox_override("pressed", style)
-	btn.add_theme_font_size_override("font_size", 18)
+	btn.add_theme_font_size_override("font_size", _fs(0.048, 18.0, 22.0))
 
 # ─── RESPONSIVE ────────────────────────────────────────
 func _apply_responsive_layout() -> void:
-	var current = "mobile" if ScreenManager.is_mobile() else "tablet" if ScreenManager.is_tablet() else "desktop"
-	var device_changed = current != _last_device
-	_last_device = current
-	
-	var top_bar = $TopBar
-	var content_area = $ContentArea
-	var title_label = $TopBar/TopBarLayout/TitleLabel
+	var vp: Vector2 = get_viewport().get_visible_rect().size
+	var w := maxf(vp.x, 320.0)
+	var h := maxf(vp.y, 240.0)
+	var min_dim := minf(w, h)
+
+	# Fluid typography
+	$TopBar/TopBarLayout/TitleLabel.add_theme_font_size_override("font_size", int(clampf(min_dim * 0.032, 18.0, 28.0)))
+	back_btn.add_theme_font_size_override("font_size", _fs(0.045, 16.0, 18.0))
+
+	# Fluid button sizes
+	var btn_h := clampf(h * 0.075, 44.0, 52.0)
+	back_btn.custom_minimum_size = Vector2(clampf(w * 0.12, 80.0, 120.0), btn_h)
+
+	# Tab bar sizing
 	var tab_bar = $TabBar
-	
-	if ScreenManager.is_mobile():
-		search_field.visible = true
-		ScreenManager.apply_panel_padding(top_bar, 20)
-		tab_bar.offset_left = 20
-		tab_bar.offset_right = -20
-		content_area.add_theme_constant_override("margin_left", 20)
-		content_area.add_theme_constant_override("margin_right", 20)
-		content_area.add_theme_constant_override("margin_top", 20)
-		content_area.add_theme_constant_override("margin_bottom", 20)
-		title_label.add_theme_font_size_override("font_size", 20)
-		back_btn.custom_minimum_size = Vector2(85, 52)
-	elif ScreenManager.is_tablet():
-		search_field.visible = true
-		ScreenManager.apply_panel_padding(top_bar, 24)
-		tab_bar.offset_left = 24
-		tab_bar.offset_right = -24
-		content_area.add_theme_constant_override("margin_left", 24)
-		content_area.add_theme_constant_override("margin_right", 24)
-		content_area.add_theme_constant_override("margin_top", 24)
-		content_area.add_theme_constant_override("margin_bottom", 24)
-		title_label.add_theme_font_size_override("font_size", 22)
-		back_btn.custom_minimum_size = Vector2(95, 52)
-	else:
-		search_field.visible = true
-		title_label.add_theme_font_size_override("font_size", 24)
-		back_btn.custom_minimum_size = Vector2(110, 52)
-	
-	# Rebuild current tab if device changed (card sizes differ)
-	if device_changed:
-		match active_tab:
-			"towers": _build_towers_tab()
-			"enemies": _build_enemies_tab()
+	var inset := clampf(min_dim * 0.020, 16.0, 24.0)
+	tab_bar.offset_left = inset
+	tab_bar.offset_right = -inset
+	tab_bar.add_theme_constant_override("separation", clampf(min_dim * 0.010, 6.0, 12.0))
+	for btn in [towers_tab, enemies_tab]:
+		btn.custom_minimum_size = Vector2(0, clampf(min_dim * 0.065, 44.0, 52.0))
+
+	# Content area margins — fluid inset
+	var content_area = $ContentArea
+	content_area.add_theme_constant_override("margin_left", inset)
+	content_area.add_theme_constant_override("margin_right", inset)
+	content_area.add_theme_constant_override("margin_top", clampf(min_dim * 0.010, 8.0, 16.0))
+	content_area.add_theme_constant_override("margin_bottom", inset)
 
 # ─── TUTORIAL ──────────────────────────────────────────
 const TutorialOverlay = preload("res://scenes/core/TutorialOverlay.gd")
