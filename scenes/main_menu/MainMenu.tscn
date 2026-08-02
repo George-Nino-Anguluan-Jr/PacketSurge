@@ -51,41 +51,41 @@ anchor_bottom = 1.0
 grow_horizontal = 2
 grow_vertical = 2
 
-[node name="MainLayout" type="VBoxContainer" parent="CenterContainer" unique_id=707529798]
+[node name="MainLayout" type="VBoxContainer" parent="ScrollContainer/CenterContainer" unique_id=707529798]
 layout_mode = 2
 theme_override_constants/separation = 24
 
-[node name="TitleSection" type="VBoxContainer" parent="CenterContainer/MainLayout" unique_id=1070787321]
+[node name="TitleSection" type="VBoxContainer" parent="ScrollContainer/CenterContainer/MainLayout" unique_id=1070787321]
 layout_mode = 2
 theme_override_constants/separation = 8
 alignment = 1
 
-[node name="TitleLabel" type="Label" parent="CenterContainer/MainLayout/TitleSection" unique_id=1319595900]
+[node name="TitleLabel" type="Label" parent="ScrollContainer/CenterContainer/MainLayout/TitleSection" unique_id=1319595900]
 layout_mode = 2
 size_flags_horizontal = 4
 theme_override_colors/font_color = Color(0, 0.83137256, 1, 1)
 theme_override_font_sizes/font_size = 68
 text = "PACKET SURGE"
 
-[node name="Spacer" type="Control" parent="CenterContainer/MainLayout" unique_id=514360466]
+[node name="Spacer" type="Control" parent="ScrollContainer/CenterContainer/MainLayout" unique_id=514360466]
 custom_minimum_size = Vector2(0, 40)
 layout_mode = 2
 
-[node name="ButtonSection" type="VBoxContainer" parent="CenterContainer/MainLayout" unique_id=343250965]
+[node name="ButtonSection" type="VBoxContainer" parent="ScrollContainer/CenterContainer/MainLayout" unique_id=343250965]
 layout_mode = 2
 theme_override_constants/separation = 12
 
-[node name="CampaignButton" type="Button" parent="CenterContainer/MainLayout/ButtonSection" unique_id=324031090]
+[node name="CampaignButton" type="Button" parent="ScrollContainer/CenterContainer/MainLayout/ButtonSection" unique_id=324031090]
 custom_minimum_size = Vector2(360, 56)
 layout_mode = 2
 text = "CAMPAIGN"
 
-[node name="AcademyButton" type="Button" parent="CenterContainer/MainLayout/ButtonSection" unique_id=1640463120]
+[node name="AcademyButton" type="Button" parent="ScrollContainer/CenterContainer/MainLayout/ButtonSection" unique_id=1640463120]
 custom_minimum_size = Vector2(360, 56)
 layout_mode = 2
 text = "ACADEMY"
 
-[node name="IndexButton" type="Button" parent="CenterContainer/MainLayout/ButtonSection" unique_id=171158732]
+[node name="IndexButton" type="Button" parent="ScrollContainer/CenterContainer/MainLayout/ButtonSection" unique_id=171158732]
 custom_minimum_size = Vector2(360, 56)
 layout_mode = 2
 text = "INDEX"
