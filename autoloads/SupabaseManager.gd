@@ -9,11 +9,16 @@ const ANON_KEY     := "sb_publishable_G5sL9znS3rCvH4BUitElIg_cLPIeF4n"
 var student_id:   String = ""
 var full_name:    String = ""
 var username:     String = ""
+var email:        String = ""
 var section:      String = ""
 var year_level:   String = ""
 var access_token: String = ""
 var last_login:  String = ""
 var is_logged_in: bool   = false
+
+# User metadata captured from the auth response, used to restore a
+# missing students row at login (e.g. registration was interrupted).
+var _auto_meta: Dictionary = {}
 
 # ─── SIGNALS ───────────────────────────────────────────
 signal register_completed(success: bool, message: String)
@@ -96,7 +101,7 @@ func _create_auth_account(
 	add_child(http)
 	http.request_completed.connect(
 		_on_auth_created.bind(
-			http, p_full_name, p_username, p_year, p_section
+			http, p_full_name, p_username, p_email, p_year, p_section
 		)
 	)
 	http.request(url, _get_headers(false), HTTPClient.METHOD_POST, body)
@@ -105,7 +110,7 @@ func _on_auth_created(
 		result: int, code: int,
 		headers: PackedStringArray, body: PackedByteArray,
 		http: HTTPRequest,
-		p_full_name: String, p_username: String,
+		p_full_name: String, p_username: String, p_email: String,
 		p_year: String, p_section: String) -> void:
 	http.queue_free()
 	var parsed = JSON.parse_string(body.get_string_from_utf8())
@@ -114,6 +119,7 @@ func _on_auth_created(
 		student_id   = parsed["user"]["id"]
 		full_name    = p_full_name
 		username     = p_username
+		email        = p_email
 		year_level   = p_year
 		section      = p_section
 		is_logged_in = true
@@ -128,33 +134,47 @@ func _on_auth_created(
 			msg = parsed["message"]
 		register_completed.emit(false, msg)
 
-func _save_student_profile() -> void:
+func _save_student_profile(with_email := true) -> void:
 	var url  = SUPABASE_URL + "/rest/v1/students"
-	var body = JSON.stringify({
+	var body_dict := {
 		"id":         student_id,
 		"full_name":  full_name,
 		"username":   username,
 		"year_level": year_level,
 		"section":    section,
-	})
+	}
+	if with_email and email != "":
+		body_dict["email"] = email
+	var body = JSON.stringify(body_dict)
 	var http := HTTPRequest.new()
 	add_child(http)
 	http.request_completed.connect(
-		_on_profile_saved.bind(http)
+		_on_profile_saved.bind(http, with_email)
 	)
 	http.request(url, _get_headers(), HTTPClient.METHOD_POST, body)
 
 func _on_profile_saved(
 		result: int, code: int,
 		headers: PackedStringArray, body: PackedByteArray,
-		http: HTTPRequest) -> void:
+		http: HTTPRequest, with_email: bool) -> void:
 	http.queue_free()
-	if code == 201:
-		ProgressManager.reset_all_progress()
-		_create_initial_progress()
-		_create_leaderboard_entry()
-		# Reset local progress for new user, then load fresh progress from cloud
-		load_progress_from_cloud()
+	if code != 201 and code != 200:
+		if with_email:
+			# The students table may not have an email column yet —
+			# retry the profile save without it.
+			print("[Supabase] Profile save failed, retrying without email: ",
+				code, " — ", body.get_string_from_utf8())
+			_save_student_profile(false)
+			return
+		print("[Supabase] Failed to save profile: ", code,
+			" — ", body.get_string_from_utf8())
+		register_completed.emit(false, "Registration failed. Could not save profile.")
+		return
+	ProgressManager.reset_all_progress()
+	_create_initial_progress()
+	_create_leaderboard_entry()
+	# Reset local progress for new user, then load fresh progress from cloud
+	load_progress_from_cloud()
 
 # ─── LOGIN ─────────────────────────────────────────────
 func login_student(p_email: String, p_password: String) -> void:
@@ -168,6 +188,35 @@ func login_student(p_email: String, p_password: String) -> void:
 	http.request_completed.connect(_on_login_response.bind(http))
 	http.request(url, _get_headers(false), HTTPClient.METHOD_POST, body)
 
+# Resolve a username to its email via the students table, then log in.
+# Falls back to the legacy "username@packetsurge.com" convention for
+# accounts created before email was collected.
+func login_with_username(p_username: String, p_password: String) -> void:
+	var url = SUPABASE_URL + \
+		"/rest/v1/students?username=eq." + p_username.uri_encode() + \
+		"&select=email"
+	var http := HTTPRequest.new()
+	add_child(http)
+	http.request_completed.connect(
+		_on_username_email_resolved.bind(http, p_username, p_password)
+	)
+	http.request(url, _get_headers(false), HTTPClient.METHOD_GET)
+
+func _on_username_email_resolved(
+		result: int, code: int,
+		headers: PackedStringArray, body: PackedByteArray,
+		http: HTTPRequest,
+		p_username: String, p_password: String) -> void:
+	http.queue_free()
+	var email := ""
+	if code == 200:
+		var parsed = JSON.parse_string(body.get_string_from_utf8())
+		if parsed is Array and parsed.size() > 0:
+			email = str(parsed[0].get("email", ""))
+	if email == "":
+		email = p_username.to_lower() + "@packetsurge.com"
+	login_student(email, p_password)
+
 func _on_login_response(
 		result: int, code: int,
 		headers: PackedStringArray, body: PackedByteArray,
@@ -178,6 +227,9 @@ func _on_login_response(
 		access_token = parsed["access_token"]
 		student_id   = parsed["user"]["id"]
 		is_logged_in = true
+		var user_data = parsed.get("user", {})
+		_auto_meta = user_data.get("user_metadata", {})
+		_auto_meta["email"] = user_data.get("email", "")
 		_load_student_profile()
 	else:
 		login_completed.emit(false, "Invalid email or password.")
@@ -201,6 +253,7 @@ func _on_profile_loaded(
 			var s      = parsed[0]
 			full_name  = s.get("full_name",  "")
 			username   = s.get("username",   "")
+			email      = s.get("email",      "")
 			year_level = s.get("year_level", "")
 			section    = s.get("section",    "")
 			last_login = s.get("last_seen", "")
@@ -211,8 +264,24 @@ func _on_profile_loaded(
 			)
 			print("[Supabase] Logged in: ", username)
 			return
+		# No students row found — registration was probably interrupted
+		# (e.g. before the email column existed). Restore it from the
+		# auth metadata so login can continue normally.
+		_restore_profile_from_metadata()
+		return
 	login_completed.emit(false, "Failed to load profile.")
 	GameManager.go_to("login")
+
+func _restore_profile_from_metadata() -> void:
+	full_name  = str(_auto_meta.get("full_name",  full_name))
+	username   = str(_auto_meta.get("username",   username))
+	year_level = str(_auto_meta.get("year_level", year_level))
+	section    = str(_auto_meta.get("section",    section))
+	email      = str(_auto_meta.get("email",      email))
+	# Save the row (retries without email if the column is missing),
+	# then the normal post-save flow runs (progress, leaderboard, etc.).
+	_save_student_profile()
+	print("[Supabase] Restored missing student profile for: ", username)
 
 # ─── LOGOUT ────────────────────────────────────────────
 func logout() -> void:
@@ -224,11 +293,13 @@ func logout() -> void:
 	student_id   = ""
 	full_name    = ""
 	username     = ""
+	email        = ""
 	section      = ""
 	year_level   = ""
 	last_login   = ""
 	access_token = ""
 	is_logged_in = false
+	_auto_meta   = {}
 	ProgressManager.reset_all_progress()
 	logout_completed.emit()
 	GameManager.go_to("login")
