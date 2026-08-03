@@ -15,21 +15,22 @@ func _min_dim() -> float:
 func _fs(ratio: float, floor_v: float, cap_v: float) -> int:
 	return int(clampf(_min_dim() * ratio, floor_v, cap_v))
 
-# Visual zig-zag coordinates for main level groups on the 2100px wide canvas
+# Visual zig-zag coordinates for main level groups on the 2100x680px canvas.
+# Levels are spread vertically so the map can be scrolled on both axes.
 const MAIN_LEVEL_POSITIONS = {
-	1: Vector2(100, 180),
-	2: Vector2(250, 90),
-	3: Vector2(400, 240),
-	4: Vector2(550, 140),
-	5: Vector2(700, 240),
-	6: Vector2(850, 90),
-	7: Vector2(1000, 180),
-	8: Vector2(1150, 90),
-	9: Vector2(1300, 240),
-	10: Vector2(1450, 140),
-	11: Vector2(1600, 240),
-	12: Vector2(1750, 90),
-	13: Vector2(1900, 180),
+	1: Vector2(100, 414),
+	2: Vector2(250, 180),
+	3: Vector2(400, 570),
+	4: Vector2(550, 310),
+	5: Vector2(700, 570),
+	6: Vector2(850, 180),
+	7: Vector2(1000, 414),
+	8: Vector2(1150, 180),
+	9: Vector2(1300, 570),
+	10: Vector2(1450, 310),
+	11: Vector2(1600, 570),
+	12: Vector2(1750, 180),
+	13: Vector2(1900, 414),
 }
 
 var tooltip_panel: PanelContainer = null
@@ -42,7 +43,7 @@ func _position_for_level(level_number: int) -> Vector2:
 		return MAIN_LEVEL_POSITIONS[level_number]
 	var max_key: int = MAIN_LEVEL_POSITIONS.keys().max()
 	var base: Vector2 = MAIN_LEVEL_POSITIONS[max_key]
-	var y_pattern: Array[float] = [180.0, 90.0, 240.0, 140.0, 240.0, 90.0]
+	var y_pattern: Array[float] = [414.0, 180.0, 570.0, 310.0, 570.0, 180.0]
 	var idx := level_number - 1
 	return Vector2(
 		100.0 + idx * 150.0,
@@ -108,14 +109,17 @@ func _auto_scroll_to_current() -> void:
 			highest_unlocked = main_level
 
 	var target_pos = _position_for_level(highest_unlocked)
-	# Center the scrollbar around target pos
-	var center_offset = target_pos.x - (size.x / 2.0)
-	center_offset = clamp(center_offset, 0.0, map_canvas.custom_minimum_size.x - size.x)
-	
+	# Center the scrollbar around target pos on both axes
+	var max_x := maxf(0.0, map_canvas.custom_minimum_size.x - map_scroll.size.x)
+	var max_y := maxf(0.0, map_canvas.custom_minimum_size.y - map_scroll.size.y)
+	var center_x := clampf(target_pos.x - (map_scroll.size.x / 2.0), 0.0, max_x)
+	var center_y := clampf(target_pos.y - (map_scroll.size.y / 2.0), 0.0, max_y)
+
 	var tween = create_tween()
 	tween.set_ease(Tween.EASE_OUT)
 	tween.set_trans(Tween.TRANS_QUAD)
-	tween.tween_property(map_scroll, "scroll_horizontal", int(center_offset), 0.8)
+	tween.tween_property(map_scroll, "scroll_horizontal", int(center_x), 0.8)
+	tween.tween_property(map_scroll, "scroll_vertical", int(center_y), 0.8)
 
 # ─── floating tooltip CARD setup ───────────────────────
 func _setup_floating_tooltip() -> void:
@@ -484,11 +488,11 @@ func _draw_system_readouts() -> void:
 	var color = Color("#4A7FA5", 0.45)
 	
 	# Draw technical status readout overlays on the board
-	map_canvas.draw_string(font, Vector2(150, 310), "[DATA_BUS: SECURED // RX/TX_ACTIVE]", HORIZONTAL_ALIGNMENT_LEFT, -1, font_size, color)
-	map_canvas.draw_string(font, Vector2(750, 45), "[SYS_FREQ: 4.80_GHz // CORES: 13]", HORIZONTAL_ALIGNMENT_LEFT, -1, font_size, color)
-	map_canvas.draw_string(font, Vector2(1015, 260), "[CPU_TEMP: 32_C // STATUS: NOMINAL]", HORIZONTAL_ALIGNMENT_LEFT, -1, font_size, color)
-	map_canvas.draw_string(font, Vector2(1480, 310), "[FIREWALL_STATE: PROTECTED // AES_256]", HORIZONTAL_ALIGNMENT_LEFT, -1, font_size, color)
-	map_canvas.draw_string(font, Vector2(1850, 45), "[PACKET_LOSS: 0.00% // RETRIES: 0]", HORIZONTAL_ALIGNMENT_LEFT, -1, font_size, color)
+	map_canvas.draw_string(font, Vector2(150, 645), "[DATA_BUS: SECURED // RX/TX_ACTIVE]", HORIZONTAL_ALIGNMENT_LEFT, -1, font_size, color)
+	map_canvas.draw_string(font, Vector2(650, 60), "[SYS_FREQ: 4.80_GHz // CORES: 13]", HORIZONTAL_ALIGNMENT_LEFT, -1, font_size, color)
+	map_canvas.draw_string(font, Vector2(1015, 650), "[CPU_TEMP: 32_C // STATUS: NOMINAL]", HORIZONTAL_ALIGNMENT_LEFT, -1, font_size, color)
+	map_canvas.draw_string(font, Vector2(1500, 60), "[FIREWALL_STATE: PROTECTED // AES_256]", HORIZONTAL_ALIGNMENT_LEFT, -1, font_size, color)
+	map_canvas.draw_string(font, Vector2(1850, 645), "[PACKET_LOSS: 0.00% // RETRIES: 0]", HORIZONTAL_ALIGNMENT_LEFT, -1, font_size, color)
 	
 	# Draw hex addresses under each level node
 	for lvl in DataRegistry.get_level_numbers():
@@ -503,7 +507,7 @@ func _draw_traffic_oscillator() -> void:
 	var time_offset = Time.get_ticks_msec() * 0.001 * 4.0
 	
 	for x in range(0, 2101, 30):
-		var y = 300.0 + sin((x * 0.015) + time_offset) * 12.0
+		var y = 640.0 + sin((x * 0.015) + time_offset) * 12.0
 		wave_points.append(Vector2(x, y))
 		
 	map_canvas.draw_polyline(PackedVector2Array(wave_points), wave_color, 1.2)
