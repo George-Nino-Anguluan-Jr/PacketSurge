@@ -1,6 +1,7 @@
 [gd_scene format=3 uid="uid://medjf7xdgpd1"]
 
 [ext_resource type="Script" uid="uid://ckp8royf4hygd" path="res://scenes/placement_quiz/PlacementQuiz.gd" id="1_7q65o"]
+[ext_resource type="Script" path="res://scripts/utils/SafeArea.gd" id="2_safearea"]
 
 [node name="PlacementQuiz" type="Control" unique_id=161210857]
 layout_mode = 3
@@ -20,7 +21,24 @@ grow_horizontal = 2
 grow_vertical = 2
 color = Color(0.019607844, 0.050980393, 0.101960786, 1)
 
-[node name="TopBar" type="PanelContainer" parent="." unique_id=868510145]
+[node name="SafeArea" type="MarginContainer" parent="." unique_id=2200000005]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+script = ExtResource("2_safearea")
+
+[node name="ContentHost" type="Control" parent="SafeArea" unique_id=2200000006]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+
+[node name="TopBar" type="PanelContainer" parent="SafeArea/ContentHost" unique_id=868510145]
 custom_minimum_size = Vector2(0, 52)
 layout_mode = 1
 anchors_preset = 10
@@ -28,20 +46,20 @@ anchor_right = 1.0
 offset_bottom = 23.0
 grow_horizontal = 2
 
-[node name="TopBarLayout" type="HBoxContainer" parent="TopBar" unique_id=1781818711]
+[node name="TopBarLayout" type="HBoxContainer" parent="SafeArea/ContentHost/TopBar" unique_id=1781818711]
 layout_mode = 2
 theme_override_constants/separation = 16
 
-[node name="TitleLabel" type="Label" parent="TopBar/TopBarLayout" unique_id=1512744355]
+[node name="TitleLabel" type="Label" parent="SafeArea/ContentHost/TopBar/TopBarLayout" unique_id=1512744355]
 layout_mode = 2
 text = "PLACEMENT QUIZ"
 
-[node name="ProgressLabel" type="Label" parent="TopBar/TopBarLayout" unique_id=852925047]
+[node name="ProgressLabel" type="Label" parent="SafeArea/ContentHost/TopBar/TopBarLayout" unique_id=852925047]
 layout_mode = 2
 size_flags_horizontal = 3
 horizontal_alignment = 2
 
-[node name="ContentArea" type="MarginContainer" parent="." unique_id=1620080717]
+[node name="ContentArea" type="MarginContainer" parent="SafeArea/ContentHost" unique_id=1620080717]
 layout_mode = 1
 anchors_preset = -1
 anchor_right = 1.0
@@ -54,62 +72,62 @@ theme_override_constants/margin_top = 16
 theme_override_constants/margin_right = 16
 theme_override_constants/margin_bottom = 16
 
-[node name="Content" type="VBoxContainer" parent="ContentArea" unique_id=353044655]
+[node name="Content" type="VBoxContainer" parent="SafeArea/ContentHost/ContentArea" unique_id=353044655]
 layout_mode = 2
 theme_override_constants/separation = 24
 
-[node name="IntroPanel" type="PanelContainer" parent="ContentArea/Content" unique_id=1264111441]
+[node name="IntroPanel" type="PanelContainer" parent="SafeArea/ContentHost/ContentArea/Content" unique_id=1264111441]
 layout_mode = 2
 
-[node name="IntroMargin" type="MarginContainer" parent="ContentArea/Content/IntroPanel" unique_id=83169296]
+[node name="IntroMargin" type="MarginContainer" parent="SafeArea/ContentHost/ContentArea/Content/IntroPanel" unique_id=83169296]
 layout_mode = 2
 theme_override_constants/margin_left = 16
 theme_override_constants/margin_top = 16
 theme_override_constants/margin_right = 16
 theme_override_constants/margin_bottom = 16
 
-[node name="IntroContent" type="VBoxContainer" parent="ContentArea/Content/IntroPanel/IntroMargin" unique_id=999600479]
+[node name="IntroContent" type="VBoxContainer" parent="SafeArea/ContentHost/ContentArea/Content/IntroPanel/IntroMargin" unique_id=999600479]
 layout_mode = 2
 
-[node name="QuizPanel" type="VBoxContainer" parent="ContentArea/Content" unique_id=892128893]
+[node name="QuizPanel" type="VBoxContainer" parent="SafeArea/ContentHost/ContentArea/Content" unique_id=892128893]
 visible = false
 layout_mode = 2
 theme_override_constants/separation = 16
 
-[node name="QuestionLabel" type="Label" parent="ContentArea/Content/QuizPanel" unique_id=686292246]
+[node name="QuestionLabel" type="Label" parent="SafeArea/ContentHost/ContentArea/Content/QuizPanel" unique_id=686292246]
 layout_mode = 2
 autowrap_mode = 3
 
-[node name="OptionsContainer" type="VBoxContainer" parent="ContentArea/Content/QuizPanel" unique_id=140331699]
+[node name="OptionsContainer" type="VBoxContainer" parent="SafeArea/ContentHost/ContentArea/Content/QuizPanel" unique_id=140331699]
 layout_mode = 2
 theme_override_constants/separation = 12
 
-[node name="FeedbackLabel" type="Label" parent="ContentArea/Content/QuizPanel" unique_id=563369218]
+[node name="FeedbackLabel" type="Label" parent="SafeArea/ContentHost/ContentArea/Content/QuizPanel" unique_id=563369218]
 visible = false
 layout_mode = 2
 autowrap_mode = 3
 
-[node name="ResultPanel" type="VBoxContainer" parent="ContentArea/Content" unique_id=2003526585]
+[node name="ResultPanel" type="VBoxContainer" parent="SafeArea/ContentHost/ContentArea/Content" unique_id=2003526585]
 visible = false
 layout_mode = 2
 theme_override_constants/separation = 20
 alignment = 1
 
-[node name="ResultIcon" type="Label" parent="ContentArea/Content/ResultPanel" unique_id=148805552]
+[node name="ResultIcon" type="Label" parent="SafeArea/ContentHost/ContentArea/Content/ResultPanel" unique_id=148805552]
 layout_mode = 2
 horizontal_alignment = 1
 
-[node name="ResultTitle" type="Label" parent="ContentArea/Content/ResultPanel" unique_id=2043641441]
-layout_mode = 2
-horizontal_alignment = 1
-autowrap_mode = 3
-
-[node name="ResultDesc" type="Label" parent="ContentArea/Content/ResultPanel" unique_id=268567180]
+[node name="ResultTitle" type="Label" parent="SafeArea/ContentHost/ContentArea/Content/ResultPanel" unique_id=2043641441]
 layout_mode = 2
 horizontal_alignment = 1
 autowrap_mode = 3
 
-[node name="ContinueBtn" type="Button" parent="ContentArea/Content/ResultPanel" unique_id=1028344133]
+[node name="ResultDesc" type="Label" parent="SafeArea/ContentHost/ContentArea/Content/ResultPanel" unique_id=268567180]
+layout_mode = 2
+horizontal_alignment = 1
+autowrap_mode = 3
+
+[node name="ContinueBtn" type="Button" parent="SafeArea/ContentHost/ContentArea/Content/ResultPanel" unique_id=1028344133]
 custom_minimum_size = Vector2(180, 52)
 layout_mode = 2
 size_flags_horizontal = 4

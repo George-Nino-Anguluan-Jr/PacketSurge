@@ -1,10 +1,10 @@
 extends Control
 
 # ─── NODE REFERENCES ───────────────────────────────────
-@onready var back_btn: Button       = $TopBar/TopBarLayout/BackBtn
-@onready var analytics_btn: Button  = $TopBar/TopBarLayout/AnalyticsBtn
-@onready var scroll_container: ScrollContainer = $ContentArea/ScrollContainer
-@onready var content: VBoxContainer  = $ContentArea/ScrollContainer/Content
+@onready var back_btn: Button       = $SafeArea/ContentHost/TopBar/TopBarLayout/BackBtn
+@onready var analytics_btn: Button  = $SafeArea/ContentHost/TopBar/TopBarLayout/AnalyticsBtn
+@onready var scroll_container: ScrollContainer = $SafeArea/ContentHost/ContentArea/ScrollContainer
+@onready var content: VBoxContainer  = $SafeArea/ContentHost/ContentArea/ScrollContainer/Content
 
 # ─── STATE ─────────────────────────────────────────────
 
@@ -792,7 +792,7 @@ func _apply_styles() -> void:
 	top_style.bg_color          = Color("#0A1628")
 	top_style.border_color      = Color("#00D4FF")
 	top_style.border_width_bottom = 1
-	$TopBar.add_theme_stylebox_override("panel", top_style)
+	$SafeArea/ContentHost/TopBar.add_theme_stylebox_override("panel", top_style)
 
 	var back_style := StyleBoxFlat.new()
 	back_style.bg_color               = Color("#0A1628")
@@ -845,7 +845,7 @@ func _apply_responsive_layout() -> void:
 	var min_dim := minf(w, h)
 
 	# Fluid typography for top bar
-	$TopBar/TopBarLayout/TitleLabel.add_theme_font_size_override("font_size", int(clampf(min_dim * 0.030, 18.0, 28.0)))
+	$SafeArea/ContentHost/TopBar/TopBarLayout/TitleLabel.add_theme_font_size_override("font_size", int(clampf(min_dim * 0.030, 18.0, 28.0)))
 	back_btn.add_theme_font_size_override("font_size", _fs(0.045, 16.0, 20.0))
 	analytics_btn.add_theme_font_size_override("font_size", _fs(0.045, 16.0, 20.0))
 
@@ -855,7 +855,7 @@ func _apply_responsive_layout() -> void:
 	analytics_btn.custom_minimum_size = Vector2(clampf(w * 0.22, 100.0, 150.0), btn_h)
 
 	# Content area margins — fluid inset
-	var content_area = $ContentArea
+	var content_area = $SafeArea/ContentHost/ContentArea
 	var inset := clampf(min_dim * 0.020, 16.0, 24.0)
 	content_area.add_theme_constant_override("margin_left", inset)
 	content_area.add_theme_constant_override("margin_right", inset)

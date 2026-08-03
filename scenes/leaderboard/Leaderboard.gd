@@ -2,16 +2,16 @@
 extends Control
 
 # ─── NODE REFERENCES ───────────────────────────────────
-@onready var back_btn: Button           = $TopBar/TopBarLayout/BackBtn
-@onready var my_rank_label: Label       = $TopBar/TopBarLayout/MyRankLabel
-@onready var global_tab: Button         = $TabBar/GlobalTab
-@onready var section_tab: Button        = $TabBar/SectionTab
-@onready var global_panel: VBoxContainer  = $ContentArea/ScrollArea/GlobalPanel
-@onready var section_panel: VBoxContainer = $ContentArea/ScrollArea/SectionPanel
-@onready var global_list: VBoxContainer   = $ContentArea/ScrollArea/GlobalPanel/GlobalList
-@onready var section_list: VBoxContainer  = $ContentArea/ScrollArea/SectionPanel/SectionList
-@onready var refresh_btn: Button          = $ContentArea/ScrollArea/GlobalPanel/RefreshBtn
-@onready var section_refresh_btn: Button  = $ContentArea/ScrollArea/SectionPanel/SectionRefreshBtn
+@onready var back_btn: Button           = $SafeArea/ContentHost/TopBar/TopBarLayout/BackBtn
+@onready var my_rank_label: Label       = $SafeArea/ContentHost/TopBar/TopBarLayout/MyRankLabel
+@onready var global_tab: Button         = $SafeArea/ContentHost/TabBar/GlobalTab
+@onready var section_tab: Button        = $SafeArea/ContentHost/TabBar/SectionTab
+@onready var global_panel: VBoxContainer  = $SafeArea/ContentHost/ContentArea/ScrollArea/GlobalPanel
+@onready var section_panel: VBoxContainer = $SafeArea/ContentHost/ContentArea/ScrollArea/SectionPanel
+@onready var global_list: VBoxContainer   = $SafeArea/ContentHost/ContentArea/ScrollArea/GlobalPanel/GlobalList
+@onready var section_list: VBoxContainer  = $SafeArea/ContentHost/ContentArea/ScrollArea/SectionPanel/SectionList
+@onready var refresh_btn: Button          = $SafeArea/ContentHost/ContentArea/ScrollArea/GlobalPanel/RefreshBtn
+@onready var section_refresh_btn: Button  = $SafeArea/ContentHost/ContentArea/ScrollArea/SectionPanel/SectionRefreshBtn
 
 # ─── STATE ─────────────────────────────────────────────
 var active_tab: String   = "global"
@@ -26,7 +26,7 @@ func _ready() -> void:
 	_show_global_tab()
 	_fetch_global()
 	_apply_responsive_layout()
-	ScreenManager.make_scroll_touch_friendly($ContentArea/ScrollArea)
+	ScreenManager.make_scroll_touch_friendly($SafeArea/ContentHost/ContentArea/ScrollArea)
 	get_tree().root.size_changed.connect(_apply_responsive_layout)
 	SupabaseManager.leaderboard_loaded.connect(_on_leaderboard_loaded)
 	_maybe_show_tutorial()
@@ -305,7 +305,7 @@ func _apply_styles() -> void:
 	top_style.bg_color          = Color("#0A1628")
 	top_style.border_color      = Color("#00D4FF")
 	top_style.border_width_bottom = 1
-	$TopBar.add_theme_stylebox_override("panel", top_style)
+	$SafeArea/ContentHost/TopBar.add_theme_stylebox_override("panel", top_style)
 
 	# Back button
 	var back_style := StyleBoxFlat.new()
@@ -368,23 +368,23 @@ func _apply_responsive_layout() -> void:
 	var min_dim := minf(w, h)
 
 	# Continuous typography
-	$TopBar/TopBarLayout/TitleLabel.add_theme_font_size_override("font_size", int(clampf(min_dim * 0.032, 20.0, 28.0)))
+	$SafeArea/ContentHost/TopBar/TopBarLayout/TitleLabel.add_theme_font_size_override("font_size", int(clampf(min_dim * 0.032, 20.0, 28.0)))
 	back_btn.add_theme_font_size_override("font_size", int(clampf(min_dim * 0.025, 16.0, 20.0)))
 	my_rank_label.add_theme_font_size_override("font_size", int(clampf(min_dim * 0.022, 16.0, 20.0)))
 	back_btn.custom_minimum_size = Vector2(clampf(w * 0.12, 80.0, 120.0), clampf(h * 0.07, 44.0, 56.0))
 
 	# Tab bar sizing
-	var tab_bar = $TabBar
+	var tab_bar = $SafeArea/ContentHost/TabBar
 	tab_bar.add_theme_constant_override("separation", clampf(min_dim * 0.010, 6.0, 12.0))
 	for btn in [global_tab, section_tab]:
 		btn.custom_minimum_size = Vector2(0, clampf(min_dim * 0.065, 44.0, 52.0))
 
 	# Content area margins — fluid inset
 	var inset := clampf(min_dim * 0.020, 16.0, 24.0)
-	$ContentArea.add_theme_constant_override("margin_left", inset)
-	$ContentArea.add_theme_constant_override("margin_right", inset)
-	$ContentArea.add_theme_constant_override("margin_top", clampf(min_dim * 0.010, 8.0, 16.0))
-	$ContentArea.add_theme_constant_override("margin_bottom", inset)
+	$SafeArea/ContentHost/ContentArea.add_theme_constant_override("margin_left", inset)
+	$SafeArea/ContentHost/ContentArea.add_theme_constant_override("margin_right", inset)
+	$SafeArea/ContentHost/ContentArea.add_theme_constant_override("margin_top", clampf(min_dim * 0.010, 8.0, 16.0))
+	$SafeArea/ContentHost/ContentArea.add_theme_constant_override("margin_bottom", inset)
 
 	# Tab button font sizes
 	var tab_font := int(clampf(min_dim * 0.024, 18.0, 24.0))

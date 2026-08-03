@@ -2,6 +2,7 @@
 
 [ext_resource type="Script" path="res://scenes/analytics/Analytics.gd" id="1_4554l"]
 [ext_resource type="PackedScene" uid="uid://r0pj7cuytrqm" path="res://scenes/core/ToastManager.tscn" id="2_rhook"]
+[ext_resource type="Script" path="res://scripts/utils/SafeArea.gd" id="3_safearea"]
 
 [node name="Analytics" type="Control" unique_id=1581172840]
 layout_mode = 3
@@ -21,7 +22,24 @@ grow_horizontal = 2
 grow_vertical = 2
 color = Color(0.0196078, 0.0509804, 0.101961, 1)
 
-[node name="TopBar" type="PanelContainer" parent="." unique_id=1964936328]
+[node name="SafeArea" type="MarginContainer" parent="." unique_id=2200000017]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+script = ExtResource("3_safearea")
+
+[node name="ContentHost" type="Control" parent="SafeArea" unique_id=2200000018]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+
+[node name="TopBar" type="PanelContainer" parent="SafeArea/ContentHost" unique_id=1964936328]
 custom_minimum_size = Vector2(0, 52)
 layout_mode = 1
 anchors_preset = 10
@@ -29,22 +47,22 @@ anchor_right = 1.0
 offset_bottom = 24.0
 grow_horizontal = 2
 
-[node name="TopBarLayout" type="HBoxContainer" parent="TopBar" unique_id=607332307]
+[node name="TopBarLayout" type="HBoxContainer" parent="SafeArea/ContentHost/TopBar" unique_id=607332307]
 layout_mode = 2
 theme_override_constants/separation = 16
 
-[node name="BackBtn" type="Button" parent="TopBar/TopBarLayout" unique_id=679405855]
+[node name="BackBtn" type="Button" parent="SafeArea/ContentHost/TopBar/TopBarLayout" unique_id=679405855]
 custom_minimum_size = Vector2(80, 50)
 layout_mode = 2
 text = "← BACK"
 
-[node name="TitleLabel" type="Label" parent="TopBar/TopBarLayout" unique_id=1156620356]
+[node name="TitleLabel" type="Label" parent="SafeArea/ContentHost/TopBar/TopBarLayout" unique_id=1156620356]
 layout_mode = 2
 size_flags_horizontal = 3
 theme_override_colors/font_color = Color(0.9098039, 0.95686275, 0.99215686, 1)
 text = "ANALYTICS"
 
-[node name="TabBar" type="HBoxContainer" parent="." unique_id=473287979]
+[node name="TabBar" type="HBoxContainer" parent="SafeArea/ContentHost" unique_id=473287979]
 layout_mode = 1
 anchors_preset = -1
 anchor_right = 1.0
@@ -54,19 +72,19 @@ grow_horizontal = 2
 grow_vertical = 2
 theme_override_constants/separation = 0
 
-[node name="MyStatsTab" type="Button" parent="TabBar" unique_id=1793645307]
+[node name="MyStatsTab" type="Button" parent="SafeArea/ContentHost/TabBar" unique_id=1793645307]
 custom_minimum_size = Vector2(0, 48)
 layout_mode = 2
 size_flags_horizontal = 3
 text = "📊 MY STATS"
 
-[node name="ClassTab" type="Button" parent="TabBar" unique_id=1085111944]
+[node name="ClassTab" type="Button" parent="SafeArea/ContentHost/TabBar" unique_id=1085111944]
 custom_minimum_size = Vector2(0, 48)
 layout_mode = 2
 size_flags_horizontal = 3
 text = "🏫 CLASS COMPARISON"
 
-[node name="ContentArea" type="MarginContainer" parent="." unique_id=1070440337]
+[node name="ContentArea" type="MarginContainer" parent="SafeArea/ContentHost" unique_id=1070440337]
 layout_mode = 1
 anchors_preset = -1
 anchor_right = 1.0
@@ -79,21 +97,21 @@ theme_override_constants/margin_top = 16
 theme_override_constants/margin_right = 16
 theme_override_constants/margin_bottom = 16
 
-[node name="MyStatsPanel" type="ScrollContainer" parent="ContentArea" unique_id=568626420]
+[node name="MyStatsPanel" type="ScrollContainer" parent="SafeArea/ContentHost/ContentArea" unique_id=568626420]
 layout_mode = 2
 horizontal_scroll_mode = 0
 
-[node name="MyStatsContent" type="VBoxContainer" parent="ContentArea/MyStatsPanel" unique_id=1732040486]
+[node name="MyStatsContent" type="VBoxContainer" parent="SafeArea/ContentHost/ContentArea/MyStatsPanel" unique_id=1732040486]
 layout_mode = 2
 size_flags_horizontal = 3
 theme_override_constants/separation = 16
 
-[node name="ClassPanel" type="ScrollContainer" parent="ContentArea" unique_id=1939588356]
+[node name="ClassPanel" type="ScrollContainer" parent="SafeArea/ContentHost/ContentArea" unique_id=1939588356]
 visible = false
 layout_mode = 2
 horizontal_scroll_mode = 0
 
-[node name="ClassContent" type="VBoxContainer" parent="ContentArea/ClassPanel" unique_id=1960182525]
+[node name="ClassContent" type="VBoxContainer" parent="SafeArea/ContentHost/ContentArea/ClassPanel" unique_id=1960182525]
 layout_mode = 2
 size_flags_horizontal = 3
 theme_override_constants/separation = 16

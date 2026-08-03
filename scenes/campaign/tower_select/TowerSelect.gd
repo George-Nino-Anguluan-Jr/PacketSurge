@@ -2,18 +2,18 @@
 extends Control
 
 # ─── NODE REFERENCES ───────────────────────────────────
-@onready var back_btn: Button               = $TopBar/TopBarLayout/BackBtn
-@onready var title_label: Label             = $TopBar/TopBarLayout/TitleLabel
-@onready var level_name_label: Label        = $OuterScroll/ContentArea/LeftMargin/LeftContent/LevelNameLabel
-@onready var concept_content: VBoxContainer = $OuterScroll/ContentArea/LeftMargin/LeftContent/ConceptPanel/ConceptMargin/ConceptContent
-@onready var enemy_tip_content: VBoxContainer = $OuterScroll/ContentArea/LeftMargin/LeftContent/EnemyTipPanel/EnemyTipMargin/EnemyTipContent
-@onready var stats_content: VBoxContainer   = $OuterScroll/ContentArea/LeftMargin/LeftContent/StatsPanel/StatsMargin/StatsContent
-@onready var slot_label: Label              = $OuterScroll/ContentArea/RightMargin/RightContent/SlotLabel
-@onready var selected_row: HBoxContainer    = $OuterScroll/ContentArea/RightMargin/RightContent/SelectedRow
-@onready var available_grid: GridContainer  = $OuterScroll/ContentArea/RightMargin/RightContent/AvailableGrid
-@onready var start_btn: Button              = get_node("OuterScroll/ContentArea/RightMargin/RightContent/StartBtn")
-@onready var scroll_container: ScrollContainer = $OuterScroll
-@onready var card_layer: Control            = $CardLayer
+@onready var back_btn: Button               = $SafeArea/ContentHost/TopBar/TopBarLayout/BackBtn
+@onready var title_label: Label             = $SafeArea/ContentHost/TopBar/TopBarLayout/TitleLabel
+@onready var level_name_label: Label        = $SafeArea/ContentHost/OuterScroll/ContentArea/LeftMargin/LeftContent/LevelNameLabel
+@onready var concept_content: VBoxContainer = $SafeArea/ContentHost/OuterScroll/ContentArea/LeftMargin/LeftContent/ConceptPanel/ConceptMargin/ConceptContent
+@onready var enemy_tip_content: VBoxContainer = $SafeArea/ContentHost/OuterScroll/ContentArea/LeftMargin/LeftContent/EnemyTipPanel/EnemyTipMargin/EnemyTipContent
+@onready var stats_content: VBoxContainer   = $SafeArea/ContentHost/OuterScroll/ContentArea/LeftMargin/LeftContent/StatsPanel/StatsMargin/StatsContent
+@onready var slot_label: Label              = $SafeArea/ContentHost/OuterScroll/ContentArea/RightMargin/RightContent/SlotLabel
+@onready var selected_row: HBoxContainer    = $SafeArea/ContentHost/OuterScroll/ContentArea/RightMargin/RightContent/SelectedRow
+@onready var available_grid: GridContainer  = $SafeArea/ContentHost/OuterScroll/ContentArea/RightMargin/RightContent/AvailableGrid
+@onready var start_btn: Button              = get_node("SafeArea/ContentHost/OuterScroll/ContentArea/RightMargin/RightContent/StartBtn")
+@onready var scroll_container: ScrollContainer = $SafeArea/ContentHost/OuterScroll
+@onready var card_layer: Control            = $SafeArea/ContentHost/CardLayer
 
 # ─── STATE ─────────────────────────────────────────────
 var level_config: Dictionary = {}
@@ -409,7 +409,7 @@ func _apply_styles() -> void:
 	top_style.bg_color            = Color("#0A1628")
 	top_style.border_color        = Color("#00D4FF")
 	top_style.border_width_bottom = 1
-	$TopBar.add_theme_stylebox_override("panel", top_style)
+	$SafeArea/ContentHost/TopBar.add_theme_stylebox_override("panel", top_style)
 
 	# Back button
 	var back_style := StyleBoxFlat.new()
@@ -439,7 +439,7 @@ func _apply_styles() -> void:
 	concept_style.corner_radius_top_right    = 6
 	concept_style.corner_radius_bottom_left  = 6
 	concept_style.corner_radius_bottom_right = 6
-	$OuterScroll/ContentArea/LeftMargin/LeftContent/ConceptPanel.add_theme_stylebox_override(
+	$SafeArea/ContentHost/OuterScroll/ContentArea/LeftMargin/LeftContent/ConceptPanel.add_theme_stylebox_override(
 		"panel", concept_style
 	)
 
@@ -455,7 +455,7 @@ func _apply_styles() -> void:
 	tip_style.corner_radius_top_right    = 6
 	tip_style.corner_radius_bottom_left  = 6
 	tip_style.corner_radius_bottom_right = 6
-	$OuterScroll/ContentArea/LeftMargin/LeftContent/EnemyTipPanel.add_theme_stylebox_override(
+	$SafeArea/ContentHost/OuterScroll/ContentArea/LeftMargin/LeftContent/EnemyTipPanel.add_theme_stylebox_override(
 		"panel", tip_style
 	)
 
@@ -471,7 +471,7 @@ func _apply_styles() -> void:
 	stats_style.corner_radius_top_right    = 6
 	stats_style.corner_radius_bottom_left  = 6
 	stats_style.corner_radius_bottom_right = 6
-	$OuterScroll/ContentArea/LeftMargin/LeftContent/StatsPanel.add_theme_stylebox_override(
+	$SafeArea/ContentHost/OuterScroll/ContentArea/LeftMargin/LeftContent/StatsPanel.add_theme_stylebox_override(
 		"panel", stats_style
 	)
 
@@ -570,14 +570,14 @@ func _apply_responsive_layout() -> void:
 	var min_dim := minf(w, h)
 	var inset := clampf(min_dim * 0.025, 16.0, 24.0)
 
-	var top_bar = $TopBar
-	var left_margin = $OuterScroll/ContentArea/LeftMargin
-	var right_margin = $OuterScroll/ContentArea/RightMargin
+	var top_bar = $SafeArea/ContentHost/TopBar
+	var left_margin = $SafeArea/ContentHost/OuterScroll/ContentArea/LeftMargin
+	var right_margin = $SafeArea/ContentHost/OuterScroll/ContentArea/RightMargin
 
 	# Fluid TopBar height
 	var top_h := clampf(h * 0.065, 52.0, 64.0)
 	top_bar.custom_minimum_size = Vector2(0, top_h)
-	$OuterScroll.offset_top = top_h
+	$SafeArea/ContentHost/OuterScroll.offset_top = top_h
 
 	# Fluid typography
 	title_label.add_theme_font_size_override("font_size", int(clampf(min_dim * 0.032, 18.0, 28.0)))
@@ -643,7 +643,7 @@ func _get_tower_select_tutorial_steps() -> Array:
 	steps.append({
 		"title": "Mission Intel",
 		"body": "Read the mission briefing here: level concept, enemy warnings, and key stats like wave count and starting RAM.",
-		"highlight": $OuterScroll/ContentArea/LeftMargin.get_path(),
+		"highlight": $SafeArea/ContentHost/OuterScroll/ContentArea/LeftMargin.get_path(),
 	})
 	steps.append({
 		"title": "Tower Slots",
