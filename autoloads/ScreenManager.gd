@@ -1,10 +1,19 @@
 # ScreenManager.gd
 extends Node
 
-# ─── REFERENCE RESOLUTION ──────────────────────────────
-# Everything is designed at this base resolution
-const BASE_WIDTH: float  = 1152.0
-const BASE_HEIGHT: float = 648.0
+# ─── REFERENCE RESOLUTIONS ─────────────────────────────
+# Desktop design matches the project viewport (project.godot:
+# window/size/viewport_width x height).
+const BASE_WIDTH: float  = 1280.0
+const BASE_HEIGHT: float = 720.0
+
+# Mobile/tablet render against a smaller, fixed design size so the UI reads
+# larger on phones than on desktop, while staying pixel-identical on every
+# device (the scale factor self-normalizes to this size).
+# Lower these to make phone UI bigger:
+#   1152x648 = +11%   1024x576 = +25%   960x540 = +33%   854x480 = +50%
+const MOBILE_WIDTH: float  = 1024.0
+const MOBILE_HEIGHT: float = 576.0
 
 func _ready() -> void:
 	# Force landscape orientation on mobile devices
@@ -16,27 +25,19 @@ func _ready() -> void:
 	get_window().size_changed.connect(update_content_scale)
 
 func update_content_scale() -> void:
-	# Calculate dynamic base scale relative to base designed resolution
 	var size = get_screen_size()
-	var scale_x = size.x / BASE_WIDTH
-	var scale_y = size.y / BASE_HEIGHT
-	var base_scale = min(scale_x, scale_y)
-	
-	var scale_factor: float = base_scale
-	
-	if is_mobile():
-		# On mobile devices, ensure extra upscale factor so texts and buttons are comfortably tap-able and readable
-		scale_factor = max(base_scale, 1.4)
-	elif is_tablet():
-		scale_factor = max(base_scale, 1.15)
-	elif OS.has_feature("web"):
-		if size.x < 1000 or size.y < 600:
-			scale_factor = max(base_scale, 1.25)
+
+	if is_mobile() or is_tablet() or OS.has_feature("web"):
+		# Self-normalize to the fixed mobile design size. For any window this
+		# yields the SAME effective canvas on every phone (no floors, no
+		# per-device drift), and because it is smaller than the desktop design
+		# the UI renders larger on phones.
+		var scale_x = size.x / MOBILE_WIDTH
+		var scale_y = size.y / MOBILE_HEIGHT
+		get_window().content_scale_factor = min(scale_x, scale_y)
 	else:
 		# Desktop uses Godot's built-in stretch mode — no manual content scale needed
 		return
-			
-	get_window().content_scale_factor = scale_factor
 
 # ─── SCREEN SIZE ───────────────────────────────────────
 func get_screen_size() -> Vector2:
