@@ -55,30 +55,34 @@ jobs:
             sed -i '' 's/IPHONEOS_DEPLOYMENT_TARGET = .*/IPHONEOS_DEPLOYMENT_TARGET = 16.0;/g' "$PROJECT_FILE"
           fi
 
-# Step 7: Build for iOS Simulator with Ad-Hoc Signing
-      - name: Build Xcode Simulator App
+      # Step 7: Build unsigned .xcarchive via xcodebuild
+      - name: Build Xcode Archive
         run: |
           cd build/ios
           xcodebuild -project PacketSurge.xcodeproj \
                      -scheme "PacketSurge" \
-                     -sdk iphonesimulator \
+                     -sdk iphoneos \
                      -configuration Debug \
-                     -derivedDataPath build_sim \
+                     -archivePath PacketSurge.xcarchive \
                      IPHONEOS_DEPLOYMENT_TARGET=16.0 \
-                     CODE_SIGN_IDENTITY="-" \
+                     CODE_SIGNING_ALLOWED=NO \
                      CODE_SIGNING_REQUIRED=NO \
-                     CODE_SIGNING_ALLOWED=YES \
-                     build
+                     CODE_SIGN_IDENTITY="" \
+                     DEVELOPMENT_TEAM="" \
+                     archive
 
-# Step 8: Move Simulator .app to build output directory
-      - name: Prepare Simulator App Bundle
+      # Step 8: Package into an unsigned .ipa
+      - name: Create Unsigned IPA Package
         run: |
-          cd build/ios/build_sim/Build/Products/Debug-iphonesimulator
-          mv PacketSurge.app $GITHUB_WORKSPACE/build/ios/
+          cd build/ios/PacketSurge.xcarchive/Products/Applications
+          mkdir Payload
+          mv *.app Payload/
+          zip -r PacketSurge.ipa Payload
+          mv PacketSurge.ipa ../../../
 
-      # Step 9: Upload Simulator .app Folder directly
-      - name: Upload Simulator Artifact
+      # Step 9: Upload IPA Artifact to GitHub
+      - name: Upload IPA Artifact
         uses: actions/upload-artifact@v4
         with:
-          name: PacketSurge-Appetize-Build
-          path: build/ios/PacketSurge.app
+          name: PacketSurge-Unsigned-IPA
+          path: build/ios/PacketSurge.ipa
