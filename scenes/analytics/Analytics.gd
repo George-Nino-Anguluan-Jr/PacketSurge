@@ -1,13 +1,13 @@
 extends Control
 
 # ─── NODE REFERENCES ───────────────────────────────────
-@onready var back_btn: Button         = $TopBar/TopBarLayout/BackBtn
-@onready var my_stats_tab: Button     = $TabBar/MyStatsTab
-@onready var class_tab: Button        = $TabBar/ClassTab
-@onready var my_stats_panel: ScrollContainer = $ContentArea/MyStatsPanel
-@onready var class_panel: ScrollContainer    = $ContentArea/ClassPanel
-@onready var my_stats_content: VBoxContainer = $ContentArea/MyStatsPanel/MyStatsContent
-@onready var class_content: VBoxContainer    = $ContentArea/ClassPanel/ClassContent
+@onready var back_btn: Button         = $SafeArea/ContentHost/TopBar/TopBarLayout/BackBtn
+@onready var my_stats_tab: Button     = $SafeArea/ContentHost/TabBar/MyStatsTab
+@onready var class_tab: Button        = $SafeArea/ContentHost/TabBar/ClassTab
+@onready var my_stats_panel: ScrollContainer = $SafeArea/ContentHost/ContentArea/MyStatsPanel
+@onready var class_panel: ScrollContainer    = $SafeArea/ContentHost/ContentArea/ClassPanel
+@onready var my_stats_content: VBoxContainer = $SafeArea/ContentHost/ContentArea/MyStatsPanel/MyStatsContent
+@onready var class_content: VBoxContainer    = $SafeArea/ContentHost/ContentArea/ClassPanel/ClassContent
 
 # ─── STATE ─────────────────────────────────────────────
 var active_tab: String  = "my_stats"
@@ -816,7 +816,7 @@ func _apply_styles() -> void:
 	top_style.bg_color          = Color("#0A1628")
 	top_style.border_color      = Color("#00D4FF")
 	top_style.border_width_bottom = 1
-	$TopBar.add_theme_stylebox_override("panel", top_style)
+	$SafeArea/ContentHost/TopBar.add_theme_stylebox_override("panel", top_style)
 
 	var back_style := StyleBoxFlat.new()
 	back_style.bg_color               = Color("#0A1628")
@@ -862,7 +862,7 @@ func _apply_responsive_layout() -> void:
 	var min_dim := minf(w, h)
 
 	# Fluid typography
-	$TopBar/TopBarLayout/TitleLabel.add_theme_font_size_override("font_size", int(clampf(min_dim * 0.030, 18.0, 28.0)))
+	$SafeArea/ContentHost/TopBar/TopBarLayout/TitleLabel.add_theme_font_size_override("font_size", int(clampf(min_dim * 0.030, 18.0, 28.0)))
 	back_btn.add_theme_font_size_override("font_size", _fs(0.045, 16.0, 20.0))
 
 	# Fluid button sizes
@@ -870,7 +870,7 @@ func _apply_responsive_layout() -> void:
 	back_btn.custom_minimum_size = Vector2(clampf(w * 0.12, 80.0, 120.0), btn_h)
 
 	# Tab bar sizing
-	var tab_bar = $TabBar
+	var tab_bar = $SafeArea/ContentHost/TabBar
 	var inset := clampf(min_dim * 0.020, 16.0, 24.0)
 	tab_bar.offset_left = inset
 	tab_bar.offset_right = -inset
@@ -879,7 +879,7 @@ func _apply_responsive_layout() -> void:
 		btn.custom_minimum_size = Vector2(0, clampf(min_dim * 0.065, 44.0, 52.0))
 
 	# Content area margins — fluid inset
-	var content_area = $ContentArea
+	var content_area = $SafeArea/ContentHost/ContentArea
 	content_area.add_theme_constant_override("margin_left", inset)
 	content_area.add_theme_constant_override("margin_right", inset)
 	content_area.add_theme_constant_override("margin_top", clampf(min_dim * 0.010, 8.0, 16.0))

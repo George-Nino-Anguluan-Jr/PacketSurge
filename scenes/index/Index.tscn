@@ -2,6 +2,7 @@
 
 [ext_resource type="Script" uid="uid://4302plmm0wdb" path="res://scenes/index/Index.gd" id="1_8bsag"]
 [ext_resource type="PackedScene" uid="uid://r0pj7cuytrqm" path="res://scenes/core/ToastManager.tscn" id="2_1y4k8"]
+[ext_resource type="Script" path="res://scripts/utils/SafeArea.gd" id="3_safearea"]
 
 [node name="Index" type="Control" unique_id=2056591767]
 layout_mode = 3
@@ -21,7 +22,24 @@ grow_horizontal = 2
 grow_vertical = 2
 color = Color(0.019607844, 0.050980393, 0.101960786, 1)
 
-[node name="TopBar" type="PanelContainer" parent="." unique_id=1846639376]
+[node name="SafeArea" type="MarginContainer" parent="." unique_id=2200000019]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+script = ExtResource("3_safearea")
+
+[node name="ContentHost" type="Control" parent="SafeArea" unique_id=2200000020]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+
+[node name="TopBar" type="PanelContainer" parent="SafeArea/ContentHost" unique_id=1846639376]
 custom_minimum_size = Vector2(0, 52)
 layout_mode = 1
 anchors_preset = 10
@@ -29,28 +47,28 @@ anchor_right = 1.0
 offset_bottom = 24.0
 grow_horizontal = 2
 
-[node name="TopBarLayout" type="HBoxContainer" parent="TopBar" unique_id=1869223752]
+[node name="TopBarLayout" type="HBoxContainer" parent="SafeArea/ContentHost/TopBar" unique_id=1869223752]
 layout_mode = 2
 theme_override_constants/separation = 16
 
-[node name="BackBtn" type="Button" parent="TopBar/TopBarLayout" unique_id=2086767339]
+[node name="BackBtn" type="Button" parent="SafeArea/ContentHost/TopBar/TopBarLayout" unique_id=2086767339]
 custom_minimum_size = Vector2(80, 50)
 layout_mode = 2
 text = "← BACK"
 
-[node name="TitleLabel" type="Label" parent="TopBar/TopBarLayout" unique_id=1173623183]
+[node name="TitleLabel" type="Label" parent="SafeArea/ContentHost/TopBar/TopBarLayout" unique_id=1173623183]
 layout_mode = 2
 size_flags_horizontal = 3
 theme_override_colors/font_color = Color(0.9098039, 0.95686275, 0.99215686, 1)
 text = "INDEX"
 
-[node name="SearchField" type="LineEdit" parent="TopBar/TopBarLayout" unique_id=861752346]
+[node name="SearchField" type="LineEdit" parent="SafeArea/ContentHost/TopBar/TopBarLayout" unique_id=861752346]
 custom_minimum_size = Vector2(0, 0)
 layout_mode = 2
 size_flags_horizontal = 3
 placeholder_text = "Search..."
 
-[node name="TabBar" type="HBoxContainer" parent="." unique_id=1197202973]
+[node name="TabBar" type="HBoxContainer" parent="SafeArea/ContentHost" unique_id=1197202973]
 layout_mode = 1
 anchors_preset = -1
 anchor_right = 1.0
@@ -60,19 +78,19 @@ grow_horizontal = 2
 grow_vertical = 2
 theme_override_constants/separation = 0
 
-[node name="TowersTab" type="Button" parent="TabBar" unique_id=674759749]
+[node name="TowersTab" type="Button" parent="SafeArea/ContentHost/TabBar" unique_id=674759749]
 custom_minimum_size = Vector2(0, 48)
 layout_mode = 2
 size_flags_horizontal = 3
 text = "🗼 TOWERS"
 
-[node name="EnemiesTab" type="Button" parent="TabBar" unique_id=376840554]
+[node name="EnemiesTab" type="Button" parent="SafeArea/ContentHost/TabBar" unique_id=376840554]
 custom_minimum_size = Vector2(0, 48)
 layout_mode = 2
 size_flags_horizontal = 3
 text = "👾 ENEMIES	"
 
-[node name="ContentArea" type="MarginContainer" parent="." unique_id=140410277]
+[node name="ContentArea" type="MarginContainer" parent="SafeArea/ContentHost" unique_id=140410277]
 layout_mode = 1
 anchors_preset = -1
 anchor_right = 1.0
@@ -85,21 +103,21 @@ theme_override_constants/margin_top = 16
 theme_override_constants/margin_right = 16
 theme_override_constants/margin_bottom = 16
 
-[node name="TowersPanel" type="ScrollContainer" parent="ContentArea" unique_id=2012476896]
+[node name="TowersPanel" type="ScrollContainer" parent="SafeArea/ContentHost/ContentArea" unique_id=2012476896]
 layout_mode = 2
 horizontal_scroll_mode = 0
 
-[node name="TowersContent" type="VBoxContainer" parent="ContentArea/TowersPanel" unique_id=1431535072]
+[node name="TowersContent" type="VBoxContainer" parent="SafeArea/ContentHost/ContentArea/TowersPanel" unique_id=1431535072]
 layout_mode = 2
 size_flags_horizontal = 3
 theme_override_constants/separation = 16
 
-[node name="EnemiesPanel" type="ScrollContainer" parent="ContentArea" unique_id=1490524475]
+[node name="EnemiesPanel" type="ScrollContainer" parent="SafeArea/ContentHost/ContentArea" unique_id=1490524475]
 visible = false
 layout_mode = 2
 horizontal_scroll_mode = 0
 
-[node name="EnemiesContent" type="VBoxContainer" parent="ContentArea/EnemiesPanel" unique_id=1336903979]
+[node name="EnemiesContent" type="VBoxContainer" parent="SafeArea/ContentHost/ContentArea/EnemiesPanel" unique_id=1336903979]
 layout_mode = 2
 size_flags_horizontal = 3
 theme_override_constants/separation = 16

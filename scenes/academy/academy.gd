@@ -2,23 +2,23 @@
 extends Control
 
 # ─── NODE REFERENCES ───────────────────────────────────
-@onready var menu_btn: Button = $TopBar/TopBarLayout/MenuBtn
-@onready var back_btn: Button              = $TopBar/TopBarLayout/BackBtn
-@onready var scene_title: Label            = $TopBar/TopBarLayout/SceneTitle
-@onready var progress_label: Label         = $TopBar/TopBarLayout/ProgressLabel
-@onready var topic_list_python: VBoxContainer = $ContentArea/Sidebar/ScrollContainer/SidebarLayout/PythonSection/TopicList_Python
-@onready var topic_list_ds: VBoxContainer     = $ContentArea/Sidebar/ScrollContainer/SidebarLayout/DSSection/TopicList_DS
-@onready var topic_list_sort: VBoxContainer   = $ContentArea/Sidebar/ScrollContainer/SidebarLayout/SortSection/TopicList_Sort
-@onready var topic_list_search: VBoxContainer = $ContentArea/Sidebar/ScrollContainer/SidebarLayout/SearchSection/TopicList_Search
-@onready var lesson_title: Label           = $ContentArea/LessonArea/LessonContainer/StepContainer/ScrollArea/ScrollContent/LessonHeader/LessonTitle
-@onready var lesson_category: Label        = $ContentArea/LessonArea/LessonContainer/StepContainer/ScrollArea/ScrollContent/LessonHeader/LessonCategory
-@onready var step_indicator: HBoxContainer = $ContentArea/LessonArea/LessonContainer/StepContainer/ScrollArea/ScrollContent/StepIndicator
-@onready var step_container: MarginContainer = $ContentArea/LessonArea/LessonContainer/StepContainer
-@onready var scroll_area: ScrollContainer  = $ContentArea/LessonArea/LessonContainer/StepContainer/ScrollArea
-@onready var scroll_content: VBoxContainer = $ContentArea/LessonArea/LessonContainer/StepContainer/ScrollArea/ScrollContent
-@onready var hint_button: Button           = $BottomBar/BottomLayout/HintButton
-@onready var back_step_btn: Button         = $BottomBar/BottomLayout/BackStepBtn
-@onready var next_step_btn: Button         = $BottomBar/BottomLayout/NextStepBtn
+@onready var menu_btn: Button = $SafeArea/ContentHost/TopBar/TopBarLayout/MenuBtn
+@onready var back_btn: Button              = $SafeArea/ContentHost/TopBar/TopBarLayout/BackBtn
+@onready var scene_title: Label            = $SafeArea/ContentHost/TopBar/TopBarLayout/SceneTitle
+@onready var progress_label: Label         = $SafeArea/ContentHost/TopBar/TopBarLayout/ProgressLabel
+@onready var topic_list_python: VBoxContainer = $SafeArea/ContentHost/ContentArea/Sidebar/ScrollContainer/SidebarLayout/PythonSection/TopicList_Python
+@onready var topic_list_ds: VBoxContainer     = $SafeArea/ContentHost/ContentArea/Sidebar/ScrollContainer/SidebarLayout/DSSection/TopicList_DS
+@onready var topic_list_sort: VBoxContainer   = $SafeArea/ContentHost/ContentArea/Sidebar/ScrollContainer/SidebarLayout/SortSection/TopicList_Sort
+@onready var topic_list_search: VBoxContainer = $SafeArea/ContentHost/ContentArea/Sidebar/ScrollContainer/SidebarLayout/SearchSection/TopicList_Search
+@onready var lesson_title: Label           = $SafeArea/ContentHost/ContentArea/LessonArea/LessonContainer/StepContainer/ScrollArea/ScrollContent/LessonHeader/LessonTitle
+@onready var lesson_category: Label        = $SafeArea/ContentHost/ContentArea/LessonArea/LessonContainer/StepContainer/ScrollArea/ScrollContent/LessonHeader/LessonCategory
+@onready var step_indicator: HBoxContainer = $SafeArea/ContentHost/ContentArea/LessonArea/LessonContainer/StepContainer/ScrollArea/ScrollContent/StepIndicator
+@onready var step_container: MarginContainer = $SafeArea/ContentHost/ContentArea/LessonArea/LessonContainer/StepContainer
+@onready var scroll_area: ScrollContainer  = $SafeArea/ContentHost/ContentArea/LessonArea/LessonContainer/StepContainer/ScrollArea
+@onready var scroll_content: VBoxContainer = $SafeArea/ContentHost/ContentArea/LessonArea/LessonContainer/StepContainer/ScrollArea/ScrollContent
+@onready var hint_button: Button           = $SafeArea/ContentHost/BottomBar/BottomLayout/HintButton
+@onready var back_step_btn: Button         = $SafeArea/ContentHost/BottomBar/BottomLayout/BackStepBtn
+@onready var next_step_btn: Button         = $SafeArea/ContentHost/BottomBar/BottomLayout/NextStepBtn
 
 # ─── LESSON DATA ───────────────────────────────────────
 var all_lessons: Array[LessonData] = []
@@ -59,7 +59,7 @@ func _ready() -> void:
 	_update_progress_label()
 	_apply_responsive_layout()
 	ScreenManager.make_scroll_touch_friendly(scroll_area)
-	ScreenManager.make_scroll_touch_friendly($ContentArea/Sidebar/ScrollContainer)
+	ScreenManager.make_scroll_touch_friendly($SafeArea/ContentHost/ContentArea/Sidebar/ScrollContainer)
 	get_tree().root.size_changed.connect(_apply_responsive_layout)
 	_maybe_show_tutorial()
 	SignalBus.topic_unlocked.connect(_on_topic_state_changed)
@@ -858,19 +858,19 @@ func _apply_styles() -> void:
 	top_style.bg_color          = Color("#0A1628")
 	top_style.border_color      = Color("#00D4FF")
 	top_style.border_width_bottom = 1
-	$TopBar.add_theme_stylebox_override("panel", top_style)
+	$SafeArea/ContentHost/TopBar.add_theme_stylebox_override("panel", top_style)
 
 	var side_style := StyleBoxFlat.new()
 	side_style.bg_color         = Color("#080F1E")
 	side_style.border_color     = Color("#0D2040")
 	side_style.border_width_right = 1
-	$ContentArea/Sidebar.add_theme_stylebox_override("panel", side_style)
+	$SafeArea/ContentHost/ContentArea/Sidebar.add_theme_stylebox_override("panel", side_style)
 
 	var bottom_style := StyleBoxFlat.new()
 	bottom_style.bg_color       = Color("#0A1628")
 	bottom_style.border_color   = Color("#00D4FF")
 	bottom_style.border_width_top = 1
-	$BottomBar.add_theme_stylebox_override("panel", bottom_style)
+	$SafeArea/ContentHost/BottomBar.add_theme_stylebox_override("panel", bottom_style)
 
 	var back_style := StyleBoxFlat.new()
 	back_style.bg_color               = Color("#0A1628")
@@ -942,10 +942,10 @@ func _apply_responsive_layout() -> void:
 	var h := maxf(vp.y, 240.0)
 	var min_dim := minf(w, h)
 
-	var top_bar = $TopBar
-	var content_area = $ContentArea
-	var bottom_bar = $BottomBar
-	var sidebar = $ContentArea/Sidebar
+	var top_bar = $SafeArea/ContentHost/TopBar
+	var content_area = $SafeArea/ContentHost/ContentArea
+	var bottom_bar = $SafeArea/ContentHost/BottomBar
+	var sidebar = $SafeArea/ContentHost/ContentArea/Sidebar
 
 	# Fluid TopBar height + offset
 	var top_h := clampf(h * 0.065, 52.0, 64.0)
@@ -989,9 +989,9 @@ func _apply_responsive_layout() -> void:
 func _toggle_sidebar() -> void:
 	_sidebar_visible = !_sidebar_visible
 	if _sidebar_visible:
-		$ContentArea/Sidebar.show()
+		$SafeArea/ContentHost/ContentArea/Sidebar.show()
 	else:
-		$ContentArea/Sidebar.hide()
+		$SafeArea/ContentHost/ContentArea/Sidebar.hide()
 	menu_btn.text = "✕" if _sidebar_visible else "☰"
 	_apply_responsive_layout()
 
@@ -1022,7 +1022,7 @@ func _get_academy_tutorial_steps() -> Array:
 	steps.append({
 		"title": "Topics Sidebar",
 		"body": "Browse topics organized by category: Python Fundamentals, Data Structures, Sorting, and Searching.\n\nTap any unlocked topic to start learning. Complete lessons to unlock more.",
-		"highlight": $ContentArea/Sidebar.get_path(),
+		"highlight": $SafeArea/ContentHost/ContentArea/Sidebar.get_path(),
 	})
 	steps.append({
 		"title": "Your Progress",
@@ -1032,12 +1032,12 @@ func _get_academy_tutorial_steps() -> Array:
 	steps.append({
 		"title": "Lesson Content",
 		"body": "Lessons appear here with interactive content, visualizations, code editors, and practice exercises.\n\nEach lesson has 8 steps to guide you from concept to mastery.",
-		"highlight": $ContentArea/LessonArea.get_path(),
+		"highlight": $SafeArea/ContentHost/ContentArea/LessonArea.get_path(),
 	})
 	steps.append({
 		"title": "Step Navigation",
 		"body": "Move through lesson steps with Previous and Next. Tap 💡 Hint when you're stuck on a problem — it won't affect your score.",
-		"highlight": $BottomBar.get_path(),
+		"highlight": $SafeArea/ContentHost/BottomBar.get_path(),
 	})
 	steps.append({
 		"title": "Ready to Learn!",

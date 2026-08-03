@@ -2,18 +2,18 @@
 extends Control
 
 # ─── NODE REFERENCES ───────────────────────────────────
-@onready var title_label: Label           = $TopBar/TopBarLayout/TitleLabel
-@onready var progress_label: Label        = $TopBar/TopBarLayout/ProgressLabel
-@onready var intro_panel: PanelContainer  = $ContentArea/Content/IntroPanel
-@onready var quiz_panel: VBoxContainer    = $ContentArea/Content/QuizPanel
-@onready var result_panel: VBoxContainer  = $ContentArea/Content/ResultPanel
-@onready var question_label: Label        = $ContentArea/Content/QuizPanel/QuestionLabel
-@onready var options_container: VBoxContainer = $ContentArea/Content/QuizPanel/OptionsContainer
-@onready var feedback_label: Label        = $ContentArea/Content/QuizPanel/FeedbackLabel
-@onready var result_icon: Label           = $ContentArea/Content/ResultPanel/ResultIcon
-@onready var result_title: Label          = $ContentArea/Content/ResultPanel/ResultTitle
-@onready var result_desc: Label           = $ContentArea/Content/ResultPanel/ResultDesc
-@onready var continue_btn: Button         = $ContentArea/Content/ResultPanel/ContinueBtn
+@onready var title_label: Label           = $SafeArea/ContentHost/TopBar/TopBarLayout/TitleLabel
+@onready var progress_label: Label        = $SafeArea/ContentHost/TopBar/TopBarLayout/ProgressLabel
+@onready var intro_panel: PanelContainer  = $SafeArea/ContentHost/ContentArea/Content/IntroPanel
+@onready var quiz_panel: VBoxContainer    = $SafeArea/ContentHost/ContentArea/Content/QuizPanel
+@onready var result_panel: VBoxContainer  = $SafeArea/ContentHost/ContentArea/Content/ResultPanel
+@onready var question_label: Label        = $SafeArea/ContentHost/ContentArea/Content/QuizPanel/QuestionLabel
+@onready var options_container: VBoxContainer = $SafeArea/ContentHost/ContentArea/Content/QuizPanel/OptionsContainer
+@onready var feedback_label: Label        = $SafeArea/ContentHost/ContentArea/Content/QuizPanel/FeedbackLabel
+@onready var result_icon: Label           = $SafeArea/ContentHost/ContentArea/Content/ResultPanel/ResultIcon
+@onready var result_title: Label          = $SafeArea/ContentHost/ContentArea/Content/ResultPanel/ResultTitle
+@onready var result_desc: Label           = $SafeArea/ContentHost/ContentArea/Content/ResultPanel/ResultDesc
+@onready var continue_btn: Button         = $SafeArea/ContentHost/ContentArea/Content/ResultPanel/ContinueBtn
 
 # ─── QUIZ QUESTIONS ────────────────────────────────────
 const QUESTIONS = [
@@ -108,7 +108,7 @@ func _show_intro() -> void:
 	_build_intro()
 
 func _build_intro() -> void:
-	var content = $ContentArea/Content/IntroPanel/IntroMargin/IntroContent
+	var content = $SafeArea/ContentHost/ContentArea/Content/IntroPanel/IntroMargin/IntroContent
 	for child in content.get_children():
 		child.queue_free()
 
@@ -325,7 +325,7 @@ func _apply_styles() -> void:
 	top_style.bg_color            = Color("#0A1628")
 	top_style.border_color        = Color("#00D4FF")
 	top_style.border_width_bottom = 1
-	$TopBar.add_theme_stylebox_override("panel", top_style)
+	$SafeArea/ContentHost/TopBar.add_theme_stylebox_override("panel", top_style)
 
 	title_label.add_theme_font_size_override("font_size", _fs(0.040, 16.0, 20.0))
 	title_label.add_theme_color_override("font_color", Color("#00D4FF"))
@@ -427,8 +427,8 @@ func _apply_responsive_layout() -> void:
 	var min_dim := minf(w, h)
 	var inset := clampf(min_dim * 0.025, 16.0, 32.0)
 
-	var top_bar = $TopBar
-	var content_area = $ContentArea
+	var top_bar = $SafeArea/ContentHost/TopBar
+	var content_area = $SafeArea/ContentHost/ContentArea
 
 	# Fluid TopBar height
 	var top_h := clampf(h * 0.065, 52.0, 64.0)

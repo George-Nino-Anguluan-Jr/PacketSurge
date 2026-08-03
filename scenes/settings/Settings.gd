@@ -2,11 +2,11 @@
 extends Control
 
 # ─── NODE REFERENCES ───────────────────────────────────
-@onready var back_btn: Button               = $TopBar/TopBarLayout/BackBtn
-@onready var title_label: Label             = $TopBar/TopBarLayout/TitleLabel
-@onready var content_area: MarginContainer  = $ContentArea
-@onready var general_panel: ScrollContainer = $ContentArea/GeneralPanel
-@onready var general_content: VBoxContainer = $ContentArea/GeneralPanel/GeneralContent
+@onready var back_btn: Button               = $SafeArea/ContentHost/TopBar/TopBarLayout/BackBtn
+@onready var title_label: Label             = $SafeArea/ContentHost/TopBar/TopBarLayout/TitleLabel
+@onready var content_area: MarginContainer  = $SafeArea/ContentHost/ContentArea
+@onready var general_panel: ScrollContainer = $SafeArea/ContentHost/ContentArea/GeneralPanel
+@onready var general_content: VBoxContainer = $SafeArea/ContentHost/ContentArea/GeneralPanel/GeneralContent
 
 # ─── STATE ─────────────────────────────────────────────
 var _last_device: String = ""
@@ -297,7 +297,7 @@ func _apply_styles() -> void:
 	top_style.bg_color            = Color("#0A1628")
 	top_style.border_color        = Color("#00D4FF")
 	top_style.border_width_bottom = 1
-	$TopBar.add_theme_stylebox_override("panel", top_style)
+	$SafeArea/ContentHost/TopBar.add_theme_stylebox_override("panel", top_style)
 
 	var back_style := StyleBoxFlat.new()
 	back_style.bg_color               = Color("#0A1628")

@@ -2,14 +2,14 @@
 extends Control
 
 # ─── NODE REFERENCES ───────────────────────────────────
-@onready var back_btn: Button           = $TopBar/TopBarLayout/BackBtn
-@onready var search_field: LineEdit     = $TopBar/TopBarLayout/SearchField
-@onready var towers_tab: Button         = $TabBar/TowersTab
-@onready var enemies_tab: Button        = $TabBar/EnemiesTab
-@onready var towers_panel: ScrollContainer  = $ContentArea/TowersPanel
-@onready var enemies_panel: ScrollContainer = $ContentArea/EnemiesPanel
-@onready var towers_content: VBoxContainer  = $ContentArea/TowersPanel/TowersContent
-@onready var enemies_content: VBoxContainer = $ContentArea/EnemiesPanel/EnemiesContent
+@onready var back_btn: Button           = $SafeArea/ContentHost/TopBar/TopBarLayout/BackBtn
+@onready var search_field: LineEdit     = $SafeArea/ContentHost/TopBar/TopBarLayout/SearchField
+@onready var towers_tab: Button         = $SafeArea/ContentHost/TabBar/TowersTab
+@onready var enemies_tab: Button        = $SafeArea/ContentHost/TabBar/EnemiesTab
+@onready var towers_panel: ScrollContainer  = $SafeArea/ContentHost/ContentArea/TowersPanel
+@onready var enemies_panel: ScrollContainer = $SafeArea/ContentHost/ContentArea/EnemiesPanel
+@onready var towers_content: VBoxContainer  = $SafeArea/ContentHost/ContentArea/TowersPanel/TowersContent
+@onready var enemies_content: VBoxContainer = $SafeArea/ContentHost/ContentArea/EnemiesPanel/EnemiesContent
 
 # ─── STATE ──────────────────────────────────────────────
 var active_tab: String   = "towers"
@@ -478,7 +478,7 @@ func _apply_styles() -> void:
 	top_style.bg_color = C_BG_DARK
 	top_style.border_color = C_ACCENT
 	top_style.border_width_bottom = 1
-	$TopBar.add_theme_stylebox_override("panel", top_style)
+	$SafeArea/ContentHost/TopBar.add_theme_stylebox_override("panel", top_style)
 
 	var back_style := StyleBoxFlat.new()
 	back_style.bg_color = C_BG
@@ -515,7 +515,7 @@ func _apply_styles() -> void:
 
 	var tab_bg := StyleBoxFlat.new()
 	tab_bg.bg_color = C_BG_DARK
-	$TabBar.add_theme_stylebox_override("panel", tab_bg)
+	$SafeArea/ContentHost/TabBar.add_theme_stylebox_override("panel", tab_bg)
 
 func _style_active_tab(btn: Button, active: bool) -> void:
 	var style := StyleBoxFlat.new()
@@ -546,7 +546,7 @@ func _apply_responsive_layout() -> void:
 	var min_dim := minf(w, h)
 
 	# Fluid typography
-	$TopBar/TopBarLayout/TitleLabel.add_theme_font_size_override("font_size", int(clampf(min_dim * 0.032, 18.0, 28.0)))
+	$SafeArea/ContentHost/TopBar/TopBarLayout/TitleLabel.add_theme_font_size_override("font_size", int(clampf(min_dim * 0.032, 18.0, 28.0)))
 	back_btn.add_theme_font_size_override("font_size", _fs(0.045, 16.0, 18.0))
 
 	# Fluid button sizes
@@ -554,7 +554,7 @@ func _apply_responsive_layout() -> void:
 	back_btn.custom_minimum_size = Vector2(clampf(w * 0.12, 80.0, 120.0), btn_h)
 
 	# Tab bar sizing
-	var tab_bar = $TabBar
+	var tab_bar = $SafeArea/ContentHost/TabBar
 	var inset := clampf(min_dim * 0.020, 16.0, 24.0)
 	tab_bar.offset_left = inset
 	tab_bar.offset_right = -inset
@@ -563,7 +563,7 @@ func _apply_responsive_layout() -> void:
 		btn.custom_minimum_size = Vector2(0, clampf(min_dim * 0.065, 44.0, 52.0))
 
 	# Content area margins — fluid inset
-	var content_area = $ContentArea
+	var content_area = $SafeArea/ContentHost/ContentArea
 	content_area.add_theme_constant_override("margin_left", inset)
 	content_area.add_theme_constant_override("margin_right", inset)
 	content_area.add_theme_constant_override("margin_top", clampf(min_dim * 0.010, 8.0, 16.0))

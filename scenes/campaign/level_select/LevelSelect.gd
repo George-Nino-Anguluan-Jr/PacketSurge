@@ -1,11 +1,11 @@
 # LevelSelect.gd
 extends Control
 
-@onready var back_btn: Button         = $TopBar/TopBarLayout/BackBtn
-@onready var ram_label: Label         = $TopBar/TopBarLayout/RAMLabel
+@onready var back_btn: Button         = $SafeArea/ContentHost/TopBar/TopBarLayout/BackBtn
+@onready var ram_label: Label         = $SafeArea/ContentHost/TopBar/TopBarLayout/RAMLabel
 @onready var map_scroll: ScrollContainer = %MapScroll
 @onready var map_canvas: Control      = %MapCanvas
-@onready var locked_label: Label      = $ContentArea/MainLayout/LockedLabel
+@onready var locked_label: Label      = $SafeArea/ContentHost/ContentArea/MainLayout/LockedLabel
 
 # ─── HELPERS ───────────────────────────────────────────
 func _min_dim() -> float:
@@ -200,7 +200,7 @@ func _show_tooltip(global_pos: Vector2, info: Dictionary, is_unlocked: bool, is_
 	# Adjust tooltip screen position — bounces to opposite side if off-screen
 	var tooltip_size = tooltip_panel.custom_minimum_size
 	var screen = DisplayServer.window_get_size()
-	var top_h = $TopBar.custom_minimum_size.y
+	var top_h = $SafeArea/ContentHost/TopBar.custom_minimum_size.y
 	var offset_x = tooltip_size.x * 0.5 + 20
 	var offset_y = tooltip_size.y * 0.5 + 20
 	var pos = global_pos - Vector2(offset_x, offset_y + 20)
@@ -591,7 +591,7 @@ func _apply_styles() -> void:
 	top_style.bg_color          = Color("#0A1628")
 	top_style.border_color      = Color("#00D4FF")
 	top_style.border_width_bottom = 1
-	$TopBar.add_theme_stylebox_override("panel", top_style)
+	$SafeArea/ContentHost/TopBar.add_theme_stylebox_override("panel", top_style)
 
 func _style_back_btn() -> void:
 	var style := StyleBoxFlat.new()
@@ -617,10 +617,10 @@ func _apply_responsive_layout() -> void:
 
 	# Fluid TopBar height
 	var top_h := clampf(h * 0.065, 52.0, 64.0)
-	$TopBar.custom_minimum_size = Vector2(0, top_h)
+	$SafeArea/ContentHost/TopBar.custom_minimum_size = Vector2(0, top_h)
 
 	# Fluid typography
-	$TopBar/TopBarLayout/TitleLabel.add_theme_font_size_override("font_size", int(clampf(min_dim * 0.032, 18.0, 28.0)))
+	$SafeArea/ContentHost/TopBar/TopBarLayout/TitleLabel.add_theme_font_size_override("font_size", int(clampf(min_dim * 0.032, 18.0, 28.0)))
 	ram_label.add_theme_font_size_override("font_size", _fs(0.028, 16.0, 16.0))
 	back_btn.add_theme_font_size_override("font_size", _fs(0.045, 16.0, 18.0))
 
@@ -629,7 +629,7 @@ func _apply_responsive_layout() -> void:
 	back_btn.custom_minimum_size = Vector2(clampf(w * 0.12, 80.0, 100.0), btn_h)
 
 	# Content area positions & margins — fluid
-	var content_area = $ContentArea
+	var content_area = $SafeArea/ContentHost/ContentArea
 	content_area.offset_top = top_h
 	content_area.add_theme_constant_override("margin_left", inset)
 	content_area.add_theme_constant_override("margin_right", inset)
