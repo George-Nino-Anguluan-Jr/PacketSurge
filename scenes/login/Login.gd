@@ -862,28 +862,6 @@ func _apply_responsive_layout() -> void:
 	# Keep dialog cards sized correctly after viewport changes.
 	_apply_dialog_responsive()
 
-	# TEMP DEBUG — remove after confirming friend's phone
-	_update_field_debug(card, login_form)
-
-# TEMP DEBUG — remove after confirming friend's phone
-var _field_debug_label: Label = null
-func _update_field_debug(card: Control, login_form: Control) -> void:
-	if _field_debug_label == null:
-		var layer := CanvasLayer.new()
-		layer.layer = 200
-		add_child(layer)
-		_field_debug_label = Label.new()
-		_field_debug_label.add_theme_font_size_override("font_size", 26)
-		_field_debug_label.position = Vector2(8, 170)
-		layer.add_child(_field_debug_label)
-	_field_debug_label.text = "viewport=%s\nfield_h=%s\npw_h=%s\nform_sep=%s\ncard=%s" % [
-		get_viewport().get_visible_rect().size,
-		login_username_field.size.y,
-		password_field.size.y,
-		login_form.get_theme_constant("separation"),
-		card.size,
-	]
-
 func _apply_dialog_responsive() -> void:
 	if _reset_dialog and _reset_dialog.visible:
 		var cards := _reset_dialog.find_children("*", "PanelContainer", true, false)
