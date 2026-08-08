@@ -1,6 +1,10 @@
 # train.py
-# Trains a tiny neural net: 8 inputs -> 6 hidden (ReLU) -> 1 output (sigmoid)
+# Trains a tiny neural net: 9 inputs -> 6 hidden (ReLU) -> 1 output (sigmoid)
 # Output is scaled to 0.4-1.6 difficulty modifier
+#
+# The 9th input is the player's RAM-management efficiency (0-1), so the
+# Adaptive AI adjusts difficulty from topic mastery, level completion, AND
+# how efficiently the learner budgets the RAM resource.
 #
 # Usage: python train.py
 # Outputs: ../models/adaptive_weights.json
@@ -20,9 +24,9 @@ def relu(x):
 
 # ─── FORWARD PASS ────────────────────────────────────────
 def forward(X, W1, b1, W2, b2):
-    # X: 8 features (list of 8 floats)
+    # X: 9 features (list of 9 floats)
     # Returns: (hidden_pre, hidden, output)
-    z1 = [sum(W1[i][j] * X[j] for j in range(8)) + b1[i] for i in range(6)]
+    z1 = [sum(W1[i][j] * X[j] for j in range(9)) + b1[i] for i in range(6)]
     h  = [relu(v) for v in z1]
     z2 = sum(W2[0][j] * h[j] for j in range(6)) + b2[0]
     out = sigmoid(z2)
@@ -32,8 +36,8 @@ def forward(X, W1, b1, W2, b2):
 def generate_data(count=8000):
     data = []
     for _ in range(count):
-        # 8 features, each 0-1 representing player progress/skill
-        f = [random.random() for _ in range(8)]
+        # 9 features, each 0-1 representing player progress/skill
+        f = [random.random() for _ in range(9)]
 
         # Estimate overall skill from features
         # Higher mastered/levels/stars/unlocked -> higher skill
@@ -45,7 +49,8 @@ def generate_data(count=8000):
             f[4] * 0.10 +   # level stars for current level
             f[5] * 0.10 +   # unlocked towers ratio
             f[6] * 0.08 +   # max level unlocked
-            f[7] * 0.07     # waves completed
+            f[7] * 0.07 +   # waves completed
+            f[8] * 0.07     # RAM-management efficiency
         )
 
         # Add some noise so it's not perfectly linear
@@ -56,7 +61,7 @@ def generate_data(count=8000):
     return data
 
 # ─── INIT WEIGHTS ────────────────────────────────────────
-W1 = [[random.uniform(-0.5, 0.5) for _ in range(8)] for _ in range(6)]
+W1 = [[random.uniform(-0.5, 0.5) for _ in range(9)] for _ in range(6)]
 b1 = [0.0] * 6
 W2 = [[random.uniform(-0.5, 0.5) for _ in range(6)]]
 b2 = [0.0]
@@ -90,7 +95,7 @@ for epoch in range(300):
         d_h = [d_z2 * W2[0][j] for j in range(6)]
         d_z1 = [d_h[i] if z1[i] > 0 else 0.0 for i in range(6)]
 
-        d_W1 = [[d_z1[i] * X[j] for j in range(8)] for i in range(6)]
+        d_W1 = [[d_z1[i] * X[j] for j in range(9)] for i in range(6)]
         d_b1 = d_z1[:]
 
         # Update weights

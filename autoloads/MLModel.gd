@@ -1,7 +1,7 @@
 extends Node
 
 # Tiny neural network inference engine
-# Architecture: 8 inputs -> 6 hidden (ReLU) -> 1 output (sigmoid)
+# Architecture: 9 inputs -> 6 hidden (ReLU) -> 1 output (sigmoid)
 # Trained in Python, weights loaded from JSON
 
 var W1: Array = []
@@ -33,13 +33,13 @@ func load_model(path: String) -> bool:
 func predict(features: Array) -> float:
 	if not _loaded:
 		return 0.5
-	# Hidden layer: 8 -> 6 with ReLU
+	# Hidden layer: 9 -> 6 with ReLU
 	var h: Array = []
 	h.resize(6)
 	for i in range(6):
 		var s = b1[i]
 		var row = W1[i]
-		for j in range(8):
+		for j in range(9):
 			s += row[j] * features[j]
 		h[i] = max(0.0, s)
 	# Output layer: 6 -> 1 with sigmoid

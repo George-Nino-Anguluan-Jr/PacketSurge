@@ -42,12 +42,13 @@ func _collect_features() -> Array:
 	return [
 		float(mastered) / float(max(1, total_topics)),           # 0: topics mastered ratio
 		float(struggling) / float(max(1, total_topics)),         # 1: topics struggling ratio
-		levels_done / max(1.0, total_levels),                    # 2: levels completed
+		float(levels_done) / max(1.0, total_levels),             # 2: levels completed
 		avg_stars / 3.0,                                         # 3: average stars
 		0.0,                                                     # 4: level stars (set per-level)
 		float(towers_unlocked) / max(1.0, total_towers),         # 5: unlocked towers
 		max_level / max(1.0, total_levels),                      # 6: max level unlocked
-		levels_done / max(1.0, total_levels),                    # 7: waves done
+		float(levels_done) / max(1.0, total_levels),             # 7: waves done
+		ProgressManager.get_avg_ram_efficiency(),                # 8: RAM efficiency (0..1)
 	]
 
 

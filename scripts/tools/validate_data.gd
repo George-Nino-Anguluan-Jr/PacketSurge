@@ -56,6 +56,13 @@ func _ready() -> void:
 			print("[validate] tower missing intro copy: ", tower_id)
 			all_ok = false
 
+	# Every tower must declare a space complexity so the RAM cost is justified
+	for tower_id in DataRegistry.get_tower_ids_ordered():
+		var tw = DataRegistry.get_tower(tower_id)
+		if tw.space_complexity.is_empty() or tw.ram_cost <= 0:
+			print("[validate] tower missing space_complexity or ram_cost: ", tower_id)
+			all_ok = false
+
 	# Every tower referenced by a lesson must exist in the data layer
 	for lesson_id in ProgressManager.PROGRESSION_CHAIN:
 		var chain = ProgressManager.PROGRESSION_CHAIN[lesson_id]
