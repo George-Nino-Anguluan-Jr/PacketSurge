@@ -5,6 +5,8 @@
 [ext_resource type="Resource" path="res://resources/styles/tower_style_default.tres" id="2_style"]
 
 [resource]
+space_complexity = "O(n)"
+ram_cost = 150
 script = ExtResource("1_ph4gw")
 style = ExtResource("2_style")
 tower_id = "tower_array"

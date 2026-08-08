@@ -104,6 +104,7 @@ func _collect_towers() -> Array:
 			"speed":            float(def.get("attack_speed", 0.0)),
 			"range":            float(def.get("attack_range", 0.0)),
 			"time_complexity":  def.get("time_complexity", ""),
+			"space_complexity": def.get("space_complexity", ""),
 			"color":            def.get("color", C_ACCENT),
 			"icon":             def.get("icon_text", ""),
 			"ability":          intro.get("ability", ""),
@@ -197,6 +198,7 @@ func _make_tower_card(data: Dictionary) -> Control:
 		_add_stat(stats, "SPD",   "%s/s" % data["speed"])
 		_add_stat(stats, "RNG",   "%s px" % str(int(data["range"])))
 		_add_stat(stats, "TIME",  data["time_complexity"])
+		_add_stat(stats, "SPACE", data["space_complexity"])
 		middle.add_child(stats)
 
 		# Ability row

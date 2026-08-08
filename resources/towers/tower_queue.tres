@@ -5,13 +5,14 @@
 [ext_resource type="Resource" path="res://resources/styles/tower_style_default.tres" id="2_style"]
 
 [resource]
+space_complexity = "O(n)"
 script = ExtResource("1_qf76d")
 style = ExtResource("2_style")
 tower_id = "tower_queue"
 tower_name = "Queue Tower"
 description = "Pierces 2 enemies in line. FIFO targeting."
 data_structure = "Queue"
-ram_cost = 75
+ram_cost = 150
 damage = 22.0
 attack_speed = 1.6
 attack_range = 160.0

@@ -270,6 +270,7 @@ func build_tower_definitions() -> Dictionary:
 			"attack_speed":    r.attack_speed,
 			"attack_range":    r.attack_range,
 			"time_complexity": r.time_complexity,
+			"space_complexity": r.space_complexity,
 			"color":           r.color,
 			"icon_text":       r.icon_text,
 			"ability_name":    r.ability_name,

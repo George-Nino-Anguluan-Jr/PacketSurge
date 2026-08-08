@@ -24,6 +24,8 @@ var campaign_progress: Dictionary  = {
 }
 var campaign_time: Dictionary      = {}  # level_number (str) → seconds (float)
 var tutorials_seen: Array[String]   = []  # tutorial scene key (e.g. "main_menu", "level_1")
+var ram_efficiency_total: float     = 0.0
+var ram_efficiency_count: int       = 0
 
 # ─── STARTUP ───────────────────────────────────────────
 func _ready() -> void:
@@ -175,6 +177,17 @@ func add_campaign_time(level_number: int, seconds: float) -> void:
 	campaign_time[key] += seconds
 	save_progress()
 
+# ─── RAM EFFICIENCY TRACKING ───────────────────────────
+func record_ram_efficiency(efficiency: float) -> void:
+	ram_efficiency_total += clamp(efficiency, 0.0, 1.0)
+	ram_efficiency_count += 1
+	save_progress()
+
+func get_avg_ram_efficiency() -> float:
+	if ram_efficiency_count <= 0:
+		return 0.0
+	return ram_efficiency_total / float(ram_efficiency_count)
+
 # ─── UNLOCK HELPERS ────────────────────────────────────
 func unlock_campaign_level(level_number: int) -> void:
 	var current_max = campaign_progress.get("max_level_unlocked", 0)
@@ -224,6 +237,8 @@ func save_progress() -> void:
 		"new_unlocked_towers": new_unlocked_towers,
 		"campaign_progress": campaign_progress,
 		"tutorials_seen":    tutorials_seen,
+		"ram_efficiency_total": ram_efficiency_total,
+		"ram_efficiency_count": ram_efficiency_count,
 	}
 	var json_string = JSON.stringify(data)
 
@@ -295,6 +310,9 @@ func load_progress() -> void:
 	for t in loaded_tutorials:
 		tutorials_seen.append(str(t))
 
+	ram_efficiency_total = float(parsed.get("ram_efficiency_total", 0.0))
+	ram_efficiency_count = int(parsed.get("ram_efficiency_count", 0))
+
 	print("[ProgressManager] Progress loaded.")
 
 func reset_all_progress() -> void:
@@ -310,6 +328,8 @@ func reset_all_progress() -> void:
 		"waves_completed":     0,
 		"level_stars":        {},
 	}
+	ram_efficiency_total = 0.0
+	ram_efficiency_count = 0
 	_ensure_base_state()
 	save_progress()
 

@@ -5,13 +5,14 @@
 [ext_resource type="Resource" path="res://resources/styles/tower_style_default.tres" id="2_style"]
 
 [resource]
+space_complexity = "O(n)"
 script = ExtResource("1_vh5wh")
 style = ExtResource("2_style")
 tower_id = "tower_stack"
 tower_name = "Stack Tower"
 description = "Hits the most recent enemy. LIFO targeting."
 data_structure = "Stack"
-ram_cost = 75
+ram_cost = 150
 damage = 28.0
 attack_speed = 1.2
 attack_range = 130.0
