@@ -59,7 +59,8 @@ var _ff_btn: Button               = null
 const INTER_WAVE_DURATION: float  = 15.0
 var wave_countdown: float          = INTER_WAVE_DURATION
 var countdown_active: bool         = true
-var _tutorial_active: bool         = false
+var _tutorial_active: bool = false
+var _pause_press_time: float = 0.0
 
 # ─── CODING CHALLENGES ──────────────────────────────────
 const CHALLENGES = {
@@ -157,8 +158,10 @@ func _ready() -> void:
 	else:
 		call_deferred("_show_challenge")
 	_maybe_show_tutorial()
+	GameManager.active_level = self
 
 func _exit_tree() -> void:
+	GameManager.active_level = null
 	Engine.time_scale = 1.0
 	SoundManager.stop_music()
 
@@ -287,7 +290,8 @@ func _build_tower_selector() -> void:
 
 func _setup_buttons() -> void:
 	back_btn.pressed.connect(_on_back_pressed)
-	pause_btn.pressed.connect(_on_pause_pressed)
+	pause_btn.button_down.connect(func(): _pause_press_time = Time.get_ticks_msec() / 1000.0)
+	pause_btn.button_up.connect(_on_pause_released)
 	resume_btn.pressed.connect(_on_resume_pressed)
 	retry_btn.pressed.connect(_on_retry_pressed)
 	select_level_btn.pressed.connect(_on_select_level_pressed)
@@ -949,12 +953,22 @@ func _show_wave_splash_animation(wave_num: int) -> void:
 # ─── INPUT ─────────────────────────────────────────────
 func _input(event: InputEvent) -> void:
 	if event.is_action_pressed("ui_cancel"):
-		_on_pause_pressed()
+		_open_pause_menu()
 
 # ─── PAUSE / SPEED HANDLERS ────────────────────────────
-func _on_pause_pressed() -> void:
+func _open_pause_menu() -> void:
 	get_tree().paused = true
 	pause_menu.visible = true
+
+func _on_pause_released() -> void:
+	var elapsed = (Time.get_ticks_msec() / 1000.0) - _pause_press_time
+	if elapsed >= 2.0:
+		# Long press — open command panel
+		var cp = preload("res://scenes/core/CommandPanel.gd").new()
+		add_child(cp)
+	else:
+		# Short press — normal pause
+		_open_pause_menu()
 
 func _on_resume_pressed() -> void:
 	get_tree().paused = false

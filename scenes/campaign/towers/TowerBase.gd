@@ -67,16 +67,7 @@ var _base_sprite_2d: Sprite2D = null
 var _using_sprites: bool = false
 var _spire: Node2D = null
 
-const SPIRE_VARIANT_MAP: Dictionary = {
-	"tower_array":      "tower_01",
-	"tower_queue":      "tower_02",
-	"tower_linked_list":"tower_03",
-	"tower_stack":      "tower_04",
-	"tower_binary":     "tower_05",
-	"tower_linear":     "tower_06",
-	"tower_counting":   "tower_07",
-	"tower_insertion":  "tower_08",
-}
+const SPIRE_VARIANT_MAP: Dictionary = {}
 
 func _ready() -> void:
 	if tower_id == "":
@@ -473,6 +464,11 @@ func _spawn_projectile(p_style: String, p_damage: float, p_speed: float, p_targe
 	_projectiles.append(p)
 
 func _spawn_custom_projectile(p: Dictionary) -> void:
+	if _spire and p.has("damage"):
+		var t = p.get("target", current_target)
+		if is_instance_valid(t):
+			_spire.fire(t, p["damage"])
+			return
 	_projectiles.append(p)
 
 func _update_projectiles(delta: float) -> void:

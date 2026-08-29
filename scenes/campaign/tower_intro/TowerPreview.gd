@@ -79,6 +79,7 @@ func setup(t_id: String) -> void:
 	spawn_timer = 0.8
 	cycle_done = false
 	_info_label.text = ""
+	set_process(true)
 
 func _build_tower() -> void:
 	if _tower_instance:

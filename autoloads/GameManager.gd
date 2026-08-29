@@ -33,6 +33,8 @@ const SCENES = {
 # Currently selected level
 var current_level: int = 1
 var current_scene_key: String = ""
+var active_level = null  # Reference to the live Level node (set by Level.gd)
+var settings_debug_unlocked: bool = false  # Session-only: command panel access
 
 func _ready() -> void:
 	TOWER_DEFINITIONS = DataRegistry.build_tower_definitions()
