@@ -215,6 +215,62 @@ func is_level_unlocked(level_number: int) -> bool:
 		"max_level_unlocked", 0
 	)
 
+# ─── BULK UNLOCK (DEBUG / COMMAND PANEL) ────────────────
+func unlock_all_towers() -> Array[String]:
+	var unlocked: Array[String] = []
+	for tower_id in GameManager.TOWER_DEFINITIONS.keys():
+		if tower_id not in unlocked_towers:
+			unlocked_towers.append(tower_id)
+			unlocked.append(tower_id)
+	if unlocked.size() > 0:
+		save_progress()
+	return unlocked
+
+func unlock_all_levels() -> Array[int]:
+	var unlocked: Array[int] = []
+	var total = DataRegistry.get_level_count()
+	for i in range(1, total + 1):
+		if not is_level_unlocked(i):
+			unlock_campaign_level(i)
+			unlocked.append(i)
+	if unlocked.size() > 0:
+		save_progress()
+	return unlocked
+
+func unlock_everything() -> Dictionary:
+	var towers = unlock_all_towers()
+	var levels = unlock_all_levels()
+	for lesson_id in ALL_LESSONS:
+		if get_topic_state(lesson_id) == "locked":
+			topic_states[lesson_id] = "unlocked"
+	save_progress()
+	return {"towers": towers, "levels": levels}
+
+func master_lesson(lesson_id: String) -> bool:
+	if lesson_id not in ALL_LESSONS:
+		return false
+	mark_mastered(lesson_id)
+	if PROGRESSION_CHAIN.has(lesson_id):
+		var chain = PROGRESSION_CHAIN[lesson_id]
+		if chain["type"] == "tower" or chain["type"] == "both":
+			var tower_id = chain["id"]
+			unlock_tower(tower_id)
+			SignalBus.tower_unlocked.emit(tower_id)
+		if chain["type"] == "level" or chain["type"] == "both":
+			var level_num = chain.get("level_id", chain.get("id"))
+			unlock_campaign_level(level_num)
+	check_all_unlocks()
+	save_progress()
+	return true
+
+func master_all_lessons() -> Array[String]:
+	var mastered: Array[String] = []
+	for lesson_id in ALL_LESSONS:
+		if get_topic_state(lesson_id) != "mastered":
+			master_lesson(lesson_id)
+			mastered.append(lesson_id)
+	return mastered
+
 func set_level_stars(level_number: int, stars: int) -> void:
 	var star_map = campaign_progress.get("level_stars", {})
 	var existing = int(star_map.get(str(level_number), star_map.get(level_number, 0)))
