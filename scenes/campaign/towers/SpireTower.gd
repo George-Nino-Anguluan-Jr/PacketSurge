@@ -10,6 +10,14 @@ var _turret_angle: float = -PI / 2
 
 const ASSET_ROOT: String = "res://assets/sprites/towers/spire/imported/"
 
+# Projectiles drawn pointing UP need +PI/2 rotation offset
+const UP_FACING_VARIANTS: Array = ["tower_01", "tower_06", "tower_07"]
+
+func _proj_rotation(dir: Vector2) -> float:
+	if variant in UP_FACING_VARIANTS:
+		return dir.angle() + PI / 2
+	return dir.angle()
+
 func setup(v: String) -> void:
 	variant = v
 	_base = Sprite2D.new()
@@ -116,7 +124,7 @@ func fire(target: Node, damage: float) -> void:
 
 	var proj = AnimatedSprite2D.new()
 	proj.centered = true
-	proj.scale = Vector2(1.5, 1.5)
+	proj.scale = Vector2(0.8, 0.8)
 	var pdir: String = _projectile_dir(current_level)
 	var sf = _load_sprite_frames_from(pdir, 15.0)
 	if sf:
@@ -129,7 +137,7 @@ func fire(target: Node, damage: float) -> void:
 	var t_local = to_local(target.global_position)
 	var dir = t_local - origin
 	if dir.length() > 0:
-		proj.rotation = dir.angle()
+		proj.rotation = _proj_rotation(dir)
 
 	var tw = create_tween()
 	var travel_time = origin.distance_to(t_local) / 300.0
@@ -142,7 +150,7 @@ func fire(target: Node, damage: float) -> void:
 			pos = origin.lerp(tl, t)
 			var d = tl - pos
 			if d.length() > 0 and t < 0.95:
-				proj.rotation = d.angle()
+				proj.rotation = _proj_rotation(d)
 		else:
 			pos = origin.lerp(origin + Vector2(0, -200), t)
 		proj.position = pos
@@ -186,7 +194,7 @@ func _on_hit(proj: AnimatedSprite2D, target: Node, dmg: float) -> void:
 		var impact = AnimatedSprite2D.new()
 		impact.centered = true
 		impact.z_index = 5
-		impact.scale = Vector2(1.0, 1.0)
+		impact.scale = Vector2(0.7, 0.7)
 		var idir: String = _impact_dir(current_level)
 		var sf = _load_sprite_frames_from(idir)
 		if sf:

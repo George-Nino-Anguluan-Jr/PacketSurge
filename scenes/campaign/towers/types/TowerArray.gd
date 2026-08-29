@@ -40,14 +40,32 @@ func _get_ability_targets() -> Array:
 	return [targets[0]]
 
 func _draw_base_geometry(color: Color, height: float) -> void:
-	_draw_3d_box(Vector2(0, 0), Vector2(17, 17), height, Color("#101721"), color, 1.8)
+	_draw_3d_box(Vector2(0, 0), Vector2(18, 18), height, Color("#101721"), color, 1.8)
+	# Grid lines on top face — 3x3 indexed memory slots
+	var gx = 12.0
+	var gy = 12.0
+	for i in range(1, 3):
+		var fx = lerp(-gx, gx, float(i) / 3.0)
+		var fy = lerp(-gy, gy, float(i) / 3.0)
+		draw_line(Vector2(fx, -gy * SQUASH), Vector2(fx, gy * SQUASH), Color(color, 0.2), 0.8)
+		draw_line(Vector2(-gx, fy * SQUASH), Vector2(gx, fy * SQUASH), Color(color, 0.2), 0.8)
+	# Corner index markers
+	var corners = [Vector2(-gx, -gy * SQUASH), Vector2(gx, -gy * SQUASH), Vector2(-gx, gy * SQUASH), Vector2(gx, gy * SQUASH)]
+	for c in corners:
+		draw_circle(c, 1.5, Color(color, 0.4))
 
 func _draw_turret_assembly(color: Color) -> void:
 	var recoil = -_recoil * 6.0
-	_draw_3d_box(Vector2(0, 0), Vector2(22, 5), 7.0, Color("#15202E"), color, 1.5)
+	# Housing rail
+	_draw_3d_box(Vector2(0, 0), Vector2(24, 4), 6.0, Color("#15202E"), color, 1.5)
+	# 5 indexed barrel cylinders on the rail
 	for i in range(5):
-		var bx = -9 + i * 4.5
-		_draw_3d_cylinder(Vector2(bx + recoil, -2), 1.8, 8.0, Color("#1C2C3D"), color, 1.0)
-		draw_circle(Vector2(bx + recoil + 8.0, -2 * SQUASH), 1.2, Color.BLACK)
+		var bx = -10 + i * 5.0
+		_draw_3d_cylinder(Vector2(bx + recoil, -2), 1.6, 9.0, Color("#1C2C3D"), color, 1.0)
+		draw_circle(Vector2(bx + recoil + 9.0, -2 * SQUASH), 1.0, Color.BLACK)
+	# Index number labels on each barrel
 	for i in range(5):
-		draw_circle(Vector2(-9 + i * 4.5, 5), 1.0, Color(color, 0.5))
+		var bx = -10 + i * 5.0
+		draw_circle(Vector2(bx + recoil - 2.0, 4), 1.2, Color(color, 0.6))
+	# Glow strip along rail
+	draw_line(Vector2(-11, 2), Vector2(11, 2), Color(color, 0.3), 1.0)
