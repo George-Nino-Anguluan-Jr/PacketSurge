@@ -62,6 +62,26 @@ var style: EnemyStyle = null
 @onready var health_bar: Node2D         = $HealthBar
 @onready var status_layer: Node2D       = $StatusEffectLayer
 
+# ─── SPRITE ──────────────────────────────────────────────
+var _spire: Node2D = null
+var _using_sprites: bool = false
+var _last_position: Vector2 = Vector2.ZERO
+
+const SPIRE_VARIANT_MAP: Dictionary = {
+	"basic_packet":    { "variant": "Clampbeetle",    "pack": "enemy_pack1" },
+	"bubble_shield":   { "variant": "Firewasp",       "pack": "enemy_pack1" },
+	"binary_mask":     { "variant": "Flying_Locust",  "pack": "enemy_pack1" },
+	"indexed_packet":  { "variant": "Voidbutterfly",  "pack": "enemy_pack1" },
+	"count_meter":     { "variant": "Firebug",        "pack": "enemy_pack2" },
+	"insertion_stack": { "variant": "Leafbug",        "pack": "enemy_pack2" },
+	"linked_drain":    { "variant": "Magma_Crab",     "pack": "enemy_pack2" },
+	"merge_twin":      { "variant": "Scorpion",       "pack": "enemy_pack2" },
+	"overflow_packet": { "variant": "Beetle",         "pack": "enemy_pack3" },
+	"pivot_splitter":  { "variant": "EggCluster",     "pack": "enemy_pack3" },
+	"queue_jumper":    { "variant": "Maggot",          "pack": "enemy_pack3" },
+	"radix_digit":     { "variant": "Mantis",          "pack": "enemy_pack3" },
+}
+
 func initialize(
 		p_waypoints: Array[Vector2],
 		p_health: float,
@@ -78,7 +98,42 @@ func initialize(
 	_setup_type()
 	if waypoints.size() > 0:
 		position = waypoints[0]
+		_last_position = position
 	collision_mask = 0
+	if is_inside_tree():
+		_load_sprites()
+	else:
+		tree_entered.connect(_load_sprites, CONNECT_ONE_SHOT)
+
+func _ready() -> void:
+	if not _using_sprites and enemy_type != "":
+		_load_sprites()
+
+func _load_sprites() -> void:
+	if enemy_type == "":
+		return
+	if not is_inside_tree():
+		return
+	if _using_sprites:
+		return
+	if not SPIRE_VARIANT_MAP.has(enemy_type):
+		return
+
+	var entry = SPIRE_VARIANT_MAP[enemy_type]
+	var variant_name: String = str(entry["variant"])
+	var pack_name: String = str(entry["pack"])
+
+	var check_path: String = "res://assets/sprites/enemies/imported/" + pack_name + "/" + variant_name + "/idle_down"
+	if not DirAccess.dir_exists_absolute(check_path):
+		return
+
+	var SpireEnemyScript = preload("res://scenes/campaign/enemies/SpireEnemy.gd")
+	_spire = SpireEnemyScript.new()
+	_spire.name = "SpireSprite"
+	add_child(_spire)
+	var sprite_scale: float = 1.6 if enemy_type in ["overflow_packet", "pivot_splitter", "queue_jumper", "radix_digit"] else 0.7
+	_spire.setup(variant_name, pack_name, sprite_scale)
+	_using_sprites = true
 
 func _setup_type() -> void:
 	var edef = GameManager.ENEMY_DEFINITIONS.get(enemy_type, {})
@@ -129,6 +184,17 @@ func _physics_process(delta: float) -> void:
 		return
 	_move_toward_waypoint(delta)
 
+	# Update spire animation state based on movement
+	if _spire:
+		var is_moving = current_waypoint < waypoints.size() and not is_dead
+		_spire.set_state("move" if is_moving else "idle")
+		var move_delta = position - _last_position
+		if move_delta.length() > 0.5:
+			var dir_str = _dir_from_velocity(move_delta)
+			_spire.set_direction(dir_str)
+			_spire.set_flip_h(move_delta.x < 0)
+		_last_position = position
+
 	_mobile_redraw_skip += 1
 	if _mobile_redraw_skip % 2 == 0:
 		queue_redraw()
@@ -145,6 +211,11 @@ func _get_dot_damage_multiplier() -> float:
 func _apply_movement_offset(direction: Vector2, delta: float) -> Vector2:
 	# Virtual — override for types with special movement (e.g., scan_wave oscillation)
 	return Vector2.ZERO
+
+func _dir_from_velocity(vel: Vector2) -> String:
+	if abs(vel.y) > abs(vel.x):
+		return "down" if vel.y > 0 else "up"
+	return "right"
 
 func _move_toward_waypoint(delta: float) -> void:
 	var target    = waypoints[current_waypoint]
@@ -298,6 +369,20 @@ func _die() -> void:
 
 	_notify_overflow_ahead()
 
+	# For spire enemies, play death animation then fade out
+	if _spire:
+		_spire.set_state("death")
+		set_physics_process(false)
+		set_process(false)
+		_on_death()
+		SoundManager.play_enemy_death()
+		SignalBus.enemy_defeated.emit(name)
+		enemy_defeated.emit(self)
+		var tween = create_tween()
+		tween.tween_property(self, "modulate:a", 0.0, 0.8)
+		tween.tween_callback(queue_free)
+		return
+
 	_on_death()
 
 	SoundManager.play_enemy_death()
@@ -355,6 +440,9 @@ func _draw_extra_health_bar() -> void:
 
 # ─── DRAW ────────────────────────────────────────────────
 func _draw() -> void:
+	if _using_sprites:
+		_draw_health_bar()
+		return
 	var flash = _flash_timer > 0
 	var col   = Color("#FFFFFF") if flash else enemy_color
 	var bob   = sin(_bob_time) * 2.0

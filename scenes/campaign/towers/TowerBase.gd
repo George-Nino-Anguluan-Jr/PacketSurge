@@ -62,9 +62,27 @@ var style: TowerStyle = null
 @onready var muzzle_point: Node2D   = $TurretHead/MuzzlePoint
 @onready var projectile_layer: Node2D = $ProjectileLayer
 
+# ─── SPRITE ───────────────────────────────────────────
+var _base_sprite_2d: Sprite2D = null
+var _using_sprites: bool = false
+var _spire: Node2D = null
+
+const SPIRE_VARIANT_MAP: Dictionary = {
+	"tower_array":      "tower_01",
+	"tower_queue":      "tower_02",
+	"tower_linked_list":"tower_03",
+	"tower_stack":      "tower_04",
+	"tower_binary":     "tower_05",
+	"tower_linear":     "tower_06",
+	"tower_counting":   "tower_07",
+	"tower_insertion":  "tower_08",
+}
+
 func _ready() -> void:
 	if tower_id == "":
 		_setup_visual()
+	if not _using_sprites and tower_id != "":
+		_load_sprites()
 
 func initialize(data: TowerData, cell: Vector2i, e_layer: Node2D) -> void:
 	tower_id      = data.tower_id
@@ -81,6 +99,10 @@ func initialize(data: TowerData, cell: Vector2i, e_layer: Node2D) -> void:
 	current_level = 1
 	_setup_visual()
 	z_index = 1
+	if is_inside_tree():
+		_load_sprites()
+	else:
+		tree_entered.connect(_load_sprites)
 	if not preview_mode:
 		_setup_range_area()
 		_animate_placement()
@@ -93,6 +115,34 @@ func _setup_visual() -> void:
 		turret_head.position = Vector2(0, -14)
 	if muzzle_point:
 		muzzle_point.position = Vector2.ZERO
+
+func _load_sprites() -> void:
+	if tower_id == "":
+		return
+	if not is_inside_tree():
+		return
+	if _using_sprites:
+		return
+	if not SPIRE_VARIANT_MAP.has(tower_id):
+		return
+
+	var variant: String = str(SPIRE_VARIANT_MAP[tower_id])
+	var test_path: String = "res://assets/sprites/towers/spire/imported/" + variant + "/base/level_01.png"
+	if not ResourceLoader.exists(test_path):
+		return
+
+	var SpireTowerScript = preload("res://scenes/campaign/towers/SpireTower.gd")
+	_spire = SpireTowerScript.new()
+	add_child(_spire)
+	_spire.setup(variant)
+	_spire.set_level(current_level)
+	_using_sprites = true
+
+	if turret_head:
+		turret_head.visible = false
+	if base_sprite:
+		base_sprite.visible = false
+	queue_redraw()
 
 func ensure_style() -> TowerStyle:
 	if style == null:
@@ -313,6 +363,8 @@ func upgrade() -> int:
 		if shape:
 			shape.radius = attack_range + ENEMY_RADIUS
 	SignalBus.tower_upgraded.emit(tower_id, current_level)
+	if _spire:
+		_spire.set_level(current_level)
 	_animate_upgrade()
 	return current_level
 
@@ -365,6 +417,9 @@ func _process(delta: float) -> void:
 	if turret_head:
 		turret_head.rotation = _turret_angle
 
+	if _spire:
+		_spire.aim(_turret_angle)
+
 	if _shoot_flash > 0:
 		_shoot_flash -= delta * 4.0
 
@@ -396,6 +451,9 @@ func _play_attack_sound() -> void:
 
 func _spawn_projectile(p_style: String, p_damage: float, p_speed: float, p_target: Node, extra: Dictionary = {}) -> void:
 	if not is_instance_valid(p_target):
+		return
+	if _spire:
+		_spire.fire(p_target, p_damage)
 		return
 	var spawn_origin = get_muzzle_position()
 	var p = {
@@ -619,6 +677,12 @@ func _spawn_chain_arc(from_pos: Vector2, to_pos: Vector2) -> void:
 
 # ─── DRAW ───────────────────────────────────────────────
 func _draw() -> void:
+	if _using_sprites:
+		if _selected:
+			draw_circle(Vector2.ZERO, attack_range + ENEMY_RADIUS, Color(tower_color, 0.06))
+			draw_arc(Vector2.ZERO, attack_range + ENEMY_RADIUS, 0, TAU, 64, Color(tower_color, 0.25), 1.5)
+		_draw_overlays(tower_color)
+		return
 	_draw_base()
 	_draw_turret()
 	_draw_overlays(tower_color)
