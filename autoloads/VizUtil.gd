@@ -92,9 +92,19 @@ static func draw_arrow(canvas: Control, from: Vector2, to: Vector2, color: Color
 	canvas.draw_line(tip, p1, color, 2.0)
 	canvas.draw_line(tip, p2, color, 2.0)
 
+static func academy_font_size(canvas: Control, base_size: float, min_size: float = 10.0, max_size: float = 22.0) -> int:
+	var ref: float = maxf(canvas.size.x, canvas.size.y)
+	if ref <= 0.0:
+		return int(base_size)
+	return int(clampf(ref * 0.045, min_size, max_size))
+
+static func draw_academy_text(canvas: Control, pos: Vector2, text: String, color: Color, base_size: float, min_size: float = 10.0, max_size: float = 18.0, width: int = -1) -> void:
+	canvas.draw_string(ThemeDB.fallback_font, pos, text, HORIZONTAL_ALIGNMENT_LEFT, width, academy_font_size(canvas, base_size, min_size, max_size), color)
+
 static func draw_pointer(canvas: Control, tip: Vector2, label: String, color: Color, font: Font):
 	draw_arrow(canvas, tip + Vector2(0, 28), tip, color, 6)
-	canvas.draw_string(font, Vector2(tip.x - 16, tip.y - 6), label, HORIZONTAL_ALIGNMENT_LEFT, -1, 11, color)
+	var pointer_size := academy_font_size(canvas, 11.0, 10.0, 14.0)
+	canvas.draw_string(font, Vector2(tip.x - 16, tip.y - 6), label, HORIZONTAL_ALIGNMENT_LEFT, -1, pointer_size, color)
 
 static func draw_labeled_box(canvas: Control, r: Rect2, label: String, val: String, border: Color, font: Font):
 	canvas.draw_rect(r, Color(border, 0.1))

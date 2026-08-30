@@ -713,6 +713,7 @@ func _save_progress_sync() -> void:
 		"time_spent":        ProgressManager.time_spent,
 		"unlocked_towers":   ProgressManager.unlocked_towers,
 		"campaign_progress": ProgressManager.campaign_progress,
+		"tutorials_seen":    ProgressManager.tutorials_seen,
 		"updated_at":        Time.get_datetime_string_from_system()
 	})
 	var headers = _get_headers()
@@ -774,6 +775,7 @@ func save_progress_to_cloud() -> void:
 		"time_spent":        ProgressManager.time_spent,
 		"unlocked_towers":   ProgressManager.unlocked_towers,
 		"campaign_progress": ProgressManager.campaign_progress,
+		"tutorials_seen":    ProgressManager.tutorials_seen,
 		"updated_at":        Time.get_datetime_string_from_system()
 	})
 	var headers = _get_headers()
@@ -868,6 +870,12 @@ func _on_progress_loaded(
 			var cloud_campaign = data.get("campaign_progress", {})
 			if cloud_campaign is Dictionary and cloud_campaign.size() > 0:
 				ProgressManager.campaign_progress = cloud_campaign
+
+			var cloud_tutorials = data.get("tutorials_seen", [])
+			if cloud_tutorials is Array and cloud_tutorials.size() > 0:
+				ProgressManager.tutorials_seen.clear()
+				for tutorial in cloud_tutorials:
+					ProgressManager.tutorials_seen.append(str(tutorial))
 
 			var towers = data.get("unlocked_towers", [])
 			if towers is Array and towers.size() > 0:

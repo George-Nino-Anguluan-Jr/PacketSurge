@@ -24,6 +24,7 @@ var campaign_progress: Dictionary  = {
 }
 var campaign_time: Dictionary      = {}  # level_number (str) → seconds (float)
 var tutorials_seen: Array[String]   = []  # tutorial scene key (e.g. "main_menu", "level_1")
+var activity_accuracy: Dictionary    = {}  # key -> {"correct": int, "total": int, "retries": int}
 var ram_efficiency_total: float     = 0.0
 var ram_efficiency_count: int       = 0
 
@@ -293,6 +294,7 @@ func save_progress() -> void:
 		"new_unlocked_towers": new_unlocked_towers,
 		"campaign_progress": campaign_progress,
 		"tutorials_seen":    tutorials_seen,
+		"activity_accuracy": activity_accuracy,
 		"ram_efficiency_total": ram_efficiency_total,
 		"ram_efficiency_count": ram_efficiency_count,
 	}
@@ -366,18 +368,34 @@ func load_progress() -> void:
 	for t in loaded_tutorials:
 		tutorials_seen.append(str(t))
 
+	var loaded_accuracy = parsed.get("activity_accuracy", {})
+	activity_accuracy = {}
+	if loaded_accuracy is Dictionary:
+		for key in loaded_accuracy:
+			var stats = loaded_accuracy[key]
+			if stats is Dictionary:
+				activity_accuracy[str(key)] = {
+					"correct": int(stats.get("correct", 0)),
+					"total": int(stats.get("total", 0)),
+					"retries": int(stats.get("retries", 0)),
+				}
+
 	ram_efficiency_total = float(parsed.get("ram_efficiency_total", 0.0))
 	ram_efficiency_count = int(parsed.get("ram_efficiency_count", 0))
 
 	print("[ProgressManager] Progress loaded.")
 
 func reset_all_progress() -> void:
+	# Keep tutorial completion tied to the current account. Clearing it here
+	# makes the same player see the tutorial overlays again after each logout/login.
+	var saved_tutorials = tutorials_seen.duplicate()
 	topic_states        = {}
 	time_spent          = {}
 	campaign_time       = {}
 	unlocked_towers     = []
 	new_unlocked_towers = []
-	tutorials_seen      = []
+	tutorials_seen      = saved_tutorials
+	activity_accuracy   = {}
 	campaign_progress   = {
 		"placement_quiz_done": false,
 		"max_level_unlocked":  0,
@@ -402,3 +420,18 @@ func mark_tutorial_seen(key: String) -> void:
 func reset_tutorial(key: String) -> void:
 	tutorials_seen.erase(key)
 	save_progress()
+
+func record_activity_result(key: String, correct: int, total: int, retries: int = 0) -> void:
+	var stats = activity_accuracy.get(key, {"correct": 0, "total": 0, "retries": 0})
+	stats["correct"] = int(stats.get("correct", 0)) + max(0, int(correct))
+	stats["total"] = int(stats.get("total", 0)) + max(0, int(total))
+	stats["retries"] = int(stats.get("retries", 0)) + max(0, int(retries))
+	activity_accuracy[str(key)] = stats
+	save_progress()
+
+func get_activity_accuracy(key: String) -> float:
+	var stats = activity_accuracy.get(key, {"correct": 0, "total": 0, "retries": 0})
+	var total = int(stats.get("total", 0))
+	if total <= 0:
+		return 0.0
+	return float(int(stats.get("correct", 0))) / float(total)
