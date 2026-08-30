@@ -6,6 +6,7 @@
 extends CanvasLayer
 
 var _cmd_output: RichTextLabel = null
+var _cmd_output_scroll: ScrollContainer = null
 var _cmd_input: LineEdit = null
 var _cmd_history: Array = []
 var _cmd_history_idx: int = -1
@@ -81,7 +82,7 @@ func _build_command_panel() -> void:
 	var title := Label.new()
 	title.text = "CMD PANEL"
 	title.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-	title.add_theme_font_size_override("font_size", int(min_dim * 0.028))
+	title.add_theme_font_size_override("font_size", int(min_dim * 0.038))
 	title.add_theme_color_override("font_color", Color("#FF3366"))
 	top_row.add_child(title)
 
@@ -96,7 +97,7 @@ func _build_command_panel() -> void:
 	close_style.corner_radius_bottom_right = 4
 	close_btn.add_theme_stylebox_override("normal", close_style)
 	close_btn.add_theme_color_override("font_color", Color("#FF3366"))
-	close_btn.add_theme_font_size_override("font_size", int(min_dim * 0.022))
+	close_btn.add_theme_font_size_override("font_size", int(min_dim * 0.028))
 	close_btn.pressed.connect(func(): queue_free())
 	top_row.add_child(close_btn)
 
@@ -105,13 +106,12 @@ func _build_command_panel() -> void:
 	vbox.add_child(sep)
 
 	# Output
-	_cmd_output = RichTextLabel.new()
-	_cmd_output.size_flags_vertical = Control.SIZE_EXPAND_FILL
-	_cmd_output.bbcode_enabled = true
-	_cmd_output.fit_content = false
-	_cmd_output.scroll_following = true
-	_cmd_output.selection_enabled = true
-	_cmd_output.mouse_filter = Control.MOUSE_FILTER_STOP
+	_cmd_output_scroll = ScrollContainer.new()
+	_cmd_output_scroll.size_flags_vertical = Control.SIZE_EXPAND_FILL
+	_cmd_output_scroll.horizontal_scroll_mode = ScrollContainer.SCROLL_MODE_DISABLED
+	_cmd_output_scroll.vertical_scroll_mode = ScrollContainer.SCROLL_MODE_AUTO
+	_cmd_output_scroll.follow_focus = true
+	_cmd_output_scroll.mouse_filter = Control.MOUSE_FILTER_STOP
 	var out_style := StyleBoxFlat.new()
 	out_style.bg_color = Color("#050D1A")
 	out_style.corner_radius_top_left = 4
@@ -122,9 +122,20 @@ func _build_command_panel() -> void:
 	out_style.content_margin_right = 10
 	out_style.content_margin_top = 8
 	out_style.content_margin_bottom = 8
-	_cmd_output.add_theme_stylebox_override("normal", out_style)
-	_cmd_output.add_theme_font_size_override("normal_font_size", int(min_dim * 0.018))
-	vbox.add_child(_cmd_output)
+	_cmd_output_scroll.add_theme_stylebox_override("panel", out_style)
+	vbox.add_child(_cmd_output_scroll)
+
+	_cmd_output = RichTextLabel.new()
+	_cmd_output.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	_cmd_output.size_flags_vertical = Control.SIZE_EXPAND_FILL
+	_cmd_output.bbcode_enabled = true
+	_cmd_output.fit_content = false
+	_cmd_output.scroll_following = true
+	_cmd_output.selection_enabled = true
+	_cmd_output.mouse_filter = Control.MOUSE_FILTER_STOP
+	_cmd_output.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+	_cmd_output.add_theme_font_size_override("normal_font_size", int(min_dim * 0.022))
+	_cmd_output_scroll.add_child(_cmd_output)
 
 	# Suggestion bar
 	_cmd_suggestions_bar = HBoxContainer.new()
@@ -156,7 +167,7 @@ func _build_command_panel() -> void:
 	_cmd_input.add_theme_stylebox_override("normal", inp_style)
 	_cmd_input.add_theme_color_override("font_color", Color("#E8F4FD"))
 	_cmd_input.add_theme_color_override("font_placeholder_color", Color("#4A7FA5"))
-	_cmd_input.add_theme_font_size_override("font_size", int(min_dim * 0.020))
+	_cmd_input.add_theme_font_size_override("font_size", int(min_dim * 0.026))
 	_cmd_input.text_submitted.connect(_on_cmd_submitted)
 	_cmd_input.text_changed.connect(_on_cmd_text_changed)
 	_cmd_input.gui_input.connect(_on_cmd_input_gui)
@@ -173,7 +184,7 @@ func _build_command_panel() -> void:
 	run_style.corner_radius_bottom_right = 4
 	run_btn.add_theme_stylebox_override("normal", run_style)
 	run_btn.add_theme_color_override("font_color", Color("#050D1A"))
-	run_btn.add_theme_font_size_override("font_size", int(min_dim * 0.020))
+	run_btn.add_theme_font_size_override("font_size", int(min_dim * 0.026))
 	run_btn.pressed.connect(func(): _on_cmd_submitted(_cmd_input.text))
 	input_row.add_child(run_btn)
 
@@ -691,3 +702,13 @@ func _get_active_level():
 func _print_cmd_output(bbcode: String) -> void:
 	if _cmd_output:
 		_cmd_output.append_text(bbcode + "\n")
+		call_deferred("_scroll_output_to_end")
+
+func _scroll_output_to_end() -> void:
+	if not _cmd_output_scroll or not _cmd_output:
+		return
+	var max_scroll := maxf(0.0, _cmd_output.get_content_height() - _cmd_output_scroll.size.y)
+	var tween := create_tween()
+	tween.tween_property(_cmd_output_scroll, "scroll_vertical", max_scroll, 0.18)
+	tween.set_ease(Tween.EASE_OUT)
+	tween.set_trans(Tween.TRANS_CUBIC)
