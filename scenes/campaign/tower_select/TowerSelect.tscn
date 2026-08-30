@@ -160,6 +160,20 @@ columns = 4
 custom_minimum_size = Vector2(0, 4)
 layout_mode = 2
 
+[node name="HintLabel" type="Label" parent="SafeArea/ContentHost/OuterScroll/ContentArea/RightMargin/RightContent" unique_id=998877001]
+custom_minimum_size = Vector2(0, 28)
+layout_mode = 2
+horizontal_alignment = 1
+vertical_alignment = 1
+autowrap_mode = 3
+theme_override_colors/font_color = Color(0.45, 0.62, 0.78, 1)
+theme_override_colors/font_shadow_color = Color(0, 0, 0, 0.4)
+theme_override_constants/shadow_offset_x = 1
+theme_override_constants/shadow_offset_y = 1
+theme_override_constants/line_spacing = 2
+theme_override_font_sizes/font_size = 12
+text = "💡 Tip: Click the center of a tower card to preview its stats & ability"
+
 [node name="StartBtn" type="Button" parent="SafeArea/ContentHost/OuterScroll/ContentArea/RightMargin/RightContent" unique_id=1213396460]
 custom_minimum_size = Vector2(0, 52)
 layout_mode = 2

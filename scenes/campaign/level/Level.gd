@@ -32,6 +32,14 @@ const GridSystem = preload("res://scenes/campaign/level/GridSystem.gd")
 @onready var skip_wave_btn: Button           = $HUD/HUDControl/TopHUD/TopLayout/SkipWaveBtn
 
 var _diff_badge: Button = null
+var _exercise_btn: Button = null
+var _exercise_bubble: PanelContainer = null
+var _tower_exercise_shown: bool = false
+const TOWER_EXERCISE_MAP: Dictionary = {
+	1: "tower_array", 2: "tower_stack", 3: "tower_queue", 4: "tower_linked_list",
+	5: "tower_bubble", 6: "tower_selection", 7: "tower_insertion", 8: "tower_quick",
+	9: "tower_merge", 10: "tower_counting", 11: "tower_radix", 12: "tower_linear", 13: "tower_binary"
+}
 @onready var micro_panel: PanelContainer     = $HUD/HUDControl/MicroCodingPanel
 @onready var wave_splash: Control            = $HUD/HUDControl/WaveSplash
 @onready var wave_splash_label: Label        = $HUD/HUDControl/WaveSplash/WaveSplashLabel
@@ -64,20 +72,27 @@ var _pause_press_time: float = 0.0
 
 # ─── CODING CHALLENGES ──────────────────────────────────
 const CHALLENGES = {
-	1: [  # Arrays
-		{ "title": "Array Sum", "desc": "Sum all elements of [4, 8, 15, 16, 23, 42] using a loop and print the total.", "code_template": "arr = [4, 8, 15, 16, 23, 42]\ntotal = 0\n___\nprint(total)", "expected_output": "108\n", "bonus_ram": 20 },
-		{ "title": "Find Maximum", "desc": "Find and print the largest value in [3, 17, 8, 42, 9].", "code_template": "arr = [3, 17, 8, 42, 9]\nmax_val = arr[0]\n___\nprint(max_val)", "expected_output": "42\n", "bonus_ram": 20 },
-		{ "title": "Count Occurrences", "desc": "Count how many times 7 appears in [7, 3, 7, 1, 7, 9] and print the count.", "code_template": "arr = [7, 3, 7, 1, 7, 9]\ntarget = 7\ncount = 0\n___\nprint(count)", "expected_output": "3\n", "bonus_ram": 20 },
+	1: [  # Arrays — Level 1: 10+ random inline-blanks (pill drag) exercises
+		{ "title": "Print Two Values", "desc": "Fill both blanks to print \"7\" and \"11\".", "code_template": "my_array = [7, 12, 9, 4, 11]\n\nprint(my_array[___])\nprint(my_array[___])", "choices": ["0", "1", "4", "7"], "correct": ["0", "4"], "expected_output": "7\n11\n", "bonus_ram": 20 },
+		{ "title": "Array Access", "desc": "Print the last value \"11\".", "code_template": "my_array = [7, 12, 9, 4, 11]\n\nprint(my_array[___])", "choices": ["4", "5", "-1", "11"], "correct": "4", "expected_output": "11\n", "bonus_ram": 20 },
+		{ "title": "Array Length", "desc": "Print how many items are in the array.", "code_template": "my_array = [7, 12, 9, 4, 11]\n\nprint(___) ", "choices": ["len(my_array)", "my_array.len()", "count(my_array)", "size(my_array)"], "correct": "len(my_array)", "expected_output": "5\n", "bonus_ram": 20 },
+		{ "title": "Middle Value", "desc": "Print the middle value \"9\" at index 2.", "code_template": "my_array = [7, 12, 9, 4, 11]\n\nprint(my_array[___])", "choices": ["2", "3", "9", "1"], "correct": "2", "expected_output": "9\n", "bonus_ram": 20 },
+		{ "title": "Second Element", "desc": "Print \"12\" at index 1.", "code_template": "my_array = [7, 12, 9, 4, 11]\n\nprint(my_array[___])", "choices": ["0", "1", "12", "2"], "correct": "1", "expected_output": "12\n", "bonus_ram": 20 },
+		{ "title": "Negative Index", "desc": "Use a negative index to print \"11\" (last).", "code_template": "my_array = [7, 12, 9, 4, 11]\n\nprint(my_array[___])", "choices": ["-1", "4", "-4", "11"], "correct": "-1", "expected_output": "11\n", "bonus_ram": 20 },
+		{ "title": "Slice Start", "desc": "Print the first two values as a slice.", "code_template": "my_array = [7, 12, 9, 4, 11]\n\nprint(my_array[0:___])", "choices": ["2", "3", "1", "0:2"], "correct": "2", "expected_output": "[7, 12]\n", "bonus_ram": 20 },
+		{ "title": "Array Update", "desc": "Change index 2 from \"9\" to \"99\".", "code_template": "my_array = [7, 12, 9, 4, 11]\nmy_array[___] = 99\nprint(my_array)", "choices": ["2", "9", "1", "3"], "correct": "2", "expected_output": "[7, 12, 99, 4, 11]\n", "bonus_ram": 20 },
+		{ "title": "Append", "desc": "Add \"20\" to the end.", "code_template": "my_array = [7, 12, 9, 4, 11]\nmy_array.___(20)\nprint(my_array)", "choices": ["append", "add", "push", "insert"], "correct": "append", "expected_output": "[7, 12, 9, 4, 11, 20]\n", "bonus_ram": 20 },
+		{ "title": "Contains Check", "desc": "Check if \"7\" is in the array.", "code_template": "my_array = [7, 12, 9, 4, 11]\nprint(7 ___ my_array)", "choices": ["in", "not in", "==", "[]"], "correct": "in", "expected_output": "True\n", "bonus_ram": 20 },
 	],
 	2: [  # Stacks
-		{ "title": "Stack Push & Pop", "desc": "Push 10, 20, 30 onto a stack, then pop and print each value.", "code_template": "stack = []\nstack.append(10)\nstack.append(20)\n___\nprint(stack.pop())\nprint(stack.pop())\nprint(stack.pop())", "expected_output": "30\n20\n10\n", "bonus_ram": 20 },
-		{ "title": "Stack Reversal", "desc": "Push A, B, C then pop all to reverse the order. Print each popped value.", "code_template": "stack = []\nstack.append('A')\n___\nstack.append('C')\nprint(stack.pop())\nprint(stack.pop())\nprint(stack.pop())", "expected_output": "C\nB\nA\n", "bonus_ram": 20 },
-		{ "title": "Stack Peek", "desc": "Push 5, 15, 25. Pop once and print it, then print the new top without removing it (use stack[-1]).", "code_template": "stack = []\nstack.append(5)\nstack.append(15)\nstack.append(25)\npopped = stack.pop()\nprint(popped)\n___\nprint(top)", "expected_output": "25\n15\n", "bonus_ram": 20 },
+		{ "title": "Stack Push & Pop", "desc": "Push 10, 20, 30 onto a stack, then pop and print each value.", "code_template": "stack = []\nstack.append(10)\nstack.append(20)\n___\nprint(stack.pop())\nprint(stack.pop())\nprint(stack.pop())", "choices": ["stack.append(30)", "stack.append(10)", "stack.push(30)", "stack.append(20)"], "correct": "stack.append(30)", "expected_output": "30\n20\n10\n", "bonus_ram": 20 },
+		{ "title": "Stack Reversal", "desc": "Push A, B, C then pop all to reverse the order. Print each popped value.", "code_template": "stack = []\nstack.append('A')\n___\nstack.append('C')\nprint(stack.pop())\nprint(stack.pop())\nprint(stack.pop())", "choices": ["stack.append('B')", "stack.append('A')", "stack.append('D')", "stack.push('B')"], "correct": "stack.append('B')", "expected_output": "C\nB\nA\n", "bonus_ram": 20 },
+		{ "title": "Stack Peek", "desc": "Push 5, 15, 25. Pop once and print it, then print the new top without removing it (use stack[-1]).", "code_template": "stack = []\nstack.append(5)\nstack.append(15)\nstack.append(25)\npopped = stack.pop()\nprint(popped)\n___\nprint(top)", "choices": ["top = stack[-1]", "top = stack[0]", "top = stack.pop()", "top = stack[1]"], "correct": "top = stack[-1]", "expected_output": "25\n15\n", "bonus_ram": 20 },
 	],
 	3: [  # Queues
-		{ "title": "Queue Dequeue All", "desc": "Enqueue 7, 14, 21 then dequeue and print each using pop(0).", "code_template": "queue = []\nqueue.append(7)\nqueue.append(14)\n___\nprint(queue.pop(0))\nprint(queue.pop(0))\nprint(queue.pop(0))", "expected_output": "7\n14\n21\n", "bonus_ram": 20 },
-		{ "title": "Queue Round Robin", "desc": "Enqueue 1, 2, 3. Dequeue front, enqueue it back, then dequeue all. Print each dequeued value.", "code_template": "queue = [1, 2, 3]\nfront = queue.pop(0)\nqueue.append(front)\nprint(queue.pop(0))\n___\nprint(queue.pop(0))", "expected_output": "2\n3\n1\n", "bonus_ram": 20 },
-		{ "title": "Queue Size", "desc": "Enqueue 10, 20, 30, 40. Dequeue twice. Print the remaining queue size.", "code_template": "queue = []\nqueue.append(10)\nqueue.append(20)\nqueue.append(30)\nqueue.append(40)\nqueue.pop(0)\nqueue.pop(0)\nprint(___)", "expected_output": "2\n", "bonus_ram": 20 },
+		{ "title": "Queue Dequeue All", "desc": "Enqueue 7, 14, 21 then dequeue and print each using pop(0).", "code_template": "queue = []\nqueue.append(7)\nqueue.append(14)\n___\nprint(queue.pop(0))\nprint(queue.pop(0))\nprint(queue.pop(0))", "choices": ["queue.append(21)", "queue.append(7)", "queue.push(21)", "queue.append(14)"], "correct": "queue.append(21)", "expected_output": "7\n14\n21\n", "bonus_ram": 20 },
+		{ "title": "Queue Round Robin", "desc": "Enqueue 1, 2, 3. Dequeue front, enqueue it back, then dequeue all. Print each dequeued value.", "code_template": "queue = [1, 2, 3]\nfront = queue.pop(0)\nqueue.append(front)\nprint(queue.pop(0))\n___\nprint(queue.pop(0))", "choices": ["print(queue.pop(0))", "print(queue[0])", "print(front)", "queue.append(1)"], "correct": "print(queue.pop(0))", "expected_output": "2\n3\n1\n", "bonus_ram": 20 },
+		{ "title": "Queue Size", "desc": "Enqueue 10, 20, 30, 40. Dequeue twice. Print the remaining queue size.", "code_template": "queue = []\nqueue.append(10)\nqueue.append(20)\nqueue.append(30)\nqueue.append(40)\nqueue.pop(0)\nqueue.pop(0)\nprint(___)", "choices": ["len(queue)", "queue.size()", "len(queue)-1", "queue.length"], "correct": "len(queue)", "expected_output": "2\n", "bonus_ram": 20 },
 	],
 	4: [  # Linked Lists
 		{ "title": "Traverse List", "desc": "Traverse the linked chain starting at node and print each val.", "code_template": "node = {'val': 1, 'next': {'val': 2, 'next': {'val': 3, 'next': None}}}\nwhile node:\n    print(node['val'])\n    ___", "expected_output": "1\n2\n3\n", "bonus_ram": 25 },
@@ -85,49 +100,49 @@ const CHALLENGES = {
 		{ "title": "Find Value", "desc": "Find if value 10 exists in the linked chain. Print 'yes' or 'no'.", "code_template": "node = {'val': 5, 'next': {'val': 10, 'next': {'val': 15, 'next': None}}}\ntarget = 10\nfound = 'no'\nwhile node:\n    if node['val'] == target:\n        found = 'yes'\n        ___\n    node = node['next']\nprint(found)", "expected_output": "yes\n", "bonus_ram": 25 },
 	],
 	5: [  # Bubble Sort
-		{ "title": "One Pass", "desc": "Perform ONE pass of bubble sort on [5,3,8,1] and print the array.", "code_template": "arr = [5, 3, 8, 1]\nfor i in range(len(arr) - 1):\n    if arr[i] > arr[i+1]:\n        ___\nprint(arr)", "expected_output": "[3, 5, 1, 8]\n", "bonus_ram": 25 },
+		{ "title": "One Pass", "desc": "Perform ONE pass of bubble sort on [5,3,8,1] and print the array.", "code_template": "arr = [5, 3, 8, 1]\nfor i in range(len(arr) - 1):\n    if arr[i] > arr[i+1]:\n        ___\nprint(arr)", "choices": ["arr[i], arr[i+1] = arr[i+1], arr[i]", "arr[i] = arr[i+1]", "swap(arr[i], arr[i+1])", "arr.swap(i)"], "correct": "arr[i], arr[i+1] = arr[i+1], arr[i]", "expected_output": "[3, 5, 1, 8]\n", "bonus_ram": 25 },
 		{ "title": "Two Passes", "desc": "Perform TWO passes of bubble sort on [5,3,8,1] and print the array.", "code_template": "arr = [5, 3, 8, 1]\nfor _ in range(2):\n    for i in range(len(arr) - 1):\n        if arr[i] > arr[i+1]:\n            arr[i], arr[i+1] = arr[i+1], arr[i]\nprint(arr)", "expected_output": "[1, 3, 5, 8]\n", "bonus_ram": 25 },
-		{ "title": "Count Swaps", "desc": "Count how many swaps happen during one bubble sort pass on [4,2,7,1] and print the count.", "code_template": "arr = [4, 2, 7, 1]\nswaps = 0\nfor i in range(len(arr) - 1):\n    if arr[i] > arr[i+1]:\n        arr[i], arr[i+1] = arr[i+1], arr[i]\n        ___\nprint(swaps)", "expected_output": "2\n", "bonus_ram": 25 },
+		{ "title": "Count Swaps", "desc": "Count how many swaps happen during one bubble sort pass on [4,2,7,1] and print the count.", "code_template": "arr = [4, 2, 7, 1]\nswaps = 0\nfor i in range(len(arr) - 1):\n    if arr[i] > arr[i+1]:\n        arr[i], arr[i+1] = arr[i+1], arr[i]\n        ___\nprint(swaps)", "choices": ["swaps += 1", "swaps = swaps +1", "count +=1", "swaps++"], "correct": "swaps += 1", "expected_output": "2\n", "bonus_ram": 25 },
 	],
 	6: [  # Selection Sort
-		{ "title": "Find Min & Swap", "desc": "Find the minimum in [9,2,7,4] and swap it with the first element. Print the array.", "code_template": "arr = [9, 2, 7, 4]\nmin_idx = 0\nfor i in range(1, len(arr)):\n    if arr[i] < arr[min_idx]:\n        ___\narr[0], arr[min_idx] = arr[min_idx], arr[0]\nprint(arr)", "expected_output": "[2, 9, 7, 4]\n", "bonus_ram": 25 },
-		{ "title": "Second Smallest", "desc": "Find the second smallest element in [9,2,7,4] and print it.", "code_template": "arr = [9, 2, 7, 4]\narr.sort()\nprint(___)", "expected_output": "4\n", "bonus_ram": 20 },
+		{ "title": "Find Min & Swap", "desc": "Find the minimum in [9,2,7,4] and swap it with the first element. Print the array.", "code_template": "arr = [9, 2, 7, 4]\nmin_idx = 0\nfor i in range(1, len(arr)):\n    if arr[i] < arr[min_idx]:\n        ___\narr[0], arr[min_idx] = arr[min_idx], arr[0]\nprint(arr)", "choices": ["min_idx = i", "min_idx = 0", "min = arr[i]", "min_idx = j"], "correct": "min_idx = i", "expected_output": "[2, 9, 7, 4]\n", "bonus_ram": 25 },
+		{ "title": "Second Smallest", "desc": "Find the second smallest element in [9,2,7,4] and print it.", "code_template": "arr = [9, 2, 7, 4]\narr.sort()\nprint(___)", "choices": ["arr[1]", "arr[0]", "min(arr)", "arr.sort()[1]"], "correct": "arr[1]", "expected_output": "4\n", "bonus_ram": 20 },
 		{ "title": "Full Selection Sort", "desc": "Complete selection sort on [6,3,8,1] and print the sorted array.", "code_template": "arr = [6, 3, 8, 1]\nfor i in range(len(arr)):\n    min_idx = i\n    for j in range(i+1, len(arr)):\n        if arr[j] < arr[min_idx]:\n            min_idx = j\n    arr[i], arr[min_idx] = arr[min_idx], arr[i]\nprint(arr)", "expected_output": "[1, 3, 6, 8]\n", "bonus_ram": 25 },
 	],
 	7: [  # Insertion Sort
-		{ "title": "Insert Third Element", "desc": "In [3,7,2,9], insert the third element (2) into the sorted portion. Print the array.", "code_template": "arr = [3, 7, 2, 9]\nkey = arr[2]\nj = 1\nwhile j >= 0 and arr[j] > key:\n    arr[j+1] = arr[j]\n    ___\narr[j+1] = key\nprint(arr)", "expected_output": "[2, 3, 7, 9]\n", "bonus_ram": 25 },
+		{ "title": "Insert Third Element", "desc": "In [3,7,2,9], insert the third element (2) into the sorted portion. Print the array.", "code_template": "arr = [3, 7, 2, 9]\nkey = arr[2]\nj = 1\nwhile j >= 0 and arr[j] > key:\n    arr[j+1] = arr[j]\n    ___\narr[j+1] = key\nprint(arr)", "choices": ["j -= 1", "j = j -1", "j++", "j = 0"], "correct": "j -= 1", "expected_output": "[2, 3, 7, 9]\n", "bonus_ram": 25 },
 		{ "title": "Full Insertion Sort", "desc": "Complete insertion sort on [5,2,9,1,6] and print the sorted array.", "code_template": "arr = [5, 2, 9, 1, 6]\nfor i in range(1, len(arr)):\n    key = arr[i]\n    j = i - 1\n    while j >= 0 and arr[j] > key:\n        arr[j+1] = arr[j]\n        j -= 1\n    arr[j+1] = key\nprint(arr)", "expected_output": "[1, 2, 5, 6, 9]\n", "bonus_ram": 28 },
-		{ "title": "Shifts Count", "desc": "Count how many shifts happen when inserting the last element of [2,5,7,3] and print the count.", "code_template": "arr = [2, 5, 7, 3]\nkey = arr[3]\nj = 2\nshifts = 0\nwhile j >= 0 and arr[j] > key:\n    arr[j+1] = arr[j]\n    j -= 1\n    ___\nprint(shifts)", "expected_output": "2\n", "bonus_ram": 25 },
+		{ "title": "Shifts Count", "desc": "Count how many shifts happen when inserting the last element of [2,5,7,3] and print the count.", "code_template": "arr = [2, 5, 7, 3]\nkey = arr[3]\nj = 2\nshifts = 0\nwhile j >= 0 and arr[j] > key:\n    arr[j+1] = arr[j]\n    j -= 1\n    ___\nprint(shifts)", "choices": ["shifts += 1", "shifts = shifts +1", "count +=1", "shifts++"], "correct": "shifts += 1", "expected_output": "2\n", "bonus_ram": 25 },
 	],
 	8: [  # Quick Sort
-		{ "title": "Partition by Pivot", "desc": "Partition [7,3,9,2,6] using last element (6) as pivot. Print partitioned array.", "code_template": "arr = [7, 3, 9, 2, 6]\npivot = arr[-1]\ni = 0\nfor j in range(len(arr) - 1):\n    if arr[j] < pivot:\n        arr[i], arr[j] = arr[j], arr[i]\n        ___\narr[i], arr[-1] = arr[-1], arr[i]\nprint(arr)", "expected_output": "[3, 2, 6, 7, 9]\n", "bonus_ram": 30 },
-		{ "title": "Count Smaller", "desc": "Count how many elements are smaller than pivot 6 in [7,3,9,2,6] and print the count.", "code_template": "arr = [7, 3, 9, 2, 6]\npivot = 6\ncount = 0\nfor v in arr:\n    if v < pivot:\n        ___\nprint(count)", "expected_output": "2\n", "bonus_ram": 25 },
-		{ "title": "Pivot Position", "desc": "After partitioning with last element as pivot, print the final index of the pivot.", "code_template": "arr = [7, 3, 9, 2, 6]\npivot = arr[-1]\ni = 0\nfor j in range(len(arr) - 1):\n    if arr[j] < pivot:\n        arr[i], arr[j] = arr[j], arr[i]\n        i += 1\narr[i], arr[-1] = arr[-1], arr[i]\nprint(___)", "expected_output": "2\n", "bonus_ram": 25 },
+		{ "title": "Partition by Pivot", "desc": "Partition [7,3,9,2,6] using last element (6) as pivot. Print partitioned array.", "code_template": "arr = [7, 3, 9, 2, 6]\npivot = arr[-1]\ni = 0\nfor j in range(len(arr) - 1):\n    if arr[j] < pivot:\n        arr[i], arr[j] = arr[j], arr[i]\n        ___\narr[i], arr[-1] = arr[-1], arr[i]\nprint(arr)", "choices": ["i += 1", "i = i +1", "i++", "i = j"], "correct": "i += 1", "expected_output": "[3, 2, 6, 7, 9]\n", "bonus_ram": 30 },
+		{ "title": "Count Smaller", "desc": "Count how many elements are smaller than pivot 6 in [7,3,9,2,6] and print the count.", "code_template": "arr = [7, 3, 9, 2, 6]\npivot = 6\ncount = 0\nfor v in arr:\n    if v < pivot:\n        ___\nprint(count)", "choices": ["count += 1", "count = count +1", "count++", "count = count + i"], "correct": "count += 1", "expected_output": "2\n", "bonus_ram": 25 },
+		{ "title": "Pivot Position", "desc": "After partitioning with last element as pivot, print the final index of the pivot.", "code_template": "arr = [7, 3, 9, 2, 6]\npivot = arr[-1]\ni = 0\nfor j in range(len(arr) - 1):\n    if arr[j] < pivot:\n        arr[i], arr[j] = arr[j], arr[i]\n        i += 1\narr[i], arr[-1] = arr[-1], arr[i]\nprint(___)", "choices": ["i", "pivot", "j", "arr[i]"], "correct": "i", "expected_output": "2\n", "bonus_ram": 25 },
 	],
 	9: [  # Merge Sort
-		{ "title": "Merge Two Halves", "desc": "Merge sorted arrays left=[1,4] and right=[2,3] into one sorted array and print.", "code_template": "left = [1, 4]\nright = [2, 3]\nmerged = []\ni = j = 0\nwhile i < len(left) and j < len(right):\n    if left[i] < right[j]:\n        merged.append(left[i]); i += 1\n    else:\n        ___\nmerged.extend(left[i:])\nmerged.extend(right[j:])\nprint(merged)", "expected_output": "[1, 2, 3, 4]\n", "bonus_ram": 30 },
-		{ "title": "Merge Leftovers", "desc": "Merge left=[1,2,3] and right=[4,5,6]. After one list is exhausted, extend with the rest. Print merged.", "code_template": "left = [1, 2, 3]\nright = [4, 5, 6]\nmerged = []\ni = j = 0\nwhile i < len(left) and j < len(right):\n    if left[i] < right[j]:\n        merged.append(left[i]); i += 1\n    else:\n        merged.append(right[j]); j += 1\n___\nprint(merged)", "expected_output": "[1, 2, 3, 4, 5, 6]\n", "bonus_ram": 25 },
-		{ "title": "Count Merge Ops", "desc": "Count how many comparisons when merging [1,4] and [2,3]. Print the count.", "code_template": "left = [1, 4]\nright = [2, 3]\ni = j = 0\ncompares = 0\nwhile i < len(left) and j < len(right):\n    if left[i] < right[j]:\n        i += 1\n    else:\n        j += 1\n    ___\nprint(compares)", "expected_output": "3\n", "bonus_ram": 25 },
+		{ "title": "Merge Two Halves", "desc": "Merge sorted arrays left=[1,4] and right=[2,3] into one sorted array and print.", "code_template": "left = [1, 4]\nright = [2, 3]\nmerged = []\ni = j = 0\nwhile i < len(left) and j < len(right):\n    if left[i] < right[j]:\n        merged.append(left[i]); i += 1\n    else:\n        ___\nmerged.extend(left[i:])\nmerged.extend(right[j:])\nprint(merged)", "choices": ["merged.append(right[j]); j += 1", "merged.append(left[i])", "right.append()", "merged.add(right[j])"], "correct": "merged.append(right[j]); j += 1", "expected_output": "[1, 2, 3, 4]\n", "bonus_ram": 30 },
+		{ "title": "Merge Leftovers", "desc": "Merge left=[1,2,3] and right=[4,5,6]. After one list is exhausted, extend with the rest. Print merged.", "code_template": "left = [1, 2, 3]\nright = [4, 5, 6]\nmerged = []\ni = j = 0\nwhile i < len(left) and j < len(right):\n    if left[i] < right[j]:\n        merged.append(left[i]); i += 1\n    else:\n        merged.append(right[j]); j += 1\n___\nprint(merged)", "choices": ["merged.extend(left[i:])\nmerged.extend(right[j:])", "merged.append(left)", "extend(merged)", "merged += left"], "correct": "merged.extend(left[i:])\nmerged.extend(right[j:])", "expected_output": "[1, 2, 3, 4, 5, 6]\n", "bonus_ram": 25 },
+		{ "title": "Count Merge Ops", "desc": "Count how many comparisons when merging [1,4] and [2,3]. Print the count.", "code_template": "left = [1, 4]\nright = [2, 3]\ni = j = 0\ncompares = 0\nwhile i < len(left) and j < len(right):\n    if left[i] < right[j]:\n        i += 1\n    else:\n        j += 1\n    ___\nprint(compares)", "choices": ["compares += 1", "compares = compares +1", "count +=1", "compares++"], "correct": "compares += 1", "expected_output": "3\n", "bonus_ram": 25 },
 	],
 	10: [  # Counting Sort
-		{ "title": "Count Frequencies", "desc": "Count how many times 0,1,2 appear in [2,0,2,1,1,0]. Print [count0, count1, count2].", "code_template": "arr = [2, 0, 2, 1, 1, 0]\ncounts = [0, 0, 0]\nfor v in arr:\n    ___\nprint(counts)", "expected_output": "[2, 2, 2]\n", "bonus_ram": 25 },
-		{ "title": "Build Output", "desc": "Using counts=[2,2,2], build the sorted output array by repeating each index by its count. Print result.", "code_template": "counts = [2, 2, 2]\noutput = []\nfor val in range(len(counts)):\n    for _ in range(counts[val]):\n        ___\nprint(output)", "expected_output": "[0, 0, 1, 1, 2, 2]\n", "bonus_ram": 28 },
-		{ "title": "Cumulative Counts", "desc": "Given counts=[2,2,2], compute cumulative counts [2,4,6] where each is sum of previous. Print cum.", "code_template": "counts = [2, 2, 2]\ncum = []\ntotal = 0\nfor c in counts:\n    total += c\n    ___\nprint(cum)", "expected_output": "[2, 4, 6]\n", "bonus_ram": 25 },
+		{ "title": "Count Frequencies", "desc": "Count how many times 0,1,2 appear in [2,0,2,1,1,0]. Print [count0, count1, count2].", "code_template": "arr = [2, 0, 2, 1, 1, 0]\ncounts = [0, 0, 0]\nfor v in arr:\n    ___\nprint(counts)", "choices": ["counts[v] += 1", "counts[v] = 1", "count +=1", "counts.append(v)"], "correct": "counts[v] += 1", "expected_output": "[2, 2, 2]\n", "bonus_ram": 25 },
+		{ "title": "Build Output", "desc": "Using counts=[2,2,2], build the sorted output array by repeating each index by its count. Print result.", "code_template": "counts = [2, 2, 2]\noutput = []\nfor val in range(len(counts)):\n    for _ in range(counts[val]):\n        ___\nprint(output)", "choices": ["output.append(val)", "output.add(val)", "output.push(val)", "output[val]=1"], "correct": "output.append(val)", "expected_output": "[0, 0, 1, 1, 2, 2]\n", "bonus_ram": 28 },
+		{ "title": "Cumulative Counts", "desc": "Given counts=[2,2,2], compute cumulative counts [2,4,6] where each is sum of previous. Print cum.", "code_template": "counts = [2, 2, 2]\ncum = []\ntotal = 0\nfor c in counts:\n    total += c\n    ___\nprint(cum)", "choices": ["cum.append(total)", "cum.add(total)", "cum.push(total)", "cum[total]=1"], "correct": "cum.append(total)", "expected_output": "[2, 4, 6]\n", "bonus_ram": 25 },
 	],
 	11: [  # Radix Sort
-		{ "title": "Ones Digit", "desc": "Extract the ones-place digit from each number in [43,218,7,95] using num % 10. Print as a list.", "code_template": "arr = [43, 218, 7, 95]\ndigits = []\nfor num in arr:\n    digits.append(___)\nprint(digits)", "expected_output": "[3, 8, 7, 5]\n", "bonus_ram": 25 },
-		{ "title": "Tens Digit", "desc": "Extract the tens-place digit from each number in [43,218,7,95] using (num // 10) % 10. Print as a list.", "code_template": "arr = [43, 218, 7, 95]\ndigits = []\nfor num in arr:\n    digits.append(___)\nprint(digits)", "expected_output": "[4, 1, 0, 9]\n", "bonus_ram": 25 },
-		{ "title": "Max Digits", "desc": "Find how many digits the largest number in [43,218,7,95] has. Print the count.", "code_template": "arr = [43, 218, 7, 95]\nmax_val = max(arr)\ncount = 0\nwhile max_val > 0:\n    count += 1\n    ___\nprint(count)", "expected_output": "3\n", "bonus_ram": 25 },
+		{ "title": "Ones Digit", "desc": "Extract the ones-place digit from each number in [43,218,7,95] using num % 10. Print as a list.", "code_template": "arr = [43, 218, 7, 95]\ndigits = []\nfor num in arr:\n    digits.append(___)\nprint(digits)", "choices": ["num % 10", "num //10", "num % 100", "str(num)[-1]"], "correct": "num % 10", "expected_output": "[3, 8, 7, 5]\n", "bonus_ram": 25 },
+		{ "title": "Tens Digit", "desc": "Extract the tens-place digit from each number in [43,218,7,95] using (num // 10) % 10. Print as a list.", "code_template": "arr = [43, 218, 7, 95]\ndigits = []\nfor num in arr:\n    digits.append(___)\nprint(digits)", "choices": ["(num // 10) % 10", "num %100", "num //10", "int(str(num)[1])"], "correct": "(num // 10) % 10", "expected_output": "[4, 1, 0, 9]\n", "bonus_ram": 25 },
+		{ "title": "Max Digits", "desc": "Find how many digits the largest number in [43,218,7,95] has. Print the count.", "code_template": "arr = [43, 218, 7, 95]\nmax_val = max(arr)\ncount = 0\nwhile max_val > 0:\n    count += 1\n    ___\nprint(count)", "choices": ["max_val //= 10", "max_val /=10", "max_val -=10", "max_val = max_val //10"], "correct": "max_val //= 10", "expected_output": "3\n", "bonus_ram": 25 },
 	],
 	12: [  # Linear Search
-		{ "title": "Find Index", "desc": "Find the index of value 99 in [11,42,7,99,23] and print it (-1 if not found).", "code_template": "arr = [11, 42, 7, 99, 23]\ntarget = 99\nfound_idx = -1\nfor i in range(len(arr)):\n    if arr[i] == target:\n        found_idx = i\n        ___\nprint(found_idx)", "expected_output": "3\n", "bonus_ram": 20 },
-		{ "title": "First Occurrence", "desc": "Find the first index where 7 appears in [7,3,7,1,7,9]. Print it.", "code_template": "arr = [7, 3, 7, 1, 7, 9]\ntarget = 7\nfor i in range(len(arr)):\n    if arr[i] == target:\n        print(i)\n        ___", "expected_output": "0\n", "bonus_ram": 20 },
-		{ "title": "Count Occurrences", "desc": "Count how many times 7 appears in [7,3,7,1,7,9] and print the count.", "code_template": "arr = [7, 3, 7, 1, 7, 9]\ntarget = 7\ncount = 0\n___\nprint(count)", "expected_output": "3\n", "bonus_ram": 20 },
+		{ "title": "Find Index", "desc": "Find the index of value 99 in [11,42,7,99,23] and print it (-1 if not found).", "code_template": "arr = [11, 42, 7, 99, 23]\ntarget = 99\nfound_idx = -1\nfor i in range(len(arr)):\n    if arr[i] == target:\n        found_idx = i\n        ___\nprint(found_idx)", "choices": ["break", "continue", "pass", "found = i"], "correct": "break", "expected_output": "3\n", "bonus_ram": 20 },
+		{ "title": "First Occurrence", "desc": "Find the first index where 7 appears in [7,3,7,1,7,9]. Print it.", "code_template": "arr = [7, 3, 7, 1, 7, 9]\ntarget = 7\nfor i in range(len(arr)):\n    if arr[i] == target:\n        print(i)\n        ___", "choices": ["break", "continue", "pass", "return i"], "correct": "break", "expected_output": "0\n", "bonus_ram": 20 },
+		{ "title": "Count Occurrences", "desc": "Count how many times 7 appears in [7,3,7,1,7,9] and print the count.", "code_template": "arr = [7, 3, 7, 1, 7, 9]\ntarget = 7\ncount = 0\n___\nprint(count)", "choices": ["for v in arr:\n    if v==target:\n        count+=1", "count = arr.count(7)", "count += arr.count", "for i in arr: count++"], "correct": "for v in arr:\n    if v==target:\n        count+=1", "expected_output": "3\n", "bonus_ram": 20 },
 	],
 	13: [  # Binary Search
-		{ "title": "Find Target", "desc": "Binary search for 51 in [5,12,27,38,51,64,79]. Print its index.", "code_template": "arr = [5, 12, 27, 38, 51, 64, 79]\ntarget = 51\nlo, hi = 0, len(arr) - 1\nwhile lo <= hi:\n    mid = (lo + hi) // 2\n    if arr[mid] == target:\n        print(mid)\n        ___\n    elif arr[mid] < target:\n        lo = mid + 1\n    else:\n        hi = mid - 1", "expected_output": "4\n", "bonus_ram": 30 },
-		{ "title": "Search Left Half", "desc": "Binary search for 5 (first element) in [5,12,27,38,51,64,79]. Print index.", "code_template": "arr = [5, 12, 27, 38, 51, 64, 79]\ntarget = 5\nlo, hi = 0, len(arr) - 1\nwhile lo <= hi:\n    mid = (lo + hi) // 2\n    if arr[mid] == target:\n        print(mid)\n        ___\n    elif arr[mid] < target:\n        lo = mid + 1\n    else:\n        hi = mid - 1", "expected_output": "0\n", "bonus_ram": 28 },
-		{ "title": "Not Found", "desc": "Binary search for 99 (not present) in [5,12,27,38,51,64,79]. Print the index or -1.", "code_template": "arr = [5, 12, 27, 38, 51, 64, 79]\ntarget = 99\nlo, hi = 0, len(arr) - 1\nfound = -1\nwhile lo <= hi:\n    mid = (lo + hi) // 2\n    if arr[mid] == target:\n        found = mid\n        ___\n    elif arr[mid] < target:\n        lo = mid + 1\n    else:\n        hi = mid - 1\nprint(found)", "expected_output": "-1\n", "bonus_ram": 28 },
+		{ "title": "Find Target", "desc": "Binary search for 51 in [5,12,27,38,51,64,79]. Print its index.", "code_template": "arr = [5, 12, 27, 38, 51, 64, 79]\ntarget = 51\nlo, hi = 0, len(arr) - 1\nwhile lo <= hi:\n    mid = (lo + hi) // 2\n    if arr[mid] == target:\n        print(mid)\n        ___\n    elif arr[mid] < target:\n        lo = mid + 1\n    else:\n        hi = mid - 1", "choices": ["break", "continue", "pass", "found = mid"], "correct": "break", "expected_output": "4\n", "bonus_ram": 30 },
+		{ "title": "Search Left Half", "desc": "Binary search for 5 (first element) in [5,12,27,38,51,64,79]. Print index.", "code_template": "arr = [5, 12, 27, 38, 51, 64, 79]\ntarget = 5\nlo, hi = 0, len(arr) - 1\nwhile lo <= hi:\n    mid = (lo + hi) // 2\n    if arr[mid] == target:\n        print(mid)\n        ___\n    elif arr[mid] < target:\n        lo = mid + 1\n    else:\n        hi = mid - 1", "choices": ["break", "continue", "pass", "return mid"], "correct": "break", "expected_output": "0\n", "bonus_ram": 28 },
+		{ "title": "Not Found", "desc": "Binary search for 99 (not present) in [5,12,27,38,51,64,79]. Print the index or -1.", "code_template": "arr = [5, 12, 27, 38, 51, 64, 79]\ntarget = 99\nlo, hi = 0, len(arr) - 1\nfound = -1\nwhile lo <= hi:\n    mid = (lo + hi) // 2\n    if arr[mid] == target:\n        found = mid\n        ___\n    elif arr[mid] < target:\n        lo = mid + 1\n    else:\n        hi = mid - 1\nprint(found)", "choices": ["break", "continue", "found = -1", "pass"], "correct": "break", "expected_output": "-1\n", "bonus_ram": 28 },
 	],
 }
 
@@ -152,11 +167,7 @@ func _ready() -> void:
 	_build_challenge_panel()
 	_apply_responsive_challenge()
 	get_tree().root.size_changed.connect(_apply_responsive_challenge)
-	if level_number == 1:
-		if ProgressManager.has_seen_tutorial("level"):
-			call_deferred("_show_challenge")
-	else:
-		call_deferred("_show_challenge")
+	# All levels use 🧩 Exercise button — no auto-popup, player chooses difficulty
 	_maybe_show_tutorial()
 	GameManager.active_level = self
 	_setup_enemy_tooltip()
@@ -491,12 +502,76 @@ func _create_overlay_menu() -> void:
 	overlay_menu.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	$HUD/HUDControl.add_child(overlay_menu)
 
+func _show_ram_bubble() -> void:
+	# Reuse exercise bubble position but with RAM-specific text
+	if not is_instance_valid(_exercise_btn):
+		return
+	if _exercise_bubble and is_instance_valid(_exercise_bubble):
+		_exercise_bubble.queue_free()
+		_exercise_bubble = null
+	_exercise_bubble = PanelContainer.new()
+	_exercise_bubble.z_index = 10
+	var bs := StyleBoxFlat.new()
+	bs.bg_color = Color("#2A0A0A")
+	bs.border_color = Color("#FF3366")
+	bs.border_width_left = 2
+	bs.border_width_right = 2
+	bs.border_width_top = 2
+	bs.border_width_bottom = 2
+	bs.corner_radius_top_left = 8
+	bs.corner_radius_top_right = 8
+	bs.corner_radius_bottom_left = 8
+	bs.corner_radius_bottom_right = 8
+	bs.content_margin_left = 10
+	bs.content_margin_right = 10
+	bs.content_margin_top = 8
+	bs.content_margin_bottom = 10
+	_exercise_bubble.add_theme_stylebox_override("panel", bs)
+	var vbox := VBoxContainer.new()
+	vbox.add_theme_constant_override("separation", 2)
+	_exercise_bubble.add_child(vbox)
+	var lbl := Label.new()
+	lbl.text = "⚠ Not enough RAM!"
+	lbl.add_theme_font_size_override("font_size", 12)
+	lbl.add_theme_color_override("font_color", Color("#FF5577"))
+	lbl.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	vbox.add_child(lbl)
+	var hint := Label.new()
+	hint.text = "Tap 🧩 Exercise → Easy 20 / Medium 30 / Hard 50 RAM"
+	hint.add_theme_font_size_override("font_size", 9)
+	hint.add_theme_color_override("font_color", Color("#FFCC66"))
+	hint.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	vbox.add_child(hint)
+	$HUD/HUDControl.add_child(_exercise_bubble)
+	await get_tree().process_frame
+	if not is_instance_valid(_exercise_btn) or not is_instance_valid(_exercise_bubble):
+		return
+	var btn_pos = _exercise_btn.global_position
+	var btn_size = _exercise_btn.size
+	_exercise_bubble.position = btn_pos + Vector2(btn_size.x * 0.5 - _exercise_bubble.size.x * 0.5, btn_size.y + 6)
+	_exercise_bubble.scale = Vector2(0.7, 0.7)
+	_exercise_bubble.modulate.a = 0.0
+	var t = create_tween().set_parallel(true)
+	t.tween_property(_exercise_bubble, "scale", Vector2(1, 1), 0.35).set_trans(Tween.TRANS_BACK).set_ease(Tween.EASE_OUT)
+	t.tween_property(_exercise_bubble, "modulate:a", 1.0, 0.25)
+	# Pulse the Exercise button
+	if is_instance_valid(_exercise_btn):
+		var tb = create_tween()
+		tb.tween_property(_exercise_btn, "scale", Vector2(1.12, 1.12), 0.15)
+		tb.tween_property(_exercise_btn, "scale", Vector2(1, 1), 0.25)
+	await get_tree().create_timer(4.0).timeout
+	if is_instance_valid(_exercise_bubble):
+		var t2 = create_tween()
+		t2.tween_property(_exercise_bubble, "modulate:a", 0.0, 0.4)
+		t2.tween_callback(func(): if is_instance_valid(_exercise_bubble): _exercise_bubble.queue_free(); _exercise_bubble = null)
+
 func _on_overlay_tower_selected(tower_id: String) -> void:
 	_set_overlay_visible(false)
 	var def = GameManager.TOWER_DEFINITIONS[tower_id]
 	if not ram_manager.can_afford(def["ram_cost"]):
 		_flash_ram_label(false)
 		_play_feedback(false)
+		_show_ram_bubble()
 		return
 
 	selected_tower_data              = TowerData.new()
@@ -522,6 +597,12 @@ func _on_cell_clicked(cell: Vector2i) -> void:
 		_set_overlay_visible(false)
 
 	if overlay_menu.visible and cell == _current_menu_cell:
+		_set_overlay_visible(false)
+		for child in overlay_menu.get_children():
+			child.queue_free()
+		if is_instance_valid(_selected_tower):
+			_selected_tower.set_selected(false)
+			_selected_tower = null
 		return
 
 	# If tower menu is open and user clicks a different cell, just close it
@@ -778,8 +859,23 @@ func _show_tower_menu(cell: Vector2i, tower: Node) -> void:
 	var menu_offset_x = clamp(overlay_menu.position.x, clamp_margin + half_w, screen_size.x - clamp_margin - half_w) - overlay_menu.position.x
 	var menu_offset_y = clamp(overlay_menu.position.y, clamp_margin + half_h, screen_size.y - clamp_margin - half_h) - overlay_menu.position.y
 	overlay_menu.position += Vector2(menu_offset_x, menu_offset_y)
-
+	var final_pos = overlay_menu.position
+	# Build-then-reveal: start at tower center small/transparent, slide to offset
+	var start_pos = canvas_pos
+	overlay_menu.position = start_pos
+	bg.scale = Vector2(0.75, 0.75)
+	bg.modulate.a = 0.0
 	_set_overlay_visible(true)
+	# Tower hologram pulse
+	if is_instance_valid(tower):
+		tower.scale = Vector2(1.15, 1.15)
+		var pt = create_tween()
+		pt.tween_property(tower, "scale", Vector2(1, 1), 0.35).set_trans(Tween.TRANS_BACK).set_ease(Tween.EASE_OUT)
+	var t = create_tween()
+	t.set_parallel(true)
+	t.tween_property(overlay_menu, "position", final_pos, 0.35).set_trans(Tween.TRANS_BACK).set_ease(Tween.EASE_OUT)
+	t.tween_property(bg, "scale", Vector2(1, 1), 0.35).set_trans(Tween.TRANS_BACK).set_ease(Tween.EASE_OUT)
+	t.tween_property(bg, "modulate:a", 1.0, 0.25)
 
 func _on_sell_tower(cell: Vector2i, tower: Node, value: int) -> void:
 	ram_manager.earn(value)
@@ -796,6 +892,7 @@ func _on_upgrade_tower(tower: Node, cost: int) -> void:
 	if not ram_manager.spend(cost):
 		_flash_ram_label(false)
 		_play_feedback(false)
+		_show_ram_bubble()
 		return
 	var new_lvl = tower.upgrade()
 	tower.set_selected(true)
@@ -926,9 +1023,9 @@ func _show_placement_radial(cell: Vector2i) -> void:
 		
 	# Build radial selection
 	var num_options = equipped.size()
-	var radius = 88.0
-	var btn_w = 72.0
-	var btn_h = 96.0
+	var radius = 96.0
+	var btn_w = 78.0
+	var btn_h = 100.0
 	
 	for i in range(num_options):
 		var tower_id = equipped[i]
@@ -990,16 +1087,19 @@ func _show_placement_radial(cell: Vector2i) -> void:
 			visual_tower.set_process_input(false)
 			btn.add_child(visual_tower)
 		
-		# Tower name centered horizontally and vertically in its row
+		# Tower name — split on space so Binary Tower → Binary\nTower (avoids side-border touch)
+		var tname = def["tower_name"]
+		if " " in tname:
+			tname = tname.replace(" ", "\n")
 		var name_lbl := Label.new()
-		name_lbl.text = def["tower_name"]
+		name_lbl.text = tname
 		name_lbl.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 		name_lbl.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
-		name_lbl.add_theme_font_size_override("font_size", 9)
+		name_lbl.add_theme_font_size_override("font_size", 8)
 		name_lbl.add_theme_color_override("font_color", Color("#88AACC"))
-		name_lbl.position = Vector2(0, 54)
-		name_lbl.custom_minimum_size = Vector2(btn_w, 16)
-		name_lbl.size = Vector2(btn_w, 16)
+		name_lbl.position = Vector2(0, 46)
+		name_lbl.custom_minimum_size = Vector2(btn_w, 26)
+		name_lbl.size = Vector2(btn_w, 26)
 		name_lbl.mouse_filter = Control.MOUSE_FILTER_IGNORE
 		btn.add_child(name_lbl)
 		
@@ -1008,11 +1108,11 @@ func _show_placement_radial(cell: Vector2i) -> void:
 		price_lbl.text = str(def["ram_cost"]) + "⚡"
 		price_lbl.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 		price_lbl.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
-		price_lbl.add_theme_font_size_override("font_size", 11)
+		price_lbl.add_theme_font_size_override("font_size", 10)
 		price_lbl.add_theme_color_override("font_color", Color("#00D4FF"))
-		price_lbl.position = Vector2(0, 74)
-		price_lbl.custom_minimum_size = Vector2(btn_w, 18)
-		price_lbl.size = Vector2(btn_w, 18)
+		price_lbl.position = Vector2(0, 80)
+		price_lbl.custom_minimum_size = Vector2(btn_w, 16)
+		price_lbl.size = Vector2(btn_w, 16)
 		price_lbl.mouse_filter = Control.MOUSE_FILTER_IGNORE
 		btn.add_child(price_lbl)
 
@@ -1032,11 +1132,11 @@ func _show_placement_radial(cell: Vector2i) -> void:
 				eff_lbl.text = "2.0x"
 				eff_lbl.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 				eff_lbl.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
-				eff_lbl.add_theme_font_size_override("font_size", 9)
+				eff_lbl.add_theme_font_size_override("font_size", 7)
 				eff_lbl.add_theme_color_override("font_color", Color("#00FF88"))
-				eff_lbl.position = Vector2(btn_w - 28, 2)
-				eff_lbl.custom_minimum_size = Vector2(26, 14)
-				eff_lbl.size = Vector2(26, 14)
+				eff_lbl.position = Vector2(btn_w - 24, 6)
+				eff_lbl.custom_minimum_size = Vector2(20, 10)
+				eff_lbl.size = Vector2(20, 10)
 				eff_lbl.mouse_filter = Control.MOUSE_FILTER_IGNORE
 				var eff_bg := StyleBoxFlat.new()
 				eff_bg.bg_color = Color("#00FF88", 0.15)
@@ -1107,6 +1207,16 @@ func _place_tower(cell: Vector2i) -> void:
 	
 	grid_system.first_tower_placed.emit(selected_tower_data.tower_id)
 	_play_feedback(true)
+	# Auto pop easy exercise when placing the featured tower for this level (once, non-blocking)
+	var trigger = TOWER_EXERCISE_MAP.get(level_number, "")
+	if not _tower_exercise_shown and trigger != "" and selected_tower_data.tower_id == trigger:
+		_tower_exercise_shown = true
+		_exercise_difficulty = "easy"
+		# brief build pause then slide-in exercise (gameplay not paused)
+		await get_tree().create_timer(0.6).timeout
+		if not is_instance_valid(micro_panel) or micro_panel.visible:
+			return
+		_show_challenge()
 
 # ─── TOWER SELECTION ───────────────────────────────────
 func _on_tower_selected(tower_id: String) -> void:
@@ -1127,6 +1237,8 @@ func _on_tower_selected(tower_id: String) -> void:
 # ─── PROCESS ───────────────────────────────────────────
 func _process(delta: float) -> void:
 	_update_enemy_tooltip()
+	if is_instance_valid(_challenge_drag_preview):
+		_challenge_drag_preview.global_position = get_viewport().get_mouse_position() + Vector2(12, -12)
 	if _tutorial_active:
 		_update_wave_progress_bar()
 		return
@@ -1175,6 +1287,55 @@ func _setup_diff_badge() -> void:
 	_diff_badge.flat = true
 	_diff_badge.pressed.connect(_show_diff_popup.bind(mod))
 	skip_wave_btn.add_sibling(_diff_badge)
+	# Level 1 exercise button between Skip and EXPERT
+	_setup_exercise_button()
+
+func _setup_exercise_button() -> void:
+	if _exercise_btn != null and is_instance_valid(_exercise_btn):
+		_exercise_btn.queue_free()
+		_exercise_btn = null
+	_exercise_btn = Button.new()
+	_exercise_btn.text = "🧩 Exercise"
+	_exercise_btn.tooltip_text = "Micro coding exercise (Level 1)"
+	_exercise_btn.add_theme_font_size_override("font_size", _fs(0.025, 13.0, 15.0))
+	_exercise_btn.add_theme_color_override("font_color", Color("#00D4FF"))
+	var ex_style := StyleBoxFlat.new()
+	ex_style.bg_color = Color("#0D1A33")
+	ex_style.border_color = Color("#00D4FF", 0.6)
+	ex_style.border_width_left = 1
+	ex_style.border_width_right = 1
+	ex_style.border_width_top = 1
+	ex_style.border_width_bottom = 1
+	ex_style.corner_radius_top_left = 6
+	ex_style.corner_radius_top_right = 6
+	ex_style.corner_radius_bottom_left = 6
+	ex_style.corner_radius_bottom_right = 6
+	ex_style.content_margin_left = 8
+	ex_style.content_margin_right = 8
+	ex_style.content_margin_top = 4
+	ex_style.content_margin_bottom = 4
+	_exercise_btn.add_theme_stylebox_override("normal", ex_style)
+	_exercise_btn.add_theme_stylebox_override("hover", ex_style)
+	_exercise_btn.pressed.connect(_on_exercise_pressed)
+	# Place between Skip and EXPERT: Skip is before diff, so add as sibling before diff
+	_diff_badge.add_sibling(_exercise_btn, true)
+
+func _on_exercise_pressed() -> void:
+	_hide_exercise_bubble()
+	if _difficulty_picker and is_instance_valid(_difficulty_picker):
+		_difficulty_picker.visible = true
+		_difficulty_picker.move_to_front()
+	if _exercise_btn:
+		var t = create_tween()
+		t.tween_property(_exercise_btn, "modulate", Color(1,1,1,0.5), 0.15)
+		t.tween_property(_exercise_btn, "modulate", Color(1,1,1,1), 0.15)
+
+func _on_difficulty_selected(diff: String) -> void:
+	_exercise_difficulty = diff
+	if _difficulty_picker:
+		_difficulty_picker.visible = false
+	_hide_exercise_bubble()
+	_show_challenge()
 
 func _show_diff_popup(mod: float) -> void:
 	SignalBus.hud_message_requested.emit(_get_diff_tip(mod), 3.0)
@@ -1291,6 +1452,72 @@ func _on_wave_started(wave_num: int, total: int) -> void:
 	wave_label.text = str(wave_num) + "/" + str(total)
 	countdown_active = false
 	_show_wave_splash_animation(wave_num)
+	if wave_num == 1:
+		call_deferred("_show_exercise_bubble")
+
+func _show_exercise_bubble() -> void:
+	if not is_instance_valid(_exercise_btn) or not _exercise_btn.visible:
+		return
+	if _exercise_bubble and is_instance_valid(_exercise_bubble):
+		_exercise_bubble.queue_free()
+	_exercise_bubble = PanelContainer.new()
+	_exercise_bubble.z_index = 10
+	var bs := StyleBoxFlat.new()
+	bs.bg_color = Color("#0D1A33")
+	bs.border_color = Color("#00D4FF")
+	bs.border_width_left = 1
+	bs.border_width_right = 1
+	bs.border_width_top = 1
+	bs.border_width_bottom = 1
+	bs.corner_radius_top_left = 8
+	bs.corner_radius_top_right = 8
+	bs.corner_radius_bottom_left = 8
+	bs.corner_radius_bottom_right = 8
+	bs.content_margin_left = 10
+	bs.content_margin_right = 10
+	bs.content_margin_top = 8
+	bs.content_margin_bottom = 10
+	_exercise_bubble.add_theme_stylebox_override("panel", bs)
+	var vbox := VBoxContainer.new()
+	vbox.add_theme_constant_override("separation", 2)
+	_exercise_bubble.add_child(vbox)
+	var lbl := Label.new()
+	lbl.text = "🧩 Try Exercise!  Easy 20 / Medium 30 / Hard 50 RAM"
+	lbl.add_theme_font_size_override("font_size", 11)
+	lbl.add_theme_color_override("font_color", Color("#E0F8FF"))
+	lbl.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	vbox.add_child(lbl)
+	var hint := Label.new()
+	hint.text = "▲ tap 🧩 Exercise between Skip and EXPERT"
+	hint.add_theme_font_size_override("font_size", 9)
+	hint.add_theme_color_override("font_color", Color("#88CCFF"))
+	hint.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	vbox.add_child(hint)
+	$HUD/HUDControl.add_child(_exercise_bubble)
+	# Position just below exercise button
+	await get_tree().process_frame
+	if not is_instance_valid(_exercise_btn) or not is_instance_valid(_exercise_bubble):
+		return
+	var btn_pos = _exercise_btn.global_position
+	var btn_size = _exercise_btn.size
+	_exercise_bubble.position = btn_pos + Vector2(btn_size.x * 0.5 - _exercise_bubble.size.x * 0.5, btn_size.y + 6)
+	# Pop animation
+	_exercise_bubble.scale = Vector2(0.7, 0.7)
+	_exercise_bubble.modulate.a = 0.0
+	var t = create_tween().set_parallel(true)
+	t.tween_property(_exercise_bubble, "scale", Vector2(1, 1), 0.35).set_trans(Tween.TRANS_BACK).set_ease(Tween.EASE_OUT)
+	t.tween_property(_exercise_bubble, "modulate:a", 1.0, 0.25)
+	# Auto-hide after 5s or when exercise opened
+	await get_tree().create_timer(5.0).timeout
+	if is_instance_valid(_exercise_bubble):
+		var t2 = create_tween()
+		t2.tween_property(_exercise_bubble, "modulate:a", 0.0, 0.4)
+		t2.tween_callback(func(): if is_instance_valid(_exercise_bubble): _exercise_bubble.queue_free(); _exercise_bubble = null)
+
+func _hide_exercise_bubble() -> void:
+	if _exercise_bubble and is_instance_valid(_exercise_bubble):
+		_exercise_bubble.queue_free()
+		_exercise_bubble = null
 
 func _on_wave_completed(wave_num: int) -> void:
 	score            += 100 * wave_num
@@ -1527,7 +1754,7 @@ func _on_back_pressed() -> void:
 
 # ─── HUD HELPERS ───────────────────────────────────────
 func _update_ram_label() -> void:
-	ram_label.text = str(ram_manager.get_current()) + " RAM"
+	ram_label.text = str(ram_manager.get_current())
 
 func _get_level_config() -> Dictionary:
 	if GameManager.LEVEL_CONFIGS.has(level_number):
@@ -1542,63 +1769,85 @@ func _make_icon(draw_fn: Callable) -> ImageTexture:
 	return ImageTexture.create_from_image(img)
 
 func _icon_chip() -> ImageTexture:
+	# White SVG-like fallback for HUD badge (matches hud_ram.svg: rect + pins + circle)
 	return _make_icon(func(img):
-		for x in range(4, 20):
-			for y in range(6, 18):
-				img.set_pixel(x, y, Color(0.0, 0.6, 1.0, 0.3))
+		for x in range(7, 17):
+			for y in range(7, 17):
+				if x == 7 or x == 16 or y == 7 or y == 16:
+					img.set_pixel(x, y, Color(1, 1, 1, 0.95))
+					img.set_pixel(x+1, y, Color(1, 1, 1, 0.15))
+					img.set_pixel(x, y+1, Color(1, 1, 1, 0.15))
 		for i in range(4):
-			for x in range(4 + i*4, 7 + i*4):
-				for y in range(2, 6):
-					img.set_pixel(x, y, Color(0.0, 0.8, 1.0, 0.6))
-				for y in range(18, 22):
-					img.set_pixel(x, y, Color(0.0, 0.8, 1.0, 0.6))
-		for r in range(3):
-			for dx in range(-r, r+1):
-				for dy in range(-r, r+1):
-					img.set_pixel(12 + dx, 12 + dy, Color(0.0, 1.0, 0.5, 0.5 - r * 0.15))
+			var px = 5 + i*4
+			for x in range(px, px + 2):
+				for y in range(10, 14):
+					if x == 5 or x == 17:
+						img.set_pixel(x, y, Color(1, 1, 1, 0.9))
+			for y in range(5, 7):
+				for x in range(10, 14):
+					if y == 5:
+						img.set_pixel(10 + i, y, Color(1, 1, 1, 0.85))
+			for y in range(17, 19):
+				for x in range(10, 14):
+					if y == 18:
+						img.set_pixel(10 + i, y, Color(1, 1, 1, 0.85))
+		for r in range(2):
+			for dx in range(-1, 2):
+				for dy in range(-1, 2):
+					if abs(dx) + abs(dy) <= 1:
+						img.set_pixel(12 + dx, 12 + dy, Color(1, 1, 1, 0.95))
 	)
 
 func _icon_shield() -> ImageTexture:
+	# White heart fallback (matches hud_health.svg)
 	return _make_icon(func(img):
-		for y in range(3, 20):
-			var hw = int(10.0 * (1.0 - float(y - 3) / 17.0 * 0.4))
-			for x in range(12 - hw, 12 + hw):
-				img.set_pixel(x, y, Color(0.0, 1.0, 0.5, 0.5))
-			if y >= 5 and y <= 18:
-				var ihw = int(8.0 * (1.0 - float(y - 5) / 13.0 * 0.4))
-				for x in range(12 - ihw, 12 + ihw):
-					img.set_pixel(x, y, Color(0.0, 0.4, 0.2, 0.3))
-		for x in range(9, 16):
-			for y in range(8, 17):
-				img.set_pixel(x, y, Color(0.0, 0.8, 1.0, 0.4))
+		for a in range(0, 360, 8):
+			var rad = a * PI / 180.0
+			var rx = 12 + cos(rad) * (8.0 - abs(sin(rad))*3.0)
+			var ry = 12 + sin(rad) * 7.0 - 2.0
+			if rad > PI: ry += 3.0
+			img.set_pixel(int(rx), int(ry), Color(1, 1, 1, 0.95))
+		for x in range(8, 17):
+			for y in range(7, 15):
+				var d = Vector2(x-12, y-11).length()
+				if d < 5.5 and d > 4.0:
+					var cur = img.get_pixel(x, y)
+					img.set_pixel(x, y, cur.blend(Color(1, 1, 1, 0.55)))
 	)
 
 func _icon_star() -> ImageTexture:
+	# White star fallback (matches hud_score.svg)
 	return _make_icon(func(img):
+		var pts: Array[Vector2] = []
 		for i in range(5):
 			var a = -PI/2 + i * 2*PI/5
-			var px = int(12 + cos(a) * 9.0)
-			var py = int(12 + sin(a) * 9.0)
+			pts.append(Vector2(12 + cos(a) * 8, 12 + sin(a) * 8))
+		for i in range(5):
+			var p1 = pts[i]
+			var p2 = pts[(i+1)%5]
+			var steps = int(p1.distance_to(p2))
+			for s in range(steps):
+				var t = float(s)/steps
+				var px = int(lerp(p1.x, p2.x, t))
+				var py = int(lerp(p1.y, p2.y, t))
+				img.set_pixel(px, py, Color(1, 1, 1, 0.95))
+				img.set_pixel(px+1, py, Color(1, 1, 1, 0.3))
+		for dx in range(-1, 2):
 			for dy in range(-1, 2):
-				for dx in range(-1, 2):
-					var d = Vector2(px + dx - 12, py + dy - 12).length() / 9.0
-					img.set_pixel(px + dx, py + dy, Color(1.0, 0.7, 0.0, 0.5 - d * 0.3))
-		for dx in range(-2, 3):
-			for dy in range(-2, 3):
-				var d = Vector2(dx, dy).length() / 3.0
-				img.set_pixel(12 + dx, 12 + dy, Color(1.0, 0.9, 0.4, 0.6 - d * 0.2))
+				img.set_pixel(12+dx, 12+dy, Color(1, 1, 1, 0.9))
 	)
 
 func _icon_signal() -> ImageTexture:
+	# White signal bars fallback (matches hud_wave.svg)
 	return _make_icon(func(img):
-		var bars = [4, 7, 10, 13]
-		var heights = [4, 8, 12, 16]
-		var cols = [Color(0.0, 0.4, 0.6, 0.4), Color(0.0, 0.6, 0.8, 0.5), Color(0.0, 0.8, 1.0, 0.6), Color(0.0, 1.0, 0.8, 0.7)]
+		var xs = [5, 10, 15, 20]
+		var hs = [4, 8, 12, 16]
 		for i in range(4):
-			var bx = bars[i]
-			for y in range(21 - heights[i], 20):
-				for x in range(bx, bx + 3):
-					img.set_pixel(x, y, cols[i])
+			var bx = xs[i]
+			for y in range(20 - hs[i], 20):
+				for x in range(bx-1, bx+2):
+					img.set_pixel(x, y, Color(1, 1, 1, 0.95))
+					if x == bx: img.set_pixel(x, y, Color(1, 1, 1, 1.0))
 	)
 
 func _icon_pause() -> ImageTexture:
@@ -1643,21 +1892,149 @@ func _icon_power() -> ImageTexture:
 	)
 
 func _setup_hud_icons() -> void:
+	print("[HUD] Building NEW overlapping pills — outer 114×32 icon 32 badge (ref image style)")
 	var top = $HUD/HUDControl/TopHUD/TopLayout
-	var icon_size = Vector2(18, 18)
-	
-	_add_icon_before_label(top, _icon_chip(), ram_label, icon_size)
-	_add_icon_before_label(top, _icon_shield(), base_health_label, icon_size)
-	_add_icon_before_label(top, _icon_star(), score_label, icon_size)
-	_add_icon_before_label(top, _icon_signal(), wave_label, icon_size)
-	
-	pause_btn.icon = _icon_pause()
+	# Clean old pills so new overlapping-icon layout rebuilds (hot-reload + restart)
+	var old_pills: Array = []
+	for c in top.get_children():
+		if c.has_meta("hud_pill"):
+			old_pills.append(c)
+		elif c is TextureRect and c.has_meta("hud_icon"):
+			# legacy 18px inside icons
+			old_pills.append(c)
+	for outer in old_pills:
+		# find any hud label inside outer and re-parent it back to top
+		var lbl_found: Label = null
+		var stack: Array = [outer]
+		while stack.size() > 0:
+			var n = stack.pop_back()
+			if n is Label:
+				if n == ram_label or n == wave_label or n == base_health_label or n == score_label:
+					lbl_found = n
+					break
+			for ch in n.get_children():
+				stack.append(ch)
+		if lbl_found:
+			var p = lbl_found.get_parent()
+			if p:
+				p.remove_child(lbl_found)
+			top.add_child(lbl_found)
+		outer.queue_free()
+	# Also clean legacy inside-icons that were direct children of top
+	for c in top.get_children():
+		if c is TextureRect and c.has_meta("hud_icon_for"):
+			c.queue_free()
+
+	# Pill HUD — SVG icons from assets/icons (24×24 stroke white) beside pill, slightly bigger, no circle — like reference
+	var tex_ram = load("res://assets/icons/hud_ram.svg") if ResourceLoader.exists("res://assets/icons/hud_ram.svg") else _icon_chip()
+	var tex_wave = load("res://assets/icons/hud_wave.svg") if ResourceLoader.exists("res://assets/icons/hud_wave.svg") else _icon_signal()
+	var tex_health = load("res://assets/icons/hud_health.svg") if ResourceLoader.exists("res://assets/icons/hud_health.svg") else _icon_shield()
+	var tex_score = load("res://assets/icons/hud_score.svg") if ResourceLoader.exists("res://assets/icons/hud_score.svg") else _icon_star()
+	_wrap_label_in_pill(top, ram_label, tex_ram, Color("#162E4A"), Color("#00D4FF"))
+	_wrap_label_in_pill(top, wave_label, tex_wave, Color("#241E52"), Color("#FFD60A"))
+	_wrap_label_in_pill(top, base_health_label, tex_health, Color("#4A1430"), Color("#FF2E63"))
+	_wrap_label_in_pill(top, score_label, tex_score, Color("#4A3510"), Color("#C86AFF"))
+
+	var tex_pause = load("res://assets/icons/hud_pause.svg") if ResourceLoader.exists("res://assets/icons/hud_pause.svg") else _icon_pause()
+	var tex_skip = load("res://assets/icons/hud_skip.svg") if ResourceLoader.exists("res://assets/icons/hud_skip.svg") else _icon_skip()
+	pause_btn.icon = tex_pause
 	pause_btn.expand_icon = true
 	pause_btn.text = ""
-	skip_wave_btn.icon = _icon_skip()
+	skip_wave_btn.icon = tex_skip
 	skip_wave_btn.expand_icon = true
+	skip_wave_btn.text = "Skip (20⚡)"
 	back_btn.icon = _icon_power()
 	back_btn.expand_icon = true
+	if _ff_btn and is_instance_valid(_ff_btn):
+		_ff_btn.icon = tex_skip
+		_ff_btn.expand_icon = true
+		_ff_btn.text = ""
+	if _diff_badge and is_instance_valid(_diff_badge):
+		_diff_badge.icon = tex_wave
+		_diff_badge.expand_icon = true
+
+func _wrap_label_in_pill(parent: Node, label: Label, icon_tex: Texture2D, bg_col: Color, border_col: Color) -> void:
+	# Already wrapped? (retry)
+	if label.get_parent() != parent:
+		return
+	# Remove any stale icon TextureRects for this label
+	for c in parent.get_children():
+		if c is TextureRect and c.has_meta("hud_icon_for") and c.get_meta("hud_icon_for") == label.get_instance_id():
+			c.queue_free()
+	var idx = label.get_index()
+	parent.remove_child(label)
+
+	# Outer wrapper: icon slightly bigger (32) overlapping left edge of pill — like reference image, no circle
+	var outer := Control.new()
+	outer.set_meta("hud_pill", true)
+	outer.custom_minimum_size = Vector2(116, 32)
+	outer.size = Vector2(116, 32)
+	outer.size_flags_vertical = Control.SIZE_SHRINK_CENTER
+
+	var pill := PanelContainer.new()
+	pill.position = Vector2(18, 2)
+	pill.custom_minimum_size = Vector2(98, 28)
+	pill.size = Vector2(98, 28)
+	var sb := StyleBoxFlat.new()
+	sb.bg_color = bg_col
+	sb.bg_color.a = 0.98
+	sb.border_color = border_col
+	sb.border_width_left = 1
+	sb.border_width_right = 1
+	sb.border_width_top = 1
+	sb.border_width_bottom = 1
+	sb.corner_radius_top_left = 14
+	sb.corner_radius_top_right = 14
+	sb.corner_radius_bottom_left = 14
+	sb.corner_radius_bottom_right = 14
+	sb.content_margin_left = 16
+	sb.content_margin_right = 8
+	sb.content_margin_top = 2
+	sb.content_margin_bottom = 2
+	sb.shadow_size = 4
+	sb.shadow_color = Color(0, 0, 0, 0.25)
+	pill.add_theme_stylebox_override("panel", sb)
+
+	var hbox := HBoxContainer.new()
+	hbox.add_theme_constant_override("separation", 0)
+	hbox.alignment = BoxContainer.ALIGNMENT_CENTER
+	label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	label.add_theme_color_override("font_color", Color("#FFFFFF"))
+	label.add_theme_font_size_override("font_size", 13)
+	label.add_theme_color_override("font_shadow_color", Color(0, 0, 0, 0.5))
+	label.add_theme_constant_override("shadow_offset_x", 1)
+	label.add_theme_constant_override("shadow_offset_y", 1)
+	hbox.add_child(label)
+	pill.add_child(hbox)
+	outer.add_child(pill)
+
+	# Icon beside pill, slightly bigger (32 vs 28) — colored to match border_col like reference heart/bolt/gem
+	# Drop shadow (dark duplicate 1.5px offset) for pop like reference
+	var icon_shadow = TextureRect.new()
+	icon_shadow.texture = icon_tex
+	icon_shadow.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
+	icon_shadow.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_CENTERED
+	icon_shadow.size = Vector2(32, 32)
+	icon_shadow.position = Vector2(1.5, 1.5)
+	icon_shadow.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	icon_shadow.z_index = 0
+	icon_shadow.modulate = Color(0, 0, 0, 0.45)
+	outer.add_child(icon_shadow)
+
+	var icon_rect = TextureRect.new()
+	icon_rect.texture = icon_tex
+	icon_rect.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
+	icon_rect.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_CENTERED
+	icon_rect.size = Vector2(32, 32)
+	icon_rect.position = Vector2(0, 0)
+	icon_rect.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	icon_rect.z_index = 1
+	# SVG is white stroke — tint to border_col for vivid color like reference (red heart, yellow bolt, purple gem)
+	icon_rect.modulate = border_col
+	outer.add_child(icon_rect)
+
+	parent.add_child(outer)
+	parent.move_child(outer, idx)
 
 func _add_icon_before_label(parent: Node, icon_tex: ImageTexture, label: Label, icon_size: Vector2) -> void:
 	var icon_rect = TextureRect.new()
@@ -1666,6 +2043,8 @@ func _add_icon_before_label(parent: Node, icon_tex: ImageTexture, label: Label, 
 	icon_rect.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_CENTERED
 	icon_rect.custom_minimum_size = icon_size
 	icon_rect.size = icon_size
+	icon_rect.set_meta("hud_icon", true)
+	icon_rect.set_meta("hud_icon_for", label.get_instance_id())
 	parent.add_child(icon_rect)
 	var idx = label.get_index()
 	parent.move_child(icon_rect, idx)
@@ -1840,6 +2219,18 @@ var _challenge_output: Label = null
 var _challenge_title: Label = null
 var _challenge_desc: Label = null
 var _challenge_result: Label = null
+var _challenge_choice_box: VBoxContainer = null
+var _challenge_blank_btn: Button = null
+var _challenge_blank_btns: Array[Button] = []
+var _challenge_choices_row: HBoxContainer = null
+var _challenge_selected_choice: String = ""
+var _challenge_is_choice: bool = false
+var _challenge_dragging_choice: String = ""
+var _challenge_drag_preview: Label = null
+var _level1_shuffled: Array = []
+var _exercise_difficulty: String = "easy"
+var _medium_blank_edits: Array[LineEdit] = []
+var _difficulty_picker: PanelContainer = null
 
 func _build_challenge_panel() -> void:
 	var style := StyleBoxFlat.new()
@@ -1868,6 +2259,20 @@ func _build_challenge_panel() -> void:
 	var hspacer = Control.new()
 	hspacer.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	header.add_child(hspacer)
+	var close_btn := Button.new()
+	close_btn.text = "✕"
+	close_btn.custom_minimum_size = Vector2(28, 28)
+	close_btn.add_theme_font_size_override("font_size", 14)
+	close_btn.add_theme_color_override("font_color", Color("#FF5577"))
+	var close_style := StyleBoxFlat.new()
+	close_style.bg_color = Color("#1A0A1A", 0.0)
+	close_style.corner_radius_top_left = 6
+	close_style.corner_radius_top_right = 6
+	close_style.corner_radius_bottom_left = 6
+	close_style.corner_radius_bottom_right = 6
+	close_btn.add_theme_stylebox_override("normal", close_style)
+	close_btn.pressed.connect(_hide_challenge)
+	header.add_child(close_btn)
 	layout.add_child(header)
 
 	_challenge_desc = Label.new()
@@ -1888,6 +2293,34 @@ func _build_challenge_panel() -> void:
 	_challenge_code_edit.syntax_highlighter = null
 	_challenge_code_edit.highlight_all_occurrences = false
 	layout.add_child(_challenge_code_edit)
+
+	# ── Choice mode UI (Level 1 inline blank + chips) ──
+	_challenge_choice_box = VBoxContainer.new()
+	_challenge_choice_box.visible = false
+	_challenge_choice_box.add_theme_constant_override("separation", 12)
+	var code_panel := PanelContainer.new()
+	var code_style := StyleBoxFlat.new()
+	code_style.bg_color = Color("#030812")
+	code_style.border_color = Color("#00D4FF", 0.3)
+	code_style.border_width_left = 1
+	code_style.border_width_right = 1
+	code_style.border_width_top = 1
+	code_style.border_width_bottom = 1
+	code_style.corner_radius_top_left = 6
+	code_style.corner_radius_top_right = 6
+	code_style.corner_radius_bottom_left = 6
+	code_style.corner_radius_bottom_right = 6
+	code_style.content_margin_left = 12
+	code_style.content_margin_right = 12
+	code_style.content_margin_top = 12
+	code_style.content_margin_bottom = 12
+	code_panel.add_theme_stylebox_override("panel", code_style)
+	_challenge_choice_box.add_child(code_panel)
+	_challenge_choices_row = HBoxContainer.new()
+	_challenge_choices_row.alignment = BoxContainer.ALIGNMENT_CENTER
+	_challenge_choices_row.add_theme_constant_override("separation", 8)
+	_challenge_choice_box.add_child(_challenge_choices_row)
+	layout.add_child(_challenge_choice_box)
 
 	var btn_row = HBoxContainer.new()
 	var btn_h := _fs(0.055, 36.0, 44.0)
@@ -1925,31 +2358,526 @@ func _build_challenge_panel() -> void:
 	layout.add_child(_challenge_result)
 
 	micro_panel.visible = false
+	_build_difficulty_picker()
+
+func _build_difficulty_picker() -> void:
+	if _difficulty_picker != null and is_instance_valid(_difficulty_picker):
+		_difficulty_picker.queue_free()
+	_difficulty_picker = PanelContainer.new()
+	_difficulty_picker.visible = false
+	_difficulty_picker.custom_minimum_size = Vector2(360, 200)
+	_difficulty_picker.set_anchors_preset(Control.PRESET_CENTER)
+	# PRESET_CENTER sets offsets before size is known → fix to true center
+	_difficulty_picker.offset_left = -180
+	_difficulty_picker.offset_top = -100
+	_difficulty_picker.offset_right = 180
+	_difficulty_picker.offset_bottom = 100
+	var ds := StyleBoxFlat.new()
+	ds.bg_color = Color("#080F1E")
+	ds.border_color = Color("#00D4FF")
+	ds.border_width_left = 2
+	ds.border_width_right = 2
+	ds.border_width_top = 2
+	ds.border_width_bottom = 2
+	ds.corner_radius_top_left = 10
+	ds.corner_radius_top_right = 10
+	ds.corner_radius_bottom_left = 10
+	ds.corner_radius_bottom_right = 10
+	ds.content_margin_left = 16
+	ds.content_margin_right = 16
+	ds.content_margin_top = 16
+	ds.content_margin_bottom = 16
+	_difficulty_picker.add_theme_stylebox_override("panel", ds)
+	$HUD/HUDControl.add_child(_difficulty_picker)
+	var vbox := VBoxContainer.new()
+	vbox.add_theme_constant_override("separation", 10)
+	_difficulty_picker.add_child(vbox)
+	var title := Label.new()
+	title.text = "Choose Difficulty"
+	title.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	title.add_theme_font_size_override("font_size", 16)
+	title.add_theme_color_override("font_color", Color("#00D4FF"))
+	vbox.add_child(title)
+	var desc := Label.new()
+	desc.text = "Easy: drag pills into blanks\nMedium: type in the blanks\nHard: type the full code"
+	desc.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	desc.add_theme_font_size_override("font_size", 11)
+	desc.add_theme_color_override("font_color", Color("#A0B8D0"))
+	vbox.add_child(desc)
+	var row := HBoxContainer.new()
+	row.alignment = BoxContainer.ALIGNMENT_CENTER
+	row.add_theme_constant_override("separation", 10)
+	vbox.add_child(row)
+	for diff in [["Easy", "easy", Color("#00FF88"), "20 RAM"], ["Medium", "medium", Color("#FFB800"), "30 RAM"], ["Hard", "hard", Color("#FF3366"), "50 RAM"]]:
+		var btn := Button.new()
+		btn.text = diff[0] + "\n" + diff[3]
+		btn.custom_minimum_size = Vector2(90, 56)
+		btn.add_theme_font_size_override("font_size", 12)
+		btn.add_theme_color_override("font_color", diff[2])
+		var bs := StyleBoxFlat.new()
+		bs.bg_color = Color(diff[2].r * 0.15, diff[2].g * 0.15, diff[2].b * 0.15, 0.9)
+		bs.border_color = diff[2]
+		bs.border_width_left = 1
+		bs.border_width_right = 1
+		bs.border_width_top = 1
+		bs.border_width_bottom = 1
+		bs.corner_radius_top_left = 8
+		bs.corner_radius_top_right = 8
+		bs.corner_radius_bottom_left = 8
+		bs.corner_radius_bottom_right = 8
+		btn.add_theme_stylebox_override("normal", bs)
+		btn.pressed.connect(_on_difficulty_selected.bind(diff[1]))
+		row.add_child(btn)
+	var note := Label.new()
+	note.text = "▶ Gameplay continues — not paused"
+	note.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	note.add_theme_font_size_override("font_size", 9)
+	note.add_theme_color_override("font_color", Color("#88CCFF", 0.9))
+	vbox.add_child(note)
+	var close := Button.new()
+	close.text = "✕ Close"
+	close.custom_minimum_size = Vector2(80, 28)
+	close.add_theme_font_size_override("font_size", 11)
+	close.add_theme_color_override("font_color", Color("#FF5577"))
+	close.pressed.connect(func(): _difficulty_picker.visible = false)
+	vbox.add_child(close)
+
+var _shuffled_pools: Dictionary = {}
+func _get_active_challenges() -> Array:
+	var base = CHALLENGES.get(level_number, [])
+	if base.is_empty():
+		return base
+	if not _shuffled_pools.has(level_number):
+		var pool = base.duplicate()
+		pool.shuffle()
+		_shuffled_pools[level_number] = pool
+		if level_number == 1:
+			_level1_shuffled = pool
+	return _shuffled_pools[level_number]
 
 func _show_challenge() -> void:
-	if _challenge_progress >= 3:
+	var challenges = _get_active_challenges()
+	if _challenge_progress >= challenges.size():
 		return
-	var level_num = level_number
-	var challenges = CHALLENGES.get(level_num)
-	if not challenges or challenges.is_empty():
+	if challenges.is_empty():
 		return
 	_challenge_index = _challenge_progress
 	var c = challenges[_challenge_index]
-	_challenge_title.text = "⌨  " + c.title + "  (" + str(_challenge_index + 1) + "/3)"
+	_challenge_title.text = "⌨  " + c.title
 	_challenge_desc.text = c.desc
-	_challenge_code_edit.text = c.code_template
 	_challenge_output.text = ""
 	_challenge_result.text = ""
+	# ── Difficulty-aware display ──
+	var is_level1_choice = c.has("choices")
+	# Hard = full typing, Medium = blank LineEdits, Easy = draggable pills
+	if level_number == 1 and is_level1_choice:
+		if _exercise_difficulty == "hard":
+			_challenge_is_choice = false
+			_challenge_code_edit.visible = true
+			_challenge_choice_box.visible = false
+			_challenge_code_edit.editable = true
+			_challenge_code_edit.text = c.code_template
+		else:
+			_challenge_is_choice = true
+			_challenge_code_edit.visible = false
+			_challenge_choice_box.visible = true
+			_challenge_selected_choice = ""
+			_challenge_blank_btns.clear()
+			_challenge_blank_btn = null
+			_medium_blank_edits.clear()
+			# Clear old code display
+			var code_panel = _challenge_choice_box.get_child(0)
+			for ch in code_panel.get_children():
+				ch.queue_free()
+			var code_vbox := VBoxContainer.new()
+			code_vbox.add_theme_constant_override("separation", 4)
+			code_vbox.alignment = BoxContainer.ALIGNMENT_BEGIN
+			code_panel.add_child(code_vbox)
+			var lines = c.code_template.split("\n")
+			for line in lines:
+				if "___" in line:
+					var parts = line.split("___")
+					var hbox := HBoxContainer.new()
+					hbox.alignment = BoxContainer.ALIGNMENT_BEGIN
+					hbox.add_theme_constant_override("separation", 0)
+					for pi in range(parts.size()):
+						if parts[pi] != "":
+							var pre := Label.new()
+							pre.text = parts[pi]
+							pre.add_theme_font_override("font", ThemeDB.fallback_font)
+							pre.add_theme_font_size_override("font_size", _fs(0.034, 16.0, 18.0))
+							pre.add_theme_color_override("font_color", Color("#FFFFFF"))
+							hbox.add_child(pre)
+						if pi < parts.size() - 1:
+							if _exercise_difficulty == "medium":
+								var edit := LineEdit.new()
+								edit.custom_minimum_size = Vector2(72, 22)
+								edit.placeholder_text = "?"
+								edit.alignment = HORIZONTAL_ALIGNMENT_CENTER
+								edit.add_theme_font_size_override("font_size", 13)
+								var es := StyleBoxFlat.new()
+								es.bg_color = Color("#1A2A4A")
+								es.border_color = Color("#FFB800")
+								es.border_width_left = 1
+								es.border_width_right = 1
+								es.border_width_top = 1
+								es.border_width_bottom = 1
+								es.corner_radius_top_left = 4
+								es.corner_radius_top_right = 4
+								es.corner_radius_bottom_left = 4
+								es.corner_radius_bottom_right = 4
+								edit.add_theme_stylebox_override("normal", es)
+								hbox.add_child(edit)
+								_medium_blank_edits.append(edit)
+							else: # easy: Button blank + chips
+								var blank := Button.new()
+								blank.text = "   "
+								blank.custom_minimum_size = Vector2(56, 22)
+								var blank_style := StyleBoxFlat.new()
+								blank_style.bg_color = Color("#1A2A4A")
+								blank_style.border_color = Color("#00D4FF")
+								blank_style.border_width_left = 1
+								blank_style.border_width_right = 1
+								blank_style.border_width_top = 1
+								blank_style.border_width_bottom = 1
+								blank_style.corner_radius_top_left = 4
+								blank_style.corner_radius_top_right = 4
+								blank_style.corner_radius_bottom_left = 4
+								blank_style.corner_radius_bottom_right = 4
+								blank.add_theme_stylebox_override("normal", blank_style)
+								blank.add_theme_color_override("font_color", Color("#FFFFFF"))
+								blank.add_theme_font_size_override("font_size", _fs(0.034, 14.0, 16.0))
+								blank.pressed.connect(_on_blank_pressed.bind(blank))
+								hbox.add_child(blank)
+								_challenge_blank_btns.append(blank)
+								if _challenge_blank_btn == null:
+									_challenge_blank_btn = blank
+					code_vbox.add_child(hbox)
+				else:
+					var lbl := Label.new()
+					lbl.text = line if line != "" else " "
+					lbl.add_theme_font_override("font", ThemeDB.fallback_font)
+					lbl.add_theme_font_size_override("font_size", _fs(0.034, 16.0, 18.0))
+					lbl.add_theme_color_override("font_color", Color("#FFFFFF"))
+					lbl.horizontal_alignment = HORIZONTAL_ALIGNMENT_LEFT
+					code_vbox.add_child(lbl)
+			# Build choice chips only for Easy
+			for ch in _challenge_choices_row.get_children():
+				ch.queue_free()
+			_challenge_choices_row.visible = (_exercise_difficulty == "easy")
+			if _exercise_difficulty == "easy":
+				for choice in c.choices:
+					var chip := Button.new()
+					chip.text = choice
+					chip.custom_minimum_size = Vector2(70, 32)
+					var cs := StyleBoxFlat.new()
+					cs.bg_color = Color("#0D1A33")
+					cs.border_color = Color("#4A7FA5")
+					cs.border_width_left = 1
+					cs.border_width_right = 1
+					cs.border_width_top = 1
+					cs.border_width_bottom = 1
+					cs.corner_radius_top_left = 6
+					cs.corner_radius_top_right = 6
+					cs.corner_radius_bottom_left = 6
+					cs.corner_radius_bottom_right = 6
+					chip.add_theme_stylebox_override("normal", cs)
+					chip.add_theme_color_override("font_color", Color("#A0B8D0"))
+					chip.add_theme_font_size_override("font_size", _fs(0.032, 14.0, 16.0))
+					chip.pressed.connect(_on_choice_selected.bind(choice, chip))
+					chip.button_down.connect(_on_chip_drag_start.bind(choice))
+					chip.button_up.connect(_on_chip_drag_end)
+					chip.mouse_filter = Control.MOUSE_FILTER_PASS
+					_challenge_choices_row.add_child(chip)
+	elif is_level1_choice:
+		# Other levels — respect difficulty too
+		if _exercise_difficulty == "hard":
+			_challenge_is_choice = false
+			_challenge_code_edit.visible = true
+			_challenge_choice_box.visible = false
+			_challenge_code_edit.editable = true
+			_challenge_code_edit.text = c.code_template
+		else:
+			_challenge_is_choice = true
+			_challenge_code_edit.visible = false
+			_challenge_choice_box.visible = true
+			_challenge_selected_choice = ""
+			_medium_blank_edits.clear()
+			var code_panel2 = _challenge_choice_box.get_child(0)
+			for ch in code_panel2.get_children():
+				ch.queue_free()
+			_challenge_blank_btns.clear()
+			_challenge_blank_btn = null
+			var code_vbox2 := VBoxContainer.new()
+			code_vbox2.add_theme_constant_override("separation", 4)
+			code_vbox2.alignment = BoxContainer.ALIGNMENT_BEGIN
+			code_panel2.add_child(code_vbox2)
+			var lines2 = c.code_template.split("\n")
+			for line in lines2:
+				if "___" in line:
+					var parts = line.split("___")
+					var hbox := HBoxContainer.new()
+					hbox.alignment = BoxContainer.ALIGNMENT_BEGIN
+					hbox.add_theme_constant_override("separation", 0)
+					for pi in range(parts.size()):
+						if parts[pi] != "":
+							var pre := Label.new()
+							pre.text = parts[pi]
+							pre.add_theme_font_override("font", ThemeDB.fallback_font)
+							pre.add_theme_font_size_override("font_size", _fs(0.034, 16.0, 18.0))
+							pre.add_theme_color_override("font_color", Color("#FFFFFF"))
+							hbox.add_child(pre)
+						if pi < parts.size() - 1:
+							if _exercise_difficulty == "medium":
+								var edit := LineEdit.new()
+								edit.custom_minimum_size = Vector2(72, 22)
+								edit.placeholder_text = "?"
+								edit.alignment = HORIZONTAL_ALIGNMENT_CENTER
+								edit.add_theme_font_size_override("font_size", 13)
+								var es := StyleBoxFlat.new()
+								es.bg_color = Color("#1A2A4A")
+								es.border_color = Color("#FFB800")
+								es.border_width_left = 1
+								es.border_width_right = 1
+								es.border_width_top = 1
+								es.border_width_bottom = 1
+								es.corner_radius_top_left = 4
+								es.corner_radius_top_right = 4
+								es.corner_radius_bottom_left = 4
+								es.corner_radius_bottom_right = 4
+								edit.add_theme_stylebox_override("normal", es)
+								hbox.add_child(edit)
+								_medium_blank_edits.append(edit)
+							else:
+								var blank := Button.new()
+								blank.text = "   "
+								blank.custom_minimum_size = Vector2(56, 22)
+								var blank_style := StyleBoxFlat.new()
+								blank_style.bg_color = Color("#1A2A4A")
+								blank_style.border_color = Color("#00D4FF")
+								blank_style.border_width_left = 1
+								blank_style.border_width_right = 1
+								blank_style.border_width_top = 1
+								blank_style.border_width_bottom = 1
+								blank_style.corner_radius_top_left = 4
+								blank_style.corner_radius_top_right = 4
+								blank_style.corner_radius_bottom_left = 4
+								blank_style.corner_radius_bottom_right = 4
+								blank.add_theme_stylebox_override("normal", blank_style)
+								blank.add_theme_color_override("font_color", Color("#FFFFFF"))
+								blank.add_theme_font_size_override("font_size", _fs(0.034, 14.0, 16.0))
+								blank.pressed.connect(_on_blank_pressed.bind(blank))
+								hbox.add_child(blank)
+								_challenge_blank_btns.append(blank)
+								if _challenge_blank_btn == null:
+									_challenge_blank_btn = blank
+					code_vbox2.add_child(hbox)
+				else:
+					var lbl := Label.new()
+					lbl.text = line if line != "" else " "
+					lbl.add_theme_font_override("font", ThemeDB.fallback_font)
+					lbl.add_theme_font_size_override("font_size", _fs(0.034, 16.0, 18.0))
+					lbl.add_theme_color_override("font_color", Color("#FFFFFF"))
+					lbl.horizontal_alignment = HORIZONTAL_ALIGNMENT_LEFT
+					code_vbox2.add_child(lbl)
+			for ch in _challenge_choices_row.get_children():
+				ch.queue_free()
+			_challenge_choices_row.visible = (_exercise_difficulty == "easy")
+			if _exercise_difficulty == "easy":
+				for choice in c.choices:
+					var chip := Button.new()
+					chip.text = choice
+					chip.custom_minimum_size = Vector2(70, 32)
+					var cs := StyleBoxFlat.new()
+					cs.bg_color = Color("#0D1A33")
+					cs.border_color = Color("#4A7FA5")
+					cs.border_width_left = 1
+					cs.border_width_right = 1
+					cs.border_width_top = 1
+					cs.border_width_bottom = 1
+					cs.corner_radius_top_left = 6
+					cs.corner_radius_top_right = 6
+					cs.corner_radius_bottom_left = 6
+					cs.corner_radius_bottom_right = 6
+					chip.add_theme_stylebox_override("normal", cs)
+					chip.add_theme_color_override("font_color", Color("#A0B8D0"))
+					chip.add_theme_font_size_override("font_size", _fs(0.032, 14.0, 16.0))
+					chip.pressed.connect(_on_choice_selected.bind(choice, chip))
+					chip.button_down.connect(_on_chip_drag_start.bind(choice))
+					chip.button_up.connect(_on_chip_drag_end)
+					chip.mouse_filter = Control.MOUSE_FILTER_PASS
+					_challenge_choices_row.add_child(chip)
+	else:
+		_challenge_is_choice = false
+		_challenge_code_edit.visible = true
+		_challenge_choice_box.visible = false
+		_challenge_code_edit.text = c.code_template
 	micro_panel.visible = true
-	micro_panel.process_mode = Node.PROCESS_MODE_WHEN_PAUSED
-	get_tree().paused = true
+	micro_panel.process_mode = Node.PROCESS_MODE_ALWAYS
+
+func _get_filled_code() -> String:
+	var c = _get_active_challenges()[_challenge_index]
+	var code = c.code_template
+	if level_number == 1 and _exercise_difficulty == "medium" and _medium_blank_edits.size() > 0:
+		for e in _medium_blank_edits:
+			var v = e.text.strip_edges()
+			if v == "":
+				v = "___"
+			code = code.replace("___", v)
+	elif _challenge_blank_btns.size() > 0:
+		for b in _challenge_blank_btns:
+			var v = b.text.strip_edges() if b.text.strip_edges() != "" else "___"
+			if v == "":
+				v = "___"
+			code = code.replace("___", v)
+	elif _challenge_selected_choice != "":
+		code = code.replace("___", _challenge_selected_choice)
+	return code
+
+func _are_blanks_filled() -> bool:
+	if level_number == 1 and _exercise_difficulty == "medium" and _medium_blank_edits.size() > 0:
+		for e in _medium_blank_edits:
+			if e.text.strip_edges() == "":
+				return false
+		return true
+	if _challenge_blank_btns.size() > 0:
+		for b in _challenge_blank_btns:
+			if b.text.strip_edges() == "" or b.text == "   ":
+				return false
+		return true
+	return _challenge_selected_choice != ""
+
+func _on_blank_pressed(blank: Button) -> void:
+	# Click a filled blank to clear it (tap to remove)
+	if blank.text.strip_edges() != "" and blank.text != "   ":
+		blank.text = "   "
+		var blank_style := StyleBoxFlat.new()
+		blank_style.bg_color = Color("#1A2A4A")
+		blank_style.border_color = Color("#00D4FF")
+		blank_style.border_width_left = 1
+		blank_style.border_width_right = 1
+		blank_style.border_width_top = 1
+		blank_style.border_width_bottom = 1
+		blank_style.corner_radius_top_left = 4
+		blank_style.corner_radius_top_right = 4
+		blank_style.corner_radius_bottom_left = 4
+		blank_style.corner_radius_bottom_right = 4
+		blank.add_theme_stylebox_override("normal", blank_style)
+		_challenge_selected_choice = ""
+		return
+
+func _on_chip_drag_start(choice: String) -> void:
+	_challenge_dragging_choice = choice
+	if is_instance_valid(_challenge_drag_preview):
+		_challenge_drag_preview.queue_free()
+	_challenge_drag_preview = Label.new()
+	_challenge_drag_preview.text = choice
+	_challenge_drag_preview.add_theme_font_size_override("font_size", 14)
+	_challenge_drag_preview.add_theme_color_override("font_color", Color("#FFFFFF"))
+	var s := StyleBoxFlat.new()
+	s.bg_color = Color("#00D4FF", 0.9)
+	s.corner_radius_top_left = 6
+	s.corner_radius_top_right = 6
+	s.corner_radius_bottom_left = 6
+	s.corner_radius_bottom_right = 6
+	s.content_margin_left = 8
+	s.content_margin_right = 8
+	s.content_margin_top = 4
+	s.content_margin_bottom = 4
+	_challenge_drag_preview.add_theme_stylebox_override("normal", s)
+	_challenge_drag_preview.z_index = 100
+	_challenge_drag_preview.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	$HUD/HUDControl.add_child(_challenge_drag_preview)
+
+func _on_chip_drag_end() -> void:
+	if _challenge_dragging_choice == "":
+		return
+	var mouse_pos = get_viewport().get_mouse_position()
+	# Drop onto any blank under mouse
+	var dropped := false
+	for b in _challenge_blank_btns:
+		if b.get_global_rect().has_point(mouse_pos):
+			b.text = _challenge_dragging_choice
+			var filled_style := StyleBoxFlat.new()
+			filled_style.bg_color = Color("#00D4FF", 0.25)
+			filled_style.border_color = Color("#00FF88")
+			filled_style.border_width_left = 1
+			filled_style.border_width_right = 1
+			filled_style.border_width_top = 1
+			filled_style.border_width_bottom = 1
+			filled_style.corner_radius_top_left = 4
+			filled_style.corner_radius_top_right = 4
+			filled_style.corner_radius_bottom_left = 4
+			filled_style.corner_radius_bottom_right = 4
+			b.add_theme_stylebox_override("normal", filled_style)
+			dropped = true
+			break
+	if not dropped:
+		# No blank hit — fallback: fill next empty blank (tap behavior)
+		_on_choice_selected(_challenge_dragging_choice, null)
+	_challenge_dragging_choice = ""
+	if is_instance_valid(_challenge_drag_preview):
+		_challenge_drag_preview.queue_free()
+		_challenge_drag_preview = null
+
+func _on_choice_selected(choice: String, btn: Button) -> void:
+	# Fill next empty blank (supports 1 or 2+ blanks)
+	var target: Button = null
+	for b in _challenge_blank_btns:
+		if b.text.strip_edges() == "" or b.text == "   ":
+			target = b
+			break
+	if target == null and is_instance_valid(_challenge_blank_btn):
+		target = _challenge_blank_btn
+	if target == null:
+		return
+	target.text = choice
+	var filled_style := StyleBoxFlat.new()
+	filled_style.bg_color = Color("#00D4FF", 0.25)
+	filled_style.border_color = Color("#00FF88")
+	filled_style.border_width_left = 1
+	filled_style.border_width_right = 1
+	filled_style.border_width_top = 1
+	filled_style.border_width_bottom = 1
+	filled_style.corner_radius_top_left = 4
+	filled_style.corner_radius_top_right = 4
+	filled_style.corner_radius_bottom_left = 4
+	filled_style.corner_radius_bottom_right = 4
+	target.add_theme_stylebox_override("normal", filled_style)
+	_challenge_selected_choice = choice
+	# Highlight selected chip if provided
+	if btn != null:
+		for c in _challenge_choices_row.get_children():
+			if c is Button:
+				var sel = (c == btn)
+				var cs2 := StyleBoxFlat.new()
+				cs2.bg_color = Color("#00D4FF", 0.25) if sel else Color("#0D1A33")
+				cs2.border_color = Color("#00D4FF") if sel else Color("#4A7FA5")
+				cs2.border_width_left = 1
+				cs2.border_width_right = 1
+				cs2.border_width_top = 1
+				cs2.border_width_bottom = 1
+				cs2.corner_radius_top_left = 6
+				cs2.corner_radius_top_right = 6
+				cs2.corner_radius_bottom_left = 6
+				cs2.corner_radius_bottom_right = 6
+				c.add_theme_stylebox_override("normal", cs2)
+				c.add_theme_color_override("font_color", Color("#FFFFFF") if sel else Color("#A0B8D0"))
 
 func _hide_challenge() -> void:
 	micro_panel.visible = false
-	get_tree().paused = false
+	# Do not unpause — gameplay was never paused (exercise is non-blocking)
 
 func _on_challenge_run() -> void:
-	var code = _challenge_code_edit.text
+	var code: String
+	if _challenge_is_choice:
+		if not _are_blanks_filled():
+			_challenge_output.text = "Fill all blanks! Tap a pill then tap a blank — or drag it in."
+			_challenge_output.add_theme_color_override("font_color", Color("#FFB800"))
+			return
+		code = _get_filled_code()
+	else:
+		code = _challenge_code_edit.text
 	_challenge_output.text = "Running..."
 	var result = PythonTranspiler.run_code(code)
 	if result.success:
@@ -1962,16 +2890,28 @@ func _on_challenge_run() -> void:
 func _on_challenge_submit() -> void:
 	if _challenge_progress > _challenge_index:
 		return
-	var challenges = CHALLENGES.get(level_number)
+	var challenges = _get_active_challenges()
 	if not challenges or _challenge_index >= challenges.size():
 		return
 	var c = challenges[_challenge_index]
-	var code = _challenge_code_edit.text
+	var code: String
+	if _challenge_is_choice:
+		if not _are_blanks_filled():
+			_challenge_output.text = "Fill all blanks first!"
+			_challenge_output.add_theme_color_override("font_color", Color("#FFB800"))
+			return
+		code = _get_filled_code()
+	else:
+		code = _challenge_code_edit.text
 	var result = PythonTranspiler.run_code(code)
 	var expected = c.expected_output.strip_edges(false, true)
 	var reward = 0
 	if result.success and result.output == expected:
 		reward = c.bonus_ram
+		if _exercise_difficulty == "medium":
+			reward = int(reward * 1.5)
+		elif _exercise_difficulty == "hard":
+			reward = int(reward * 2.5)
 		ram_manager.earn(reward)
 		_update_ram_label()
 		_sound_ok.play()
@@ -1997,7 +2937,8 @@ func _on_challenge_skip() -> void:
 	_advance_challenge.call_deferred()
 
 func _advance_challenge() -> void:
-	if _challenge_progress >= 3:
+	var total = _get_active_challenges().size()
+	if _challenge_progress >= total:
 		_challenge_result.text = "All challenges complete!"
 		await get_tree().create_timer(1.0).timeout
 		if is_instance_valid(micro_panel):
