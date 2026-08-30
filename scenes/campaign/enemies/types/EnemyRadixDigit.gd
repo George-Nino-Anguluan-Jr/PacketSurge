@@ -12,9 +12,6 @@ func _init_type_state() -> void:
 	var seg_hp = max_health / 3.0
 	type_data["segment_hp"] = [seg_hp, seg_hp, seg_hp]
 	type_data["segment_max"] = [seg_hp, seg_hp, seg_hp]
-	# Vulnerable to Radix tower (radix sort buckets by digit place)
-	type_data["tower_multipliers"] = {"tower_radix": 2.0}
-	type_data["default_tower_mult"] = 0.6
 
 func take_damage(amount: float, source: String = "") -> void:
 	if is_dead:

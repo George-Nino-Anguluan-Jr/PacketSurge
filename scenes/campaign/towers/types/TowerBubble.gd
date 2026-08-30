@@ -1,6 +1,8 @@
 # TowerBubble.gd
 # Bubble Tower — bubble sort swap pass. Fires pulse orbs at two adjacent
 # enemies; on impact the targets SWAP places along the path (a bubble pass).
+# REDESIGN: Iridescent bubble lab — rounded capsule base with rising bubble
+# chambers, swap-loop turret. 3D isometric intact, mechanic = pair swap.
 
 extends TowerBase
 
@@ -14,8 +16,6 @@ func _perform_attack() -> void:
 	SoundManager.play_tower_attack(tower_id)
 	_recoil = 1.0
 	_flash_targets.clear()
-
-	# Bubble sort: pick the two "adjacent" elements (by path progress) and swap.
 	var sorted = _get_enemies_sorted_by_progress()
 	if sorted.size() >= 2:
 		var a: Node = sorted[0]
@@ -45,14 +45,51 @@ func _get_upgrade_stats(level: int) -> Dictionary:
 	return {"damage": 1.25, "speed": 1.0, "range": 1.2}
 
 func _draw_base_geometry(color: Color, height: float) -> void:
-	_draw_3d_box(Vector2(0, 0), Vector2(18, 18), height, Color("#101721"), color, 1.8)
+	# Bubble base: rounded platform with swap arrows and bubble indicators
+	var is_shadow = color.a < 0.5
+	var base_col = Color("#0D1C2E") if not is_shadow else Color("#0D131A")
+	_draw_3d_box(Vector2(0, 0), Vector2(19, 16), height, base_col, color, 1.5)
+	if not is_shadow:
+		# Swap-loop glyph — two curved arrows forming a loop (centered)
+		draw_arc(Vector2(-3, 0), 5.0, -PI * 0.7, PI * 0.75, 14, Color(color, 0.35), 0.9)
+		draw_arc(Vector2(3, 0), 5.0, PI * 0.3, PI * 1.75, 14, Color(color, 0.35), 0.9)
+		# Arrowheads
+		draw_line(Vector2(-6.5, -3.0), Vector2(-3.0, -4.8), Color(color, 0.5), 0.9)
+		draw_line(Vector2(-6.5, -3.0), Vector2(-7.5, 0), Color(color, 0.5), 0.9)
+		draw_line(Vector2(6.5, 3.0), Vector2(3.0, 4.8), Color(color, 0.5), 0.9)
+		draw_line(Vector2(6.5, 3.0), Vector2(7.5, 0), Color(color, 0.5), 0.9)
+		# 4 bubble indicators along bottom — circles with bubbles inside
+		for i in range(4):
+			var bx = -9 + i * 6.0
+			draw_circle(Vector2(bx, 7.0 * SQUASH), 2.0, Color(color, 0.15))
+			draw_circle(Vector2(bx, 7.0 * SQUASH), 2.0, Color(color, 0.3), false, 0.7)
+			# Small bubble inside
+			draw_circle(Vector2(bx, 7.0 * SQUASH), 0.8, Color(color, 0.4))
+	# Slab outline
+	draw_polyline(PackedVector2Array([
+		Vector2(-19, -16 * SQUASH), Vector2(19, -16 * SQUASH),
+		Vector2(19, 16 * SQUASH), Vector2(-19, 16 * SQUASH),
+		Vector2(-19, -16 * SQUASH)
+	]), color, 1.0 if not is_shadow else 0.8)
 
 func _draw_turret_assembly(color: Color) -> void:
 	var recoil = -_recoil * 4.0
-	_draw_3d_box(Vector2(0, 0), Vector2(24, 3), 4.0, Color("#15202E"), color, 1.2)
-	for i in range(6):
-		var bx = -11 + i * 4.5
-		var bh = 3.0 + i * 2.0
-		_draw_3d_cylinder(Vector2(bx + recoil, -bh/2 - 1), 1.8, bh, Color("#1C2C3D"), Color(color, 0.3 + i * 0.1), 1.0)
-		draw_circle(Vector2(bx + recoil + bh, (-bh/2 - 1) * SQUASH), 1.0, Color.BLACK)
-	_draw_3d_box(Vector2(0, -10), Vector2(14, 2), 2.0, Color("#203040"), Color(color, 0.5), 1.0)
+	var t = _anim_time
+	# Turret housing
+	_draw_3d_box(Vector2(0, 0), Vector2(18, 3.0), 4.0, Color("#0F1F33"), color, 1.1)
+	# 3 bubble chambers — cylinders that bob gently
+	for i in range(3):
+		var bx = -5 + i * 5.0
+		var bob = sin(t * 2.0 + i * 0.9) * 0.3
+		var bh = 4.0 + i * 1.0
+		_draw_3d_cylinder(Vector2(bx + recoil, -bh * 0.4 - 1.0 + bob), 1.5, bh, Color("#12233A"), Color(color, 0.25 + i * 0.1), 0.9)
+		# Bubble dome highlight
+		var top = Vector2(bx + recoil, (-bh * 0.4 - 1.0 + bob) - bh * 0.5 * SQUASH)
+		draw_circle(top, 0.9, Color(1, 1, 1, 0.45))
+	# Emitter nozzle
+	_draw_3d_cylinder(Vector2(8 + recoil, 0), 1.8, 6.0, Color("#1A2E4A"), color, 1.0)
+	var muzz = Vector2(14.0 + recoil, 0)
+	draw_circle(muzz, 1.5, Color.BLACK)
+	draw_circle(muzz, 0.6, Color(color, 0.9))
+	if _recoil > 0.3:
+		draw_circle(muzz, 2.5, Color(color, 0.2))

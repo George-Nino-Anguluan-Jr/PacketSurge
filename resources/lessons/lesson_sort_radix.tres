@@ -1,4 +1,4 @@
-[gd_resource type="Resource" script_class="LessonData" format=3 uid="uid://dd6ghqysj336w"]
+﻿[gd_resource type="Resource" script_class="LessonData" format=3 uid="uid://dd6ghqysj336w"]
 
 [ext_resource type="Script" uid="uid://ciet8k3fqk8tr" path="res://scripts/data/LessonData.gd" id="1_3d2s1"]
 [ext_resource type="PackedScene" path="res://scenes/academy/visualizations/VizRadixSort.tscn" id="2_rd84h"]
@@ -12,7 +12,7 @@ unlocks_tower = "tower_radix"
 unlocks_level = 11
 title = "Radix Sort"
 category = "data_structures"
-icon_text = "0→9"
+icon_text = "0->9"
 prerequisites = Array[String](["sort_counting"])
 visualization_scene = ExtResource("2_rd84h")
 concept_text = "Radix Sort sorts numbers DIGIT BY DIGIT, starting from the LEAST significant digit (the ones place). For each digit position, it uses Counting Sort as a helper to group numbers by that digit.
@@ -21,57 +21,57 @@ The trick: after sorting by the ones digit, then sorting by the tens digit, the 
 
 Imagine sorting [170, 45, 75, 90, 2, 24]:
 
-PASS 1 — Sort by ONES digit (rightmost):
-- 170 → 0
-- 45 → 5
-- 75 → 5
-- 90 → 0
-- 2 → 2
-- 24 → 4
+PASS 1 - Sort by ONES digit (rightmost):
+- 170 -> 0
+- 45 -> 5
+- 75 -> 5
+- 90 -> 0
+- 2 -> 2
+- 24 -> 4
 
 Group by ones digit: 0s first, then 2, 4, 5s
 Result: [170, 90, 2, 24, 45, 75]
 
-PASS 2 — Sort by TENS digit (second from right):
-- 2 → 0
-- 24 → 2
-- 45 → 4
-- 75 → 7
-- 170 → 7
-- 90 → 9
+PASS 2 - Sort by TENS digit (second from right):
+- 2 -> 0
+- 24 -> 2
+- 45 -> 4
+- 75 -> 7
+- 170 -> 7
+- 90 -> 9
 
 Group by tens digit: 0s, 2s, 4s, 7s, 9s
 Result: [2, 24, 45, 75, 170, 90]
 
-PASS 3 — Sort by HUNDREDS digit:
-- 2 → 0
-- 24 → 0
-- 45 → 0
-- 75 → 0
-- 90 → 0
-- 170 → 1
+PASS 3 - Sort by HUNDREDS digit:
+- 2 -> 0
+- 24 -> 0
+- 45 -> 0
+- 75 -> 0
+- 90 -> 0
+- 170 -> 1
 
 Group: 0s first, then 1s
-Result: [2, 24, 45, 75, 90, 170] — SORTED!
+Result: [2, 24, 45, 75, 90, 170] - SORTED!
 
 Performance:
 - Time: O(d × n) where d is the number of digits
-- Space: O(n + k) — needs the count array for each pass
+- Space: O(n + k) - needs the count array for each pass
 - STABLE (because we use Counting Sort as a subroutine)
 - FAST for integers with limited digit count
 - Great for: phone numbers, IDs, IP addresses, fixed-width integers
 - Slower than comparison sorts for very large numbers with many digits
 - Used in: old card-sorting machines (the original inspiration), some database systems"
 
-real_world_example = "Imagine you work at a post office sorting millions of letters by ZIP code. Each ZIP code is 5 digits (00000 to 99999). You can't compare 5-digit numbers one by one for millions of letters — too slow.
+real_world_example = "Imagine you work at a post office sorting millions of letters by ZIP code. Each ZIP code is 5 digits (00000 to 99999). You can't compare 5-digit numbers one by one for millions of letters - too slow.
 
 Instead, you do it in 5 passes:
 
-Pass 1 — Sort by the LAST digit (ones place). Put all letters ending in 0 in one pile, all ending in 1 in another, etc. (10 piles total.) The letters are now grouped by ones digit.
+Pass 1 - Sort by the LAST digit (ones place). Put all letters ending in 0 in one pile, all ending in 1 in another, etc. (10 piles total.) The letters are now grouped by ones digit.
 
-Pass 2 — Within each pile from pass 1, sort by the SECOND-TO-LAST digit (tens place). You regroup the letters into 10 new piles based on tens digit. The key: you preserve the order from pass 1 within each new pile (that's why we need a STABLE sort — letters with the same tens digit keep their order from pass 1, which was by ones digit).
+Pass 2 - Within each pile from pass 1, sort by the SECOND-TO-LAST digit (tens place). You regroup the letters into 10 new piles based on tens digit. The key: you preserve the order from pass 1 within each new pile (that's why we need a STABLE sort - letters with the same tens digit keep their order from pass 1, which was by ones digit).
 
-Pass 3, 4, 5 — Same thing for hundreds, thousands, ten-thousands digits.
+Pass 3, 4, 5 - Same thing for hundreds, thousands, ten-thousands digits.
 
 After 5 passes, the letters are perfectly sorted by ZIP code. Each pass is O(n) (we touched each letter once), and we do d passes (d = 5 digits). Total: O(d × n).
 
@@ -79,21 +79,21 @@ For 1 million letters: 5 × 1 million = 5 million operations. Compare to Quick S
 
 Another example: sorting student IDs. IDs are 9 digits (e.g. 100123456). You do 9 passes, one per digit. Each pass uses Counting Sort on that one digit.
 
-A third example: the original card-sorting machines from the early 1900s. They had 10 bins (one per digit) and could sort 1000 cards per minute using exactly this algorithm. That's where the name comes from — \"radix\" means \"root\" or \"base\" (the base of the number system, like base 10).
+A third example: the original card-sorting machines from the early 1900s. They had 10 bins (one per digit) and could sort 1000 cards per minute using exactly this algorithm. That's where the name comes from - \"radix\" means \"root\" or \"base\" (the base of the number system, like base 10).
 
 Why use Radix Sort? When you have MANY INTEGERS with a FIXED number of digits (like phone numbers, IDs, ZIP codes), Radix Sort can be faster than Quick Sort. The trade-off is you need O(n) extra memory."
 
 guided_example = "Let's trace Radix Sort on [170, 45, 75, 90, 2, 24], one pass at a time.
 
-PASS 1 — Sort by ONES digit (the rightmost digit).
+PASS 1 - Sort by ONES digit (the rightmost digit).
 
 Look at each number's ones digit:
-- 170 → ones = 0
-- 45  → ones = 5
-- 75  → ones = 5
-- 90  → ones = 0
-- 2   → ones = 2
-- 24  → ones = 4
+- 170 -> ones = 0
+- 45  -> ones = 5
+- 75  -> ones = 5
+- 90  -> ones = 0
+- 2   -> ones = 2
+- 24  -> ones = 4
 
 Group by ones digit (we use buckets 0-9):
 - Bucket 0: [170, 90]
@@ -104,15 +104,15 @@ Group by ones digit (we use buckets 0-9):
 Collect back, in bucket order (0, 1, 2, ..., 9):
 Result: [170, 90, 2, 24, 45, 75]
 
-PASS 2 — Sort by TENS digit (the second-from-right digit).
+PASS 2 - Sort by TENS digit (the second-from-right digit).
 
 Look at each number's tens digit (we use the array from pass 1):
-- 2   → tens = 0
-- 24  → tens = 2
-- 45  → tens = 4
-- 75  → tens = 7
-- 170 → tens = 7
-- 90  → tens = 9
+- 2   -> tens = 0
+- 24  -> tens = 2
+- 45  -> tens = 4
+- 75  -> tens = 7
+- 170 -> tens = 7
+- 90  -> tens = 9
 
 Group by tens digit:
 - Bucket 0: [2]
@@ -124,15 +124,15 @@ Group by tens digit:
 Collect back, in bucket order:
 Result: [2, 24, 45, 75, 170, 90]
 
-PASS 3 — Sort by HUNDREDS digit (the leftmost digit).
+PASS 3 - Sort by HUNDREDS digit (the leftmost digit).
 
 Look at each number's hundreds digit:
-- 2   → hundreds = 0
-- 24  → hundreds = 0
-- 45  → hundreds = 0
-- 75  → hundreds = 0
-- 90  → hundreds = 0
-- 170 → hundreds = 1
+- 2   -> hundreds = 0
+- 24  -> hundreds = 0
+- 45  -> hundreds = 0
+- 75  -> hundreds = 0
+- 90  -> hundreds = 0
+- 170 -> hundreds = 1
 
 Group by hundreds digit:
 - Bucket 0: [2, 24, 45, 75, 90]
@@ -148,14 +148,14 @@ Notice: each pass used Counting Sort (with 10 buckets, one per digit). The trick
 recap_text = "- Radix Sort sorts numbers digit by digit, starting from the LEAST significant
 - Uses Counting Sort (with 10 buckets) as a subroutine for each digit
 - Number of passes = number of digits (d)
-- Time: O(d × n) — fast for fixed-width integers
-- Space: O(n + k) — needs extra memory
-- STABLE — required for the algorithm to work
+- Time: O(d × n) - fast for fixed-width integers
+- Space: O(n + k) - needs extra memory
+- STABLE - required for the algorithm to work
 - Great for: phone numbers, IDs, ZIP codes, fixed-width integers
 - Original use: 1900s card-sorting machines
 - Each pass preserves the order from the previous pass (within buckets)
 - Slower than comparison sorts for very large numbers
-- Not a comparison sort — completely different approach
+- Not a comparison sort - completely different approach
 - d passes of O(n) work = O(d × n) total"
 
 challenge_instruction = "Drag the blocks to extract each digit of 123 using the modulo and division operators."
@@ -174,6 +174,6 @@ hundreds = num // 100
 print(ones, tens, hundreds)"
 expected_output = "6 5 4"
 practice_question = "Which digit does Radix Sort start sorting from?"
-practice_options = Array[String](["Most significant (leftmost) — the biggest place", "Least significant (rightmost) — the ones place", "The middle digit", "It doesn't matter, any digit works"])
+practice_options = Array[String](["Most significant (leftmost) - the biggest place", "Least significant (rightmost) - the ones place", "The middle digit", "It doesn't matter, any digit works"])
 practice_correct_index = 1
-practice_explanation = "Radix Sort starts from the LEAST significant digit (ones place) and works up to the most significant. This is critical — the order from earlier passes (lower digits) is preserved by later passes (higher digits) because we use a STABLE subroutine. If we started from the leftmost digit, we'd lose the order of lower digits."
+practice_explanation = "Radix Sort starts from the LEAST significant digit (ones place) and works up to the most significant. This is critical - the order from earlier passes (lower digits) is preserved by later passes (higher digits) because we use a STABLE subroutine. If we started from the leftmost digit, we'd lose the order of lower digits."

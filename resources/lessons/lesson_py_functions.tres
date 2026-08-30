@@ -1,4 +1,4 @@
-[gd_resource type="Resource" script_class="LessonData" format=3 uid="uid://cqsek7qtlpavv"]
+﻿[gd_resource type="Resource" script_class="LessonData" format=3 uid="uid://cqsek7qtlpavv"]
 
 [ext_resource type="Script" uid="uid://ciet8k3fqk8tr" path="res://scripts/data/LessonData.gd" id="1_51rxj"]
 [ext_resource type="PackedScene" path="res://scenes/academy/visualizations/VizFunctions.tscn" id="2_384g4"]
@@ -20,7 +20,7 @@ You define a function with def (short for \"define\"):
     def greet(name):
         return \"Hi, \" + name
 
-This creates a function called greet. The name in parentheses (name) is a PARAMETER — it's the input the function will receive.
+This creates a function called greet. The name in parentheses (name) is a PARAMETER - it's the input the function will receive.
 
 The return keyword is how the function sends a result back to whoever called it.
 
@@ -41,7 +41,7 @@ You can have multiple parameters, separated by commas:
 
     print(add(3, 4))    # shows: 7"
 
-real_world_example = "A function is like a recipe. The recipe itself isn't food — it's the INSTRUCTIONS for making food. When you actually want cookies, you \"call\" the recipe with ingredients, and out come cookies.
+real_world_example = "A function is like a recipe. The recipe itself isn't food - it's the INSTRUCTIONS for making food. When you actually want cookies, you \"call\" the recipe with ingredients, and out come cookies.
 
     def make_cookies(flavor):
         return flavor + \" cookies ready!\"
@@ -75,36 +75,36 @@ One more: a calculator function for doubling numbers:
     print(double(4))     # 8
     print(double(10))    # 20
 
-Same function, different inputs, different results. The function doesn't care what number you pass — it always doubles it."
+Same function, different inputs, different results. The function doesn't care what number you pass - it always doubles it."
 
 guided_example = "Let's build a function that doubles a number, one tiny step at a time.
 
-Step 1 — Define the function. This just tells Python: \"here's a function I'm going to use later\".
+Step 1 - Define the function. This just tells Python: \"here's a function I'm going to use later\".
 
     def double(n):
         return n * 2
 
-Read this as: \"define a function called double. It takes one input, which we'll call n. It returns n multiplied by 2.\" Nothing happens yet — the function is defined but not called.
+Read this as: \"define a function called double. It takes one input, which we'll call n. It returns n multiplied by 2.\" Nothing happens yet - the function is defined but not called.
 
-Step 2 — Call it with the number 4.
+Step 2 - Call it with the number 4.
 
     print(double(4))    # shows: 8
 
 When Python sees double(4), it runs the function with n = 4, which returns 4 * 2 = 8. The print() then displays 8.
 
-Step 3 — Call it with a different number.
+Step 3 - Call it with a different number.
 
     print(double(10))   # shows: 20
 
 Same function, n = 10, returns 10 * 2 = 20.
 
-Step 4 — Call it with 0.
+Step 4 - Call it with 0.
 
     print(double(0))    # shows: 0
 
 Yep, 0 * 2 = 0. Works with any number.
 
-Step 5 — Use the result in a calculation.
+Step 5 - Use the result in a calculation.
 
     score = 50
     bonus = double(score)         # bonus = 100
@@ -139,4 +139,4 @@ expected_output = "7"
 practice_question = "What does this print?    def square(x):    return x * x    print(square(5))"
 practice_options = Array[String](["10", "25", "5", "square(5)"])
 practice_correct_index = 1
-practice_explanation = "square(5) means: call the function with x = 5. Inside, return x * x means return 5 * 5 = 25. So print(square(5)) displays 25. The function name is just a label — what gets printed is the return value."
+practice_explanation = "square(5) means: call the function with x = 5. Inside, return x * x means return 5 * 5 = 25. So print(square(5)) displays 25. The function name is just a label - what gets printed is the return value."

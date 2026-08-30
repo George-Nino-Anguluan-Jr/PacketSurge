@@ -1,4 +1,4 @@
-[gd_resource type="Resource" script_class="LevelData" format=3]
+﻿[gd_resource type="Resource" script_class="LevelData" format=3]
 
 [ext_resource type="Script" path="res://scripts/data/LevelData.gd" id="1_s68tb"]
 
@@ -6,9 +6,9 @@
 script = ExtResource("1_s68tb")
 level_number = 11
 level_name = "Radix Rush"
-description = "Radix Sort processes digits one at a time. Your Radix Tower fires rapid multi-pass bursts — hitting every enemy multiple times like sorting digit by digit."
+description = "Radix Sort processes digits one at a time. Your Radix Tower fires rapid multi-pass bursts - hitting every enemy multiple times like sorting digit by digit."
 data_structure = "Radix Sort"
-concept_desc = "Radix Sort processes digits one at a time. Your Radix Tower fires rapid multi-pass bursts — hitting every enemy multiple times like sorting digit by digit."
+concept_desc = "Radix Sort processes digits one at a time. Your Radix Tower fires rapid multi-pass bursts - hitting every enemy multiple times like sorting digit by digit."
 enemy_tip = "Count Meter packets resist damage until their counter fills. Count Tower's rapid hits fill the counter fast!"
 starting_ram = 275
 wave_count = 7

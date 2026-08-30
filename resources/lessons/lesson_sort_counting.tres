@@ -1,4 +1,4 @@
-[gd_resource type="Resource" script_class="LessonData" format=3 uid="uid://c83nfhavopace"]
+﻿[gd_resource type="Resource" script_class="LessonData" format=3 uid="uid://c83nfhavopace"]
 
 [ext_resource type="Script" uid="uid://ciet8k3fqk8tr" path="res://scripts/data/LessonData.gd" id="1_0x24s"]
 [ext_resource type="PackedScene" path="res://scenes/academy/visualizations/VizCountingSort.tscn" id="2_ct84h"]
@@ -15,35 +15,35 @@ category = "data_structures"
 icon_text = "#"
 prerequisites = Array[String](["sort_merge"])
 visualization_scene = ExtResource("2_ct84h")
-concept_text = "Counting Sort is COMPLETELY different from the other sorting algorithms. It doesn't compare elements at all — it just COUNTS how many times each value appears, then uses those counts to rebuild a sorted array.
+concept_text = "Counting Sort is COMPLETELY different from the other sorting algorithms. It doesn't compare elements at all - it just COUNTS how many times each value appears, then uses those counts to rebuild a sorted array.
 
-This is blazing fast — but only works for INTEGERS with a SMALL RANGE (like exam scores 0-100, or ages 0-150).
+This is blazing fast - but only works for INTEGERS with a SMALL RANGE (like exam scores 0-100, or ages 0-150).
 
 Imagine sorting exam scores: [4, 2, 2, 8, 3, 3, 1]
 
-Step 1 — Find the maximum value: max = 8.
+Step 1 - Find the maximum value: max = 8.
 
-Step 2 — Create a count array of size 9 (indices 0 through 8), all zeros:
+Step 2 - Create a count array of size 9 (indices 0 through 8), all zeros:
 [0, 0, 0, 0, 0, 0, 0, 0, 0]
 
-Step 3 — Go through each number and increment the matching slot:
-- 4 → count[4] = 1
-- 2 → count[2] = 1
-- 2 → count[2] = 2
-- 8 → count[8] = 1
-- 3 → count[3] = 1
-- 3 → count[3] = 2
-- 1 → count[1] = 1
+Step 3 - Go through each number and increment the matching slot:
+- 4 -> count[4] = 1
+- 2 -> count[2] = 1
+- 2 -> count[2] = 2
+- 8 -> count[8] = 1
+- 3 -> count[3] = 1
+- 3 -> count[3] = 2
+- 1 -> count[1] = 1
 
 Final counts: [0, 1, 2, 2, 1, 0, 0, 0, 1]
 (read as: 0 appears 0 times, 1 appears 1 time, 2 appears 2 times, 3 appears 2 times, ...)
 
-Step 4 — Build the result by reading the counts in order:
-- 1 appears 1 time → [1]
-- 2 appears 2 times → [1, 2, 2]
-- 3 appears 2 times → [1, 2, 2, 3, 3]
-- 4 appears 1 time → [1, 2, 2, 3, 3, 4]
-- 8 appears 1 time → [1, 2, 2, 3, 3, 4, 8]
+Step 4 - Build the result by reading the counts in order:
+- 1 appears 1 time -> [1]
+- 2 appears 2 times -> [1, 2, 2]
+- 3 appears 2 times -> [1, 2, 2, 3, 3]
+- 4 appears 1 time -> [1, 2, 2, 3, 3, 4]
+- 8 appears 1 time -> [1, 2, 2, 3, 3, 4, 8]
 
 Sorted! No comparisons were ever made.
 
@@ -55,7 +55,7 @@ Performance:
 - Stable if implemented carefully
 - Used in: sorting ages, scores, pixel values, ages in census data, as a building block in Radix Sort"
 
-real_world_example = "Imagine a teacher has 200 exam papers to sort by score (0-100). Instead of comparing each paper to others (slow), the teacher makes 101 stacks — one for each possible score (0, 1, 2, ..., 100). 
+real_world_example = "Imagine a teacher has 200 exam papers to sort by score (0-100). Instead of comparing each paper to others (slow), the teacher makes 101 stacks - one for each possible score (0, 1, 2, ..., 100). 
 
 For each paper, the teacher looks at the score and puts the paper on the corresponding stack. Stack 0 holds papers that scored 0, stack 1 holds papers that scored 1, etc.
 
@@ -76,52 +76,52 @@ A third example: in image processing, each pixel has a value 0-255. To histogram
 
 guided_example = "Let's trace Counting Sort on [4, 2, 2, 8, 3, 3, 1], step by step.
 
-Step 1 — Find the maximum value.
+Step 1 - Find the maximum value.
 
     max_val = 8
 
 We need to know the range. The largest value in our array is 8.
 
-Step 2 — Create a count array of size max_val + 1 (so indices 0 through 8).
+Step 2 - Create a count array of size max_val + 1 (so indices 0 through 8).
 
     count = [0, 0, 0, 0, 0, 0, 0, 0, 0]
 
-Nine zeros — one for each possible value (0 to 8).
+Nine zeros - one for each possible value (0 to 8).
 
-Step 3 — Go through each number in the input and increment its count.
+Step 3 - Go through each number in the input and increment its count.
 
 For each number, do count[number] += 1.
 
-- 4 → count[4] = 1
-- 2 → count[2] = 1
-- 2 → count[2] = 2 (incremented again)
-- 8 → count[8] = 1
-- 3 → count[3] = 1
-- 3 → count[3] = 2 (incremented again)
-- 1 → count[1] = 1
+- 4 -> count[4] = 1
+- 2 -> count[2] = 1
+- 2 -> count[2] = 2 (incremented again)
+- 8 -> count[8] = 1
+- 3 -> count[3] = 1
+- 3 -> count[3] = 2 (incremented again)
+- 1 -> count[1] = 1
 
 Final counts: [0, 1, 2, 2, 1, 0, 0, 0, 1]
 
 Read this as: \"0 appeared 0 times, 1 appeared 1 time, 2 appeared 2 times, 3 appeared 2 times, 4 appeared 1 time, 5-7 appeared 0 times, 8 appeared 1 time.\"
 
-Step 4 — Build the result by reading the counts in order, from 0 to max_val.
+Step 4 - Build the result by reading the counts in order, from 0 to max_val.
 
 For each value v from 0 to max_val:
 - If count[v] > 0, add v to the result that many times.
 
-- 0 appears 0 times → add nothing
-- 1 appears 1 time → result: [1]
-- 2 appears 2 times → result: [1, 2, 2]
-- 3 appears 2 times → result: [1, 2, 2, 3, 3]
-- 4 appears 1 time → result: [1, 2, 2, 3, 3, 4]
-- 5, 6, 7 appear 0 times → add nothing
-- 8 appears 1 time → result: [1, 2, 2, 3, 3, 4, 8]
+- 0 appears 0 times -> add nothing
+- 1 appears 1 time -> result: [1]
+- 2 appears 2 times -> result: [1, 2, 2]
+- 3 appears 2 times -> result: [1, 2, 2, 3, 3]
+- 4 appears 1 time -> result: [1, 2, 2, 3, 3, 4]
+- 5, 6, 7 appear 0 times -> add nothing
+- 8 appears 1 time -> result: [1, 2, 2, 3, 3, 4, 8]
 
 Final: [1, 2, 2, 3, 3, 4, 8]. SORTED!
 
 Notice: no comparisons were made. We just counted and rebuilt. That's the magic of Counting Sort."
 
-recap_text = "- Counting Sort doesn't compare elements — it COUNTS them
+recap_text = "- Counting Sort doesn't compare elements - it COUNTS them
 - Step 1: find the maximum value (to know the range)
 - Step 2: create a count array of size max+1, all zeros
 - Step 3: increment count[value] for each element
@@ -134,7 +134,7 @@ recap_text = "- Counting Sort doesn't compare elements — it COUNTS them
 - Only works for INTEGERS with a small range
 - Used in: sorting exam scores, ages, pixel values, census data
 - Also a building block for Radix Sort
-- Not a comparison sort — completely different approach"
+- Not a comparison sort - completely different approach"
 
 challenge_instruction = "Drag the blocks to count occurrences of each value in [3, 1, 2, 1] and print the count array."
 challenge_blocks = Array[String](["arr = [3, 1, 2, 1]", "count = [0, 0, 0, 0]", "for num in arr:", "    count[num] += 1", "print(count)"])

@@ -8,6 +8,10 @@ var tower_id: String = ""
 @onready var icon_label: Label = $Backdrop/Margin/Panel/Content/Header/IconLabel
 @onready var title_label: Label = $Backdrop/Margin/Panel/Content/Header/TitleLabel
 @onready var tagline_label: Label = $Backdrop/Margin/Panel/Content/Header/TaglineLabel
+@onready var description_label: Label = $Backdrop/Margin/Panel/Content/Header/DescriptionLabel
+@onready var data_structure_badge: Label = $Backdrop/Margin/Panel/Content/ComplexityRow/DataStructureBadge
+@onready var time_complexity_badge: Label = $Backdrop/Margin/Panel/Content/ComplexityRow/TimeComplexityBadge
+@onready var space_complexity_badge: Label = $Backdrop/Margin/Panel/Content/ComplexityRow/SpaceComplexityBadge
 @onready var mechanic_label: Label = $Backdrop/Margin/Panel/Content/Body/BodyContent/MechanicLabel
 @onready var targeting_label: Label = $Backdrop/Margin/Panel/Content/Body/BodyContent/TargetingLabel
 @onready var shooting_label: Label = $Backdrop/Margin/Panel/Content/Body/BodyContent/ShootingLabel
@@ -64,9 +68,22 @@ func show_for(t_id: String) -> void:
 		return
 
 	var def = GameManager.TOWER_DEFINITIONS.get(t_id, {})
+	var tower_res: TowerData = DataRegistry.get_tower(t_id)
 	icon_label.text = def.get("icon_text", "")
 	title_label.text = def.get("tower_name", t_id)
 	tagline_label.text = data.get("tagline", "")
+
+	# TowerData educational fields
+	if tower_res:
+		description_label.text = tower_res.description
+		data_structure_badge.text = "  " + tower_res.data_structure + "  "
+		time_complexity_badge.text = "  Time: " + tower_res.time_complexity + "  "
+		space_complexity_badge.text = "  Space: " + tower_res.space_complexity + "  "
+	else:
+		description_label.text = ""
+		data_structure_badge.text = ""
+		time_complexity_badge.text = ""
+		space_complexity_badge.text = ""
 
 	var col: Color = def.get("color", Color("#00D4FF"))
 	title_label.add_theme_color_override("font_color", col)
@@ -175,6 +192,10 @@ func _apply_responsive_layout() -> void:
 	icon_label.add_theme_font_size_override("font_size", _fs(0.080, 24.0, 36.0))
 	title_label.add_theme_font_size_override("font_size", _fs(0.055, 18.0, 26.0))
 	tagline_label.add_theme_font_size_override("font_size", _fs(0.030, 16.0, 16.0))
+	description_label.add_theme_font_size_override("font_size", _fs(0.025, 14.0, 14.0))
+	data_structure_badge.add_theme_font_size_override("font_size", _fs(0.025, 14.0, 14.0))
+	time_complexity_badge.add_theme_font_size_override("font_size", _fs(0.025, 14.0, 14.0))
+	space_complexity_badge.add_theme_font_size_override("font_size", _fs(0.025, 14.0, 14.0))
 	mechanic_label.add_theme_font_size_override("font_size", _fs(0.030, 16.0, 16.0))
 	targeting_label.add_theme_font_size_override("font_size", _fs(0.030, 16.0, 16.0))
 	shooting_label.add_theme_font_size_override("font_size", _fs(0.030, 16.0, 16.0))

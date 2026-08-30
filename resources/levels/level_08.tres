@@ -1,4 +1,4 @@
-[gd_resource type="Resource" script_class="LevelData" format=3]
+﻿[gd_resource type="Resource" script_class="LevelData" format=3]
 
 [ext_resource type="Script" path="res://scripts/data/LevelData.gd" id="1_75egi"]
 
@@ -6,9 +6,9 @@
 script = ExtResource("1_75egi")
 level_number = 8
 level_name = "Quick Strike"
-description = "Quick Sort divides around a pivot. Your Quick Tower splits its shot — hitting 2 enemies simultaneously like dividing the array into left and right partitions."
+description = "Quick Sort divides around a pivot. Your Quick Tower splits its shot - hitting 2 enemies simultaneously like dividing the array into left and right partitions."
 data_structure = "Quick Sort"
-concept_desc = "Quick Sort divides around a pivot. Your Quick Tower splits its shot — hitting 2 enemies simultaneously like dividing the array into left and right partitions."
+concept_desc = "Quick Sort divides around a pivot. Your Quick Tower splits its shot - hitting 2 enemies simultaneously like dividing the array into left and right partitions."
 enemy_tip = "Insertion Stack packets take extra damage-over-time. Insertion Tower's DoT shreds them! Pivot Splitter boss divides on death."
 starting_ram = 250
 wave_count = 6

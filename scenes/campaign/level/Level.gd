@@ -159,11 +159,85 @@ func _ready() -> void:
 		call_deferred("_show_challenge")
 	_maybe_show_tutorial()
 	GameManager.active_level = self
+	_setup_enemy_tooltip()
 
 func _exit_tree() -> void:
 	GameManager.active_level = null
 	Engine.time_scale = 1.0
 	SoundManager.stop_music()
+
+# ─── ENEMY TOOLTIP ──────────────────────────────────────
+var _enemy_tooltip: Control = null
+
+func _setup_enemy_tooltip() -> void:
+	var TooltipScript = preload("res://scenes/campaign/enemies/EnemyTooltip.gd")
+	_enemy_tooltip = TooltipScript.new()
+	_enemy_tooltip.name = "EnemyTooltip"
+	_enemy_tooltip.z_index = 50
+	_enemy_tooltip.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	$HUD/HUDControl.add_child(_enemy_tooltip)
+	# Connect enemy hover signals when enemies spawn
+	enemy_layer.child_entered_tree.connect(_on_enemy_spawned)
+	# Connect to enemies that will be spawned (deferred to ensure _ready ran)
+	call_deferred("_connect_existing_enemies")
+
+func _connect_existing_enemies() -> void:
+	for child in enemy_layer.get_children():
+		if child is Enemy:
+			_connect_enemy_hover(child)
+
+func _update_enemy_tooltip() -> void:
+	if is_level_ended:
+		if _enemy_tooltip and _enemy_tooltip.visible:
+			_enemy_tooltip.hide_tooltip()
+		return
+	var mouse_screen = get_viewport().get_mouse_position()
+	var closest_enemy: Enemy = null
+	var closest_dist := 40.0
+	for child in enemy_layer.get_children():
+		if child is Enemy and not child.is_dead:
+			var enemy_screen = child.get_global_transform_with_canvas().origin
+			var dist = mouse_screen.distance_to(enemy_screen)
+			if dist < closest_dist:
+				closest_dist = dist
+				closest_enemy = child
+	if closest_enemy and _enemy_tooltip:
+		_enemy_tooltip.show_for_enemy(closest_enemy.enemy_type)
+		var epos = closest_enemy.get_global_transform_with_canvas().origin
+		_enemy_tooltip.global_position = epos + Vector2(20, -80)
+	elif _enemy_tooltip and _enemy_tooltip.visible:
+		_enemy_tooltip.hide_tooltip()
+
+func _on_enemy_spawned(enemy: Node) -> void:
+	if enemy is Enemy:
+		# Use call_deferred to ensure Enemy._ready() has run (HoverArea created)
+		_connect_enemy_hover.call_deferred(enemy)
+
+func _connect_enemy_hover(enemy: Enemy) -> void:
+	var hover_area = enemy.get_node_or_null("HoverArea")
+	if hover_area:
+		hover_area.mouse_entered.connect(_on_enemy_hover.bind(enemy))
+		hover_area.mouse_exited.connect(_on_enemy_unhover.bind(enemy))
+		hover_area.input_event.connect(_on_enemy_input_event.bind(enemy))
+
+func _on_enemy_input_event(_viewport: Node, event: InputEvent, _shape_idx: int, enemy: Enemy) -> void:
+	if event is InputEventMouseMotion and _enemy_tooltip and not enemy.is_dead:
+		_enemy_tooltip.show_for_enemy(enemy.enemy_type)
+		var pos = enemy.get_global_transform_with_canvas().origin
+		_enemy_tooltip.global_position = pos + Vector2(20, -80)
+	elif event is InputEventMouseButton and not event.pressed:
+		if _enemy_tooltip:
+			_enemy_tooltip.hide_tooltip()
+
+func _on_enemy_hover(enemy: Enemy) -> void:
+	if _enemy_tooltip and not enemy.is_dead:
+		_enemy_tooltip.show_for_enemy(enemy.enemy_type)
+		var pos = enemy.get_global_transform_with_canvas().origin
+		_enemy_tooltip.global_position = pos + Vector2(20, -80)
+
+func _on_enemy_unhover(_enemy: Enemy) -> void:
+	if _enemy_tooltip:
+		_enemy_tooltip.hide_tooltip()
 
 # ─── SETUP ─────────────────────────────────────────────
 func _setup_grid() -> void:
@@ -780,6 +854,42 @@ func _show_placement_radial(cell: Vector2i) -> void:
 		price_lbl.size = Vector2(btn_w, 18)
 		price_lbl.mouse_filter = Control.MOUSE_FILTER_IGNORE
 		btn.add_child(price_lbl)
+
+		# Effectiveness indicator — shows if tower counters enemies in this level
+		var tower_res: TowerData = DataRegistry.get_tower(tower_id)
+		if tower_res:
+			var level_enemy_types: Array[String] = []
+			var lvl_cfg = _get_level_config()
+			for et in lvl_cfg.get("enemy_types", []):
+				level_enemy_types.append(str(et))
+			var strong_count := 0
+			for et in level_enemy_types:
+				if et in tower_res.strong_against:
+					strong_count += 1
+			if strong_count > 0:
+				var eff_lbl := Label.new()
+				eff_lbl.text = "2.0x"
+				eff_lbl.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+				eff_lbl.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
+				eff_lbl.add_theme_font_size_override("font_size", 9)
+				eff_lbl.add_theme_color_override("font_color", Color("#00FF88"))
+				eff_lbl.position = Vector2(btn_w - 28, 2)
+				eff_lbl.custom_minimum_size = Vector2(26, 14)
+				eff_lbl.size = Vector2(26, 14)
+				eff_lbl.mouse_filter = Control.MOUSE_FILTER_IGNORE
+				var eff_bg := StyleBoxFlat.new()
+				eff_bg.bg_color = Color("#00FF88", 0.15)
+				eff_bg.border_color = Color("#00FF88", 0.6)
+				eff_bg.border_width_left = 1
+				eff_bg.border_width_right = 1
+				eff_bg.border_width_top = 1
+				eff_bg.border_width_bottom = 1
+				eff_bg.corner_radius_top_left = 3
+				eff_bg.corner_radius_top_right = 3
+				eff_bg.corner_radius_bottom_left = 3
+				eff_bg.corner_radius_bottom_right = 3
+				eff_lbl.add_theme_stylebox_override("normal", eff_bg)
+				btn.add_child(eff_lbl)
 		
 		# Connect trigger action
 		btn.pressed.connect(_on_overlay_tower_selected.bind(tower_id))
@@ -855,6 +965,7 @@ func _on_tower_selected(tower_id: String) -> void:
 
 # ─── PROCESS ───────────────────────────────────────────
 func _process(delta: float) -> void:
+	_update_enemy_tooltip()
 	if _tutorial_active:
 		_update_wave_progress_bar()
 		return

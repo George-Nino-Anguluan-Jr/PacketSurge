@@ -1,4 +1,4 @@
-[gd_resource type="Resource" script_class="LevelData" format=3]
+﻿[gd_resource type="Resource" script_class="LevelData" format=3]
 
 [ext_resource type="Script" path="res://scripts/data/LevelData.gd" id="1_5eu8s"]
 
@@ -6,9 +6,9 @@
 script = ExtResource("1_5eu8s")
 level_number = 5
 level_name = "Bubble Protocol"
-description = "Bubble Sort compares adjacent elements repeatedly — O(n²). Your Bubble Tower hits ALL enemies in range simultaneously, like comparing every pair."
+description = "Bubble Sort compares adjacent elements repeatedly - O(n²). Your Bubble Tower hits ALL enemies in range simultaneously, like comparing every pair."
 data_structure = "Bubble Sort"
-concept_desc = "Bubble Sort compares adjacent elements repeatedly — O(n²). Your Bubble Tower hits ALL enemies in range simultaneously, like comparing every pair."
+concept_desc = "Bubble Sort compares adjacent elements repeatedly - O(n²). Your Bubble Tower hits ALL enemies in range simultaneously, like comparing every pair."
 enemy_tip = "Linked Drain packets share damage with a partner. Hash Tower's random bursts can catch both quickly!"
 starting_ram = 225
 wave_count = 5

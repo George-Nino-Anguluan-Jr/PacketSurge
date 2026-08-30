@@ -560,6 +560,21 @@ func _make_enemy_preview_cell(enemy_id: String, tint: Color, intro: Dictionary) 
 	lbl.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 	cell.add_child(lbl)
 
+	# Tower counter info — shows which towers deal 2.0x damage
+	var counters: Array[String] = []
+	for tower_id in DataRegistry.towers:
+		var td: TowerData = DataRegistry.towers[tower_id]
+		if enemy_id in td.strong_against:
+			counters.append(td.tower_name.replace(" Tower", ""))
+	if counters.size() > 0:
+		var counter_lbl := Label.new()
+		counter_lbl.text = "2.0x: " + ", ".join(counters)
+		counter_lbl.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+		counter_lbl.add_theme_font_size_override("font_size", _fs(0.022, 11.0, 13.0))
+		counter_lbl.add_theme_color_override("font_color", Color("#00FF88"))
+		counter_lbl.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+		cell.add_child(counter_lbl)
+
 	return cell
 
 # ─── RESPONSIVE ────────────────────────────────────────

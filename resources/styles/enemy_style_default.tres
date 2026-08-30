@@ -1,4 +1,4 @@
-[gd_resource type="Resource" script_class="EnemyStyle" format=3]
+﻿[gd_resource type="Resource" script_class="EnemyStyle" format=3]
 
 [ext_resource type="Script" uid="uid://hcl3h0pa6jjj" path="res://scripts/data/styles/EnemyStyle.gd" id="1_style"]
 

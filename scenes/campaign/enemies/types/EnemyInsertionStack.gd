@@ -8,9 +8,7 @@ func get_type_id() -> String:
 	return "insertion_stack"
 
 func _init_type_state() -> void:
-	# Vulnerable to Insertion tower (insertion sort inserts past the stack)
-	type_data["tower_multipliers"] = {"tower_insertion": 2.0}
-	type_data["default_tower_mult"] = 0.6
+	pass  # Tower multipliers built dynamically by EnemyBase from TowerData
 
 func _get_dot_scaling_on_apply() -> float:
 	return 1.5

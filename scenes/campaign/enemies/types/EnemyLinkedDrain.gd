@@ -10,9 +10,6 @@ func _init_type_state() -> void:
 	type_data["link_color"] = Color("#00FF88")
 	if not type_data.has("partner_id"):
 		type_data["partner_id"] = 0
-	# Vulnerable to Linked List tower (chain lightning follows the links)
-	type_data["tower_multipliers"] = {"tower_linked_list": 2.0}
-	type_data["default_tower_mult"] = 0.6
 
 func _modify_damage(amount: float) -> float:
 	var partner = get_partner()

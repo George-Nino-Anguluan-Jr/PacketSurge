@@ -1,4 +1,4 @@
-[gd_resource type="Resource" script_class="LevelData" format=3]
+﻿[gd_resource type="Resource" script_class="LevelData" format=3]
 
 [ext_resource type="Script" path="res://scripts/data/LevelData.gd" id="1_37cyr"]
 
@@ -6,9 +6,9 @@
 script = ExtResource("1_37cyr")
 level_number = 13
 level_name = "Binary Endgame"
-description = "Binary Search finds targets in O(log n) by halving the search space. Your Binary Tower is a precision sniper — it instantly locates and destroys the highest-priority target."
+description = "Binary Search finds targets in O(log n) by halving the search space. Your Binary Tower is a precision sniper - it instantly locates and destroys the highest-priority target."
 data_structure = "Binary Search"
-concept_desc = "Binary Search finds targets in O(log n) by halving the search space. Your Binary Tower is a precision sniper — it instantly locates and destroys the highest-priority target."
+concept_desc = "Binary Search finds targets in O(log n) by halving the search space. Your Binary Tower is a precision sniper - it instantly locates and destroys the highest-priority target."
 enemy_tip = "Scan Wave packets are immune mid-sweep. Binary Mask alternates vulnerable halves. Binary Tower's precision beats both!"
 starting_ram = 300
 wave_count = 8

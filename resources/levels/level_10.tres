@@ -1,4 +1,4 @@
-[gd_resource type="Resource" script_class="LevelData" format=3]
+﻿[gd_resource type="Resource" script_class="LevelData" format=3]
 
 [ext_resource type="Script" path="res://scripts/data/LevelData.gd" id="1_314mw"]
 
@@ -6,9 +6,9 @@
 script = ExtResource("1_314mw")
 level_number = 10
 level_name = "Count Down"
-description = "Counting Sort counts occurrences of each value. Your Count Tower gets stronger the more enemies are in range — O(n+k) means it scales with crowd size."
+description = "Counting Sort counts occurrences of each value. Your Count Tower gets stronger the more enemies are in range - O(n+k) means it scales with crowd size."
 data_structure = "Counting Sort"
-concept_desc = "Counting Sort counts occurrences of each value. Your Count Tower gets stronger the more enemies are in range — O(n+k) means it scales with crowd size."
+concept_desc = "Counting Sort counts occurrences of each value. Your Count Tower gets stronger the more enemies are in range - O(n+k) means it scales with crowd size."
 enemy_tip = "Merge Twin packets absorb their partner's HP when one dies. Merge Tower's AoE kills both evenly!"
 starting_ram = 275
 wave_count = 7

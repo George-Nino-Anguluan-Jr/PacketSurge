@@ -1,4 +1,4 @@
-[gd_resource type="Resource" script_class="LessonData" format=3 uid="uid://ddywnc14ns7gy"]
+﻿[gd_resource type="Resource" script_class="LessonData" format=3 uid="uid://ddywnc14ns7gy"]
 
 [ext_resource type="Script" uid="uid://ciet8k3fqk8tr" path="res://scripts/data/LessonData.gd" id="1_ureiw"]
 [ext_resource type="PackedScene" path="res://scenes/academy/visualizations/VizStacks.tscn" id="2_t55l4"]
@@ -12,10 +12,10 @@ unlocks_tower = "tower_stack"
 unlocks_level = 2
 title = "Stacks"
 category = "data_structures"
-icon_text = "↑↓"
+icon_text = "^v"
 prerequisites = Array[String](["ds_arrays"])
 visualization_scene = ExtResource("2_t55l4")
-concept_text = "A stack is a list where you can only add or remove from ONE END — the top. Think of a stack of plates: you put a new plate on top, and you take a plate from the top. You can't grab a plate from the middle without disturbing the others.
+concept_text = "A stack is a list where you can only add or remove from ONE END - the top. Think of a stack of plates: you put a new plate on top, and you take a plate from the top. You can't grab a plate from the middle without disturbing the others.
 
 This rule is called LIFO: Last In, First Out. The last item you added is the first one you can remove.
 
@@ -24,21 +24,21 @@ In Python, you use a list with two operations:
 - pop: remove the top item and give it back to you
 
     stack = []             # start with an empty stack
-    stack.append(\"A\")     # push A — stack is now [\"A\"]
-    stack.append(\"B\")     # push B — stack is now [\"A\", \"B\"]
-    stack.append(\"C\")     # push C — stack is now [\"A\", \"B\", \"C\"]
+    stack.append(\"A\")     # push A - stack is now [\"A\"]
+    stack.append(\"B\")     # push B - stack is now [\"A\", \"B\"]
+    stack.append(\"C\")     # push C - stack is now [\"A\", \"B\", \"C\"]
 
-    print(stack.pop())    # pop → \"C\" (the last one in is the first one out)
-    print(stack.pop())    # pop → \"B\"
-    print(stack.pop())    # pop → \"A\"
+    print(stack.pop())    # pop -> \"C\" (the last one in is the first one out)
+    print(stack.pop())    # pop -> \"B\"
+    print(stack.pop())    # pop -> \"A\"
 
 You can also peek at the top without removing it using the last item:
 
     top = stack[-1]        # the last item is the top of the stack
 
-All operations (push, pop, peek) are FAST (O(1)) — they always touch just the top of the stack, no matter how big the stack is."
+All operations (push, pop, peek) are FAST (O(1)) - they always touch just the top of the stack, no matter how big the stack is."
 
-real_world_example = "A stack of plates in a cafeteria is the perfect example. When you wash a plate, you put it on top of the stack. When someone needs a plate, they take one from the top. You can't take a plate from the middle — you'd have to lift the plates above it first, which is awkward and might cause a crash.
+real_world_example = "A stack of plates in a cafeteria is the perfect example. When you wash a plate, you put it on top of the stack. When someone needs a plate, they take one from the top. You can't take a plate from the middle - you'd have to lift the plates above it first, which is awkward and might cause a crash.
 
 Same with a stack of books on a desk. You add to the top, take from the top. Easy.
 
@@ -49,26 +49,26 @@ Another real-life example: the BACK button on your web browser. Every page you v
     history.append(\"About\")           # visit About
     history.append(\"Contact\")         # visit Contact
 
-    history.pop()    # Back → \"Contact\" (most recent)
-    history.pop()    # Back → \"About\"
-    history.pop()    # Back → \"Home\"
+    history.pop()    # Back -> \"Contact\" (most recent)
+    history.pop()    # Back -> \"About\"
+    history.pop()    # Back -> \"Home\"
 
-A third example: undo in a program. Every action you take is pushed onto a stack. When you press Ctrl+Z, the most recent action is popped and undone. The order is LIFO — last action first, going back through history.
+A third example: undo in a program. Every action you take is pushed onto a stack. When you press Ctrl+Z, the most recent action is popped and undone. The order is LIFO - last action first, going back through history.
 
     actions = [\"typed 'h'\", \"typed 'e'\", \"typed 'l'\", \"typed 'l'\", \"typed 'o'\"]
     actions.pop()    # undo: remove \"typed 'o'\"
     actions.pop()    # undo: remove \"typed 'l'\"
-    # now you have \"h\", \"e\", \"l\" — the word \"hel\""
+    # now you have \"h\", \"e\", \"l\" - the word \"hel\""
 
 guided_example = "Let's use a stack to track a player's recent game actions, one step at a time.
 
-Step 1 — Start with an empty stack.
+Step 1 - Start with an empty stack.
 
     actions = []
 
 A stack is just a list. We'll use it like a stack by only ever adding to or removing from the end.
 
-Step 2 — Player performs three actions.
+Step 2 - Player performs three actions.
 
     actions.append(\"jump\")     # pushed to top
     actions.append(\"shoot\")    # pushed to top
@@ -76,13 +76,13 @@ Step 2 — Player performs three actions.
 
 Each append() adds to the END of the list. The end is our \"top\". So after these three lines, the top of the stack is \"dodge\".
 
-Step 3 — Peek at the top without removing it.
+Step 3 - Peek at the top without removing it.
 
     print(actions[-1])    # shows: dodge
 
 The [-1] means \"last item\". That's the top. We can look at it without removing it.
 
-Step 4 — Undo the last action (pop from the top).
+Step 4 - Undo the last action (pop from the top).
 
     last = actions.pop()
     print(\"Undid:\", last)    # shows: Undid: dodge
@@ -90,7 +90,7 @@ Step 4 — Undo the last action (pop from the top).
 
 pop() removed the LAST item (\"dodge\") and gave it back. The stack is now shorter.
 
-Step 5 — Undo again.
+Step 5 - Undo again.
 
     last = actions.pop()
     print(\"Undid:\", last)    # shows: Undid: shoot
@@ -105,7 +105,7 @@ recap_text = "- A stack is a list where you can only touch the TOP
 - push (append) adds to the top
 - pop removes from the top and returns it
 - You can peek at the top with the last item (stack[-1])
-- All operations are FAST (O(1)) — always touch the top
+- All operations are FAST (O(1)) - always touch the top
 - Think of a stack of plates: add to the top, take from the top
 - Used in: undo systems, browser Back button, function call stack
 - You can never grab an item from the middle without removing the ones above it first"

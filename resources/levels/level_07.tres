@@ -1,4 +1,4 @@
-[gd_resource type="Resource" script_class="LevelData" format=3]
+﻿[gd_resource type="Resource" script_class="LevelData" format=3]
 
 [ext_resource type="Script" path="res://scripts/data/LevelData.gd" id="1_nyewv"]
 
@@ -6,9 +6,9 @@
 script = ExtResource("1_nyewv")
 level_number = 7
 level_name = "Stack Defense"
-description = "Insertion Sort inserts each element into its correct position one at a time. Your Insertion Tower applies stacking damage-over-time — inserting damage repeatedly."
+description = "Insertion Sort inserts each element into its correct position one at a time. Your Insertion Tower applies stacking damage-over-time - inserting damage repeatedly."
 data_structure = "Insertion Sort"
-concept_desc = "Insertion Sort inserts each element into its correct position one at a time. Your Insertion Tower applies stacking damage-over-time — inserting damage repeatedly."
+concept_desc = "Insertion Sort inserts each element into its correct position one at a time. Your Insertion Tower applies stacking damage-over-time - inserting damage repeatedly."
 enemy_tip = "Selection Mark packets are nearly invulnerable unless they're the lowest HP. Selection Tower auto-targets them!"
 starting_ram = 250
 wave_count = 6

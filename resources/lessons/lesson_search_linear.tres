@@ -1,4 +1,4 @@
-[gd_resource type="Resource" script_class="LessonData" format=3 uid="uid://bs1g4gull5nu0"]
+﻿[gd_resource type="Resource" script_class="LessonData" format=3 uid="uid://bs1g4gull5nu0"]
 
 [ext_resource type="Script" uid="uid://ciet8k3fqk8tr" path="res://scripts/data/LessonData.gd" id="1_l7yaq"]
 [ext_resource type="PackedScene" path="res://scenes/academy/visualizations/VizLinearSearch.tscn" id="2_ln84h"]
@@ -12,7 +12,7 @@ unlocks_tower = "tower_linear"
 unlocks_level = 12
 title = "Linear Search"
 category = "data_structures"
-icon_text = "→"
+icon_text = "->"
 prerequisites = Array[String](["sort_radix"])
 visualization_scene = ExtResource("2_ln84h")
 concept_text = "Linear Search is the SIMPLEST way to find a value in a list. You check each item ONE BY ONE, from start to end, until you find the target (or run out of items).
@@ -25,28 +25,28 @@ Imagine searching for 8 in [5, 3, 8, 1]:
 - Check index 2: is 8 == 8? YES! Found at index 2!
 
 Imagine searching for 99 in [5, 3, 8, 1] (not in the list):
-- Check 5 — no
-- Check 3 — no
-- Check 8 — no
-- Check 1 — no
+- Check 5 - no
+- Check 3 - no
+- Check 8 - no
+- Check 1 - no
 - Reached the end. NOT FOUND.
 
 Performance:
-- Best case: O(1) — the target is the FIRST item
-- Worst case: O(n) — the target is the LAST item OR not in the list at all
-- Average case: O(n) — on average, you check half the list
-- Space: O(1) — no extra memory needed
+- Best case: O(1) - the target is the FIRST item
+- Worst case: O(n) - the target is the LAST item OR not in the list at all
+- Average case: O(n) - on average, you check half the list
+- Space: O(1) - no extra memory needed
 - Works on ANY list, sorted or unsorted
 - VERY slow for huge lists
 - Best when: the list is small, the data is unsorted, or you only need to search once
 
-The big downside: for 1 million items, you might check all 1 million. There's a much faster algorithm for SORTED data — that's Binary Search, in the next lesson."
+The big downside: for 1 million items, you might check all 1 million. There's a much faster algorithm for SORTED data - that's Binary Search, in the next lesson."
 
 real_world_example = "Imagine you're looking for your friend's house number on a street, but the houses are NOT in numerical order. The only way is to walk down the entire street, checking each house number one at a time, until you find 47.
 
 House 1: no. House 2: no. House 3: no. ... House 47: yes, found!
 
-If your friend lived at house 999,999, you'd have to walk past almost a million houses. That's linear search — slow for big data.
+If your friend lived at house 999,999, you'd have to walk past almost a million houses. That's linear search - slow for big data.
 
 Another example: looking for a specific word in a book that's NOT indexed. You flip through each page, scanning each line, until you find the word. If the word is near the end, you read the whole book. That's linear search.
 
@@ -64,35 +64,35 @@ Linear search is the universal fallback. When in doubt, use linear search."
 
 guided_example = "Let's search for 7 in [4, 2, 7, 1, 9], one step at a time.
 
-Step 1 — Set up the array and the target.
+Step 1 - Set up the array and the target.
 
     arr = [4, 2, 7, 1, 9]
     target = 7
 
 We want to find where 7 is in the list.
 
-Step 2 — Check index 0.
+Step 2 - Check index 0.
 
     arr[0] = 4. Is 4 == 7? NO. Keep going.
 
-Step 3 — Check index 1.
+Step 3 - Check index 1.
 
     arr[1] = 2. Is 2 == 7? NO. Keep going.
 
-Step 4 — Check index 2.
+Step 4 - Check index 2.
 
     arr[2] = 7. Is 7 == 7? YES! FOUND at index 2!
 
 We can stop. The target is at position 2.
 
-Step 5 — Print the result.
+Step 5 - Print the result.
 
     print(\"Found at:\", 2)    # shows: Found at: 2
 
 That's the whole algorithm! Just loop through each index, compare to the target, stop when you find it.
 
 What if the target is NOT in the array? Say we search for 99 in [4, 2, 7, 1, 9]:
-- Check 4, 2, 7, 1, 9 — none match
+- Check 4, 2, 7, 1, 9 - none match
 - Reached the end of the array
 - \"Not found\"
 
@@ -100,11 +100,11 @@ The pattern is the same: keep checking, and either find it or reach the end. No 
 
 recap_text = "- Linear Search checks each item one by one from start to end
 - Stops when it finds the target OR reaches the end
-- Best case: O(1) — target is the first item
-- Worst case: O(n) — target is the last item or not in the list
-- Average case: O(n) — checks half the list on average
-- Space: O(1) — no extra memory
-- Works on ANY list — sorted or unsorted
+- Best case: O(1) - target is the first item
+- Worst case: O(n) - target is the last item or not in the list
+- Average case: O(n) - checks half the list on average
+- Space: O(1) - no extra memory
+- Works on ANY list - sorted or unsorted
 - Simplest search algorithm
 - Best for: small lists, unsorted data, one-time searches
 - Bad for: large lists (use Binary Search if the data is sorted)
@@ -128,4 +128,4 @@ expected_output = "3"
 practice_question = "When is Linear Search the best choice?"
 practice_options = Array[String](["When the array is very large (millions of items)", "When the array is already sorted", "When the array is small or unsorted", "When you need to search really fast every time"])
 practice_correct_index = 2
-practice_explanation = "Linear Search shines when the array is small (under 50 items) or when the data is unsorted. For tiny lists, the overhead of a smarter algorithm isn't worth it. For unsorted data, Binary Search simply won't work. For LARGE SORTED data, use Binary Search instead — it's much faster."
+practice_explanation = "Linear Search shines when the array is small (under 50 items) or when the data is unsorted. For tiny lists, the overhead of a smarter algorithm isn't worth it. For unsorted data, Binary Search simply won't work. For LARGE SORTED data, use Binary Search instead - it's much faster."

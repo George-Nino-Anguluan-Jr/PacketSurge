@@ -1,4 +1,4 @@
-[gd_resource type="Resource" script_class="LessonData" format=3 uid="uid://c008n744a0h1u"]
+﻿[gd_resource type="Resource" script_class="LessonData" format=3 uid="uid://c008n744a0h1u"]
 
 [ext_resource type="Script" uid="uid://ciet8k3fqk8tr" path="res://scripts/data/LessonData.gd" id="1_h46rf"]
 [ext_resource type="PackedScene" path="res://scenes/academy/visualizations/VizInsertionSort.tscn" id="2_h3kw3"]
@@ -12,7 +12,7 @@ unlocks_tower = "tower_insertion"
 unlocks_level = 7
 title = "Insertion Sort"
 category = "data_structures"
-icon_text = "←↑"
+icon_text = "←^"
 prerequisites = Array[String](["sort_selection"])
 visualization_scene = ExtResource("2_h3kw3")
 concept_text = "Insertion Sort builds a sorted list one item at a time. For each new item, it slides into its correct position among the already-sorted items.
@@ -23,73 +23,73 @@ Imagine sorting [12, 11, 13, 5, 6]:
 
 Step 1: Start with just [12]. (One item is always sorted.)
 
-Step 2: Take 11. Compare with 12 — 11 < 12, so insert BEFORE 12. → [11, 12, 13, 5, 6]
+Step 2: Take 11. Compare with 12 - 11 < 12, so insert BEFORE 12. -> [11, 12, 13, 5, 6]
 
-Step 3: Take 13. Compare with 12 — 13 > 12, already in place. → [11, 12, 13, 5, 6]
+Step 3: Take 13. Compare with 12 - 13 > 12, already in place. -> [11, 12, 13, 5, 6]
 
-Step 4: Take 5. Compare with 13, 12, 11 — 5 is smaller than all of them. Slide 13, 12, 11 to the right, insert 5 at the start. → [5, 11, 12, 13, 6]
+Step 4: Take 5. Compare with 13, 12, 11 - 5 is smaller than all of them. Slide 13, 12, 11 to the right, insert 5 at the start. -> [5, 11, 12, 13, 6]
 
-Step 5: Take 6. Compare with 13, 12, 11 — bigger than those. Compare with 5 — 6 > 5, stop here. Insert 6 after 5. → [5, 6, 11, 12, 13]
+Step 5: Take 6. Compare with 13, 12, 11 - bigger than those. Compare with 5 - 6 > 5, stop here. Insert 6 after 5. -> [5, 6, 11, 12, 13]
 
 Sorted!
 
 The key idea: for each new item, walk LEFT through the sorted part, SHIFT bigger items to the right, and INSERT the new item in the empty spot.
 
 Performance:
-- Best case: O(n) — when data is already sorted, one pass with no shifts
-- Average/worst case: O(n²) — for random or reverse-sorted data
-- Space: O(1) — sorts in place
+- Best case: O(n) - when data is already sorted, one pass with no shifts
+- Average/worst case: O(n²) - for random or reverse-sorted data
+- Space: O(1) - sorts in place
 - STABLE: equal elements keep their original order (important for some applications)
 - Fast for SMALL lists and NEARLY-SORTED data
 - Slower than merge sort or quicksort for large random data"
 
 real_world_example = "Think of sorting playing cards in your hand. Imagine someone deals you cards one at a time. You want your hand sorted by rank.
 
-When the first card arrives, you just hold it — one card is always sorted. When the second arrives, you compare it to the first. If it's smaller, you slide the first card right and put the new one on the left. If it's bigger, it goes on the right.
+When the first card arrives, you just hold it - one card is always sorted. When the second arrives, you compare it to the first. If it's smaller, you slide the first card right and put the new one on the left. If it's bigger, it goes on the right.
 
 When the third card arrives, you find its correct spot by comparing leftward through your hand, sliding bigger cards right as you go.
 
-Each new card = one pass of insertion sort. By the end, your hand is sorted, and you didn't have to do anything complicated — just slide cards and insert.
+Each new card = one pass of insertion sort. By the end, your hand is sorted, and you didn't have to do anything complicated - just slide cards and insert.
 
 Another example: organizing papers on your desk. You grab papers one at a time and slot each into its correct place in a growing pile. Each paper is one \"pass\". Simple, intuitive.
 
-A third example: building a sorted playlist. As you add new songs, you find the right spot in the already-sorted playlist and insert the song there. You don't restart from scratch — you just slot in the new song.
+A third example: building a sorted playlist. As you add new songs, you find the right spot in the already-sorted playlist and insert the song there. You don't restart from scratch - you just slot in the new song.
 
 Why use insertion sort? It's the BEST algorithm for small lists (under 50 items) and for nearly-sorted data. It's simple, uses almost no extra memory, and is stable. Real-world software (like Python's built-in sort) actually uses insertion sort internally for small chunks before switching to a faster algorithm."
 
 guided_example = "Let's trace Insertion Sort on [12, 11, 13, 5, 6], one step at a time.
 
-Step 1 — Start. The first item [12] is already \"sorted\" by itself.
+Step 1 - Start. The first item [12] is already \"sorted\" by itself.
 
-Step 2 — Take the second item, 11. We compare it with the sorted part (just 12).
+Step 2 - Take the second item, 11. We compare it with the sorted part (just 12).
 
-    Is 11 < 12? YES → shift 12 to the right
+    Is 11 < 12? YES -> shift 12 to the right
     Insert 11 at index 0
 
 Array: [11, 12, 13, 5, 6]. Sorted part: [11, 12].
 
-Step 3 — Take the third item, 13. Compare with the sorted part.
+Step 3 - Take the third item, 13. Compare with the sorted part.
 
-    Is 13 < 12? NO → no shifts needed
+    Is 13 < 12? NO -> no shifts needed
     13 stays at index 2
 
 Array: [11, 12, 13, 5, 6]. Sorted part: [11, 12, 13].
 
-Step 4 — Take the fourth item, 5. Compare with the sorted part.
+Step 4 - Take the fourth item, 5. Compare with the sorted part.
 
-    Is 5 < 13? YES → shift 13 to the right
-    Is 5 < 12? YES → shift 12 to the right
-    Is 5 < 11? YES → shift 11 to the right
+    Is 5 < 13? YES -> shift 13 to the right
+    Is 5 < 12? YES -> shift 12 to the right
+    Is 5 < 11? YES -> shift 11 to the right
     Insert 5 at index 0
 
 Array: [5, 11, 12, 13, 6]. Sorted part: [5, 11, 12, 13].
 
-Step 5 — Take the fifth item, 6. Compare with the sorted part.
+Step 5 - Take the fifth item, 6. Compare with the sorted part.
 
-    Is 6 < 13? YES → shift 13 right
-    Is 6 < 12? YES → shift 12 right
-    Is 6 < 11? YES → shift 11 right
-    Is 6 < 5? NO → stop
+    Is 6 < 13? YES -> shift 13 right
+    Is 6 < 12? YES -> shift 12 right
+    Is 6 < 11? YES -> shift 11 right
+    Is 6 < 5? NO -> stop
     Insert 6 at index 1
 
 Array: [5, 6, 11, 12, 13]. SORTED!
@@ -101,7 +101,7 @@ recap_text = "- Insertion Sort builds a sorted list one item at a time
 - Shifts (not swaps) bigger items to the right, then inserts the new item
 - Best case: O(n) when data is already sorted
 - Average/worst case: O(n²) for random or reverse-sorted data
-- Space: O(1) — sorts in place
+- Space: O(1) - sorts in place
 - STABLE: equal elements keep their original order
 - Best for SMALL lists and NEARLY-SORTED data
 - Used internally by Python's sort and other real-world libraries for small chunks
@@ -132,4 +132,4 @@ expected_output = "[3, 8, 6, 2]"
 practice_question = "When does Insertion Sort perform at its best (O(n))?"
 practice_options = Array[String](["Array is reverse sorted", "Array is already sorted", "Array has all duplicates", "Array has random elements"])
 practice_correct_index = 1
-practice_explanation = "When the array is already sorted, each new item is already in the right place. The inner while loop never runs (because arr[j] is never > key). So we just do n comparisons and no shifts. That's O(n) — linear time. It's the fastest case for insertion sort."
+practice_explanation = "When the array is already sorted, each new item is already in the right place. The inner while loop never runs (because arr[j] is never > key). So we just do n comparisons and no shifts. That's O(n) - linear time. It's the fastest case for insertion sort."

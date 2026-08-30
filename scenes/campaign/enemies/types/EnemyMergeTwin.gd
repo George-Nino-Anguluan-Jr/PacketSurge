@@ -11,9 +11,6 @@ func _init_type_state() -> void:
 	type_data["merged"] = false
 	if not type_data.has("partner_id"):
 		type_data["partner_id"] = 0
-	# Vulnerable to Merge tower (merge sort handles the halves before merging)
-	type_data["tower_multipliers"] = {"tower_merge": 2.0}
-	type_data["default_tower_mult"] = 0.6
 
 func set_partner(p: Node) -> void:
 	type_data["partner_id"] = p.get_instance_id() if p != null else 0

@@ -1,4 +1,4 @@
-[gd_resource type="Resource" script_class="LevelData" format=3]
+﻿[gd_resource type="Resource" script_class="LevelData" format=3]
 
 [ext_resource type="Script" path="res://scripts/data/LevelData.gd" id="1_8uyek"]
 
@@ -6,9 +6,9 @@
 script = ExtResource("1_8uyek")
 level_number = 9
 level_name = "Merge Protocol"
-description = "Merge Sort splits arrays in half then merges sorted halves. Your Merge Tower does guaranteed AoE damage — O(n log n) means no enemy escapes."
+description = "Merge Sort splits arrays in half then merges sorted halves. Your Merge Tower does guaranteed AoE damage - O(n log n) means no enemy escapes."
 data_structure = "Merge Sort"
-concept_desc = "Merge Sort splits arrays in half then merges sorted halves. Your Merge Tower does guaranteed AoE damage — O(n log n) means no enemy escapes."
+concept_desc = "Merge Sort splits arrays in half then merges sorted halves. Your Merge Tower does guaranteed AoE damage - O(n log n) means no enemy escapes."
 enemy_tip = "Pivot Splitter boss divides in two on death. Quick Tower's split shot counters the split!"
 starting_ram = 275
 wave_count = 6
