@@ -78,23 +78,69 @@ var _default_attack_sound: AudioStreamWAV
 
 func _generate_tower_attack_sounds() -> void:
 	_default_attack_sound = _generate_noise_tick(0.04, 0.08)
-	tower_attack_sounds["tower_array"] = _generate_noise_tick(0.03, 0.06)
-	tower_attack_sounds["tower_stack"] = _generate_sine_sweep(150.0, 80.0, 0.15, 0.10)
-	tower_attack_sounds["tower_queue"] = _generate_sine_sweep(1200.0, 400.0, 0.06, 0.08)
-	tower_attack_sounds["tower_linked_list"] = _generate_noise_tick(0.05, 0.08)
-	tower_attack_sounds["tower_bubble"] = _generate_sine_sweep(600.0, 900.0, 0.05, 0.08)
-	tower_attack_sounds["tower_selection"] = _generate_sine_sweep(500.0, 800.0, 0.10, 0.08)
-	tower_attack_sounds["tower_insertion"] = _generate_sine_sweep(300.0, 100.0, 0.08, 0.10)
-	tower_attack_sounds["tower_quick"] = _generate_sine_sweep(900.0, 600.0, 0.06, 0.08)
-	tower_attack_sounds["tower_merge"] = _generate_sine_sweep(400.0, 700.0, 0.12, 0.06)
-	tower_attack_sounds["tower_counting"] = _generate_noise_tick(0.02, 0.05)
-	tower_attack_sounds["tower_radix"] = _generate_sine_sweep(800.0, 1200.0, 0.07, 0.08)
-	tower_attack_sounds["tower_linear"] = _generate_sine_sweep(300.0, 1000.0, 0.10, 0.07)
-	tower_attack_sounds["tower_binary"] = _generate_sine_sweep(2000.0, 500.0, 0.04, 0.10)
-	# Guarantee a sound exists for every tower registered in data, even future ones.
+
+	var profiles: Dictionary = {
+		"tower_array": {"start": 180.0, "end": 980.0, "duration": 0.065, "volume": 0.14, "mod": 20.0, "noise": 0.07, "harmonics": 2, "pulse": 4},
+		"tower_stack": {"start": 160.0, "end": 60.0, "duration": 0.18, "volume": 0.13, "mod": 10.0, "noise": 0.04, "harmonics": 1, "pulse": 1},
+		"tower_queue": {"start": 900.0, "end": 260.0, "duration": 0.08, "volume": 0.12, "mod": 40.0, "noise": 0.03, "harmonics": 3, "pulse": 2},
+		"tower_linked_list": {"start": 240.0, "end": 760.0, "duration": 0.11, "volume": 0.12, "mod": 22.0, "noise": 0.10, "harmonics": 2, "pulse": 3},
+		"tower_bubble": {"start": 420.0, "end": 960.0, "duration": 0.07, "volume": 0.13, "mod": 28.0, "noise": 0.05, "harmonics": 3, "pulse": 5},
+		"tower_selection": {"start": 520.0, "end": 1420.0, "duration": 0.10, "volume": 0.12, "mod": 18.0, "noise": 0.04, "harmonics": 2, "pulse": 2},
+		"tower_insertion": {"start": 300.0, "end": 100.0, "duration": 0.12, "volume": 0.14, "mod": 16.0, "noise": 0.06, "harmonics": 2, "pulse": 1},
+		"tower_quick": {"start": 1100.0, "end": 1800.0, "duration": 0.05, "volume": 0.12, "mod": 80.0, "noise": 0.02, "harmonics": 3, "pulse": 6},
+		"tower_merge": {"start": 290.0, "end": 820.0, "duration": 0.13, "volume": 0.15, "mod": 18.0, "noise": 0.08, "harmonics": 4, "pulse": 2},
+		"tower_counting": {"start": 760.0, "end": 1200.0, "duration": 0.08, "volume": 0.11, "mod": 30.0, "noise": 0.12, "harmonics": 2, "pulse": 5},
+		"tower_radix": {"start": 680.0, "end": 1750.0, "duration": 0.09, "volume": 0.13, "mod": 24.0, "noise": 0.03, "harmonics": 3, "pulse": 3},
+		"tower_linear": {"start": 280.0, "end": 1180.0, "duration": 0.10, "volume": 0.14, "mod": 22.0, "noise": 0.05, "harmonics": 2, "pulse": 4},
+		"tower_binary": {"start": 2100.0, "end": 360.0, "duration": 0.07, "volume": 0.14, "mod": 65.0, "noise": 0.04, "harmonics": 4, "pulse": 3},
+	}
+
 	for tower_id in DataRegistry.get_tower_ids_ordered():
-		if not tower_attack_sounds.has(tower_id):
+		if profiles.has(tower_id):
+			tower_attack_sounds[tower_id] = _generate_custom_tower_sound(profiles[tower_id])
+		else:
 			tower_attack_sounds[tower_id] = _default_attack_sound
+
+func _generate_custom_tower_sound(profile: Dictionary) -> AudioStreamWAV:
+	var stream = AudioStreamWAV.new()
+	stream.mix_rate = 22050
+	stream.format = AudioStreamWAV.FORMAT_8_BITS
+	stream.stereo = false
+
+	var duration: float = profile.get("duration", 0.08)
+	var num_samples = int(stream.mix_rate * duration)
+	var bytes = PackedByteArray()
+	bytes.resize(num_samples)
+
+	var start_freq: float = profile.get("start", 440.0)
+	var end_freq: float = profile.get("end", 880.0)
+	var volume: float = profile.get("volume", 0.12)
+	var mod_depth: float = profile.get("mod", 0.0)
+	var noise_level: float = profile.get("noise", 0.0)
+	var harmonics: int = int(profile.get("harmonics", 1))
+	var pulse_count: float = profile.get("pulse", 1.0)
+
+	for i in range(num_samples):
+		var t = float(i) / stream.mix_rate
+		var sweep = clamp(t / duration, 0.0, 1.0)
+		var freq = start_freq + (end_freq - start_freq) * sweep
+		var flutter = sin(2.0 * PI * 12.0 * t) * mod_depth
+		var sample = 0.0
+		for h in range(1, harmonics + 1):
+			var harm_amp = 1.0 / float(h)
+			var phase = 2.0 * PI * freq * float(h) * t + flutter * float(h) * 0.25
+			sample += sin(phase) * harm_amp
+		if noise_level > 0.0:
+			sample += (randf() * 2.0 - 1.0) * noise_level * (1.0 - sweep)
+		if pulse_count > 1.0:
+			sample *= 0.45 + maxf(0.0, sin(2.0 * PI * pulse_count * t)) * 0.55
+		var envelope = 1.0 - sweep
+		envelope = clamp(envelope, 0.0, 1.0)
+		var val = int(clamp((sample * envelope * volume * 127.0) + 128.0, 0.0, 255.0))
+		bytes[i] = val
+
+	stream.data = bytes
+	return stream
 
 func _generate_sine_sweep(start_freq: float, end_freq: float, duration: float, volume: float) -> AudioStreamWAV:
 	var stream = AudioStreamWAV.new()
