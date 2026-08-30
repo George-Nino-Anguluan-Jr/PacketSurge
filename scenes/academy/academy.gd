@@ -348,9 +348,9 @@ func _show_block_puzzle_step() -> void:
 func _show_code_editor_step() -> void:
 	var layout := VBoxContainer.new()
 	layout.add_theme_constant_override("separation", _fs(0.025, 8.0, 12.0))
-	if current_lesson.challenge_code.is_empty():
+	if current_lesson.challenge_code.is_empty() and current_lesson.code_template.is_empty():
 		var label := Label.new()
-		label.text = "No coding challenge for this lesson."
+		label.text = "No starter code for this lesson yet. You can still write your own Python here."
 		label.add_theme_color_override("font_color", Color("#4A7FA5"))
 		label.add_theme_font_size_override("font_size", _fs(0.032, 16.0, 16.0))
 		label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
@@ -358,7 +358,7 @@ func _show_code_editor_step() -> void:
 		scroll_content.add_child(layout)
 		return
 	var instruction := Label.new()
-	instruction.text = "Type your code below. Fill in the blanks (___), then press Run to test."
+	instruction.text = "Sandbox mode: try the example below, edit it, and run it freely. This is a playground, not a quiz."
 	instruction.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 	instruction.add_theme_color_override("font_color", Color("#E8F4FD"))
 	instruction.add_theme_font_size_override("font_size", _fs(0.038, 16.0, 20.0))
@@ -367,6 +367,7 @@ func _show_code_editor_step() -> void:
 	scroll_content.add_child(layout)
 
 func _show_code_editor(layout: VBoxContainer) -> void:
+	var starter_code := current_lesson.code_template if not current_lesson.code_template.is_empty() else current_lesson.challenge_code if not current_lesson.challenge_code.is_empty() else "# Try your Python here\nprint(\"Hello, PacketSurge!\")\n"
 	var editor := TextEdit.new()
 	editor.name = "CodeEditor"
 	editor.custom_minimum_size = Vector2(0, _fs(0.50, 200.0, 280.0))
@@ -376,34 +377,35 @@ func _show_code_editor(layout: VBoxContainer) -> void:
 	editor.add_theme_color_override("caret_color", Color("#00D4FF"))
 	editor.add_theme_color_override("selection_color", Color("#003366"))
 	editor.add_theme_font_size_override("font_size", _fs(0.034, 16.0, 18.0))
-	editor.text = current_lesson.code_template if not current_lesson.code_template.is_empty() else ""
+	editor.text = starter_code
 	editor.placeholder_text = "# Write your Python code here"
 	layout.add_child(editor)
 
 	var hint_line := Label.new()
-	hint_line.text = "💡 Write Python code. Press Run to test, then Check Answer when output matches expected."
+	hint_line.text = "💡 This is a sandbox. Edit the starter code, press Run, and experiment freely."
 	hint_line.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 	hint_line.add_theme_color_override("font_color", Color("#4A7FA5"))
 	hint_line.add_theme_font_size_override("font_size", _fs(0.030, 16.0, 16.0))
 	layout.add_child(hint_line)
 
-	# Run button
+	var row := HBoxContainer.new()
+	row.add_theme_constant_override("separation", 8)
+	layout.add_child(row)
+
 	var run_btn := Button.new()
 	run_btn.text = "▶ Run Code"
-	run_btn.custom_minimum_size = Vector2(_fs(0.40, 140.0, 180.0), _fs(0.075, 40.0, 48.0))
+	run_btn.custom_minimum_size = Vector2(_fs(0.35, 120.0, 160.0), _fs(0.075, 40.0, 48.0))
 	_style_accent_button(run_btn)
 	run_btn.pressed.connect(_on_run_code.bind(editor))
-	layout.add_child(run_btn)
+	row.add_child(run_btn)
 
-	# Check answer button
-	var check_btn := Button.new()
-	check_btn.text = "✔ Check Answer"
-	check_btn.custom_minimum_size = Vector2(_fs(0.40, 140.0, 180.0), _fs(0.075, 40.0, 48.0))
-	_style_accent_button(check_btn)
-	check_btn.pressed.connect(_on_check_code_answer.bind(editor))
-	layout.add_child(check_btn)
+	var reset_btn := Button.new()
+	reset_btn.text = "↺ Reset"
+	reset_btn.custom_minimum_size = Vector2(_fs(0.20, 90.0, 120.0), _fs(0.075, 40.0, 48.0))
+	_style_accent_button(reset_btn)
+	reset_btn.pressed.connect(func(): editor.text = starter_code)
+	row.add_child(reset_btn)
 
-	# Run output area
 	var output_label := Label.new()
 	output_label.name = "OutputLabel"
 	output_label.text = ""
@@ -785,11 +787,19 @@ func _update_nav_buttons() -> void:
 		next_step_btn.disabled = true
 		return
 	back_step_btn.disabled = current_step == 0
-	var needs_completion = current_step == 4 or current_step == 5
-	if not current_lesson.challenge_code.is_empty() and current_step == 6:
-		needs_completion = true
-	if needs_completion:
+
+	var is_block_puzzle_step := current_step == 4
+	var is_practice_step := false
+	if current_lesson.challenge_code.is_empty():
+		is_practice_step = current_step == 5
+	else:
+		is_practice_step = current_step == 6
+	var is_code_sandbox_step := not current_lesson.challenge_code.is_empty() and current_step == 5
+
+	if is_block_puzzle_step or is_practice_step:
 		next_step_btn.disabled = current_step not in completed_steps
+	elif is_code_sandbox_step:
+		next_step_btn.disabled = false
 	else:
 		next_step_btn.disabled = false
 	next_step_btn.text = "Complete →" if current_step == total_steps - 1 else "Next →"
