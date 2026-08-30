@@ -35,6 +35,7 @@ const STEP_NAMES: Array[String] = [
 
 var topic_buttons: Dictionary = {}
 var _lesson_start_time: float = 0.0
+var _lesson_timer_started: bool = false
 
 # ─── HELPERS ───────────────────────────────────────────
 func _min_dim() -> float:
@@ -191,7 +192,8 @@ func _open_lesson(lesson: LessonData) -> void:
 	current_step   = 0
 	total_steps    = 8 if lesson.challenge_code.is_empty() else 9
 	completed_steps.clear()
-	_lesson_start_time = Time.get_ticks_msec() / 1000.0
+	_lesson_start_time = 0.0
+	_lesson_timer_started = false
 	lesson_title.text = lesson.title
 
 	# Set category label based on lesson section (from data)
@@ -236,6 +238,9 @@ func _update_step_indicator() -> void:
 
 # ─── SHOW CURRENT STEP ─────────────────────────────────
 func _show_current_step() -> void:
+	if not _lesson_timer_started and current_step == 0:
+		_lesson_start_time = Time.get_ticks_msec() / 1000.0
+		_lesson_timer_started = true
 	# Keep LessonHeader in place; only remove step-specific content
 	var header = scroll_content.get_node_or_null("LessonHeader")
 	var indicator = scroll_content.get_node_or_null("StepIndicator")
@@ -467,10 +472,14 @@ func _on_check_code_answer(editor: TextEdit) -> void:
 		if result_label:
 			result_label.text = "❌ Your code has errors."
 			result_label.add_theme_color_override("font_color", Color("#FF3366"))
+		if current_lesson != null:
+			ProgressManager.record_activity_result(current_lesson.lesson_id, 0, 1, 1)
 		return
 	var actual = result.output.strip_edges(false, true)
 	var expected = current_lesson.expected_output.strip_edges(false, true)
 	var passed = actual == expected
+	if current_lesson != null:
+		ProgressManager.record_activity_result(current_lesson.lesson_id, 1 if passed else 0, 1, 0 if passed else 1)
 	if result_label:
 		if passed:
 			SoundManager.play_success()
@@ -603,6 +612,8 @@ func _check_code_answer(answer_area: VBoxContainer) -> void:
 			student_answer.append(child.text)
 
 	var passed = student_answer == current_lesson.correct_sequence
+	if current_lesson != null:
+		ProgressManager.record_activity_result(current_lesson.lesson_id, 1 if passed else 0, 1, 0 if passed else 1)
 
 	if result_label:
 		if passed:
@@ -650,6 +661,8 @@ func _show_practice_step() -> void:
 func _check_practice_answer(index: int, layout: VBoxContainer) -> void:
 	var explanation = layout.get_node_or_null("ExplanationLabel")
 	var passed      = index == current_lesson.practice_correct_index
+	if current_lesson != null:
+		ProgressManager.record_activity_result(current_lesson.lesson_id, 1 if passed else 0, 1, 0 if passed else 1)
 	if passed:
 		SoundManager.play_success()
 	else:

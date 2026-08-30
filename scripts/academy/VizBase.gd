@@ -11,10 +11,11 @@ var _controls_rect: Rect2 = Rect2()
 var _concept_title_y: float = 0.0
 var _anim_title_y: float = 0.0
 
-# ── Buttons ──
+# ── Buttons / labels ──
 var _btn_play: Button
 var _btn_step: Button
 var _btn_reset: Button
+var _code_label_text: String = ""
 
 # ── Step state (set by subclass) ──
 var current_step: int = 0
@@ -162,16 +163,19 @@ func _process(delta: float) -> void:
 					_btn_play.text = "▶ Play"
 		queue_redraw()
 
+func _dynamic_font_size(base_size: float, min_size: float = 10.0, max_size: float = 18.0) -> int:
+	return VizUtil.academy_font_size(self, base_size, min_size, max_size)
+
 func _draw() -> void:
 	if size.x <= 0 or size.y <= 0:
 		return
 	# Concept title (above diagram)
-	draw_string(ThemeDB.fallback_font, Vector2(8, _concept_title_y), get_concept_title(), HORIZONTAL_ALIGNMENT_LEFT, -1, 13, VizUtil.C_LABEL)
+	draw_string(ThemeDB.fallback_font, Vector2(8, _concept_title_y), get_concept_title(), HORIZONTAL_ALIGNMENT_LEFT, -1, _dynamic_font_size(15.0, 12.0, 18.0), VizUtil.C_LABEL)
 	# Diagram area background + content
 	draw_rect(_diagram_rect, VizUtil.C_BG, true)
 	_draw_diagram()
 	# Animation title (above anim)
-	draw_string(ThemeDB.fallback_font, Vector2(8, _anim_title_y), get_anim_title(), HORIZONTAL_ALIGNMENT_LEFT, -1, 12, VizUtil.C_LABEL)
+	draw_string(ThemeDB.fallback_font, Vector2(8, _anim_title_y), get_anim_title(), HORIZONTAL_ALIGNMENT_LEFT, -1, _dynamic_font_size(14.0, 11.0, 17.0), VizUtil.C_LABEL)
 	# Code label
 	_draw_code_label()
 	# Animation area background + content
@@ -180,9 +184,13 @@ func _draw() -> void:
 
 # Override in subclass to draw a code label; default is empty
 func _draw_code_label() -> void:
+	var steps := get_steps()
+	_code_label_text = ""
+	if current_step >= 0 and current_step < steps.size():
+		_code_label_text = steps[current_step].get("code", "")
+	if _code_label_text.is_empty():
+		return
 	draw_rect(_code_label_rect, Color("#0A1628"), true)
 	draw_rect(_code_label_rect, Color("#1A2A3A"), false, 1)
-	var steps := get_steps()
-	if current_step >= 0 and current_step < steps.size():
-		var code_text: String = steps[current_step].get("code", "")
-		draw_string(ThemeDB.fallback_font, Vector2(_code_label_rect.position.x + _code_label_rect.size.x * 0.5 - code_text.length() * 4, _code_label_rect.position.y + 16), code_text, HORIZONTAL_ALIGNMENT_LEFT, -1, 14, VizUtil.C_HIGHLIGHT)
+	var font_size := _dynamic_font_size(14.0, 11.0, 18.0)
+	draw_string(ThemeDB.fallback_font, Vector2(_code_label_rect.position.x + 8, _code_label_rect.position.y + 16), _code_label_text, HORIZONTAL_ALIGNMENT_LEFT, -1, font_size, VizUtil.C_HIGHLIGHT)

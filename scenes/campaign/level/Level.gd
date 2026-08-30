@@ -110,13 +110,13 @@ const CHALLENGES = {
 		{ "title": "Queue Size", "desc": "Enqueue 10, 20, 30, 40. Dequeue twice. Print the remaining queue size.", "code_template": "queue = []\nqueue.append(10)\nqueue.append(20)\nqueue.append(30)\nqueue.append(40)\nqueue.pop(0)\nqueue.pop(0)\nprint(___)", "choices": ["len(queue)", "queue.size()", "len(queue)-1", "queue.length"], "correct": "len(queue)", "expected_output": "2\n", "bonus_ram": 20 },
 	],
 	4: [  # Linked Lists
-		{ "title": "Traverse List", "desc": "Traverse the linked chain starting at node and print each val.", "code_template": "node = {'val': 1, 'next': {'val': 2, 'next': {'val': 3, 'next': None}}}\nwhile node:\n    print(node['val'])\n    ___", "expected_output": "1\n2\n3\n", "bonus_ram": 25 },
-		{ "title": "Count Nodes", "desc": "Count how many nodes are in the linked chain and print the count.", "code_template": "node = {'val': 5, 'next': {'val': 10, 'next': {'val': 15, 'next': None}}}\ncount = 0\n___\nprint(count)", "expected_output": "3\n", "bonus_ram": 25 },
-		{ "title": "Find Value", "desc": "Find if value 10 exists in the linked chain. Print 'yes' or 'no'.", "code_template": "node = {'val': 5, 'next': {'val': 10, 'next': {'val': 15, 'next': None}}}\ntarget = 10\nfound = 'no'\nwhile node:\n    if node['val'] == target:\n        found = 'yes'\n        ___\n    node = node['next']\nprint(found)", "expected_output": "yes\n", "bonus_ram": 25 },
+		{ "title": "Traverse List", "desc": "Traverse the linked chain starting at node and print each val.", "code_template": "node = {'val': 1, 'next': {'val': 2, 'next': {'val': 3, 'next': None}}}\nwhile node:\n    print(node['val'])\n    ___", "choices": ["node = node['next']", "node = node.next", "node = None", "node = node['prev']"], "correct": "node = node['next']", "expected_output": "1\n2\n3\n", "bonus_ram": 25 },
+		{ "title": "Count Nodes", "desc": "Count how many nodes are in the linked chain and print the count.", "code_template": "node = {'val': 5, 'next': {'val': 10, 'next': {'val': 15, 'next': None}}}\ncount = 0\n___\nprint(count)", "choices": ["while node:\n    count += 1\n    node = node['next']", "count += 1\nnode = node['next']", "for n in node:\n    count += 1", "node = node['next']"], "correct": "while node:\n    count += 1\n    node = node['next']", "expected_output": "3\n", "bonus_ram": 25 },
+		{ "title": "Find Value", "desc": "Find if value 10 exists in the linked chain. Print 'yes' or 'no'.", "code_template": "node = {'val': 5, 'next': {'val': 10, 'next': {'val': 15, 'next': None}}}\ntarget = 10\nfound = 'no'\nwhile node:\n    if node['val'] == target:\n        found = 'yes'\n        ___\n    node = node['next']\nprint(found)", "choices": ["break", "continue", "pass", "node = node['next']"], "correct": "break", "expected_output": "yes\n", "bonus_ram": 25 },
 	],
 	5: [  # Bubble Sort
 		{ "title": "One Pass", "desc": "Perform ONE pass of bubble sort on [5,3,8,1] and print the array.", "code_template": "arr = [5, 3, 8, 1]\nfor i in range(len(arr) - 1):\n    if arr[i] > arr[i+1]:\n        ___\nprint(arr)", "choices": ["arr[i], arr[i+1] = arr[i+1], arr[i]", "arr[i] = arr[i+1]", "swap(arr[i], arr[i+1])", "arr.swap(i)"], "correct": "arr[i], arr[i+1] = arr[i+1], arr[i]", "expected_output": "[3, 5, 1, 8]\n", "bonus_ram": 25 },
-		{ "title": "Two Passes", "desc": "Perform TWO passes of bubble sort on [5,3,8,1] and print the array.", "code_template": "arr = [5, 3, 8, 1]\nfor _ in range(2):\n    for i in range(len(arr) - 1):\n        if arr[i] > arr[i+1]:\n            arr[i], arr[i+1] = arr[i+1], arr[i]\nprint(arr)", "expected_output": "[1, 3, 5, 8]\n", "bonus_ram": 25 },
+		{ "title": "Two Passes", "desc": "Perform TWO passes of bubble sort on [5,3,8,1] and print the array.", "code_template": "arr = [5, 3, 8, 1]\nfor _ in range(2):\n    for i in range(len(arr) - 1):\n        if arr[i] > arr[i+1]:\n            ___\nprint(arr)", "choices": ["arr[i], arr[i+1] = arr[i+1], arr[i]", "arr[i] = arr[i+1]", "swap(arr[i], arr[i+1])", "arr[i+1] = arr[i]"], "correct": "arr[i], arr[i+1] = arr[i+1], arr[i]", "expected_output": "[1, 3, 5, 8]\n", "bonus_ram": 25 },
 		{ "title": "Count Swaps", "desc": "Count how many swaps happen during one bubble sort pass on [4,2,7,1] and print the count.", "code_template": "arr = [4, 2, 7, 1]\nswaps = 0\nfor i in range(len(arr) - 1):\n    if arr[i] > arr[i+1]:\n        arr[i], arr[i+1] = arr[i+1], arr[i]\n        ___\nprint(swaps)", "choices": ["swaps += 1", "swaps = swaps +1", "count +=1", "swaps++"], "correct": "swaps += 1", "expected_output": "2\n", "bonus_ram": 25 },
 	],
 	6: [  # Selection Sort
@@ -1043,6 +1043,9 @@ func _on_cancel_placement() -> void:
 func _show_placement_radial(cell: Vector2i) -> void:
 	if _has_blocking_modal():
 		return
+	var cell_center = grid_system.get_cell_center(cell)
+	var popup_start = get_canvas_transform() * cell_center
+	
 	# Determine equipped towers (bring/equip from tower select)
 	var equipped = GameManager.selected_towers
 	if equipped.is_empty():
@@ -1056,6 +1059,13 @@ func _show_placement_radial(cell: Vector2i) -> void:
 	var radius = 96.0
 	var btn_w = 78.0
 	var btn_h = 100.0
+	
+	# Reset menu before animating in
+	overlay_menu.position = popup_start
+	overlay_menu.scale = Vector2(1.0, 1.0)
+	overlay_menu.modulate.a = 1.0
+	for child in overlay_menu.get_children():
+		child.queue_free()
 	
 	for i in range(num_options):
 		var tower_id = equipped[i]
@@ -1217,9 +1227,29 @@ func _show_placement_radial(cell: Vector2i) -> void:
 	var clamp_margin_y = btn_h + radius
 	var menu_offset_x = clamp(overlay_menu.position.x, clamp_margin_x, screen_size.x - clamp_margin_x) - overlay_menu.position.x
 	var menu_offset_y = clamp(overlay_menu.position.y, clamp_margin_y, screen_size.y - clamp_margin_y) - overlay_menu.position.y
-	overlay_menu.position += Vector2(menu_offset_x, menu_offset_y)
+	var final_pos = overlay_menu.position + Vector2(menu_offset_x, menu_offset_y)
 	
+	# Quick snap-burst + smooth settle: fast outward burst, then a gentle finish
+	overlay_menu.position = popup_start
+	overlay_menu.scale = Vector2(0.15, 0.15)
+	overlay_menu.modulate.a = 0.2
 	_set_overlay_visible(true)
+	var menu_tween = create_tween().set_parallel(true)
+	menu_tween.tween_property(overlay_menu, "position", final_pos, 0.16).set_trans(Tween.TRANS_SINE).set_ease(Tween.EASE_OUT)
+	menu_tween.tween_property(overlay_menu, "scale", Vector2(1.04, 1.04), 0.16).set_trans(Tween.TRANS_SINE).set_ease(Tween.EASE_OUT)
+	menu_tween.tween_property(overlay_menu, "modulate:a", 1.0, 0.10)
+	for i in range(overlay_menu.get_child_count()):
+		var child = overlay_menu.get_child(i)
+		if child is Control:
+			var end_pos = child.position
+			var burst_offset = Vector2((randf() - 0.5) * 28.0, (randf() - 0.5) * 28.0)
+			child.position = end_pos + burst_offset
+			child.scale = Vector2(0.55, 0.55)
+			child.modulate.a = 0.3
+			var burst_tween = create_tween().set_parallel(true)
+			burst_tween.tween_property(child, "position", end_pos, 0.14 + i * 0.01).set_trans(Tween.TRANS_QUAD).set_ease(Tween.EASE_OUT)
+			burst_tween.tween_property(child, "scale", Vector2(1.0, 1.0), 0.14 + i * 0.01).set_trans(Tween.TRANS_BACK).set_ease(Tween.EASE_OUT)
+			burst_tween.tween_property(child, "modulate:a", 1.0, 0.10 + i * 0.01)
 
 func _place_tower(cell: Vector2i) -> void:
 	ram_manager.spend(selected_tower_data.ram_cost)
@@ -1990,7 +2020,7 @@ func _setup_hud_icons() -> void:
 	var tex_health = load("res://assets/icons/hud_health.svg") if ResourceLoader.exists("res://assets/icons/hud_health.svg") else _icon_shield()
 	var tex_score = load("res://assets/icons/hud_score.svg") if ResourceLoader.exists("res://assets/icons/hud_score.svg") else _icon_star()
 	_wrap_label_in_pill(top, ram_label, tex_ram, Color("#162E4A"), Color("#00D4FF"))
-	_wrap_label_in_pill(top, wave_label, tex_wave, Color("#241E52"), Color("#FFD60A"))
+	wave_label.visible = false
 	_wrap_label_in_pill(top, base_health_label, tex_health, Color("#4A1430"), Color("#FF2E63"))
 	_wrap_label_in_pill(top, score_label, tex_score, Color("#4A3510"), Color("#C86AFF"))
 
@@ -2139,7 +2169,18 @@ func _apply_responsive_challenge() -> void:
 	wave_splash_label.add_theme_font_size_override("font_size", _fs(0.105, 24.0, 48.0))
 
 func _apply_hud_styles() -> void:
-	var top_style := StyleBoxEmpty.new()
+	var top_style := StyleBoxFlat.new()
+	top_style.bg_color = Color("#050D1A")
+	top_style.bg_color.a = 0.85
+	top_style.border_color = Color("#00D4FF")
+	top_style.border_width_left = 1
+	top_style.border_width_right = 1
+	top_style.border_width_top = 1
+	top_style.border_width_bottom = 1
+	top_style.corner_radius_top_left = 8
+	top_style.corner_radius_top_right = 8
+	top_style.corner_radius_bottom_left = 8
+	top_style.corner_radius_bottom_right = 8
 	$HUD/HUDControl/TopHUD.add_theme_stylebox_override("panel", top_style)
 
 	var go_style := StyleBoxFlat.new()
@@ -2397,12 +2438,6 @@ func _build_challenge_panel() -> void:
 	submit_btn.pressed.connect(_on_challenge_submit)
 	_style_challenge_btn(submit_btn, Color("#00D4FF"))
 	btn_row.add_child(submit_btn)
-	var skip_btn = Button.new()
-	skip_btn.text = "⏭ Skip"
-	skip_btn.custom_minimum_size = Vector2(_fs(0.18, 90.0, 120.0), btn_h)
-	skip_btn.pressed.connect(_on_challenge_skip)
-	_style_challenge_btn(skip_btn, Color("#4A7FA5"))
-	btn_row.add_child(skip_btn)
 	btn_row.add_theme_constant_override("separation", 6)
 	layout.add_child(btn_row)
 
@@ -3026,16 +3061,6 @@ func _on_challenge_submit() -> void:
 			_apply_tower_lesson_price_adjustment(false)
 	var user_out = result.output.replace("\n", "  ") if result.success else "Error: " + result.error
 	_challenge_output.text = "Your output:  " + user_out + "\nExpected:     " + expected.replace("\n", "  ")
-	if not _challenge_is_auto_trigger:
-		_challenge_progress += 1
-	_advance_challenge.call_deferred()
-
-func _on_challenge_skip() -> void:
-	if _challenge_progress > _challenge_index:
-		return
-	_challenge_result.text = "⏭ Skipped"
-	_challenge_result.add_theme_color_override("font_color", Color("#4A7FA5"))
-	_challenge_output.text = ""
 	if not _challenge_is_auto_trigger:
 		_challenge_progress += 1
 	_advance_challenge.call_deferred()

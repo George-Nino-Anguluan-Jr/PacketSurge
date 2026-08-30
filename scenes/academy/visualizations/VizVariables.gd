@@ -47,14 +47,16 @@ func _draw_diagram() -> void:
 	var total_w: float = box_w * 3 + 20 * 2
 	var start_x: float = _diagram_rect.position.x + (_diagram_rect.size.x - total_w) * 0.5
 	var cy: float = _diagram_rect.position.y + (_diagram_rect.size.y - box_h) * 0.5
+	var label_size := VizUtil.academy_font_size(self, 12.0, 10.0, 14.0)
+	var value_size := VizUtil.academy_font_size(self, 16.0, 11.0, 18.0)
 	for i in 3:
 		var r := Rect2(start_x + i * (box_w + 20), cy, box_w, box_h)
 		draw_rect(r, VizUtil.C_PANEL, true)
 		draw_rect(r, colors[i], false, 2)
 		var name_bg := Rect2(r.position, Vector2(r.size.x, 22))
 		draw_rect(name_bg, colors[i], true)
-		draw_string(ThemeDB.fallback_font, Vector2(r.position.x + 10, r.position.y + 16), labels[i], HORIZONTAL_ALIGNMENT_LEFT, -1, 12, VizUtil.C_BG)
-		draw_string(ThemeDB.fallback_font, Vector2(r.position.x + 10, r.position.y + 46), vals[i], HORIZONTAL_ALIGNMENT_LEFT, -1, 16, colors[i])
+		VizUtil.draw_academy_text(self, Vector2(r.position.x + 10, r.position.y + 16), labels[i], VizUtil.C_BG, 12.0, 10.0, 14.0)
+		VizUtil.draw_academy_text(self, Vector2(r.position.x + 10, r.position.y + 46), vals[i], colors[i], 16.0, 11.0, 18.0)
 
 func _draw_anim() -> void:
 	var box_w: float = 180.0
@@ -66,7 +68,7 @@ func _draw_anim() -> void:
 	draw_rect(rect, _current_value_color, false, 2.5)
 	var name_bg := Rect2(rect.position, Vector2(rect.size.x, 28))
 	draw_rect(name_bg, _current_value_color, true)
-	draw_string(ThemeDB.fallback_font, Vector2(rect.position.x + 12, rect.position.y + 20), _current_name, HORIZONTAL_ALIGNMENT_LEFT, -1, 16, VizUtil.C_BG)
+	VizUtil.draw_academy_text(self, Vector2(rect.position.x + 12, rect.position.y + 20), _current_name, VizUtil.C_BG, 16.0, 12.0, 18.0)
 
 	var show_value: String = _current_value
 	var alpha: float = 1.0
@@ -79,7 +81,7 @@ func _draw_anim() -> void:
 			alpha = (_anim_progress - 0.5) * 2.0
 	var val_col := _current_value_color
 	val_col.a = clamp(alpha, 0.0, 1.0)
-	draw_string(ThemeDB.fallback_font, Vector2(rect.position.x + rect.size.x * 0.5 - 36, rect.position.y + rect.size.y * 0.5 + 22), show_value, HORIZONTAL_ALIGNMENT_LEFT, -1, 28, val_col)
+	VizUtil.draw_academy_text(self, Vector2(rect.position.x + 18, rect.position.y + rect.size.y * 0.5 + 18), show_value, val_col, 28.0, 16.0, 30.0)
 
 	var arr_from := Vector2(rect.position.x + rect.size.x, rect.position.y + rect.size.y * 0.5)
 	var arr_to := Vector2(_anim_rect.position.x + _anim_rect.size.x * 0.68, rect.position.y + rect.size.y * 0.5)
@@ -88,8 +90,8 @@ func _draw_anim() -> void:
 	var con_rect := Rect2(_anim_rect.position.x + _anim_rect.size.x * 0.68, rect.position.y - 20, 200, rect.size.y + 40)
 	draw_rect(con_rect, VizUtil.C_PANEL, true)
 	draw_rect(con_rect, VizUtil.C_HIGHLIGHT, false, 1.5)
-	draw_string(ThemeDB.fallback_font, Vector2(con_rect.position.x + 10, con_rect.position.y + 16), "console", HORIZONTAL_ALIGNMENT_LEFT, -1, 11, VizUtil.C_MUTED)
+	VizUtil.draw_academy_text(self, Vector2(con_rect.position.x + 10, con_rect.position.y + 16), "console", VizUtil.C_MUTED, 11.0, 9.0, 12.0)
 	if _printed_output != "":
-		draw_string(ThemeDB.fallback_font, Vector2(con_rect.position.x + 10, con_rect.position.y + 60), "> " + _printed_output, HORIZONTAL_ALIGNMENT_LEFT, -1, 18, VizUtil.C_VAL)
+		VizUtil.draw_academy_text(self, Vector2(con_rect.position.x + 10, con_rect.position.y + 60), "> " + _printed_output, VizUtil.C_VAL, 18.0, 12.0, 20.0)
 	else:
-		draw_string(ThemeDB.fallback_font, Vector2(con_rect.position.x + 10, con_rect.position.y + 60), "> _", HORIZONTAL_ALIGNMENT_LEFT, -1, 18, VizUtil.C_MUTED)
+		VizUtil.draw_academy_text(self, Vector2(con_rect.position.x + 10, con_rect.position.y + 60), "> _", VizUtil.C_MUTED, 18.0, 12.0, 20.0)

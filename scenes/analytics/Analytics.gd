@@ -259,28 +259,34 @@ func _make_accuracy_chart() -> Control:
 		var max_h  = size.y - 40
 
 		for i in range(count):
-			var topic   = topics[i]
-			var mastered = ProgressManager.topic_states.get(topic, "locked") == "mastered"
-			var x       = 20 + i * bar_w
-			var bar_h   = max_h * (1.0 if mastered else 0.3)
-			var bar_col = Color("#00FF88") if mastered else Color("#4A7FA5")
+			var topic = topics[i]
+			var score = ProgressManager.get_activity_accuracy(topic)
+			var x = 20 + i * bar_w
+			var bar_h = max_h * clamp(score, 0.0, 1.0)
+			var bar_col = Color("#00FF88") if score >= 0.7 else Color("#00D4FF") if score > 0.0 else Color("#1A3A5A")
 
-			if mastered:
+			if score > 0.0:
 				var rect = Rect2(
 					x + 2, size.y - 20 - bar_h,
 					bar_w - 4, bar_h
 				)
 				chart.draw_rect(rect, Color(bar_col, 0.3))
 				chart.draw_rect(rect, bar_col, false, 1.5)
+				var pct = int(round(score * 100.0))
+				chart.draw_string(
+					ThemeDB.fallback_font,
+					Vector2(x + 2, size.y - 24 - bar_h),
+					str(pct) + "%",
+					HORIZONTAL_ALIGNMENT_LEFT, -1, _fs(0.030, 16.0, 16.0),
+					Color("#E8F4FD")
+				)
 			else:
-				# Empty bar placeholder
 				var rect = Rect2(
 					x + 2, size.y - 20 - max_h * 0.05,
 					bar_w - 4, max_h * 0.05
 				)
 				chart.draw_rect(rect, Color("#1A3A5A"))
 
-		# Baseline
 		chart.draw_line(
 			Vector2(20, size.y - 20),
 			Vector2(size.x - 20, size.y - 20),

@@ -104,6 +104,7 @@ func _make_details_section() -> PanelContainer:
 
 	layout.add_child(_make_info_row("Full Name", SupabaseManager.full_name if SupabaseManager.full_name != "" else "Student Player"))
 	layout.add_child(_make_info_row("Username", SupabaseManager.username if SupabaseManager.username != "" else "student"))
+	layout.add_child(_make_info_row("Email", SupabaseManager.email if SupabaseManager.email != "" else "No email on file"))
 
 	var y_level = SupabaseManager.year_level
 	var sect = SupabaseManager.section

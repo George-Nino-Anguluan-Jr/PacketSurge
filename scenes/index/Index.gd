@@ -160,10 +160,10 @@ func _make_tower_card(data: Dictionary) -> Control:
 	var layout = HBoxContainer.new()
 	layout.add_theme_constant_override("separation", _card_separation())
 
-	# ── LEFT: live 3D preview ──
-	layout.add_child(_make_preview_panel(
-		data["id"], true, color, _preview_size()
-	))
+	# ── LEFT: lightweight placeholder, then queue actual preview later ──
+	var preview_slot := _make_placeholder_preview(color, _preview_size(), data["icon"])
+	layout.add_child(preview_slot)
+	_queue_preview_for_card(preview_slot, data["id"], true, color)
 
 	# ── MIDDLE: identity + description + stats ──
 	var middle = VBoxContainer.new()
@@ -263,10 +263,10 @@ func _make_enemy_card(data: Dictionary) -> Control:
 	var layout = HBoxContainer.new()
 	layout.add_theme_constant_override("separation", _card_separation())
 
-	# ── LEFT: live 3D preview ──
-	layout.add_child(_make_preview_panel(
-		data["id"], false, color, _preview_size()
-	))
+	# ── LEFT: lightweight placeholder, then queue actual preview later ──
+	var preview_slot := _make_placeholder_preview(color, _preview_size(), data["icon"])
+	layout.add_child(preview_slot)
+	_queue_preview_for_card(preview_slot, data["id"], false, color)
 
 	# ── MIDDLE: identity + description + stats ──
 	var middle = VBoxContainer.new()
@@ -331,6 +331,60 @@ func _matches_search(name: String, ds: String) -> bool:
 		return true
 	var q = search_query
 	return name.to_lower().contains(q) or ds.to_lower().contains(q)
+
+func _make_placeholder_preview(tint: Color, size: Vector2, icon: String = "") -> Control:
+	var wrapper = PanelContainer.new()
+	wrapper.custom_minimum_size = size
+	var frame := StyleBoxFlat.new()
+	frame.bg_color = C_BG_DARK
+	frame.border_color = Color(tint, 0.4)
+	frame.border_width_left   = 1
+	frame.border_width_right  = 1
+	frame.border_width_top    = 1
+	frame.border_width_bottom = 1
+	frame.corner_radius_top_left     = 6
+	frame.corner_radius_top_right    = 6
+	frame.corner_radius_bottom_left  = 6
+	frame.corner_radius_bottom_right = 6
+	wrapper.add_theme_stylebox_override("panel", frame)
+
+	var label := Label.new()
+	label.text = icon if icon != "" else "◈"
+	label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	label.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
+	label.add_theme_font_size_override("font_size", _fs(0.060, 20.0, 28.0))
+	label.add_theme_color_override("font_color", tint)
+	label.set_anchors_preset(Control.PRESET_FULL_RECT)
+	label.offset_left = 0
+	label.offset_top = 0
+	label.offset_right = 0
+	label.offset_bottom = 0
+	wrapper.add_child(label)
+	return wrapper
+
+func _queue_preview_for_card(card: Control, entity_id: String, is_tower: bool, tint: Color) -> void:
+	if card == null or not is_instance_valid(card):
+		return
+	if card.has_meta("preview_queued"):
+		return
+	card.set_meta("preview_queued", true)
+	var timer := get_tree().create_timer(0.15)
+	timer.timeout.connect(func():
+		if not is_instance_valid(card) or not card.is_inside_tree():
+			return
+		if card.get_node_or_null("PreviewSlot") != null:
+			return
+		var parent = card.get_parent()
+		if parent == null:
+			return
+		var size = card.custom_minimum_size if card.custom_minimum_size != Vector2.ZERO else _preview_size()
+		var real_preview = _make_preview_panel(entity_id, is_tower, tint, size)
+		real_preview.name = "PreviewSlot"
+		var idx = card.get_index()
+		card.queue_free()
+		parent.add_child(real_preview)
+		parent.move_child(real_preview, idx)
+	)
 
 # ─── 3D PREVIEW WIDGET ─────────────────────────────────
 # Builds a SubViewportContainer hosting the actual tower or enemy
