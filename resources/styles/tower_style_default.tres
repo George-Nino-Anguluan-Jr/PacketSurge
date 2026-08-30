@@ -1,4 +1,4 @@
-[gd_resource type="Resource" script_class="TowerStyle" format=3]
+﻿[gd_resource type="Resource" script_class="TowerStyle" format=3]
 
 [ext_resource type="Script" uid="uid://bklblcv5lwql0" path="res://scripts/data/styles/TowerStyle.gd" id="1_style"]
 

@@ -1,6 +1,8 @@
 # TowerLinkedList.gd
 # Linked List Tower — fires chain lightning that walks the enemy list in path
 # order (one node to the next), like following linked list pointers.
+# REDESIGN: Node-chain relay — triangular prism base with 3 node pods,
+# central hub + linked energy tethers. Mechanic = path-order chaining.
 
 extends TowerBase
 
@@ -19,7 +21,6 @@ func _perform_attack() -> void:
 	SoundManager.play_tower_attack(tower_id)
 	_recoil = 1.0
 	_flash_targets.clear()
-
 	var spawn_origin = get_muzzle_position()
 	var p = {
 		"pos": spawn_origin,
@@ -50,38 +51,66 @@ func _get_ability_targets() -> Array:
 	return result
 
 func _draw_base_geometry(color: Color, height: float) -> void:
-	var b_offset = Vector2(0, 0)
-	var top_pts = PackedVector2Array()
-	for i in range(3):
-		var angle = -PI/2 + i * (TAU / 3.0)
-		top_pts.append(b_offset + Vector2(cos(angle) * 22.0, sin(angle) * 22.0 * SQUASH))
-	for i in range(3):
-		var next_i = (i + 1) % 3
-		var t1 = top_pts[i]
-		var t2 = top_pts[next_i]
-		var b1 = t1 + Vector2(0, height)
-		var b2 = t2 + Vector2(0, height)
-		var panel = PackedVector2Array([t1, t2, b2, b1])
-		draw_colored_polygon(panel, Color("#0D131A") if color.a < 0.5 else Color(color, 0.15))
-		draw_polyline(PackedVector2Array([t1, t2, b2, b1]), color, 1.0)
-	draw_colored_polygon(top_pts, Color("#141D29") if color.a < 0.5 else Color("#15202E"))
-	var outline_loop = top_pts
-	outline_loop.append(top_pts[0])
-	draw_polyline(outline_loop, color, 1.8)
+	# Linked list base: chain of 3 node-circles with arrows, on a simple slab
+	var is_shadow = color.a < 0.5
+	var slab_col = Color("#0C1A14") if not is_shadow else Color("#0D131A")
+	# Simple rectangular slab
+	_draw_3d_box(Vector2(0, 0), Vector2(20, 16), height, slab_col, color, 1.5)
+	if not is_shadow:
+		# 3 linked nodes in a horizontal chain
+		var node_positions = [Vector2(-10, 0), Vector2(0, 0), Vector2(10, 0)]
+		for i in range(3):
+			var np = node_positions[i]
+			# Node circle
+			draw_circle(np, 3.5, Color("#0A1520"))
+			draw_circle(np, 3.5, Color(color, 0.4), false, 0.9)
+			# Node label (A, B, C or 0, 1, 2)
+			draw_string(ThemeDB.fallback_font, np + Vector2(-1.5, 1.5), str(i), HORIZONTAL_ALIGNMENT_CENTER, -1, 7, Color(color, 0.8))
+			# Pointer arrow to next node
+			if i < 2:
+				var next = node_positions[i + 1]
+				var arrow_start = np + Vector2(4.0, 0)
+				var arrow_end = next - Vector2(4.0, 0)
+				# Arrow shaft
+				draw_line(arrow_start, arrow_end, Color(color, 0.5), 1.2)
+				# Arrow head
+				var tip = arrow_end
+				var back = arrow_end - Vector2(2.5, 0)
+				draw_line(tip, back + Vector2(0, 1.5), Color(color, 0.6), 1.0)
+				draw_line(tip, back - Vector2(0, 1.5), Color(color, 0.6), 1.0)
+		# NULL terminator after last node
+		var null_pos = node_positions[2] + Vector2(7.0, 0)
+		draw_line(node_positions[2] + Vector2(4.0, 0), null_pos, Color(color, 0.3), 0.8)
+		draw_string(ThemeDB.fallback_font, null_pos + Vector2(-1.5, 1.5), "N", HORIZONTAL_ALIGNMENT_CENTER, -1, 6, Color(color, 0.4))
+	# Slab outline
+	draw_polyline(PackedVector2Array([
+		Vector2(-20, -16 * SQUASH), Vector2(20, -16 * SQUASH),
+		Vector2(20, 16 * SQUASH), Vector2(-20, 16 * SQUASH),
+		Vector2(-20, -16 * SQUASH)
+	]), color, 1.0 if not is_shadow else 0.8)
 
 func _draw_turret_assembly(color: Color) -> void:
 	var recoil = -_recoil * 5.0
-	_draw_3d_sphere(Vector2.ZERO, 4.0, color)
-	var nodes = [
-		Vector2(8.0, 0.0),
-		Vector2(-4.0, -6.0 * SQUASH),
-		Vector2(-4.0, 6.0 * SQUASH)
-	]
-	for i in range(3):
-		var j = (i + 1) % 3
-		draw_line(nodes[i], nodes[j], color, 1.5)
-	for i in range(3):
-		var n = nodes[i]
-		_draw_3d_sphere(n, 3.0, Color(color, 0.4 + i * 0.2))
-		_draw_3d_cylinder(Vector2(n.x + 3 + recoil, n.y), 1.5, 5.0, Color("#203040"), color, 1.0)
-		draw_circle(Vector2(n.x + 8 + recoil, n.y * SQUASH), 1.0, Color.BLACK)
+	var t = _anim_time
+	# Central relay hub — clean sphere
+	_draw_3d_sphere(Vector2.ZERO, 4.5, color)
+	# Pulsing ring around hub
+	draw_arc(Vector2.ZERO, 6.0 + sin(t * 3.0) * 0.5, 0, TAU, 16, Color(color, 0.3), 0.8)
+	# Emitter nozzle pointing right
+	_draw_3d_cylinder(Vector2(5.0 + recoil, 0), 1.5, 8.0, Color("#1A2E4A"), color, 1.0)
+	# Muzzle bore
+	var bore = Vector2(13.0 + recoil, 0)
+	draw_circle(bore, 1.2, Color.BLACK)
+	draw_circle(bore, 2.0, Color(color, 0.2 if _recoil > 0.3 else 0.08))
+	draw_circle(bore, 0.6, Color(color, 0.9))
+	# Chain lightning arcs from hub to sides (static decorative arcs)
+	for side in [-1.0, 1.0]:
+		var arc_end = Vector2(0, side * 5.0)
+		var mid = Vector2(3.0, side * 2.5)
+		draw_line(Vector2.ZERO, mid, Color(color, 0.25), 0.7)
+		draw_line(mid, arc_end, Color(color, 0.18), 0.6)
+	# Flow dots along arcs
+	for side in [-1.0, 1.0]:
+		var flow_t = fmod(t * 2.0 + side * 0.5, 1.0)
+		var p1 = Vector2.ZERO.lerp(Vector2(3.0, side * 2.5), flow_t)
+		draw_circle(p1, 0.8, Color(1, 1, 1, 0.7))

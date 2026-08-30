@@ -1,4 +1,4 @@
-[gd_resource type="Resource" script_class="TowerData" format=3]
+﻿[gd_resource type="Resource" script_class="TowerData" format=3]
 
 [ext_resource type="Script" path="res://scripts/data/TowerData.gd" id="1_vh5wh"]
 
@@ -20,10 +20,10 @@ ability_name = "Stack Pop"
 color = Color(1, 0.41960785, 0.20784314, 1)
 icon_text = "^v"
 order = 2
-tagline = "LIFO â€” last in, first out"
+tagline = "LIFO — last in, first out"
 mechanic = "Pushes small mortar hits onto a stack (targeting the last-entered enemy, LIFO). After 4 hits the stack POPs: a heavy mortar blast plus an AoE burst around the target."
 shooting = "A lobbed mortar shell arcs upward then crashes down on the target with a satisfying POP explosion."
 ability_desc = "Instantly triggers the next Stack Pop, dealing a heavy mortar burst and 0.5x splash damage to nearby enemies."
 	strong_against = Array[String](["overflow_packet", "basic_packet"])
 	weak_against = Array[String](["bubble_shield", "merge_twin", "selection_mark"])
-targeting = "LIFO â€” always hits the newest (last-entered) enemy in range."
+targeting = "LIFO — always hits the newest (last-entered) enemy in range."

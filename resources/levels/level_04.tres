@@ -1,4 +1,4 @@
-[gd_resource type="Resource" script_class="LevelData" format=3]
+﻿[gd_resource type="Resource" script_class="LevelData" format=3]
 
 [ext_resource type="Script" path="res://scripts/data/LevelData.gd" id="1_nds82"]
 
@@ -6,9 +6,9 @@
 script = ExtResource("1_nds82")
 level_number = 4
 level_name = "Linked Assault"
-description = "A Linked List connects nodes with pointers. Your Linked Tower chains damage — hitting one enemy then jumping to the next nearby one."
+description = "A Linked List connects nodes with pointers. Your Linked Tower chains damage - hitting one enemy then jumping to the next nearby one."
 data_structure = "Linked Lists"
-concept_desc = "A Linked List connects nodes with pointers. Your Linked Tower chains damage — hitting one enemy then jumping to the next nearby one."
+concept_desc = "A Linked List connects nodes with pointers. Your Linked Tower chains damage - hitting one enemy then jumping to the next nearby one."
 enemy_tip = "Queue Jumper packets speed up when they reach the front. Queue Tower's FIFO targeting counters them."
 starting_ram = 200
 wave_count = 5

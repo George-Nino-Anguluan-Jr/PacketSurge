@@ -1,4 +1,4 @@
-[gd_resource type="Resource" script_class="LessonData" format=3 uid="uid://c0s0tnbukxy8v"]
+﻿[gd_resource type="Resource" script_class="LessonData" format=3 uid="uid://c0s0tnbukxy8v"]
 
 [ext_resource type="Script" uid="uid://ciet8k3fqk8tr" path="res://scripts/data/LessonData.gd" id="1_6cnu5"]
 [ext_resource type="PackedScene" path="res://scenes/academy/visualizations/VizLists.tscn" id="2_ontg8"]
@@ -58,38 +58,38 @@ If you decide you don't need eggs anymore, you REMOVE them:
     shopping.remove(\"eggs\")
     # now: [\"milk\", \"bread\", \"butter\"]
 
-You can also count how many items are on your list — just look at it and count. Python does the same with len(shopping), which gives you 3.
+You can also count how many items are on your list - just look at it and count. Python does the same with len(shopping), which gives you 3.
 
 Another example: a playlist of songs. The first song is index 0. You can skip to the third song (index 2), add new songs (append), or remove songs you don't like (remove). Same idea."
 guided_example = "Let's build a small game inventory, one line at a time.
 
-Step 1 — Create the inventory. We start with three items.
+Step 1 - Create the inventory. We start with three items.
 
     inventory = [\"sword\", \"shield\", \"potion\"]
 
 Read this as: \"inventory is a list that contains three strings, in this order.\" The square brackets [ ] mark the start and end of the list. Commas separate each item.
 
-Step 2 — Look at the first item. The first item is at index 0.
+Step 2 - Look at the first item. The first item is at index 0.
 
     print(inventory[0])    # shows: sword
 
-Yes, ZERO — not one. This trips up everyone at first. The first item is always at index 0.
+Yes, ZERO - not one. This trips up everyone at first. The first item is always at index 0.
 
-Step 3 — Add a new item. We use append() to add it to the END of the list.
+Step 3 - Add a new item. We use append() to add it to the END of the list.
 
     inventory.append(\"ring\")
     print(inventory)        # shows: [\"sword\", \"shield\", \"potion\", \"ring\"]
 
 append() always adds to the end. The list grew from 3 items to 4.
 
-Step 4 — Replace an item. Let's say the player upgraded their shield to armor.
+Step 4 - Replace an item. Let's say the player upgraded their shield to armor.
 
     inventory[1] = \"armor\"
     print(inventory[1])    # shows: armor
 
-We didn't add or remove — we just REPLACED position 1 (which was \"shield\") with \"armor\".
+We didn't add or remove - we just REPLACED position 1 (which was \"shield\") with \"armor\".
 
-Step 5 — Count the items. len() tells you how many.
+Step 5 - Count the items. len() tells you how many.
 
     print(len(inventory))    # shows: 4
 
@@ -117,4 +117,4 @@ expected_output = "fruit"
 practice_question = "What does len() tell you about a list?"
 practice_options = Array[String](["The number of items in the list", "The last item in the list", "The first item in the list", "The total size in memory (in bytes)"])
 practice_correct_index = 0
-practice_explanation = "len() returns the number of items. For [10, 20, 30] it returns 3. It's like asking \"how long is this list?\" — it counts the items."
+practice_explanation = "len() returns the number of items. For [10, 20, 30] it returns 3. It's like asking \"how long is this list?\" - it counts the items."

@@ -1,4 +1,4 @@
-[gd_resource type="Resource" script_class="LessonData" format=3 uid="uid://b7mfo8srbw8gg"]
+﻿[gd_resource type="Resource" script_class="LessonData" format=3 uid="uid://b7mfo8srbw8gg"]
 
 [ext_resource type="Script" uid="uid://ciet8k3fqk8tr" path="res://scripts/data/LessonData.gd" id="1_wqrxq"]
 [ext_resource type="PackedScene" path="res://scenes/academy/visualizations/VizSelectionSort.tscn" id="2_wjjx8"]
@@ -12,7 +12,7 @@ unlocks_tower = "tower_selection"
 unlocks_level = 6
 title = "Selection Sort"
 category = "data_structures"
-icon_text = "→↓"
+icon_text = "->v"
 prerequisites = Array[String](["sort_bubble"])
 visualization_scene = ExtResource("2_wjjx8")
 concept_text = "Selection Sort finds the SMALLEST item in the unsorted part and swaps it to the front. Then it finds the next smallest, and so on.
@@ -21,38 +21,38 @@ The name comes from how it works: it SELECTS the minimum, then SELECTS the next 
 
 Imagine sorting [29, 10, 14, 37, 13]:
 
-Pass 1 — find minimum in ENTIRE array:
+Pass 1 - find minimum in ENTIRE array:
 - Scan: 29, 10, 14, 37, 13
 - Smallest = 10 at index 1
-- Swap with index 0 → [10, 29, 14, 37, 13]
+- Swap with index 0 -> [10, 29, 14, 37, 13]
 - Position 0 is now sorted forever
 
-Pass 2 — find minimum in REST (starting at index 1):
+Pass 2 - find minimum in REST (starting at index 1):
 - Scan: 29, 14, 37, 13
 - Smallest = 13 at index 4
-- Swap with index 1 → [10, 13, 14, 37, 29]
+- Swap with index 1 -> [10, 13, 14, 37, 29]
 - Position 1 is now sorted forever
 
-Pass 3 — find minimum in REST (starting at index 2):
+Pass 3 - find minimum in REST (starting at index 2):
 - Scan: 14, 37, 29
 - Smallest = 14 at index 2
-- Already in place → no swap
+- Already in place -> no swap
 - [10, 13, 14, 37, 29]
 
-Pass 4 — find minimum in REST (starting at index 3):
+Pass 4 - find minimum in REST (starting at index 3):
 - Scan: 37, 29
 - Smallest = 29 at index 4
-- Swap with index 3 → [10, 13, 14, 29, 37]
+- Swap with index 3 -> [10, 13, 14, 29, 37]
 - SORTED!
 
 Key facts:
-- Always O(n²) — same speed for best, average, and worst case
+- Always O(n²) - same speed for best, average, and worst case
 - FEWER swaps than Bubble Sort (only one swap per pass, vs many)
-- Memory: O(1) — sorts in place
+- Memory: O(1) - sorts in place
 - Easy to understand
 - Good when SWAPS are expensive (like writing to flash memory)"
 
-real_world_example = "Imagine you're picking teams for a game, and you want the shortest kid to be team captain (go first). You line up 5 kids and find the shortest — that's kid #2. You swap kid #2 with kid #1 (the current captain). Now kid #2 is the captain.
+real_world_example = "Imagine you're picking teams for a game, and you want the shortest kid to be team captain (go first). You line up 5 kids and find the shortest - that's kid #2. You swap kid #2 with kid #1 (the current captain). Now kid #2 is the captain.
 
 Next, you find the shortest kid in the REST of the line (kids 2-5). That's kid #4. You swap kid #4 with kid #2. Now kid #4 is in position 2.
 
@@ -66,7 +66,7 @@ This is SLOWER than bubble sort in some ways (always O(n²) comparisons), but it
 
 guided_example = "Let's trace Selection Sort on [29, 10, 14, 37, 13], one pass at a time.
 
-Pass 1 — Find the smallest in the WHOLE array.
+Pass 1 - Find the smallest in the WHOLE array.
 
 We scan: 29, 10, 14, 37, 13. The smallest is 10, at index 1. We swap it with the item at index 0 (which is 29).
 
@@ -74,7 +74,7 @@ After swap: [10, 29, 14, 37, 13]
 
 The 10 is now in its FINAL position (index 0). We never touch it again.
 
-Pass 2 — Find the smallest in the REST (positions 1 through 4).
+Pass 2 - Find the smallest in the REST (positions 1 through 4).
 
 We scan: 29, 14, 37, 13. The smallest is 13, at index 4. We swap it with the item at index 1 (which is 29).
 
@@ -82,13 +82,13 @@ After swap: [10, 13, 14, 37, 29]
 
 The 13 is now in its final position. The sorted part is [10, 13].
 
-Pass 3 — Find the smallest in the REST (positions 2 through 4).
+Pass 3 - Find the smallest in the REST (positions 2 through 4).
 
 We scan: 14, 37, 29. The smallest is 14, at index 2. It's already in place, so no swap.
 
 After pass: [10, 13, 14, 37, 29]
 
-Pass 4 — Find the smallest in the REST (positions 3 through 4).
+Pass 4 - Find the smallest in the REST (positions 3 through 4).
 
 We scan: 37, 29. The smallest is 29, at index 4. We swap it with the item at index 3 (which is 37).
 
@@ -102,9 +102,9 @@ For 5 items: 4 passes. For each pass, we scan the remaining unsorted part. Total
 
 recap_text = "- Selection Sort finds the minimum in the unsorted part and swaps it to the front
 - After each pass, one more value is locked in at the left
-- Always O(n²) — same speed for best, average, and worst
+- Always O(n²) - same speed for best, average, and worst
 - FEWER swaps than Bubble Sort (1 per pass vs many)
-- Memory: O(1) — sorts in place
+- Memory: O(1) - sorts in place
 - Very simple to understand
 - Good when swaps are expensive (flash memory, large records)
 - Not great for large lists (always slow)
@@ -133,4 +133,4 @@ expected_output = "[2, 4, 7, 9]"
 practice_question = "How many swaps does Selection Sort make for an array of 5 elements (in the worst case)?"
 practice_options = Array[String](["Up to 10 swaps", "Exactly 5 swaps", "At most 4 swaps", "Depends on the data, could be 0"])
 practice_correct_index = 2
-practice_explanation = "Selection Sort makes at most n-1 swaps for n elements. For 5 elements, that's 4 swaps maximum — one per pass. This is LESS than Bubble Sort, which can swap many times per pass. Fewer swaps = potentially faster if swaps are expensive."
+practice_explanation = "Selection Sort makes at most n-1 swaps for n elements. For 5 elements, that's 4 swaps maximum - one per pass. This is LESS than Bubble Sort, which can swap many times per pass. Fewer swaps = potentially faster if swaps are expensive."

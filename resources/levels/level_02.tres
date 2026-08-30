@@ -1,4 +1,4 @@
-[gd_resource type="Resource" script_class="LevelData" format=3]
+﻿[gd_resource type="Resource" script_class="LevelData" format=3]
 
 [ext_resource type="Script" path="res://scripts/data/LevelData.gd" id="1_q126n"]
 
@@ -6,9 +6,9 @@
 script = ExtResource("1_q126n")
 level_number = 2
 level_name = "Stack Overflow"
-description = "A Stack is LIFO — Last In First Out. Your Stack Tower targets the most recently arrived enemy first."
+description = "A Stack is LIFO - Last In First Out. Your Stack Tower targets the most recently arrived enemy first."
 data_structure = "Stacks"
-concept_desc = "A Stack is LIFO — Last In First Out. Your Stack Tower targets the most recently arrived enemy first."
+concept_desc = "A Stack is LIFO - Last In First Out. Your Stack Tower targets the most recently arrived enemy first."
 enemy_tip = "Indexed packets have damage resistance. Stack Tower's LIFO targeting helps pick them off."
 starting_ram = 175
 wave_count = 4

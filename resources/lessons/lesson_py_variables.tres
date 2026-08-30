@@ -1,4 +1,4 @@
-[gd_resource type="Resource" script_class="LessonData" format=3 uid="uid://n6gd71iio3v1"]
+﻿[gd_resource type="Resource" script_class="LessonData" format=3 uid="uid://n6gd71iio3v1"]
 
 [ext_resource type="Script" uid="uid://ciet8k3fqk8tr" path="res://scripts/data/LessonData.gd" id="1_38uo3"]
 [ext_resource type="PackedScene" path="res://scenes/academy/visualizations/VizVariables.tscn" id="2_3o5rh"]
@@ -27,8 +27,8 @@ You can also CHANGE what's inside the box anytime. Just use the same name with a
     score = 10      # score is now 10
     score = 20      # score is now 20 (the 10 is gone)
 
-Python automatically figures out the type — text (str), whole numbers (int), decimals (float), or true/false (bool). You don't have to declare the type yourself."
-real_world_example = "Imagine a small whiteboard on your fridge. You write \"Monday: Pizza\" on it, and the family sees it. Tomorrow you erase it and write \"Tuesday: Tacos\". The whiteboard label (the variable) stays the same — it's still YOUR family whiteboard — but the content (the value) changes every day.
+Python automatically figures out the type - text (str), whole numbers (int), decimals (float), or true/false (bool). You don't have to declare the type yourself."
+real_world_example = "Imagine a small whiteboard on your fridge. You write \"Monday: Pizza\" on it, and the family sees it. Tomorrow you erase it and write \"Tuesday: Tacos\". The whiteboard label (the variable) stays the same - it's still YOUR family whiteboard - but the content (the value) changes every day.
 
 That's exactly what a variable does:
 
@@ -46,27 +46,27 @@ Another example: your phone's battery percentage. It's a number that goes up whi
     battery = 84
     battery = 12
     # ... and so on"
-guided_example = "Let's build a tiny player profile together, one line at a time. Don't rush — read each step.
+guided_example = "Let's build a tiny player profile together, one line at a time. Don't rush - read each step.
 
-Step 1 — Pick a name. We store it in a variable called username.
+Step 1 - Pick a name. We store it in a variable called username.
 
     username = \"ProGamer99\"
 
 Think of this as writing \"ProGamer99\" on a label and sticking it on a box. The box is now called username.
 
-Step 2 — Pick a level. Levels are whole numbers, so no quotes needed.
+Step 2 - Pick a level. Levels are whole numbers, so no quotes needed.
 
     level = 5
 
 Notice: no quotes around 5. Quotes are for text. Numbers don't need them.
 
-Step 3 — Pick health. Health starts high.
+Step 3 - Pick health. Health starts high.
 
     health = 100
 
-Same idea — whole number, no quotes.
+Same idea - whole number, no quotes.
 
-Step 4 — Show everything. We use print() to display each value.
+Step 4 - Show everything. We use print() to display each value.
 
     print(username)
     print(level)
@@ -77,12 +77,12 @@ Output:
     5
     100
 
-Step 5 — Try changing a value. Let's say the player took damage.
+Step 5 - Try changing a value. Let's say the player took damage.
 
     health = 75
     print(health)    # shows: 75
 
-The box still has the name \"health\", but the number inside changed from 100 to 75. The old value (100) is replaced — it's gone forever, unless we saved it somewhere else.
+The box still has the name \"health\", but the number inside changed from 100 to 75. The old value (100) is replaced - it's gone forever, unless we saved it somewhere else.
 
 That's it! You just wrote a tiny program that stores and updates player info."
 recap_text = "- A variable is a labeled box that holds one value
@@ -91,7 +91,7 @@ recap_text = "- A variable is a labeled box that holds one value
 - Text needs quotes: name = \"Alex\"
 - Numbers don't need quotes: score = 100
 - Python picks the type for you (str, int, float, bool)
-- You can replace a value anytime — just assign again
+- You can replace a value anytime - just assign again
 - The old value is forgotten unless you saved it elsewhere
 - Variable names should describe what they hold (health, score, name)"
 challenge_instruction = "Drag the blocks to store a player's high score and lives, then display both."
@@ -111,5 +111,5 @@ expected_output = "100
 practice_question = "What does this code print?    x = 5    print(x)"
 practice_options = Array[String](["Show the number 5", "Show the letter x", "Cause an error", "Show \"x\" with quotes"])
 practice_correct_index = 0
-practice_explanation = "x is the variable name. 5 is the value. print(x) means: \"show whatever is inside the box called x\" — which is the number 5. It does NOT print the letter 'x'."
+practice_explanation = "x is the variable name. 5 is the value. print(x) means: \"show whatever is inside the box called x\" - which is the number 5. It does NOT print the letter 'x'."
 metadata/_custom_type_script = "uid://b3jcovwhgerid"

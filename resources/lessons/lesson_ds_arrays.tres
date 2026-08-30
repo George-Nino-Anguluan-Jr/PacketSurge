@@ -1,4 +1,4 @@
-[gd_resource type="Resource" script_class="LessonData" format=3 uid="uid://jc7po1d2w1h7"]
+﻿[gd_resource type="Resource" script_class="LessonData" format=3 uid="uid://jc7po1d2w1h7"]
 
 [ext_resource type="Script" uid="uid://ciet8k3fqk8tr" path="res://scripts/data/LessonData.gd" id="1_mo1o6"]
 [ext_resource type="PackedScene" path="res://scenes/academy/visualizations/VizArrays.tscn" id="2_qsa84"]
@@ -30,7 +30,7 @@ To put a value in a slot, assign to that position:
     scores[2] = 95
 
 Why is this useful? Three big reasons:
-1. INSTANT access by index (computer scientists call this O(1), meaning \"constant time\"). It doesn't matter if the array has 10 items or 10 million — getting scores[5] takes the same amount of time.
+1. INSTANT access by index (computer scientists call this O(1), meaning \"constant time\"). It doesn't matter if the array has 10 items or 10 million - getting scores[5] takes the same amount of time.
 2. Useful for data that has a known order or position (like days of the week, scores for 30 players, pixels in an image).
 3. The foundation for many other data structures.
 
@@ -64,13 +64,13 @@ To find \"Wed\", you'd loop through (Mon, Tue, Wed...) until you find it. But if
 
 guided_example = "Let's track the temperature for each day of the week, one step at a time.
 
-Step 1 — Create an array with 7 slots (one per day).
+Step 1 - Create an array with 7 slots (one per day).
 
     temps = [0, 0, 0, 0, 0, 0, 0]
 
 All zeros for now. We have 7 slots, indices 0 through 6.
 
-Step 2 — Fill in some temperatures.
+Step 2 - Fill in some temperatures.
 
     temps[0] = 72    # Monday
     temps[1] = 75    # Tuesday
@@ -80,13 +80,13 @@ Step 2 — Fill in some temperatures.
 
 Notice we used slot 0 for Monday, slot 1 for Tuesday, etc. The slot number (index) is the position from the start.
 
-Step 3 — Read Wednesday's temperature.
+Step 3 - Read Wednesday's temperature.
 
     print(temps[2])    # shows: 68
 
 Direct access! We didn't have to look at slots 0, 1, then 2. We just said \"give me slot 2\" and Python gave us 68.
 
-Step 4 — Find the highest temperature.
+Step 4 - Find the highest temperature.
 
     highest = temps[0]
     for t in temps:
@@ -96,7 +96,7 @@ Step 4 — Find the highest temperature.
 
 This loops through every slot. Each time it finds a value bigger than the current highest, it updates highest. By the end, highest holds the biggest number.
 
-Step 5 — Update a value.
+Step 5 - Update a value.
 
     temps[4] = 74    # Friday changed from 73 to 74
     print(temps)     # shows the full array with the new value
@@ -108,9 +108,9 @@ That's the whole pattern! Arrays are great when you need fast access by position
 recap_text = "- An array is a fixed-size row of slots, each with an index
 - In Python, a list works like an array
 - Index starts at 0: first slot is index 0, last slot is index N-1
-- Access by index is INSTANT (O(1)) — same time for 10 or 10 million items
+- Access by index is INSTANT (O(1)) - same time for 10 or 10 million items
 - Assign to an index to change a value: arr[2] = 99
-- Searching without knowing the position is SLOW (O(n)) — must check each slot
+- Searching without knowing the position is SLOW (O(n)) - must check each slot
 - Great for: ordered data, fixed-size collections, fast position-based access
 - Not great for: searching unknown positions, frequent insertions in the middle"
 

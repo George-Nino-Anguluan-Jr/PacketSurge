@@ -1,4 +1,4 @@
-[gd_resource type="Resource" script_class="EnemyData" format=3]
+﻿[gd_resource type="Resource" script_class="EnemyData" format=3]
 
 [ext_resource type="Script" path="res://scripts/data/EnemyData.gd" id="1_h0v0r"]
 
@@ -17,5 +17,5 @@ tagline = "Resistant to single hits. Array Tower's fast attack excels here."
 icon = "[0]"
 threat = "Low"
 special = "50% damage resistance. Quick, repeated hits (Array Tower) bypass it."
-lesson = "Arrays use index-based access â€” multiple bolts at different indices."
+lesson = "Arrays use index-based access — multiple bolts at different indices."
 color = Color(0, 0.83137256, 1, 1)

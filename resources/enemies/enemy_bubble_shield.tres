@@ -1,4 +1,4 @@
-[gd_resource type="Resource" script_class="EnemyData" format=3]
+﻿[gd_resource type="Resource" script_class="EnemyData" format=3]
 
 [ext_resource type="Script" path="res://scripts/data/EnemyData.gd" id="1_viktu"]
 
@@ -14,7 +14,7 @@ ram_reward = 25
 is_boss = false
 title = "Bubble Shield"
 tagline = "Shield absorbs the first 3 hits. Pop it first."
-icon = "â­•"
+icon = "â­"
 special = "Shield blocks 3 hits before HP is exposed. Shield slowly regenerates."
-lesson = "Bubble Sort compares adjacent pairs â€” pop two at once with AoE."
+lesson = "Bubble Sort compares adjacent pairs — pop two at once with AoE."
 color = Color(0.58431375, 0.64705884, 0.6509804, 1)

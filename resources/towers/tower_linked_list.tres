@@ -1,4 +1,4 @@
-[gd_resource type="Resource" script_class="TowerData" format=3]
+﻿[gd_resource type="Resource" script_class="TowerData" format=3]
 
 [ext_resource type="Script" path="res://scripts/data/TowerData.gd" id="1_ljvxj"]
 
@@ -20,8 +20,8 @@ ability_name = "Chain Link"
 color = Color(0, 1, 0.53333336, 1)
 icon_text = "->->"
 order = 4
-tagline = "Chain lightning â€” jumps between enemies"
-mechanic = "Fires chain lightning that hits a primary target then bounces to up to 2 more nearby enemies. Each chain jump deals reduced damage â€” like traversing nodes in a linked list."
+tagline = "Chain lightning — jumps between enemies"
+mechanic = "Fires chain lightning that hits a primary target then bounces to up to 2 more nearby enemies. Each chain jump deals reduced damage — like traversing nodes in a linked list."
 shooting = "A crackling lightning bolt arcs from the tower to the first target, then chains to adjacent enemies."
 ability_desc = "Unleashes a triple-chain burst hitting 3 enemies with full damage."
 	strong_against = Array[String](["linked_drain", "merge_twin"])

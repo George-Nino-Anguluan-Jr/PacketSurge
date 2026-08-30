@@ -32,6 +32,8 @@ var tower_instance: Node2D = null
 
 var _info_btn: Label
 var _new_badge: Label
+var _concept_badge: Label
+var _complexity_badge: Label
 
 # ─── HELPERS ───────────────────────────────────────────
 func _min_dim() -> float:
@@ -47,6 +49,8 @@ func _ready() -> void:
 	pivot_offset = size / 2
 	_build_info_button()
 	_build_new_badge()
+	_build_concept_badge()
+	_build_complexity_badge()
 
 func _build_info_button() -> void:
 	_info_btn = Label.new()
@@ -88,6 +92,40 @@ func _build_new_badge() -> void:
 	_new_badge.offset_bottom = _fs(0.045, 18.0, 24.0)
 	add_child(_new_badge)
 
+func _build_concept_badge() -> void:
+	_concept_badge = Label.new()
+	_concept_badge.text = ""
+	_concept_badge.add_theme_font_size_override("font_size", _fs(0.022, 11.0, 13.0))
+	_concept_badge.add_theme_color_override("font_color", Color("#00D4FF"))
+	_concept_badge.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	_concept_badge.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
+	_concept_badge.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	var bg = StyleBoxFlat.new()
+	bg.bg_color = Color("#00D4FF", 0.12)
+	bg.border_color = Color("#00D4FF", 0.4)
+	bg.border_width_left = 1
+	bg.border_width_right = 1
+	bg.border_width_top = 1
+	bg.border_width_bottom = 1
+	bg.corner_radius_top_left = 3
+	bg.corner_radius_top_right = 3
+	bg.corner_radius_bottom_left = 3
+	bg.corner_radius_bottom_right = 3
+	_concept_badge.add_theme_stylebox_override("normal", bg)
+	_concept_badge.visible = false
+	add_child(_concept_badge)
+
+func _build_complexity_badge() -> void:
+	_complexity_badge = Label.new()
+	_complexity_badge.text = ""
+	_complexity_badge.add_theme_font_size_override("font_size", _fs(0.020, 10.0, 12.0))
+	_complexity_badge.add_theme_color_override("font_color", Color("#80FFB0"))
+	_complexity_badge.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	_complexity_badge.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
+	_complexity_badge.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	_complexity_badge.visible = false
+	add_child(_complexity_badge)
+
 func setup(p_tower_id: String, def: Dictionary, req: bool) -> void:
 	tower_id = p_tower_id
 	tower_name = def["tower_name"]
@@ -98,6 +136,16 @@ func setup(p_tower_id: String, def: Dictionary, req: bool) -> void:
 
 	name_label.text = tower_name.replace(" Tower", "")
 	cost_label.text = str(ram_cost) + " RAM"
+
+	# Populate educational badges from TowerData
+	var tower_res: TowerData = DataRegistry.get_tower(tower_id)
+	if tower_res:
+		if tower_res.data_structure != "":
+			_concept_badge.text = tower_res.data_structure
+			_concept_badge.visible = true
+		if tower_res.time_complexity != "":
+			_complexity_badge.text = tower_res.time_complexity
+			_complexity_badge.visible = true
 
 	# Lock card size — dynamic via _fs() — prevents stretching in any container
 	var card_w = _fs(0.22, 110.0, 160.0)
@@ -112,6 +160,12 @@ func setup(p_tower_id: String, def: Dictionary, req: bool) -> void:
 	var viewport_h = _fs(0.18, 64.0, 96.0)
 	tower_viewport.custom_minimum_size = Vector2(0, viewport_h)
 	tower_container.position = Vector2(card_w * 0.5, viewport_h * 0.5)
+
+	# Position educational badges — concept at top-right below NEW badge, complexity at bottom-left
+	_concept_badge.position = Vector2(card_w - _fs(0.085, 36.0, 48.0) - _fs(0.008, 2.0, 4.0), _fs(0.045, 18.0, 24.0) + _fs(0.008, 2.0, 4.0))
+	_concept_badge.custom_minimum_size = Vector2(_fs(0.085, 36.0, 48.0), _fs(0.024, 10.0, 12.0))
+	_complexity_badge.position = Vector2(_fs(0.008, 2.0, 4.0), card_h - _fs(0.028, 12.0, 14.0) - _fs(0.008, 2.0, 4.0))
+	_complexity_badge.custom_minimum_size = Vector2(_fs(0.06, 28.0, 36.0), _fs(0.024, 10.0, 12.0))
 
 	_apply_styles()
 	_instantiate_tower_model(def)

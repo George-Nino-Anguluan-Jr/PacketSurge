@@ -1,4 +1,4 @@
-[gd_resource type="Resource" script_class="LevelData" format=3]
+﻿[gd_resource type="Resource" script_class="LevelData" format=3]
 
 [ext_resource type="Script" path="res://scripts/data/LevelData.gd" id="1_dqddg"]
 
@@ -6,9 +6,9 @@
 script = ExtResource("1_dqddg")
 level_number = 12
 level_name = "Linear Sweep"
-description = "Linear Search checks every element one by one. Your Linear Tower scans ALL enemies in a wide range — it never misses but takes time like O(n) sequential checking."
+description = "Linear Search checks every element one by one. Your Linear Tower scans ALL enemies in a wide range - it never misses but takes time like O(n) sequential checking."
 data_structure = "Linear Search"
-concept_desc = "Linear Search checks every element one by one. Your Linear Tower scans ALL enemies in a wide range — it never misses but takes time like O(n) sequential checking."
+concept_desc = "Linear Search checks every element one by one. Your Linear Tower scans ALL enemies in a wide range - it never misses but takes time like O(n) sequential checking."
 enemy_tip = "Radix Digit packets have 3 health segments. Radix Tower's multi-pass strips them digit by digit!"
 starting_ram = 300
 wave_count = 7

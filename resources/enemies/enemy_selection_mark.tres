@@ -1,4 +1,4 @@
-[gd_resource type="Resource" script_class="EnemyData" format=3]
+﻿[gd_resource type="Resource" script_class="EnemyData" format=3]
 
 [ext_resource type="Script" path="res://scripts/data/EnemyData.gd" id="1_ov1jk"]
 
@@ -14,8 +14,8 @@ ram_reward = 20
 is_boss = false
 title = "Selection Mark"
 tagline = "Nearly invulnerable unless it's the lowest-HP enemy on screen."
-icon = "â—Ž"
+icon = "â-Ž"
 threat = "High"
 special = "75% damage resistance unless it has the lowest HP in range."
-lesson = "Selection Sort finds the minimum â€” Selection Tower auto-targets the weakest."
+lesson = "Selection Sort finds the minimum — Selection Tower auto-targets the weakest."
 color = Color(0.90588236, 0.29803923, 0.23529412, 1)

@@ -75,6 +75,15 @@ theme_override_font_sizes/font_size = 16
 theme_override_colors/font_color = Color(0, 0.831, 1, 1)
 vertical_alignment = 2
 
+[node name="DescriptionLabel" type="Label" parent="Backdrop/Margin/Panel/Content/Header"]
+layout_mode = 2
+size_flags_horizontal = 3
+size_flags_vertical = 3
+theme_override_font_sizes/font_size = 14
+theme_override_colors/font_color = Color(0.75, 0.85, 0.93, 0.8)
+vertical_alignment = 1
+autowrap_mode = 1
+
 [node name="PreviewWrap" type="Control" parent="Backdrop/Margin/Panel/Content"]
 layout_mode = 2
 size_flags_horizontal = 3
@@ -90,6 +99,26 @@ grow_horizontal = 2
 grow_vertical = 2
 mouse_filter = 2
 script = ExtResource("2_w94sq")
+
+[node name="ComplexityRow" type="HBoxContainer" parent="Backdrop/Margin/Panel/Content"]
+layout_mode = 2
+theme_override_constants/separation = 12
+
+[node name="DataStructureBadge" type="Label" parent="Backdrop/Margin/Panel/Content/ComplexityRow"]
+layout_mode = 2
+theme_override_font_sizes/font_size = 14
+theme_override_colors/font_color = Color(0, 0.831, 1, 1)
+theme_override_colors/fontBackgroundColor = Color(0, 0.3, 0.5, 0.4)
+
+[node name="TimeComplexityBadge" type="Label" parent="Backdrop/Margin/Panel/Content/ComplexityRow"]
+layout_mode = 2
+theme_override_font_sizes/font_size = 14
+theme_override_colors/font_color = Color(0.5, 1, 0.5, 1)
+
+[node name="SpaceComplexityBadge" type="Label" parent="Backdrop/Margin/Panel/Content/ComplexityRow"]
+layout_mode = 2
+theme_override_font_sizes/font_size = 14
+theme_override_colors/font_color = Color(1, 0.8, 0.4, 1)
 
 [node name="Body" type="ScrollContainer" parent="Backdrop/Margin/Panel/Content"]
 layout_mode = 2

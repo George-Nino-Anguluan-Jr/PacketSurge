@@ -108,6 +108,24 @@ func initialize(
 func _ready() -> void:
 	if not _using_sprites and enemy_type != "":
 		_load_sprites()
+	_setup_mouse_detection()
+
+func _setup_mouse_detection() -> void:
+	# Add Area2D for mouse hover detection (enemies are CharacterBody2D,
+	# which don't emit mouse signals natively)
+	var area = Area2D.new()
+	area.name = "HoverArea"
+	area.input_pickable = true
+	area.monitoring = true
+	area.monitorable = false
+	area.collision_layer = 0
+	area.collision_mask = 0
+	var shape = CollisionShape2D.new()
+	var circle = CircleShape2D.new()
+	circle.radius = ENEMY_RADIUS + 4.0
+	shape.shape = circle
+	area.add_child(shape)
+	add_child(area)
 
 func _load_sprites() -> void:
 	if enemy_type == "":
@@ -140,10 +158,29 @@ func _setup_type() -> void:
 	enemy_color = edef.get("color", Color.WHITE)
 	ram_reward = int(edef.get("ram_reward", 10))
 	_init_type_state()
+	_build_tower_multipliers()
 
 func _init_type_state() -> void:
 	# Virtual — subclasses override to initialize type-specific state
 	pass
+
+func _build_tower_multipliers() -> void:
+	# Build tower_multipliers dynamically from TowerData.strong_against.
+	# Each tower that lists this enemy in its strong_against deals 2.0x;
+	# all other towers deal 0.6x (except basic_packet which stays 1.0x).
+	var mults: Dictionary = {}
+	var has_any_strong := false
+	for tower_id in DataRegistry.towers:
+		var td: TowerData = DataRegistry.towers[tower_id]
+		if enemy_type in td.strong_against:
+			mults[tower_id] = 2.0
+			has_any_strong = true
+		else:
+			mults[tower_id] = 0.6
+	if has_any_strong:
+		type_data["tower_multipliers"] = mults
+		type_data["default_tower_mult"] = 0.6
+	# Basic packet gets no multipliers — 1.0x from everything
 
 func ensure_style() -> EnemyStyle:
 	if style == null:
@@ -308,7 +345,12 @@ func take_damage(amount: float, source: String = "") -> void:
 	if is_dead:
 		return
 
-	var final_damage = _modify_damage(amount) * _get_source_damage_multiplier(source)
+	var mult = _get_source_damage_multiplier(source)
+	var final_damage = _modify_damage(amount) * mult
+
+	# Show floating multiplier text for educational feedback
+	if source != "" and mult != 1.0:
+		_show_floating_multiplier(mult)
 
 	# Some types (e.g., radix_digit) handle death internally in _modify_damage.
 	# If _die() was called there, skip the standard HP application.
@@ -319,8 +361,50 @@ func take_damage(amount: float, source: String = "") -> void:
 	_flash_timer = 0.15
 	queue_redraw()
 
+	# Show damage number
+	if final_damage > 0:
+		_show_damage_number(final_damage)
+
 	if current_health <= 0:
 		_die()
+
+func _show_floating_multiplier(mult: float) -> void:
+	var label = Label.new()
+	if mult >= 2.0:
+		label.text = "2.0x"
+		label.add_theme_color_override("font_color", Color("#00FF88"))
+	elif mult <= 0.6:
+		label.text = "0.6x"
+		label.add_theme_color_override("font_color", Color("#FF4466"))
+	else:
+		return
+	label.add_theme_font_size_override("font_size", 18)
+	label.z_index = 100
+	label.position = Vector2(-16, -48)
+	label.modulate.a = 0.0
+	add_child(label)
+	var tween = create_tween()
+	tween.tween_property(label, "modulate:a", 1.0, 0.08)
+	tween.tween_property(label, "position:y", label.position.y - 24, 0.8)
+	tween.parallel().tween_property(label, "modulate:a", 0.0, 0.5).set_delay(0.3)
+	tween.tween_callback(label.queue_free)
+
+func _show_damage_number(damage: float) -> void:
+	var label = Label.new()
+	var rounded = int(damage)
+	if rounded <= 0:
+		return
+	label.text = str(rounded)
+	label.add_theme_font_size_override("font_size", 18)
+	label.add_theme_color_override("font_color", Color("#FFFFFF"))
+	label.z_index = 99
+	label.position = Vector2(randf_range(-10, 10), -35)
+	label.modulate.a = 0.9
+	add_child(label)
+	var tween = create_tween()
+	tween.tween_property(label, "position:y", label.position.y - 22, 0.6)
+	tween.parallel().tween_property(label, "modulate:a", 0.0, 0.45).set_delay(0.1)
+	tween.tween_callback(label.queue_free)
 
 func _modify_damage(amount: float) -> float:
 	# Virtual — subclasses override for type-specific resistance/absorption

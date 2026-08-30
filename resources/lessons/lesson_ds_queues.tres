@@ -1,4 +1,4 @@
-[gd_resource type="Resource" script_class="LessonData" format=3 uid="uid://ba2hjywpum87f"]
+﻿[gd_resource type="Resource" script_class="LessonData" format=3 uid="uid://ba2hjywpum87f"]
 
 [ext_resource type="Script" uid="uid://ciet8k3fqk8tr" path="res://scripts/data/LessonData.gd" id="1_eftlh"]
 [ext_resource type="PackedScene" path="res://scenes/academy/visualizations/VizQueues.tscn" id="2_m1hvm"]
@@ -12,10 +12,10 @@ unlocks_tower = "tower_queue"
 unlocks_level = 3
 title = "Queues"
 category = "data_structures"
-icon_text = "→"
+icon_text = "->"
 prerequisites = Array[String](["ds_stacks"])
 visualization_scene = ExtResource("2_m1hvm")
-concept_text = "A queue is a line where the FIRST person in is the FIRST person served. Just like standing in line at a store — no cutting, no jumping ahead.
+concept_text = "A queue is a line where the FIRST person in is the FIRST person served. Just like standing in line at a store - no cutting, no jumping ahead.
 
 This rule is called FIFO: First In, First Out. The first item you add is the first one you remove.
 
@@ -28,15 +28,15 @@ Two main operations:
 - enqueue (= append): add to the BACK of the line
 - dequeue (= popleft): remove from the FRONT of the line
 
-    q.append(\"A\")        # enqueue A — line: A
-    q.append(\"B\")        # enqueue B — line: A, B
-    q.append(\"C\")        # enqueue C — line: A, B, C
+    q.append(\"A\")        # enqueue A - line: A
+    q.append(\"B\")        # enqueue B - line: A, B
+    q.append(\"C\")        # enqueue C - line: A, B, C
 
-    print(q.popleft())    # dequeue → \"A\" (first in, first out)
-    print(q.popleft())    # dequeue → \"B\"
-    print(q.popleft())    # dequeue → \"C\"
+    print(q.popleft())    # dequeue -> \"A\" (first in, first out)
+    print(q.popleft())    # dequeue -> \"B\"
+    print(q.popleft())    # dequeue -> \"C\"
 
-Why use deque instead of a regular list? Because removing from the front of a list is SLOW (O(n)) — every other item has to shift over. deque is built for fast operations on BOTH ends, so enqueue and dequeue are both O(1).
+Why use deque instead of a regular list? Because removing from the front of a list is SLOW (O(n)) - every other item has to shift over. deque is built for fast operations on BOTH ends, so enqueue and dequeue are both O(1).
 
 You can also peek at the front without removing: q[0].
 
@@ -44,7 +44,7 @@ Key difference from STACK: in a stack, you add and remove from the SAME end. In 
 
 real_world_example = "The most obvious example: a line at a store. The first person in line gets served first. When a new person arrives, they go to the BACK of the line. When the cashier is free, they serve the person at the FRONT.
 
-Another example: a print queue. When you print 5 documents, they all get added to the queue. The printer processes them in order — the first one you printed comes out first. If you print another document while the printer is busy, it goes to the back of the queue.
+Another example: a print queue. When you print 5 documents, they all get added to the queue. The printer processes them in order - the first one you printed comes out first. If you print another document while the printer is busy, it goes to the back of the queue.
 
     printer = deque()
     printer.append(\"Resume.pdf\")
@@ -55,7 +55,7 @@ Another example: a print queue. When you print 5 documents, they all get added t
     printer.popleft()    # prints \"Resume.pdf\"
     printer.popleft()    # prints \"Report.pdf\"
 
-A third example: a customer service phone line. When you call, you join a queue. The next available agent takes the person who has been waiting the LONGEST — that's the person at the front of the queue. New callers go to the back.
+A third example: a customer service phone line. When you call, you join a queue. The next available agent takes the person who has been waiting the LONGEST - that's the person at the front of the queue. New callers go to the back.
 
     line = deque()
     line.append(\"Alice\")      # joined the line
@@ -70,14 +70,14 @@ A fourth example: a to-do list processed in order. The first task you add is the
 
 guided_example = "Let's build a task queue, one step at a time.
 
-Step 1 — Import the deque and create an empty queue.
+Step 1 - Import the deque and create an empty queue.
 
     from collections import deque
     tasks = deque()
 
 We have to import deque from collections (it's not built-in like lists). It's a special structure designed for fast operations on both ends.
 
-Step 2 — Add three tasks (enqueue).
+Step 2 - Add three tasks (enqueue).
 
     tasks.append(\"Task 1: Setup\")
     tasks.append(\"Task 2: Build\")
@@ -85,20 +85,20 @@ Step 2 — Add three tasks (enqueue).
 
 Each append() adds to the BACK of the queue. So Task 1 is at the front, Task 3 is at the back.
 
-Step 3 — Process the first task (dequeue).
+Step 3 - Process the first task (dequeue).
 
     current = tasks.popleft()
     print(\"Doing:\", current)    # Doing: Task 1: Setup
 
 popleft() removes from the FRONT and gives us the value. The first task in is the first one processed.
 
-Step 4 — Check how many are left.
+Step 4 - Check how many are left.
 
     print(len(tasks))    # shows: 2
 
 Two tasks remaining.
 
-Step 5 — Process the rest.
+Step 5 - Process the rest.
 
     while len(tasks) > 0:
         print(\"Doing:\", tasks.popleft())
@@ -115,11 +115,11 @@ recap_text = "- A queue is a line where the first item in is the first one out (
 - enqueue (append) adds to the BACK
 - dequeue (popleft) removes from the FRONT
 - In Python, use deque from collections for fast operations
-- Both operations are O(1) — constant time
+- Both operations are O(1) - constant time
 - Difference from STACK: stack is LIFO (same end), queue is FIFO (opposite ends)
 - Think of a line at a store: new people go to the back, served people leave from the front
 - Used in: print queues, task lists, customer service lines, BFS algorithms
-- Regular lists are slow for popleft — use deque instead"
+- Regular lists are slow for popleft - use deque instead"
 
 challenge_instruction = "Drag the blocks to create a queue, add two items, then dequeue the first one to print it."
 challenge_blocks = Array[String](["from collections import deque", "q = deque()", "q.append(\"hi\")", "print(q.popleft())"])
@@ -137,4 +137,4 @@ expected_output = "hello"
 practice_question = "What is the difference between a stack and a queue?"
 practice_options = Array[String](["Stack is FIFO, queue is LIFO", "Stack is LIFO, queue is FIFO", "They are exactly the same", "Stack has no pop operation"])
 practice_correct_index = 1
-practice_explanation = "Stack is LIFO (Last In First Out) — the most recent is removed first. Queue is FIFO (First In First Out) — the oldest is removed first. They serve opposite purposes. Use a stack for undo/back, use a queue for lines and task order."
+practice_explanation = "Stack is LIFO (Last In First Out) - the most recent is removed first. Queue is FIFO (First In First Out) - the oldest is removed first. They serve opposite purposes. Use a stack for undo/back, use a queue for lines and task order."
