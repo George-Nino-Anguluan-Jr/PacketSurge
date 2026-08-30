@@ -137,15 +137,10 @@ func setup(p_tower_id: String, def: Dictionary, req: bool) -> void:
 	name_label.text = tower_name.replace(" Tower", "")
 	cost_label.text = str(ram_cost) + " RAM"
 
-	# Populate educational badges from TowerData
-	var tower_res: TowerData = DataRegistry.get_tower(tower_id)
-	if tower_res:
-		if tower_res.data_structure != "":
-			_concept_badge.text = tower_res.data_structure
-			_concept_badge.visible = true
-		if tower_res.time_complexity != "":
-			_complexity_badge.text = tower_res.time_complexity
-			_complexity_badge.visible = true
+	# Educational badges disabled — center of card now clean (no duplicate name / complexity)
+	# Keep badges hidden as requested
+	_concept_badge.visible = false
+	_complexity_badge.visible = false
 
 	# Lock card size — dynamic via _fs() — prevents stretching in any container
 	var card_w = _fs(0.22, 110.0, 160.0)

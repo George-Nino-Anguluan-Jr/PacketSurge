@@ -12,6 +12,7 @@ extends Control
 @onready var selected_row: HBoxContainer    = $SafeArea/ContentHost/OuterScroll/ContentArea/RightMargin/RightContent/SelectedRow
 @onready var available_grid: GridContainer  = $SafeArea/ContentHost/OuterScroll/ContentArea/RightMargin/RightContent/AvailableGrid
 @onready var start_btn: Button              = get_node("SafeArea/ContentHost/OuterScroll/ContentArea/RightMargin/RightContent/StartBtn")
+@onready var hint_label: Label              = get_node_or_null("SafeArea/ContentHost/OuterScroll/ContentArea/RightMargin/RightContent/HintLabel")
 @onready var scroll_container: ScrollContainer = $SafeArea/ContentHost/OuterScroll
 @onready var card_layer: Control            = $SafeArea/ContentHost/CardLayer
 
@@ -631,6 +632,10 @@ func _apply_responsive_layout() -> void:
 	right_margin.add_theme_constant_override("margin_right", inset)
 	right_margin.add_theme_constant_override("margin_top", clampf(min_dim * 0.010, 8.0, 16.0))
 	right_margin.add_theme_constant_override("margin_bottom", inset)
+
+	# Fluid hint label
+	if hint_label:
+		hint_label.add_theme_font_size_override("font_size", _fs(0.028, 12.0, 14.0))
 
 	# Fluid left margin width
 	left_margin.custom_minimum_size = Vector2(clampf(min_dim * 0.32, 180.0, 380.0), 0)
