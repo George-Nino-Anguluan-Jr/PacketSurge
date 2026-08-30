@@ -717,8 +717,6 @@ func _draw_hud_elements() -> void:
 	if _selected:
 		draw_circle(Vector2.ZERO, attack_range + ENEMY_RADIUS, Color(tower_color, 0.06))
 		draw_arc(Vector2.ZERO, attack_range + ENEMY_RADIUS, 0, TAU, 64, Color(tower_color, 0.25), 1.5)
-		draw_string(ThemeDB.fallback_font, Vector2(0, -attack_range - ENEMY_RADIUS - 14),
-			"Range: " + str(attack_range), HORIZONTAL_ALIGNMENT_CENTER, -1, 10, Color(tower_color, 0.7))
 
 	if Engine.is_editor_hint():
 		draw_arc(Vector2.ZERO, attack_range, 0, TAU, 64, Color(tower_color, 0.15), 1.0)
