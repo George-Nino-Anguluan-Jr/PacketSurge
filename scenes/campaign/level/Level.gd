@@ -35,11 +35,10 @@ var _diff_badge: Button = null
 var _exercise_btn: Button = null
 var _exercise_bubble: PanelContainer = null
 var _tower_exercise_shown: bool = false
-const TOWER_EXERCISE_MAP: Dictionary = {
-	1: "tower_array", 2: "tower_stack", 3: "tower_queue", 4: "tower_linked_list",
-	5: "tower_bubble", 6: "tower_selection", 7: "tower_insertion", 8: "tower_quick",
-	9: "tower_merge", 10: "tower_counting", 11: "tower_radix", 12: "tower_linear", 13: "tower_binary"
-}
+var _challenge_is_auto_trigger: bool = false
+var _challenge_close_btn: Button = null
+var _auto_challenge_level: int = -1
+var _tower_lesson_shown_by_tower: Dictionary = {}
 @onready var micro_panel: PanelContainer     = $HUD/HUDControl/MicroCodingPanel
 @onready var wave_splash: Control            = $HUD/HUDControl/WaveSplash
 @onready var wave_splash_label: Label        = $HUD/HUDControl/WaveSplash/WaveSplashLabel
@@ -69,6 +68,22 @@ var wave_countdown: float          = INTER_WAVE_DURATION
 var countdown_active: bool         = true
 var _tutorial_active: bool = false
 var _pause_press_time: float = 0.0
+
+const TOWER_TO_LEVEL_MAP: Dictionary = {
+	"tower_array": 1,
+	"tower_stack": 2,
+	"tower_queue": 3,
+	"tower_linked_list": 4,
+	"tower_bubble": 5,
+	"tower_selection": 6,
+	"tower_insertion": 7,
+	"tower_quick": 8,
+	"tower_merge": 9,
+	"tower_counting": 10,
+	"tower_radix": 11,
+	"tower_linear": 12,
+	"tower_binary": 13,
+}
 
 # ─── CODING CHALLENGES ──────────────────────────────────
 const CHALLENGES = {
@@ -938,7 +953,20 @@ func _remove_preview_tower() -> void:
 		_preview_tower = null
 	_confirm_cell = Vector2i(-1, -1)
 
+func _has_blocking_modal() -> bool:
+	if game_over_panel and is_instance_valid(game_over_panel) and game_over_panel.visible:
+		return true
+	if pause_menu and is_instance_valid(pause_menu) and pause_menu.visible:
+		return true
+	if _difficulty_picker and is_instance_valid(_difficulty_picker) and _difficulty_picker.visible:
+		return true
+	if is_instance_valid(micro_panel) and micro_panel.visible:
+		return true
+	return false
+
 func _show_placement_confirmation(cell: Vector2i) -> void:
+	if _has_blocking_modal():
+		return
 	var cell_center = grid_system.get_cell_center(cell)
 	var canvas_pos = get_canvas_transform() * cell_center
 	overlay_menu.position = canvas_pos
@@ -1013,6 +1041,8 @@ func _on_cancel_placement() -> void:
 	_remove_preview_tower()
 
 func _show_placement_radial(cell: Vector2i) -> void:
+	if _has_blocking_modal():
+		return
 	# Determine equipped towers (bring/equip from tower select)
 	var equipped = GameManager.selected_towers
 	if equipped.is_empty():
@@ -1207,16 +1237,31 @@ func _place_tower(cell: Vector2i) -> void:
 	
 	grid_system.first_tower_placed.emit(selected_tower_data.tower_id)
 	_play_feedback(true)
-	# Auto pop easy exercise when placing the featured tower for this level (once, non-blocking)
-	var trigger = TOWER_EXERCISE_MAP.get(level_number, "")
-	if not _tower_exercise_shown and trigger != "" and selected_tower_data.tower_id == trigger:
-		_tower_exercise_shown = true
-		_exercise_difficulty = "easy"
-		# brief build pause then slide-in exercise (gameplay not paused)
-		await get_tree().create_timer(0.6).timeout
-		if not is_instance_valid(micro_panel) or micro_panel.visible:
-			return
-		_show_challenge()
+	_attempt_featured_tower_exercise(selected_tower_data)
+
+func _attempt_featured_tower_exercise(tower_data: TowerData) -> void:
+	if tower_data == null:
+		return
+	var key := str(level_number) + ":" + tower_data.tower_id
+	if _tower_lesson_shown_by_tower.get(key, false):
+		return
+	_tower_lesson_shown_by_tower[key] = true
+	_tower_exercise_shown = true
+	_exercise_difficulty = "easy"
+	_challenge_is_auto_trigger = true
+	_auto_challenge_level = TOWER_TO_LEVEL_MAP.get(tower_data.tower_id, level_number)
+	if _challenge_close_btn and is_instance_valid(_challenge_close_btn):
+		_challenge_close_btn.visible = false
+	await get_tree().create_timer(0.6).timeout
+	if not is_instance_valid(micro_panel):
+		return
+	if micro_panel.visible:
+		return
+	micro_panel.process_mode = Node.PROCESS_MODE_ALWAYS
+	get_tree().paused = true
+	_show_challenge()
+	if _challenge_close_btn and is_instance_valid(_challenge_close_btn):
+		_challenge_close_btn.visible = false
 
 # ─── TOWER SELECTION ───────────────────────────────────
 func _on_tower_selected(tower_id: String) -> void:
@@ -1322,6 +1367,11 @@ func _setup_exercise_button() -> void:
 
 func _on_exercise_pressed() -> void:
 	_hide_exercise_bubble()
+	if get_tree().paused and not _challenge_is_auto_trigger:
+		get_tree().paused = false
+	_challenge_is_auto_trigger = false
+	if _challenge_close_btn and is_instance_valid(_challenge_close_btn):
+		_challenge_close_btn.visible = true
 	if _difficulty_picker and is_instance_valid(_difficulty_picker):
 		_difficulty_picker.visible = true
 		_difficulty_picker.move_to_front()
@@ -1331,10 +1381,19 @@ func _on_exercise_pressed() -> void:
 		t.tween_property(_exercise_btn, "modulate", Color(1,1,1,1), 0.15)
 
 func _on_difficulty_selected(diff: String) -> void:
+	if get_tree().paused:
+		get_tree().paused = false
 	_exercise_difficulty = diff
 	if _difficulty_picker:
 		_difficulty_picker.visible = false
 	_hide_exercise_bubble()
+	_challenge_is_auto_trigger = false
+	if _challenge_close_btn and is_instance_valid(_challenge_close_btn):
+		_challenge_close_btn.visible = true
+	if is_instance_valid(micro_panel):
+		micro_panel.visible = true
+		micro_panel.process_mode = Node.PROCESS_MODE_ALWAYS
+		micro_panel.move_to_front()
 	_show_challenge()
 
 func _show_diff_popup(mod: float) -> void:
@@ -2260,6 +2319,7 @@ func _build_challenge_panel() -> void:
 	hspacer.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	header.add_child(hspacer)
 	var close_btn := Button.new()
+	_challenge_close_btn = close_btn
 	close_btn.text = "✕"
 	close_btn.custom_minimum_size = Vector2(28, 28)
 	close_btn.add_theme_font_size_override("font_size", 14)
@@ -2272,6 +2332,7 @@ func _build_challenge_panel() -> void:
 	close_style.corner_radius_bottom_right = 6
 	close_btn.add_theme_stylebox_override("normal", close_style)
 	close_btn.pressed.connect(_hide_challenge)
+	close_btn.visible = not _challenge_is_auto_trigger
 	header.add_child(close_btn)
 	layout.add_child(header)
 
@@ -2444,24 +2505,36 @@ func _build_difficulty_picker() -> void:
 
 var _shuffled_pools: Dictionary = {}
 func _get_active_challenges() -> Array:
-	var base = CHALLENGES.get(level_number, [])
+	var challenge_level := level_number
+	if _challenge_is_auto_trigger and _auto_challenge_level > 0:
+		challenge_level = _auto_challenge_level
+	var base = CHALLENGES.get(challenge_level, [])
 	if base.is_empty():
 		return base
-	if not _shuffled_pools.has(level_number):
+	if not _shuffled_pools.has(challenge_level):
 		var pool = base.duplicate()
 		pool.shuffle()
-		_shuffled_pools[level_number] = pool
-		if level_number == 1:
+		_shuffled_pools[challenge_level] = pool
+		if challenge_level == 1:
 			_level1_shuffled = pool
-	return _shuffled_pools[level_number]
+	return _shuffled_pools[challenge_level]
 
 func _show_challenge() -> void:
+	if is_instance_valid(micro_panel):
+		micro_panel.visible = true
+		micro_panel.process_mode = Node.PROCESS_MODE_ALWAYS
+		micro_panel.move_to_front()
+	if _challenge_close_btn and is_instance_valid(_challenge_close_btn):
+		_challenge_close_btn.visible = not _challenge_is_auto_trigger
 	var challenges = _get_active_challenges()
-	if _challenge_progress >= challenges.size():
-		return
 	if challenges.is_empty():
 		return
-	_challenge_index = _challenge_progress
+	if _challenge_is_auto_trigger:
+		_challenge_index = 0
+	else:
+		if _challenge_progress >= challenges.size():
+			return
+		_challenge_index = _challenge_progress
 	var c = challenges[_challenge_index]
 	_challenge_title.text = "⌨  " + c.title
 	_challenge_desc.text = c.desc
@@ -2866,7 +2939,13 @@ func _on_choice_selected(choice: String, btn: Button) -> void:
 
 func _hide_challenge() -> void:
 	micro_panel.visible = false
-	# Do not unpause — gameplay was never paused (exercise is non-blocking)
+	if _challenge_is_auto_trigger:
+		_challenge_is_auto_trigger = false
+		_auto_challenge_level = -1
+		if get_tree().paused:
+			get_tree().paused = false
+	if _challenge_close_btn and is_instance_valid(_challenge_close_btn):
+		_challenge_close_btn.visible = true
 
 func _on_challenge_run() -> void:
 	var code: String
@@ -2886,6 +2965,25 @@ func _on_challenge_run() -> void:
 	else:
 		_challenge_output.text = "Error: " + result.error
 		_challenge_output.add_theme_color_override("font_color", Color("#FF3366"))
+
+func _apply_tower_lesson_price_adjustment(correct: bool) -> void:
+	if selected_tower_data == null:
+		return
+	var base_cost: int = max(0, selected_tower_data.ram_cost)
+	if base_cost <= 0:
+		return
+	var adjustment: int = 0
+	if correct:
+		adjustment = max(5, int(base_cost * 0.2))
+		ram_manager.earn(adjustment)
+		_challenge_result.text += "\nTower discount: -" + str(adjustment) + " RAM"
+		_challenge_result.add_theme_color_override("font_color", Color("#00FF88"))
+	else:
+		adjustment = max(10, int(base_cost * 0.25))
+		ram_manager.spend(adjustment)
+		_challenge_result.text += "\nTower penalty: +" + str(adjustment) + " RAM"
+		_challenge_result.add_theme_color_override("font_color", Color("#FF3366"))
+	_update_ram_label()
 
 func _on_challenge_submit() -> void:
 	if _challenge_progress > _challenge_index:
@@ -2918,13 +3016,18 @@ func _on_challenge_submit() -> void:
 		_challenge_result.text = "✔ Correct! +" + str(reward) + " RAM"
 		_challenge_result.add_theme_color_override("font_color", Color("#00FF88"))
 		_challenge_output.add_theme_color_override("font_color", Color("#00FF88"))
+		if _challenge_is_auto_trigger:
+			_apply_tower_lesson_price_adjustment(true)
 	else:
 		_challenge_result.text = "✕ Wrong"
 		_challenge_result.add_theme_color_override("font_color", Color("#FF3366"))
 		_challenge_output.add_theme_color_override("font_color", Color("#FFB800"))
+		if _challenge_is_auto_trigger:
+			_apply_tower_lesson_price_adjustment(false)
 	var user_out = result.output.replace("\n", "  ") if result.success else "Error: " + result.error
 	_challenge_output.text = "Your output:  " + user_out + "\nExpected:     " + expected.replace("\n", "  ")
-	_challenge_progress += 1
+	if not _challenge_is_auto_trigger:
+		_challenge_progress += 1
 	_advance_challenge.call_deferred()
 
 func _on_challenge_skip() -> void:
@@ -2933,10 +3036,16 @@ func _on_challenge_skip() -> void:
 	_challenge_result.text = "⏭ Skipped"
 	_challenge_result.add_theme_color_override("font_color", Color("#4A7FA5"))
 	_challenge_output.text = ""
-	_challenge_progress += 1
+	if not _challenge_is_auto_trigger:
+		_challenge_progress += 1
 	_advance_challenge.call_deferred()
 
 func _advance_challenge() -> void:
+	if _challenge_is_auto_trigger:
+		await get_tree().create_timer(0.8).timeout
+		if is_instance_valid(micro_panel):
+			_hide_challenge()
+		return
 	var total = _get_active_challenges().size()
 	if _challenge_progress >= total:
 		_challenge_result.text = "All challenges complete!"
