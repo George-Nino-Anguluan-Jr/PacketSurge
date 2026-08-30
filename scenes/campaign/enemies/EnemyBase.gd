@@ -66,6 +66,8 @@ var style: EnemyStyle = null
 var _spire: Node2D = null
 var _using_sprites: bool = false
 var _last_position: Vector2 = Vector2.ZERO
+# Procedural-only mode: leave the spire code in place but disconnect it from enemy visuals.
+var spire_visuals_enabled: bool = false
 
 const SPIRE_VARIANT_MAP: Dictionary = {
 	"basic_packet":    { "variant": "Clampbeetle",    "pack": "enemy_pack1" },
@@ -128,6 +130,9 @@ func _setup_mouse_detection() -> void:
 	add_child(area)
 
 func _load_sprites() -> void:
+	if not spire_visuals_enabled:
+		_using_sprites = false
+		return
 	if enemy_type == "":
 		return
 	if not is_inside_tree():
