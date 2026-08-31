@@ -377,6 +377,7 @@ func _show_code_editor(layout: VBoxContainer) -> void:
 	editor.name = "CodeEditor"
 	editor.custom_minimum_size = Vector2(0, _fs(0.50, 200.0, 280.0))
 	editor.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	ScreenManager.register_keyboard_scroll(editor, scroll_area, 140.0)
 	editor.add_theme_color_override("background_color", Color("#0A1628"))
 	editor.add_theme_color_override("font_color", Color("#E8F4FD"))
 	editor.add_theme_color_override("caret_color", Color("#00D4FF"))
