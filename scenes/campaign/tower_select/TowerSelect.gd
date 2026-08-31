@@ -606,13 +606,8 @@ func _apply_responsive_layout() -> void:
 	back_btn.custom_minimum_size = Vector2(clampf(w * 0.12, 80.0, 100.0), btn_h)
 	start_btn.custom_minimum_size = Vector2(0, btn_h)
 
-	# Fluid column count based on min dimension
-	var col_count := 2
-	if min_dim > 600:
-		col_count = 3
-	if min_dim > 800:
-		col_count = 4
-	available_grid.columns = col_count
+	# Match the selected tower slots with a fixed 5-column unlock grid.
+	available_grid.columns = 5
 
 	# Fluid selected row separation (smaller gap for cramped mobile rows)
 	var slot_sep := clampf(min_dim * 0.025, 8.0, 16.0)

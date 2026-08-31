@@ -182,8 +182,8 @@ func _ready() -> void:
 	_build_challenge_panel()
 	_apply_responsive_challenge()
 	get_tree().root.size_changed.connect(_apply_responsive_challenge)
-	# All levels use 🧩 Exercise button — no auto-popup, player chooses difficulty
-	_maybe_show_tutorial()
+	# Only tower-placement auto-exercises and the manual 🧩 exercise button should trigger popups.
+	# The level-start tutorial/challenge flow is intentionally disabled here.
 	GameManager.active_level = self
 	_setup_enemy_tooltip()
 
@@ -1277,6 +1277,7 @@ func _attempt_featured_tower_exercise(tower_data: TowerData) -> void:
 		return
 	_tower_lesson_shown_by_tower[key] = true
 	_tower_exercise_shown = true
+	# Auto tower-placement lessons should use the multiple-choice flow for this placement tutorial.
 	_exercise_difficulty = "easy"
 	_challenge_is_auto_trigger = true
 	_auto_challenge_level = TOWER_TO_LEVEL_MAP.get(tower_data.tower_id, level_number)
@@ -2170,17 +2171,17 @@ func _apply_responsive_challenge() -> void:
 
 func _apply_hud_styles() -> void:
 	var top_style := StyleBoxFlat.new()
-	top_style.bg_color = Color("#050D1A")
-	top_style.bg_color.a = 0.85
+	top_style.bg_color = grid_system._theme.get("bg_color", Color("#050D1A"))
+	top_style.bg_color.a = 0.8
 	top_style.border_color = Color("#00D4FF")
-	top_style.border_width_left = 1
-	top_style.border_width_right = 1
-	top_style.border_width_top = 1
-	top_style.border_width_bottom = 1
-	top_style.corner_radius_top_left = 8
-	top_style.corner_radius_top_right = 8
-	top_style.corner_radius_bottom_left = 8
-	top_style.corner_radius_bottom_right = 8
+	top_style.border_width_left = 0
+	top_style.border_width_right = 0
+	top_style.border_width_top = 0
+	top_style.border_width_bottom = 0
+	top_style.corner_radius_top_left = 0
+	top_style.corner_radius_top_right = 0
+	top_style.corner_radius_bottom_left = 0
+	top_style.corner_radius_bottom_right = 0
 	$HUD/HUDControl/TopHUD.add_theme_stylebox_override("panel", top_style)
 
 	var go_style := StyleBoxFlat.new()

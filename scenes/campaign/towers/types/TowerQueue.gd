@@ -28,6 +28,7 @@ func _perform_attack() -> void:
 		"start_pos": spawn_origin,
 		"draw_pos": spawn_origin,
 		"beam_dir": dir,
+		"target_last_pos": current_target.position if is_instance_valid(current_target) else spawn_origin,
 		"speed": 500.0,
 		"damage": damage,
 		"style": "queue_pierce",

@@ -529,6 +529,7 @@ func _build_reset_dialog() -> void:
 	_reset_code_field.max_length = 10
 	_style_input_field(_reset_code_field)
 	_reset_code_field.text_submitted.connect(func(_t): _submit_reset_step())
+	ScreenManager.register_keyboard_scroll(_reset_code_field, scroll_container, 110.0)
 	layout.add_child(_reset_code_field)
 
 	_reset_password_field = LineEdit.new()
@@ -536,6 +537,7 @@ func _build_reset_dialog() -> void:
 	_reset_password_field.secret = true
 	_reset_password_field.custom_minimum_size = Vector2(0, _fs(0.13, 44.0, 48.0))
 	_style_input_field(_reset_password_field)
+	ScreenManager.register_keyboard_scroll(_reset_password_field, scroll_container, 110.0)
 	layout.add_child(_reset_password_field)
 
 	_reset_confirm_field = LineEdit.new()
@@ -544,6 +546,7 @@ func _build_reset_dialog() -> void:
 	_reset_confirm_field.custom_minimum_size = Vector2(0, _fs(0.13, 44.0, 48.0))
 	_style_input_field(_reset_confirm_field)
 	_reset_confirm_field.text_submitted.connect(func(_t): _submit_reset_step())
+	ScreenManager.register_keyboard_scroll(_reset_confirm_field, scroll_container, 110.0)
 	layout.add_child(_reset_confirm_field)
 
 	_reset_error_label = Label.new()
