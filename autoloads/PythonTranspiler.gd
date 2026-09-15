@@ -32,6 +32,9 @@ extends Node
 const MAX_LOOP_ITERS  := 100000
 const MAX_STATEMENTS  := 200000
 const MAX_CALL_DEPTH  := 200
+# Max elements produced by one range()/repetition. Anything bigger would
+# freeze the game building giant arrays — fail with an error instead.
+const MAX_SEQ_SIZE    := 100000
 
 const BUILTIN_NAMES := [
 	"len", "str", "int", "float", "bool", "list", "dict",
@@ -453,6 +456,15 @@ func _py_range(start, stop, step, state: Dictionary) -> Array:
 	var out: Array = []
 	if step == 0:
 		_fail(state, "range() arg 3 must not be zero.")
+		return out
+	# Guard: refuse gigantic ranges instead of freezing the game.
+	var span := 0.0
+	if step > 0 and stop > start:
+		span = float(stop) - float(start)
+	elif step < 0 and start > stop:
+		span = float(start) - float(stop)
+	if span / absf(float(step)) > float(MAX_SEQ_SIZE):
+		_fail(state, "range() too large (max %d elements)." % MAX_SEQ_SIZE)
 		return out
 	var i = start
 	if step > 0:
@@ -1578,15 +1590,21 @@ func _apply_arith(op: String, left, right, state: Dictionary, floor_div: bool) -
 		if _is_num(left) and _is_num(right):
 			return left * right
 		if lt == TYPE_STRING and _is_num(right):
-			return _repeat_string(left, int(right))
+			return _repeat_string(left, int(right), state)
 		if rt == TYPE_STRING and _is_num(left):
-			return _repeat_string(right, int(left))
+			return _repeat_string(right, int(left), state)
 		if lt == TYPE_ARRAY and _is_num(right):
+			if float(left.size()) * float(maxi(int(right), 0)) > float(MAX_SEQ_SIZE):
+				_fail(state, "List repetition too large (max %d elements)." % MAX_SEQ_SIZE)
+				return null
 			var out: Array = []
 			for i in range(int(right)):
 				out.append_array(left)
 			return out
 		if rt == TYPE_ARRAY and _is_num(left):
+			if float(right.size()) * float(maxi(int(left), 0)) > float(MAX_SEQ_SIZE):
+				_fail(state, "List repetition too large (max %d elements)." % MAX_SEQ_SIZE)
+				return null
 			var out: Array = []
 			for i in range(int(left)):
 				out.append_array(right)
@@ -1627,8 +1645,11 @@ func _apply_arith(op: String, left, right, state: Dictionary, floor_div: bool) -
 			return floor(float(left) / float(right))
 	return null
 
-func _repeat_string(s: String, n: int) -> String:
+func _repeat_string(s: String, n: int, state: Dictionary) -> String:
 	if n <= 0:
+		return ""
+	if float(s.length()) * float(n) > float(MAX_SEQ_SIZE):
+		_fail(state, "String repetition too large (max %d characters)." % MAX_SEQ_SIZE)
 		return ""
 	var out := ""
 	for i in range(n):
