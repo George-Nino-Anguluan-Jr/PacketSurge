@@ -122,11 +122,11 @@ const CHALLENGES = {
 	6: [  # Selection Sort
 		{ "title": "Find Min & Swap", "desc": "Find the minimum in [9,2,7,4] and swap it with the first element. Print the array.", "code_template": "arr = [9, 2, 7, 4]\nmin_idx = 0\nfor i in range(1, len(arr)):\n    if arr[i] < arr[min_idx]:\n        ___\narr[0], arr[min_idx] = arr[min_idx], arr[0]\nprint(arr)", "choices": ["min_idx = i", "min_idx = 0", "min = arr[i]", "min_idx = j"], "correct": "min_idx = i", "expected_output": "[2, 9, 7, 4]\n", "bonus_ram": 25 },
 		{ "title": "Second Smallest", "desc": "Find the second smallest element in [9,2,7,4] and print it.", "code_template": "arr = [9, 2, 7, 4]\narr.sort()\nprint(___)", "choices": ["arr[1]", "arr[0]", "min(arr)", "arr.sort()[1]"], "correct": "arr[1]", "expected_output": "4\n", "bonus_ram": 20 },
-		{ "title": "Full Selection Sort", "desc": "Complete selection sort on [6,3,8,1] and print the sorted array.", "code_template": "arr = [6, 3, 8, 1]\nfor i in range(len(arr)):\n    min_idx = i\n    for j in range(i+1, len(arr)):\n        if arr[j] < arr[min_idx]:\n            min_idx = j\n    arr[i], arr[min_idx] = arr[min_idx], arr[i]\nprint(arr)", "expected_output": "[1, 3, 6, 8]\n", "bonus_ram": 25 },
+		{ "title": "Full Selection Sort", "desc": "Complete selection sort on [6,3,8,1] and print the sorted array.", "code_template": "arr = [6, 3, 8, 1]\nfor i in range(len(arr)):\n    min_idx = i\n    for j in range(i+1, len(arr)):\n        if arr[j] < arr[min_idx]:\n            ___\n    arr[i], arr[min_idx] = arr[min_idx], arr[i]\nprint(arr)", "choices": ["min_idx = j", "min_idx = i", "min = arr[j]", "j = min_idx"], "correct": "min_idx = j", "expected_output": "[1, 3, 6, 8]\n", "bonus_ram": 25 },
 	],
 	7: [  # Insertion Sort
 		{ "title": "Insert Third Element", "desc": "In [3,7,2,9], insert the third element (2) into the sorted portion. Print the array.", "code_template": "arr = [3, 7, 2, 9]\nkey = arr[2]\nj = 1\nwhile j >= 0 and arr[j] > key:\n    arr[j+1] = arr[j]\n    ___\narr[j+1] = key\nprint(arr)", "choices": ["j -= 1", "j = j -1", "j++", "j = 0"], "correct": "j -= 1", "expected_output": "[2, 3, 7, 9]\n", "bonus_ram": 25 },
-		{ "title": "Full Insertion Sort", "desc": "Complete insertion sort on [5,2,9,1,6] and print the sorted array.", "code_template": "arr = [5, 2, 9, 1, 6]\nfor i in range(1, len(arr)):\n    key = arr[i]\n    j = i - 1\n    while j >= 0 and arr[j] > key:\n        arr[j+1] = arr[j]\n        j -= 1\n    arr[j+1] = key\nprint(arr)", "expected_output": "[1, 2, 5, 6, 9]\n", "bonus_ram": 28 },
+		{ "title": "Full Insertion Sort", "desc": "Complete insertion sort on [5,2,9,1,6] and print the sorted array.", "code_template": "arr = [5, 2, 9, 1, 6]\nfor i in range(1, len(arr)):\n    key = arr[i]\n    j = i - 1\n    while j >= 0 and arr[j] > key:\n        arr[j+1] = arr[j]\n        ___\n    arr[j+1] = key\nprint(arr)", "choices": ["j -= 1", "j = j -1", "j++", "j = 0"], "correct": "j -= 1", "expected_output": "[1, 2, 5, 6, 9]\n", "bonus_ram": 28 },
 		{ "title": "Shifts Count", "desc": "Count how many shifts happen when inserting the last element of [2,5,7,3] and print the count.", "code_template": "arr = [2, 5, 7, 3]\nkey = arr[3]\nj = 2\nshifts = 0\nwhile j >= 0 and arr[j] > key:\n    arr[j+1] = arr[j]\n    j -= 1\n    ___\nprint(shifts)", "choices": ["shifts += 1", "shifts = shifts +1", "count +=1", "shifts++"], "correct": "shifts += 1", "expected_output": "2\n", "bonus_ram": 25 },
 	],
 	8: [  # Quick Sort
@@ -2172,7 +2172,8 @@ func _apply_responsive_challenge() -> void:
 func _apply_hud_styles() -> void:
 	var top_style := StyleBoxFlat.new()
 	top_style.bg_color = grid_system._theme.get("bg_color", Color("#050D1A"))
-	top_style.bg_color.a = 0.8
+	# Opaque so the HUD blends seamlessly with the grid background.
+	top_style.bg_color.a = 1.0
 	top_style.border_color = Color("#00D4FF")
 	top_style.border_width_left = 0
 	top_style.border_width_right = 0
@@ -2324,6 +2325,8 @@ var _challenge_choice_box: VBoxContainer = null
 var _challenge_blank_btn: Button = null
 var _challenge_blank_btns: Array[Button] = []
 var _challenge_choices_row: HBoxContainer = null
+var _challenge_code_scroll: ScrollContainer = null
+var _challenge_code_panel: PanelContainer = null
 var _challenge_selected_choice: String = ""
 var _challenge_is_choice: bool = false
 var _challenge_dragging_choice: String = ""
@@ -2401,7 +2404,16 @@ func _build_challenge_panel() -> void:
 	_challenge_choice_box = VBoxContainer.new()
 	_challenge_choice_box.visible = false
 	_challenge_choice_box.add_theme_constant_override("separation", 12)
-	var code_panel := PanelContainer.new()
+	# Scroll wrapper caps the code area height so long code scrolls
+	# instead of stretching the popup past the screen.
+	_challenge_code_scroll = ScrollContainer.new()
+	_challenge_code_scroll.custom_minimum_size = Vector2(0, _fs(0.30, 100.0, 160.0))
+	_challenge_code_scroll.size_flags_vertical = Control.SIZE_EXPAND_FILL
+	_challenge_code_scroll.horizontal_scroll_mode = ScrollContainer.SCROLL_MODE_DISABLED
+	_challenge_choice_box.add_child(_challenge_code_scroll)
+	_challenge_code_panel = PanelContainer.new()
+	_challenge_code_panel.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	var code_panel := _challenge_code_panel
 	var code_style := StyleBoxFlat.new()
 	code_style.bg_color = Color("#030812")
 	code_style.border_color = Color("#00D4FF", 0.3)
@@ -2418,7 +2430,7 @@ func _build_challenge_panel() -> void:
 	code_style.content_margin_top = 12
 	code_style.content_margin_bottom = 12
 	code_panel.add_theme_stylebox_override("panel", code_style)
-	_challenge_choice_box.add_child(code_panel)
+	_challenge_code_scroll.add_child(code_panel)
 	_challenge_choices_row = HBoxContainer.new()
 	_challenge_choices_row.alignment = BoxContainer.ALIGNMENT_CENTER
 	_challenge_choices_row.add_theme_constant_override("separation", 8)
@@ -2577,15 +2589,16 @@ func _show_challenge() -> void:
 	_challenge_output.text = ""
 	_challenge_result.text = ""
 	# ── Difficulty-aware display ──
-	var is_level1_choice = c.has("choices")
-	# Hard = full typing, Medium = blank LineEdits, Easy = draggable pills
+	# Easy = choice pills into blanks, Medium = type into blanks, Hard = type whole program.
+	var is_level1_choice = c.has("choices") and "___" in str(c.get("code_template", ""))
+	# Hard = full typing (empty editor), Medium = blank LineEdits, Easy = draggable pills
 	if level_number == 1 and is_level1_choice:
 		if _exercise_difficulty == "hard":
 			_challenge_is_choice = false
 			_challenge_code_edit.visible = true
 			_challenge_choice_box.visible = false
 			_challenge_code_edit.editable = true
-			_challenge_code_edit.text = c.code_template
+			_challenge_code_edit.text = _get_hard_starter_code(c)
 		else:
 			_challenge_is_choice = true
 			_challenge_code_edit.visible = false
@@ -2595,7 +2608,7 @@ func _show_challenge() -> void:
 			_challenge_blank_btn = null
 			_medium_blank_edits.clear()
 			# Clear old code display
-			var code_panel = _challenge_choice_box.get_child(0)
+			var code_panel = _challenge_code_panel
 			for ch in code_panel.get_children():
 				ch.queue_free()
 			var code_vbox := VBoxContainer.new()
@@ -2705,14 +2718,14 @@ func _show_challenge() -> void:
 			_challenge_code_edit.visible = true
 			_challenge_choice_box.visible = false
 			_challenge_code_edit.editable = true
-			_challenge_code_edit.text = c.code_template
+			_challenge_code_edit.text = _get_hard_starter_code(c)
 		else:
 			_challenge_is_choice = true
 			_challenge_code_edit.visible = false
 			_challenge_choice_box.visible = true
 			_challenge_selected_choice = ""
 			_medium_blank_edits.clear()
-			var code_panel2 = _challenge_choice_box.get_child(0)
+			var code_panel2 = _challenge_code_panel
 			for ch in code_panel2.get_children():
 				ch.queue_free()
 			_challenge_blank_btns.clear()
@@ -2817,34 +2830,64 @@ func _show_challenge() -> void:
 					chip.mouse_filter = Control.MOUSE_FILTER_PASS
 					_challenge_choices_row.add_child(chip)
 	else:
+		# Safety fallback (no blank/choices entry): never pre-show a solution —
+		# treat as Hard mode so the player always types the full program.
 		_challenge_is_choice = false
 		_challenge_code_edit.visible = true
 		_challenge_choice_box.visible = false
-		_challenge_code_edit.text = c.code_template
+		_challenge_code_edit.text = _get_hard_starter_code(c)
 	micro_panel.visible = true
 	micro_panel.process_mode = Node.PROCESS_MODE_ALWAYS
+	if _challenge_code_scroll and is_instance_valid(_challenge_code_scroll):
+		_challenge_code_scroll.scroll_vertical = 0
+		_challenge_code_scroll.scroll_horizontal = 0
+
+func _get_hard_starter_code(c: Dictionary) -> String:
+	# Hard mode: the player types the whole program — never pre-fill solution code.
+	# Only the task title, description, and expected output are given as comments.
+	var lines: Array[String] = []
+	lines.append("# " + str(c.get("title", "Challenge")))
+	lines.append("# " + str(c.get("desc", "")))
+	var expected := str(c.get("expected_output", "")).strip_edges(false, true)
+	if expected != "":
+		lines.append("# Expected output:")
+		for eline in expected.split("\n"):
+			lines.append("#   " + eline)
+	lines.append("")
+	return "\n".join(lines)
+
+func _fill_next_blank(code: String, value: String) -> String:
+	# Fill exactly ONE blank so multi-blank challenges get each answer in order.
+	# (String.replace would stamp the same value into every blank.)
+	var at = code.find("___")
+	if at == -1:
+		return code
+	return code.substr(0, at) + value + code.substr(at + 3)
 
 func _get_filled_code() -> String:
-	var c = _get_active_challenges()[_challenge_index]
+	var challenges = _get_active_challenges()
+	if challenges.is_empty() or _challenge_index < 0 or _challenge_index >= challenges.size():
+		return ""
+	var c = challenges[_challenge_index]
 	var code = c.code_template
-	if level_number == 1 and _exercise_difficulty == "medium" and _medium_blank_edits.size() > 0:
+	if _medium_blank_edits.size() > 0:
 		for e in _medium_blank_edits:
 			var v = e.text.strip_edges()
 			if v == "":
 				v = "___"
-			code = code.replace("___", v)
+			code = _fill_next_blank(code, v)
 	elif _challenge_blank_btns.size() > 0:
 		for b in _challenge_blank_btns:
 			var v = b.text.strip_edges() if b.text.strip_edges() != "" else "___"
 			if v == "":
 				v = "___"
-			code = code.replace("___", v)
+			code = _fill_next_blank(code, v)
 	elif _challenge_selected_choice != "":
 		code = code.replace("___", _challenge_selected_choice)
 	return code
 
 func _are_blanks_filled() -> bool:
-	if level_number == 1 and _exercise_difficulty == "medium" and _medium_blank_edits.size() > 0:
+	if _medium_blank_edits.size() > 0:
 		for e in _medium_blank_edits:
 			if e.text.strip_edges() == "":
 				return false
@@ -2984,6 +3027,10 @@ func _hide_challenge() -> void:
 		_challenge_close_btn.visible = true
 
 func _on_challenge_run() -> void:
+	if _get_active_challenges().is_empty() or _challenge_index < 0 or _challenge_index >= _get_active_challenges().size():
+		_challenge_output.text = "No challenge loaded. Close and reopen the exercise."
+		_challenge_output.add_theme_color_override("font_color", Color("#FF3366"))
+		return
 	var code: String
 	if _challenge_is_choice:
 		if not _are_blanks_filled():
@@ -2993,6 +3040,10 @@ func _on_challenge_run() -> void:
 		code = _get_filled_code()
 	else:
 		code = _challenge_code_edit.text
+		if code.strip_edges() == "":
+			_challenge_output.text = "Type your code first, then press Run."
+			_challenge_output.add_theme_color_override("font_color", Color("#FFB800"))
+			return
 	_challenge_output.text = "Running..."
 	var result = PythonTranspiler.run_code(code)
 	if result.success:
@@ -3025,7 +3076,9 @@ func _on_challenge_submit() -> void:
 	if _challenge_progress > _challenge_index:
 		return
 	var challenges = _get_active_challenges()
-	if not challenges or _challenge_index >= challenges.size():
+	if not challenges or _challenge_index < 0 or _challenge_index >= challenges.size():
+		_challenge_output.text = "No challenge loaded. Close and reopen the exercise."
+		_challenge_output.add_theme_color_override("font_color", Color("#FF3366"))
 		return
 	var c = challenges[_challenge_index]
 	var code: String
@@ -3037,6 +3090,10 @@ func _on_challenge_submit() -> void:
 		code = _get_filled_code()
 	else:
 		code = _challenge_code_edit.text
+		if code.strip_edges() == "":
+			_challenge_output.text = "Type your code first, then press Submit."
+			_challenge_output.add_theme_color_override("font_color", Color("#FFB800"))
+			return
 	var result = PythonTranspiler.run_code(code)
 	var expected = c.expected_output.strip_edges(false, true)
 	var reward = 0

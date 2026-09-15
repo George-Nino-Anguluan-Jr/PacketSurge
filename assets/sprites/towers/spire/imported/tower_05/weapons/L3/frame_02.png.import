@@ -3,15 +3,15 @@
 importer="texture"
 type="CompressedTexture2D"
 uid="uid://ca3mno5axlg63"
-path="res://.godot/imported/frame_02.png-a3e947c9f94520cc7e78c0da8a8d57be.ctex"
+path="res://.godot/imported/frame_02.png-9734f198b5e26d80aff84cc7033fb8fd.ctex"
 metadata={
 "vram_texture": false
 }
 
 [deps]
 
-source_file="res://assets/towers/spire/imported/tower_05/weapons/L3/frame_02.png"
-dest_files=["res://.godot/imported/frame_02.png-a3e947c9f94520cc7e78c0da8a8d57be.ctex"]
+source_file="res://assets/sprites/towers/spire/imported/tower_05/weapons/L3/frame_02.png"
+dest_files=["res://.godot/imported/frame_02.png-9734f198b5e26d80aff84cc7033fb8fd.ctex"]
 
 [params]
 
