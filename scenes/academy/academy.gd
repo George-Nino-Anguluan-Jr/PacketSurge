@@ -63,6 +63,7 @@ func _ready() -> void:
 	ScreenManager.make_scroll_touch_friendly($SafeArea/ContentHost/ContentArea/Sidebar/ScrollContainer)
 	get_tree().root.size_changed.connect(_apply_responsive_layout)
 	_maybe_show_tutorial()
+	SoundManager.play_academy_music()
 	SignalBus.topic_unlocked.connect(_on_topic_state_changed)
 	SignalBus.topic_mastered.connect(_on_topic_state_changed)
 

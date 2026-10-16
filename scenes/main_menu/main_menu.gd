@@ -65,6 +65,7 @@ func _ready() -> void:
 	ScreenManager.make_scroll_touch_friendly(scroll_container)
 	_check_placement_quiz()
 	_connect_button_sounds(self)
+	SoundManager.play_menu_music()
 	_maybe_show_tutorial()
 
 func _build_continue_button() -> void:

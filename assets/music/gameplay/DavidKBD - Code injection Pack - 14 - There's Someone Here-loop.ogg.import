@@ -1,0 +1,19 @@
+[remap]
+
+importer="oggvorbisstr"
+type="AudioStreamOggVorbis"
+uid="uid://dciltoeujgo04"
+path="res://.godot/imported/DavidKBD - Code injection Pack - 14 - There's Someone Here-loop.ogg-7f99bc73cf0e756861a018a8698284e2.oggvorbisstr"
+
+[deps]
+
+source_file="res://assets/music/gameplay/DavidKBD - Code injection Pack - 14 - There's Someone Here-loop.ogg"
+dest_files=["res://.godot/imported/DavidKBD - Code injection Pack - 14 - There's Someone Here-loop.ogg-7f99bc73cf0e756861a018a8698284e2.oggvorbisstr"]
+
+[params]
+
+loop=false
+loop_offset=0
+bpm=0
+beat_count=0
+bar_beats=4

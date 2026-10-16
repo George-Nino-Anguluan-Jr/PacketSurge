@@ -1,0 +1,19 @@
+[remap]
+
+importer="oggvorbisstr"
+type="AudioStreamOggVorbis"
+uid="uid://c0iqe4rfpvx4t"
+path="res://.godot/imported/DavidKBD - Code injection Pack - 11 - I.A.'s Growl-loop.ogg-d15370d4d220532e48a6675eb6f4e29e.oggvorbisstr"
+
+[deps]
+
+source_file="res://assets/music/gameplay/DavidKBD - Code injection Pack - 11 - I.A.'s Growl-loop.ogg"
+dest_files=["res://.godot/imported/DavidKBD - Code injection Pack - 11 - I.A.'s Growl-loop.ogg-d15370d4d220532e48a6675eb6f4e29e.oggvorbisstr"]
+
+[params]
+
+loop=false
+loop_offset=0
+bpm=0
+beat_count=0
+bar_beats=4

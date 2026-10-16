@@ -76,6 +76,19 @@ func make_scroll_touch_friendly(scroll: ScrollContainer) -> void:
 	scroll.set_script(preload("res://scripts/utils/TouchScrollContainer.gd"))
 	scroll.set_process_input(true)
 
+# ─── KEYBOARD SCROLL ─────────────────────────────────────
+# Keeps a focused TextEdit (code editor) visible inside a ScrollContainer
+# on mobile/small screens by scrolling the container into view.
+func register_keyboard_scroll(editor: Control, scroll: ScrollContainer, offset: float = 140.0) -> void:
+	editor.focus_entered.connect(func():
+		await get_tree().process_frame
+		var editor_global = editor.get_global_position()
+		var scroll_global = scroll.get_global_position()
+		var relative_y = editor_global.y - scroll_global.y
+		var target_scroll = relative_y + editor.size.y + offset - scroll.size.y * 0.5
+		scroll.scroll_vertical = maxi(0, int(target_scroll))
+)
+
 func apply_panel_padding(panel: PanelContainer, padding: int) -> void:
 	var style = panel.get_theme_stylebox("panel")
 	if style and style is StyleBoxFlat:

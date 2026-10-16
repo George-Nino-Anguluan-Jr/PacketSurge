@@ -178,7 +178,7 @@ func _ready() -> void:
 	_on_viewport_size_changed()
 	_create_overlay_menu()
 	_setup_sounds()
-	SoundManager.play_level_music(level_number)
+	SoundManager.play_gameplay_music()
 	_build_challenge_panel()
 	_apply_responsive_challenge()
 	get_tree().root.size_changed.connect(_apply_responsive_challenge)

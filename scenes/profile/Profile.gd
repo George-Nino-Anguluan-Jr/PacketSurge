@@ -442,6 +442,7 @@ func _on_password_set_completed(success: bool, message: String) -> void:
 # Step 0: enter code → Step 1: new password. The email is already known
 # (the logged-in account), so unlike the login screen there's no email step.
 var _reset_dialog: Control = null
+var _reset_confirm_dialog: Control = null
 var _reset_step: int = 0
 var _reset_email: String = ""
 var _reset_session_token: String = ""
@@ -778,15 +779,137 @@ func _make_danger_zone() -> PanelContainer:
 	return card
 
 func _on_reset_progress_pressed() -> void:
-	var confirm := AcceptDialog.new()
-	confirm.dialog_text = "Are you sure you want to reset ALL progress?\n\nThis will clear all lessons, campaign levels, and tower unlocks.\nThis action cannot be undone."
-	confirm.confirmed.connect(_do_reset_progress)
-	confirm.ok_button_text = "Yes, Reset Everything"
-	confirm.add_cancel_button("Cancel")
-	add_child(confirm)
-	confirm.popup_centered()
+	_show_reset_confirm_dialog()
+
+func _show_reset_confirm_dialog() -> void:
+	if _reset_confirm_dialog:
+		_reset_confirm_dialog.queue_free()
+
+	var dim := ColorRect.new()
+	dim.color = Color("#050D1A", 0.82)
+	dim.set_anchors_preset(Control.PRESET_FULL_RECT)
+	dim.mouse_filter = Control.MOUSE_FILTER_STOP
+	dim.visible = true
+	_reset_confirm_dialog = dim
+	add_child(dim)
+
+	var center := CenterContainer.new()
+	center.set_anchors_preset(Control.PRESET_FULL_RECT)
+	dim.add_child(center)
+
+	var card := PanelContainer.new()
+	card.custom_minimum_size = Vector2(_fs(0.42, 340.0, 520.0), 0)
+	var card_style := StyleBoxFlat.new()
+	card_style.bg_color               = Color("#1A0A0A")
+	card_style.border_color           = Color("#FF3366")
+	card_style.border_width_left      = 1
+	card_style.border_width_right     = 1
+	card_style.border_width_top       = 1
+	card_style.border_width_bottom    = 1
+	card_style.corner_radius_top_left     = 8
+	card_style.corner_radius_top_right    = 8
+	card_style.corner_radius_bottom_left  = 8
+	card_style.corner_radius_bottom_right = 8
+	card_style.content_margin_left   = 24
+	card_style.content_margin_right  = 24
+	card_style.content_margin_top    = 20
+	card_style.content_margin_bottom = 20
+	card.add_theme_stylebox_override("panel", card_style)
+	center.add_child(card)
+
+	var layout := VBoxContainer.new()
+	layout.add_theme_constant_override("separation", 14)
+	card.add_child(layout)
+
+	var icon_lbl := Label.new()
+	icon_lbl.text = "⚠"
+	icon_lbl.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	icon_lbl.add_theme_font_size_override("font_size", _fs(0.10, 40.0, 60.0))
+	icon_lbl.add_theme_color_override("font_color", Color("#FF3366"))
+	layout.add_child(icon_lbl)
+
+	var title_lbl := Label.new()
+	title_lbl.text = "Reset All Progress"
+	title_lbl.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	title_lbl.add_theme_font_size_override("font_size", _fs(0.050, 20.0, 24.0))
+	title_lbl.add_theme_color_override("font_color", Color("#FF6680"))
+	layout.add_child(title_lbl)
+
+	var desc_lbl := Label.new()
+	desc_lbl.text = "This will clear every lesson, campaign level, tower unlock, and star you've earned.\nThis action cannot be undone."
+	desc_lbl.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	desc_lbl.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+	desc_lbl.add_theme_font_size_override("font_size", _fs(0.032, 16.0, 16.0))
+	desc_lbl.add_theme_color_override("font_color", Color("#E8F4FD"))
+	layout.add_child(desc_lbl)
+
+	var btns := HBoxContainer.new()
+	btns.add_theme_constant_override("separation", 12)
+	layout.add_child(btns)
+
+	var cancel_btn := Button.new()
+	cancel_btn.text = "Cancel"
+	cancel_btn.custom_minimum_size = Vector2(0, _fs(0.13, 44.0, 52.0))
+	cancel_btn.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	_style_confirm_btn(cancel_btn, Color("#4A7FA5"))
+	cancel_btn.pressed.connect(func(): _hide_reset_confirm_dialog())
+	btns.add_child(cancel_btn)
+
+	var confirm_btn := Button.new()
+	confirm_btn.text = "Yes, Reset Everything"
+	confirm_btn.custom_minimum_size = Vector2(0, _fs(0.13, 44.0, 52.0))
+	confirm_btn.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	_style_confirm_btn(confirm_btn, Color("#FF3366"))
+	confirm_btn.pressed.connect(func(): _do_reset_progress())
+	btns.add_child(confirm_btn)
+
+	var sfx = get_node_or_null("/root/SoundManager")
+	if sfx:
+		for b in [cancel_btn, confirm_btn]:
+			b.mouse_entered.connect(sfx.play_hover)
+			b.pressed.connect(sfx.play_click)
+
+	confirm_btn.grab_focus()
+
+func _hide_reset_confirm_dialog() -> void:
+	if _reset_confirm_dialog:
+		_reset_confirm_dialog.queue_free()
+		_reset_confirm_dialog = null
+
+func _style_confirm_btn(btn: Button, color: Color) -> void:
+	btn.add_theme_font_size_override("font_size", _fs(0.045, 16.0, 18.0))
+	btn.add_theme_color_override("font_color", color)
+
+	var normal := StyleBoxFlat.new()
+	normal.bg_color               = Color("#0A1628")
+	normal.border_color           = color
+	normal.border_width_left      = 1
+	normal.border_width_right     = 1
+	normal.border_width_top       = 1
+	normal.border_width_bottom    = 1
+	normal.corner_radius_top_left     = 4
+	normal.corner_radius_top_right    = 4
+	normal.corner_radius_bottom_left  = 4
+	normal.corner_radius_bottom_right = 4
+
+	var hover := StyleBoxFlat.new()
+	hover.bg_color                = Color(color.r, color.g, color.b, 0.15)
+	hover.border_color            = color
+	hover.border_width_left       = 1
+	hover.border_width_right      = 1
+	hover.border_width_top        = 1
+	hover.border_width_bottom     = 1
+	hover.corner_radius_top_left      = 4
+	hover.corner_radius_top_right     = 4
+	hover.corner_radius_bottom_left   = 4
+	hover.corner_radius_bottom_right  = 4
+
+	btn.add_theme_stylebox_override("normal", normal)
+	btn.add_theme_stylebox_override("hover", hover)
+	btn.add_theme_color_override("font_hover_color", Color("#E8F4FD"))
 
 func _do_reset_progress() -> void:
+	_hide_reset_confirm_dialog()
 	ProgressManager.reset_all_progress()
 	SignalBus.hud_message_requested.emit("Progress has been reset.", 4.0)
 	_build_content()

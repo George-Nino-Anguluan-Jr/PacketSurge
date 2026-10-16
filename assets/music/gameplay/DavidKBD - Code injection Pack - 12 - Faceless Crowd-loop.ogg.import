@@ -1,0 +1,19 @@
+[remap]
+
+importer="oggvorbisstr"
+type="AudioStreamOggVorbis"
+uid="uid://bjirbrdimd0dy"
+path="res://.godot/imported/DavidKBD - Code injection Pack - 12 - Faceless Crowd-loop.ogg-f218f4bb4f563870a2bdf73ff753d715.oggvorbisstr"
+
+[deps]
+
+source_file="res://assets/music/gameplay/DavidKBD - Code injection Pack - 12 - Faceless Crowd-loop.ogg"
+dest_files=["res://.godot/imported/DavidKBD - Code injection Pack - 12 - Faceless Crowd-loop.ogg-f218f4bb4f563870a2bdf73ff753d715.oggvorbisstr"]
+
+[params]
+
+loop=false
+loop_offset=0
+bpm=0
+beat_count=0
+bar_beats=4

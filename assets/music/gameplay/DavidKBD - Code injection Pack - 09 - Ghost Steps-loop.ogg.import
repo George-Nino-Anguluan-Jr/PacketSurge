@@ -1,0 +1,19 @@
+[remap]
+
+importer="oggvorbisstr"
+type="AudioStreamOggVorbis"
+uid="uid://bevyht8c0hg3l"
+path="res://.godot/imported/DavidKBD - Code injection Pack - 09 - Ghost Steps-loop.ogg-9976c5f8e538fe43d663c368a562de1b.oggvorbisstr"
+
+[deps]
+
+source_file="res://assets/music/gameplay/DavidKBD - Code injection Pack - 09 - Ghost Steps-loop.ogg"
+dest_files=["res://.godot/imported/DavidKBD - Code injection Pack - 09 - Ghost Steps-loop.ogg-9976c5f8e538fe43d663c368a562de1b.oggvorbisstr"]
+
+[params]
+
+loop=false
+loop_offset=0
+bpm=0
+beat_count=0
+bar_beats=4

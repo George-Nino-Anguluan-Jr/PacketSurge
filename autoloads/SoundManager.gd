@@ -18,24 +18,23 @@ var enemy_reach_base_sound: AudioStreamWAV
 var ram_spend_sound: AudioStreamWAV
 var tower_attack_sounds: Dictionary = {}
 
-var effects_volume: float = 0.2
-var music_volume: float = 0.2
+var effects_volume: float = 1.0
+var music_volume: float = 1.0
 
 var _music_player: AudioStreamPlayer
 var _current_music_level: int = -1
 
-const MUSIC_TRACKS: Array[String] = [
-	"res://assets/music/lvl_0_the_tutorial.mp3",
-	"res://assets/music/lvl_1_the_royal_palace.mp3",
-	"res://assets/music/lvl_2_the_village.mp3",
-	"res://assets/music/lvl_3_the_grassland.mp3",
-	"res://assets/music/lvl_4_the_desert.mp3",
-	"res://assets/music/lvl_5_the_oasis_or_resting_place.mp3",
-	"res://assets/music/lvl_6_the_beach.mp3",
-	"res://assets/music/lvl_7_the_raft_on_the_ocean.mp3",
-	"res://assets/music/lvl_8_the_volcanic_sea_shore.mp3",
-	"res://assets/music/lvl_9_the_volcanic_ascent.mp3",
-]
+# ─── SCENE MUSIC ─────────────────────────────────────────
+const MENU_MUSIC_PATH: String       = "res://assets/music/menu_music.wav"
+const LEVEL_SELECT_MUSIC_PATH: String = "res://assets/music/level_select.ogg"
+const ACADEMY_MUSIC_PATH: String    = "res://assets/music/academy_music.wav"
+
+# Gameplay music folder — random track chosen per level from here.
+# Populate this folder with your DavidKDB synthwave tracks.
+const GAMEPLAY_MUSIC_DIR: String    = "res://assets/music/gameplay"
+var _gameplay_tracks: Array[String] = []
+var _current_music_scene: String    = ""
+var _current_music_path: String     = ""
 
 func _ready() -> void:
 	process_mode = PROCESS_MODE_ALWAYS
@@ -45,6 +44,23 @@ func _ready() -> void:
 	_music_player.bus = "Master"
 	_generate_all_sounds()
 	_connect_signals()
+	_scan_gameplay_music()
+	_music_player.finished.connect(func(): _music_player.play())
+
+func _scan_gameplay_music() -> void:
+	_gameplay_tracks.clear()
+	var dir = DirAccess.open(GAMEPLAY_MUSIC_DIR)
+	if not dir:
+		push_warning("SoundManager: gameplay music dir not found: " + GAMEPLAY_MUSIC_DIR)
+		return
+	dir.list_dir_begin()
+	var f := dir.get_next()
+	while f != "":
+		if not dir.current_is_dir() and (f.ends_with(".mp3") or f.ends_with(".ogg") or f.ends_with(".wav")):
+			_gameplay_tracks.append(GAMEPLAY_MUSIC_DIR.path_join(f))
+		f = dir.get_next()
+	if _gameplay_tracks.is_empty():
+		push_warning("SoundManager: no gameplay music tracks found in " + GAMEPLAY_MUSIC_DIR)
 
 func _connect_signals() -> void:
 	SignalBus.wave_started.connect(func(_n): play_wave_alert())
@@ -295,15 +311,34 @@ func play_tower_attack(tower_id: String) -> void:
 func play_ram_spend() -> void:
 	_play(ram_spend_sound, -8.0)
 
-func play_level_music(level: int) -> void:
-	if level == _current_music_level and _music_player.playing:
+func play_menu_music() -> void:
+	_play_music_file(MENU_MUSIC_PATH, "menu")
+
+func play_level_select_music() -> void:
+	_play_music_file(LEVEL_SELECT_MUSIC_PATH, "level_select")
+
+func play_academy_music() -> void:
+	_play_music_file(ACADEMY_MUSIC_PATH, "academy")
+
+func play_gameplay_music() -> void:
+	if _gameplay_tracks.is_empty():
 		return
-	var idx = (level - 1) % MUSIC_TRACKS.size()
-	var path = MUSIC_TRACKS[idx]
-	_current_music_level = level
+	var idx = randi() % _gameplay_tracks.size()
+	_play_music_file(_gameplay_tracks[idx], "gameplay")
+
+func play_level_music(level: int) -> void:
+	# Deprecated — use play_gameplay_music() for random per-level track.
+	play_gameplay_music()
+
+func _play_music_file(path: String, scene_label: String) -> void:
+	if _current_music_scene == scene_label and _music_player.playing:
+		return
 	var stream = _load_music(path)
 	if not stream:
+		push_warning("SoundManager: could not load music: ", path)
 		return
+	_current_music_scene = scene_label
+	_current_music_path = path
 	_music_player.stop()
 	_music_player.stream = stream
 	_music_player.volume_db = -16.0
@@ -311,17 +346,16 @@ func play_level_music(level: int) -> void:
 	_music_player.volume_db += vol_scale
 	_music_player.play()
 
-func _load_music(path: String) -> AudioStreamMP3:
+func _load_music(path: String) -> AudioStream:
 	var stream = ResourceLoader.load(path)
-	if not stream or not stream is AudioStreamMP3:
+	if not stream or not (stream is AudioStream):
 		return null
-	stream.loop = true
-	stream.loop_offset = 0.0
 	return stream
 
 func stop_music() -> void:
 	_music_player.stop()
-	_current_music_level = -1
+	_current_music_scene = ""
+	_current_music_path = ""
 
 func _play(stream: AudioStreamWAV, vol_db: float) -> void:
 	var player = AudioStreamPlayer.new()

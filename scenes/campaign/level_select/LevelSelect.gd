@@ -80,6 +80,7 @@ func _ready() -> void:
 	await get_tree().process_frame
 	_auto_scroll_to_current()
 	_maybe_show_tutorial()
+	SoundManager.play_level_select_music()
 
 var _map_redraw_counter: int = 0
 
