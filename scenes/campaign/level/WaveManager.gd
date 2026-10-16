@@ -131,6 +131,7 @@ func _spawn_enemy(wave_num: int, index: int) -> void:
 	if enemy == null:
 		return
 	enemy_layer.add_child(enemy)
+	SoundManager.play_enemy_spawn()
 
 	# Spread enemies perpendicular to the path direction at spawn
 	if path_waypoints.size() >= 2:

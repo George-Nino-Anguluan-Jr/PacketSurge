@@ -898,6 +898,7 @@ func _on_sell_tower(cell: Vector2i, tower: Node, value: int) -> void:
 	if is_instance_valid(_selected_tower):
 		_selected_tower.set_selected(false)
 	_selected_tower = null
+	SoundManager.play_tower_sell()
 	tower.queue_free()
 	_set_overlay_visible(false)
 	_spawn_floating_text("+" + str(value) + "⚡ Sold!", tower.global_position, Color("#FF8844"), 14)

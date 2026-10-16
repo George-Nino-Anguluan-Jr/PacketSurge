@@ -369,7 +369,6 @@ func take_damage(amount: float, source: String = "") -> void:
 	# Show damage number
 	if final_damage > 0:
 		_show_damage_number(final_damage)
-		SoundManager.play_enemy_hit()
 
 	if current_health <= 0:
 		_die()
