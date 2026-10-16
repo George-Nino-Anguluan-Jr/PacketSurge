@@ -73,27 +73,33 @@ func _connect_signals() -> void:
 	SignalBus.enemy_reached_end.connect(func(_id): play_enemy_reach_base())
 
 func _generate_all_sounds() -> void:
-	hover_sound = _generate_sine_sweep(700.0, 1100.0, 0.05, 0.06)
-	click_sound = _generate_sine_sweep(400.0, 320.0, 0.08, 0.18)
-	tick_sound = _generate_noise_tick(0.006, 0.08)
-	success_sound = _generate_chord([523.0, 659.0, 784.0], 0.35, 0.15)
-	error_sound = _generate_sine_sweep(200.0, 100.0, 0.25, 0.12)
-	notify_sound = _generate_sine_sweep(880.0, 1320.0, 0.12, 0.10)
-	transition_sound = _generate_sine_sweep(200.0, 600.0, 0.30, 0.08)
-	collect_sound = _generate_arpeggio([440.0, 554.0, 659.0, 880.0], 0.06, 0.10)
-	wave_alert_sound = _generate_sine_sweep(300.0, 900.0, 0.18, 0.12)
-	level_complete_sound = _generate_arpeggio([523.0, 659.0, 784.0, 1047.0], 0.12, 0.15)
-	game_over_sound = _generate_sine_sweep(300.0, 60.0, 0.60, 0.12)
-	enemy_hit_sound = _generate_noise_tick(0.04, 0.08)
-	enemy_death_sound = _generate_sine_sweep(200.0, 50.0, 0.20, 0.10)
-	enemy_reach_base_sound = _generate_sine_sweep(150.0, 80.0, 0.30, 0.12)
-	ram_spend_sound = _generate_sine_sweep(1000.0, 500.0, 0.08, 0.10)
+	# ── UI (digital blips) ─────────────────────────
+	hover_sound = _generate_digital_blip(500.0, 0.05, 0.08)      # Soft digital hover
+	click_sound = _generate_digital_tap(0.03, 0.12)              # Clean digital tap (no noise burst)
+	tick_sound  = _generate_digital_tick(0.010, 0.07)            # Tiny tech tick
+	
+	# ── Feedback (correct / wrong) ─────────────────
+	success_sound = _generate_digital_arpeggio([523.0, 659.0, 784.0, 1047.0], 0.09, 0.17)  # Ascending "correct"
+	error_sound   = _generate_digital_buzz(100.0, 0.26, 0.12)     # Low digital error
+	notify_sound  = _generate_digital_chime(880.0, 1175.0, 0.11, 0.10)  # Soft notification ping
+	
+	# ── Gameplay (network / packet theme) ──────────
+	transition_sound     = _generate_digital_sweep(180.0, 700.0, 0.20, 0.06)
+	collect_sound        = _generate_digital_arpeggio([600.0, 800.0, 1000.0, 1200.0], 0.05, 0.12)  # Packet collect
+	wave_alert_sound     = _generate_digital_wave_start(0.45, 0.11)   # Packet transmission alert
+	level_complete_sound = _generate_digital_fanfare([523.0, 659.0, 784.0, 1047.0, 1318.0], 0.11, 0.18)  # Level cleared
+	game_over_sound      = _generate_digital_powerdown([523.0, 440.0, 349.0, 293.0, 261.0, 220.0], 0.16, 0.14)  # System down
+	enemy_hit_sound      = _generate_digital_impact(0.06, 0.12)            # Packet hit
+	enemy_death_sound    = _generate_digital_explosion(0.20, 0.14)          # Packet deleted
+	enemy_reach_base_sound = _generate_digital_alarm(160.0, 0.35, 0.13)     # Base breach
+	ram_spend_sound      = _generate_digital_cash(0.08, 0.11)               # RAM spend
+	
 	_generate_tower_attack_sounds()
 
 var _default_attack_sound: AudioStreamWAV
 
 func _generate_tower_attack_sounds() -> void:
-	_default_attack_sound = _generate_noise_tick(0.04, 0.08)
+	_default_attack_sound = _generate_digital_tick(0.04, 0.08)
 
 	var profiles: Dictionary = {
 		"tower_array": {"start": 180.0, "end": 980.0, "duration": 0.065, "volume": 0.14, "mod": 20.0, "noise": 0.07, "harmonics": 2, "pulse": 4},
@@ -180,69 +186,321 @@ func _generate_sine_sweep(start_freq: float, end_freq: float, duration: float, v
 	stream.data = bytes
 	return stream
 
-func _generate_noise_tick(duration: float, volume: float) -> AudioStreamWAV:
-	var stream = AudioStreamWAV.new()
-	stream.mix_rate = 22050
-	stream.format = AudioStreamWAV.FORMAT_8_BITS
-	stream.stereo = false
-	
-	var num_samples = int(stream.mix_rate * duration)
-	var bytes = PackedByteArray()
-	bytes.resize(num_samples)
-	
-	for i in range(num_samples):
-		var noise = randf() * 2.0 - 1.0
-		var envelope = pow(1.0 - (float(i) / num_samples), 2.0)
-		var val = int(clamp((noise * envelope * volume * 127.0) + 128.0, 0.0, 255.0))
-		bytes[i] = val
-		
-	stream.data = bytes
-	return stream
+# ── DIGITAL SFX GENERATORS (cyberpunk / network theme) ──────────────────────
 
-func _generate_chord(freqs: Array, duration: float, volume: float) -> AudioStreamWAV:
+func _generate_digital_blip(freq: float, duration: float, volume: float) -> AudioStreamWAV:
 	var stream = AudioStreamWAV.new()
 	stream.mix_rate = 22050
 	stream.format = AudioStreamWAV.FORMAT_8_BITS
 	stream.stereo = false
-	
 	var num_samples = int(stream.mix_rate * duration)
 	var bytes = PackedByteArray()
 	bytes.resize(num_samples)
-	
 	for i in range(num_samples):
 		var t = float(i) / stream.mix_rate
-		var sample = 0.0
-		for f in freqs:
-			sample += sin(2.0 * PI * f * t)
-		sample /= freqs.size()
-		var envelope = 1.0 - (float(i) / num_samples)
-		var val = int(clamp((sample * envelope * volume * 127.0) + 128.0, 0.0, 255.0))
+		var env = exp(-t * 22.0)
+		var sample = sin(2.0 * PI * freq * t) * env
+		sample += sin(2.0 * PI * freq * 3.0 * t) * env * 0.15
+		var val = int(clamp((sample * volume * 127.0) + 128.0, 0.0, 255.0))
 		bytes[i] = val
-		
 	stream.data = bytes
 	return stream
 
-func _generate_arpeggio(freqs: Array, note_duration: float, volume: float) -> AudioStreamWAV:
+func _generate_digital_click(duration: float, volume: float) -> AudioStreamWAV:
 	var stream = AudioStreamWAV.new()
 	stream.mix_rate = 22050
 	stream.format = AudioStreamWAV.FORMAT_8_BITS
 	stream.stereo = false
-	
+	var num_samples = int(stream.mix_rate * duration)
+	var bytes = PackedByteArray()
+	bytes.resize(num_samples)
+	for i in range(num_samples):
+		var t = float(i) / stream.mix_rate
+		var env = exp(-t * 50.0)
+		var noise = (randf() * 2.0 - 1.0) * env * 0.5
+		var tone = sin(2.0 * PI * 1100.0 * t) * env * 0.25
+		var sample = noise + tone
+		var val = int(clamp((sample * volume * 127.0) + 128.0, 0.0, 255.0))
+		bytes[i] = val
+	stream.data = bytes
+	return stream
+
+func _generate_digital_tap(duration: float, volume: float) -> AudioStreamWAV:
+	# Clean digital tap — short sine pop with fast decay, no noise
+	var stream = AudioStreamWAV.new()
+	stream.mix_rate = 22050
+	stream.format = AudioStreamWAV.FORMAT_8_BITS
+	stream.stereo = false
+	var num_samples = int(stream.mix_rate * duration)
+	var bytes = PackedByteArray()
+	bytes.resize(num_samples)
+	for i in range(num_samples):
+		var t = float(i) / stream.mix_rate
+		var env = exp(-t * 60.0)
+		var sample = sin(2.0 * PI * 800.0 * t) * env * 0.8
+		sample += sin(2.0 * PI * 1600.0 * t) * env * 0.2
+		var val = int(clamp((sample * volume * 127.0) + 128.0, 0.0, 255.0))
+		bytes[i] = val
+	stream.data = bytes
+	return stream
+
+func _generate_digital_tick(duration: float, volume: float) -> AudioStreamWAV:
+	var stream = AudioStreamWAV.new()
+	stream.mix_rate = 22050
+	stream.format = AudioStreamWAV.FORMAT_8_BITS
+	stream.stereo = false
+	var num_samples = int(stream.mix_rate * duration)
+	var bytes = PackedByteArray()
+	bytes.resize(num_samples)
+	for i in range(num_samples):
+		var t = float(i) / stream.mix_rate
+		var env = exp(-t * 80.0)
+		var sample = sin(2.0 * PI * 1500.0 * t) * env * 0.6
+		var val = int(clamp((sample * volume * 127.0) + 128.0, 0.0, 255.0))
+		bytes[i] = val
+	stream.data = bytes
+	return stream
+
+func _generate_digital_buzz(freq: float, duration: float, volume: float) -> AudioStreamWAV:
+	var stream = AudioStreamWAV.new()
+	stream.mix_rate = 22050
+	stream.format = AudioStreamWAV.FORMAT_8_BITS
+	stream.stereo = false
+	var num_samples = int(stream.mix_rate * duration)
+	var bytes = PackedByteArray()
+	bytes.resize(num_samples)
+	for i in range(num_samples):
+		var t = float(i) / stream.mix_rate
+		var env = 0.9 - (float(i) / num_samples) * 0.3
+		var vib = sin(2.0 * PI * 5.0 * t) * 8.0
+		var sample = sin(2.0 * PI * (freq + vib) * t) * env
+		sample += sin(2.0 * PI * freq * 2.0 * t) * env * 0.35
+		var val = int(clamp((sample * volume * 127.0) + 128.0, 0.0, 255.0))
+		bytes[i] = val
+	stream.data = bytes
+	return stream
+
+func _generate_digital_chime(freq1: float, freq2: float, duration: float, volume: float) -> AudioStreamWAV:
+	var stream = AudioStreamWAV.new()
+	stream.mix_rate = 22050
+	stream.format = AudioStreamWAV.FORMAT_8_BITS
+	stream.stereo = false
+	var num_samples = int(stream.mix_rate * duration)
+	var bytes = PackedByteArray()
+	bytes.resize(num_samples)
+	for i in range(num_samples):
+		var t = float(i) / stream.mix_rate
+		var env = exp(-t * 10.0)
+		var sample = (sin(2.0 * PI * freq1 * t) + sin(2.0 * PI * freq2 * t)) * 0.5 * env
+		var val = int(clamp((sample * volume * 127.0) + 128.0, 0.0, 255.0))
+		bytes[i] = val
+	stream.data = bytes
+	return stream
+
+func _generate_digital_sweep(start_freq: float, end_freq: float, duration: float, volume: float) -> AudioStreamWAV:
+	var stream = AudioStreamWAV.new()
+	stream.mix_rate = 22050
+	stream.format = AudioStreamWAV.FORMAT_8_BITS
+	stream.stereo = false
+	var num_samples = int(stream.mix_rate * duration)
+	var bytes = PackedByteArray()
+	bytes.resize(num_samples)
+	for i in range(num_samples):
+		var t = float(i) / stream.mix_rate
+		var freq = start_freq + (end_freq - start_freq) * (t / duration)
+		var phase = 2.0 * PI * freq * t
+		var sample = sin(phase) * 0.7
+		sample += sin(2.0 * PI * freq * 2.0 * t) * 0.2
+		var envelope = 1.0 - (float(i) / num_samples) * 0.5
+		var val = int(clamp((sample * envelope * volume * 127.0) + 128.0, 0.0, 255.0))
+		bytes[i] = val
+	stream.data = bytes
+	return stream
+
+func _generate_digital_arpeggio(freqs: Array, note_duration: float, volume: float) -> AudioStreamWAV:
+	var stream = AudioStreamWAV.new()
+	stream.mix_rate = 22050
+	stream.format = AudioStreamWAV.FORMAT_8_BITS
+	stream.stereo = false
 	var total_duration = note_duration * freqs.size()
 	var num_samples = int(stream.mix_rate * total_duration)
 	var bytes = PackedByteArray()
 	bytes.resize(num_samples)
-	
 	for i in range(num_samples):
 		var t = float(i) / stream.mix_rate
 		var note_idx = int(t / note_duration)
 		note_idx = clamp(note_idx, 0, freqs.size() - 1)
 		var note_t = (t - note_idx * note_duration) / note_duration
-		var envelope = 1.0 - note_t
+		var envelope = 1.0 - note_t * 0.4
+		var sample = sin(2.0 * PI * freqs[note_idx] * t) * envelope
+		sample += sin(2.0 * PI * freqs[note_idx] * 2.0 * t) * envelope * 0.2
+		var val = int(clamp((sample * volume * 127.0) + 128.0, 0.0, 255.0))
+		bytes[i] = val
+	stream.data = bytes
+	return stream
+
+func _generate_digital_wave_start(duration: float, volume: float) -> AudioStreamWAV:
+	# Packet transmission alert — quick rising digital tone, not a siren
+	var stream = AudioStreamWAV.new()
+	stream.mix_rate = 22050
+	stream.format = AudioStreamWAV.FORMAT_8_BITS
+	stream.stereo = false
+	var num_samples = int(stream.mix_rate * duration)
+	var bytes = PackedByteArray()
+	bytes.resize(num_samples)
+	for i in range(num_samples):
+		var t = float(i) / stream.mix_rate
+		var progress = t / duration
+		var freq = lerp(400.0, 900.0, progress)
+		var env = 0.85
+		var sample = sin(2.0 * PI * freq * t) * env
+		sample += sin(2.0 * PI * freq * 2.0 * t) * env * 0.15
+		var val = int(clamp((sample * volume * 127.0) + 128.0, 0.0, 255.0))
+		bytes[i] = val
+	stream.data = bytes
+	return stream
+
+func _generate_digital_siren(low: float, high: float, duration: float, volume: float) -> AudioStreamWAV:
+	var stream = AudioStreamWAV.new()
+	stream.mix_rate = 22050
+	stream.format = AudioStreamWAV.FORMAT_8_BITS
+	stream.stereo = false
+	var num_samples = int(stream.mix_rate * duration)
+	var bytes = PackedByteArray()
+	bytes.resize(num_samples)
+	var cycle := 0.0
+	for i in range(num_samples):
+		var t = float(i) / stream.mix_rate
+		cycle += 0.018
+		if cycle > 1.0:
+			cycle = 0.0
+		var f = lerp(low, high, cycle)
+		var env = 0.8 + 0.2 * sin(2.0 * PI * 5.0 * t)
+		var sample = sin(2.0 * PI * f * t) * env
+		var val = int(clamp((sample * volume * 127.0) + 128.0, 0.0, 255.0))
+		bytes[i] = val
+	stream.data = bytes
+	return stream
+
+func _generate_digital_fanfare(freqs: Array, note_duration: float, volume: float) -> AudioStreamWAV:
+	var stream = AudioStreamWAV.new()
+	stream.mix_rate = 22050
+	stream.format = AudioStreamWAV.FORMAT_8_BITS
+	stream.stereo = false
+	var total_duration = note_duration * freqs.size()
+	var num_samples = int(stream.mix_rate * total_duration)
+	var bytes = PackedByteArray()
+	bytes.resize(num_samples)
+	for i in range(num_samples):
+		var t = float(i) / stream.mix_rate
+		var note_idx = int(t / note_duration)
+		note_idx = clamp(note_idx, 0, freqs.size() - 1)
+		var note_t = (t - note_idx * note_duration) / note_duration
+		var envelope = 1.0 - note_t * 0.3
+		var sample = sin(2.0 * PI * freqs[note_idx] * t) * envelope
+		sample += sin(2.0 * PI * freqs[note_idx] * 2.0 * t) * envelope * 0.3
+		var val = int(clamp((sample * volume * 127.0) + 128.0, 0.0, 255.0))
+		bytes[i] = val
+	stream.data = bytes
+	return stream
+
+func _generate_digital_powerdown(freqs: Array, note_duration: float, volume: float) -> AudioStreamWAV:
+	var stream = AudioStreamWAV.new()
+	stream.mix_rate = 22050
+	stream.format = AudioStreamWAV.FORMAT_8_BITS
+	stream.stereo = false
+	var total_duration = note_duration * freqs.size()
+	var num_samples = int(stream.mix_rate * total_duration)
+	var bytes = PackedByteArray()
+	bytes.resize(num_samples)
+	for i in range(num_samples):
+		var t = float(i) / stream.mix_rate
+		var note_idx = int(t / note_duration)
+		note_idx = clamp(note_idx, 0, freqs.size() - 1)
+		var note_t = (t - note_idx * note_duration) / note_duration
+		var envelope = 1.0 - note_t * 0.2
 		var sample = sin(2.0 * PI * freqs[note_idx] * t) * envelope
 		var val = int(clamp((sample * volume * 127.0) + 128.0, 0.0, 255.0))
 		bytes[i] = val
-		
+	stream.data = bytes
+	return stream
+
+func _generate_digital_impact(duration: float, volume: float) -> AudioStreamWAV:
+	var stream = AudioStreamWAV.new()
+	stream.mix_rate = 22050
+	stream.format = AudioStreamWAV.FORMAT_8_BITS
+	stream.stereo = false
+	var num_samples = int(stream.mix_rate * duration)
+	var bytes = PackedByteArray()
+	bytes.resize(num_samples)
+	for i in range(num_samples):
+		var t = float(i) / stream.mix_rate
+		var env = exp(-t * 24.0)
+		var thud = sin(2.0 * PI * 110.0 * t) * env * 0.55
+		var noise = (randf() * 2.0 - 1.0) * env * 0.3
+		var sample = thud + noise
+		var val = int(clamp((sample * volume * 127.0) + 128.0, 0.0, 255.0))
+		bytes[i] = val
+	stream.data = bytes
+	return stream
+
+func _generate_digital_explosion(duration: float, volume: float) -> AudioStreamWAV:
+	var stream = AudioStreamWAV.new()
+	stream.mix_rate = 22050
+	stream.format = AudioStreamWAV.FORMAT_8_BITS
+	stream.stereo = false
+	var num_samples = int(stream.mix_rate * duration)
+	var bytes = PackedByteArray()
+	bytes.resize(num_samples)
+	for i in range(num_samples):
+		var t = float(i) / stream.mix_rate
+		var env = exp(-t * 9.0)
+		var noise = (randf() * 2.0 - 1.0) * env * 0.85
+		var low = sin(2.0 * PI * 45.0 * t) * env * 0.35
+		var sample = noise + low
+		var val = int(clamp((sample * volume * 127.0) + 128.0, 0.0, 255.0))
+		bytes[i] = val
+	stream.data = bytes
+	return stream
+
+func _generate_digital_alarm(freq: float, duration: float, volume: float) -> AudioStreamWAV:
+	var stream = AudioStreamWAV.new()
+	stream.mix_rate = 22050
+	stream.format = AudioStreamWAV.FORMAT_8_BITS
+	stream.stereo = false
+	var num_samples = int(stream.mix_rate * duration)
+	var bytes = PackedByteArray()
+	bytes.resize(num_samples)
+	for i in range(num_samples):
+		var t = float(i) / stream.mix_rate
+		var beep = sin(2.0 * PI * 4.5 * t) > 0
+		var env = 0.88 if beep else 0.08
+		var sample = sin(2.0 * PI * freq * t) * env
+		var val = int(clamp((sample * volume * 127.0) + 128.0, 0.0, 255.0))
+		bytes[i] = val
+	stream.data = bytes
+	return stream
+
+func _generate_digital_cash(duration: float, volume: float) -> AudioStreamWAV:
+	var stream = AudioStreamWAV.new()
+	stream.mix_rate = 22050
+	stream.format = AudioStreamWAV.FORMAT_8_BITS
+	stream.stereo = false
+	var num_samples = int(stream.mix_rate * duration)
+	var bytes = PackedByteArray()
+	bytes.resize(num_samples)
+	var notes := [600.0, 800.0, 1000.0, 1200.0]
+	var note_dur = duration / notes.size()
+	for i in range(num_samples):
+		var t = float(i) / stream.mix_rate
+		var note_idx = int(t / note_dur)
+		if note_idx >= notes.size():
+			note_idx = notes.size() - 1
+		var note_t = t - note_idx * note_dur
+		var env = exp(-note_t * 28.0)
+		var sample = sin(2.0 * PI * notes[note_idx] * t) * env
+		var val = int(clamp((sample * volume * 127.0) + 128.0, 0.0, 255.0))
+		bytes[i] = val
 	stream.data = bytes
 	return stream
 
@@ -256,7 +514,7 @@ func set_music_volume(val: float) -> void:
 	music_volume = clamp(val, 0.0, 1.0)
 	if _music_player and _music_player.stream:
 		var vol_scale = linear_to_db(music_volume) if music_volume > 0.0 else -80.0
-		_music_player.volume_db = -16.0 + vol_scale
+		_music_player.volume_db = -12.0 + vol_scale
 
 func get_music_volume() -> float:
 	return music_volume
@@ -265,7 +523,7 @@ func play_hover() -> void:
 	_play(hover_sound, -12.0)
 
 func play_click() -> void:
-	_play(click_sound, -6.0)
+	_play(click_sound, -8.0)
 
 func play_tick() -> void:
 	_play(tick_sound, -15.0)
@@ -341,7 +599,7 @@ func _play_music_file(path: String, scene_label: String) -> void:
 	_current_music_path = path
 	_music_player.stop()
 	_music_player.stream = stream
-	_music_player.volume_db = -16.0
+	_music_player.volume_db = -12.0
 	var vol_scale = linear_to_db(music_volume) if music_volume > 0.0 else -80.0
 	_music_player.volume_db += vol_scale
 	_music_player.play()
