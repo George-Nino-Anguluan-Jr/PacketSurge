@@ -465,7 +465,7 @@ func _die() -> void:
 		set_process(false)
 		_on_death()
 		SoundManager.play_enemy_death()
-		SignalBus.enemy_defeated.emit(name)
+		SignalBus.enemy_defeated.emit(enemy_type)
 		enemy_defeated.emit(self)
 		var tween = create_tween()
 		tween.tween_property(self, "modulate:a", 0.0, 0.8)
@@ -475,7 +475,7 @@ func _die() -> void:
 	_on_death()
 
 	SoundManager.play_enemy_death()
-	SignalBus.enemy_defeated.emit(name)
+	SignalBus.enemy_defeated.emit(enemy_type)
 	enemy_defeated.emit(self)
 
 	queue_free()
@@ -511,7 +511,7 @@ func _reach_end() -> void:
 	if is_dead:
 		return
 	is_dead = true
-	SignalBus.enemy_reached_end.emit(name)
+	SignalBus.enemy_reached_end.emit(enemy_type)
 	enemy_reached_end.emit(self)
 	queue_free()
 
@@ -726,9 +726,15 @@ func _spawn_split_enemies(count: int) -> void:
 		perp = Vector2(-dir.y, dir.x)
 	var wm_nodes = get_tree().get_nodes_in_group("wave_manager")
 	var wm = wm_nodes[0] if wm_nodes.size() > 0 else null
+	# Scale splits like regular spawns: HP grows with wave & difficulty,
+	# speed stays at the base stat (same rule as WaveManager).
+	var split_health := 60.0
+	var split_speed  := 90.0
+	if wm:
+		split_health *= wm.difficulty_modifier * (1.0 + wm.current_wave * 0.3)
 	for i in range(count):
 		var split = EnemyFactory.create(
-			"basic_packet", waypoints, 60.0, 90.0, {}, 0
+			"basic_packet", waypoints, split_health, split_speed, {}, 0
 		)
 		if split and get_parent():
 			get_parent().add_child(split)

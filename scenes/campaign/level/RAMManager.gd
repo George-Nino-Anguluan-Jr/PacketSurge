@@ -30,9 +30,14 @@ func spend(cost: int) -> bool:
 	return true
 
 func earn(amount: int) -> void:
-	var before = current_ram
-	current_ram = min(current_ram + amount, max_ram * 2)
+	# No hard cap — classic TD economy lets players accumulate currency.
+	current_ram += amount
 	total_earned += amount
+	ram_changed.emit(current_ram, max_ram)
+
+func lose(amount: int) -> void:
+	# Leak penalty: deduct RAM but never below zero (no error sound).
+	current_ram = max(0, current_ram - amount)
 	ram_changed.emit(current_ram, max_ram)
 
 func get_current() -> int:

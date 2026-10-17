@@ -846,8 +846,8 @@ func _show_tower_menu(cell: Vector2i, tower: Node) -> void:
 		upg_btn.pressed.connect(_on_upgrade_tower.bind(tower, cost))
 		bg.add_child(upg_btn)
 
-	# Sell button
-	var sell_value = tower.ram_cost * tower.current_level
+	# Sell button — 70% of total invested (placement + upgrades)
+	var sell_value = int(tower.total_invested * 0.7)
 	var sell_btn := Button.new()
 	sell_btn.text = "SELL\n" + str(sell_value) + "⚡"
 	sell_btn.position = Vector2(right_x + half_btn_w + btn_sep, right_y)
@@ -914,6 +914,7 @@ func _on_upgrade_tower(tower: Node, cost: int) -> void:
 		_play_feedback(false)
 		_show_ram_bubble()
 		return
+	tower.total_invested += cost
 	var new_lvl = tower.upgrade()
 	tower.set_selected(true)
 	_set_overlay_visible(false)
@@ -1656,16 +1657,22 @@ func _on_enemy_reached_end(_enemy_id: String) -> void:
 	if is_level_ended:
 		return
 	base_health -= 1
+	ram_manager.lose(10)
 	_update_base_health_label()
+	_spawn_floating_text("-10⚡ Leak!", base_health_label.global_position - Vector2(0, 32), Color("#FF3366"), 13)
 	if base_health <= 0:
 		is_level_ended = true
 		var topic_id = ProgressManager.get_topic_for_level(level_number)
 		AdaptiveAI.record_level_performance(topic_id, "F", 0, 0.0)
 		_show_result_panel(false)
 
-func _on_enemy_defeated(_enemy_id: String) -> void:
-	ram_manager.earn(10)
-	score            += 10
+func _on_enemy_defeated(enemy_id: String) -> void:
+	var reward := 10
+	var edata = DataRegistry.get_enemy(enemy_id)
+	if edata:
+		reward = int(edata.ram_reward)
+	ram_manager.earn(reward)
+	score            += reward
 	score_label.text  = str(score)
 
 # ─── BASE HEALTH ───────────────────────────────────────

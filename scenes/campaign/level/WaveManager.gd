@@ -126,7 +126,9 @@ func _spawn_enemy(wave_num: int, index: int) -> void:
 
 	var stats = _base_stats_for(enemy_type)
 	var health = float(stats["max_health"]) * difficulty_modifier * (1.0 + wave_num * 0.3)
-	var speed  = float(stats["speed"]) * difficulty_modifier
+	# Speed intentionally NOT scaled by difficulty — enemy speed is an identity
+	# stat. Difficulty scales HP and spawn rate only (avoids 1.6××1.6× stacking).
+	var speed  = float(stats["speed"])
 	var enemy = EnemyFactory.create(enemy_type, path_waypoints, health, speed)
 	if enemy == null:
 		return
@@ -161,7 +163,7 @@ func _get_spawn_perp() -> Vector2:
 func _spawn_linked_partner(enemy: Node, wave_num: int) -> void:
 	var stats = _base_stats_for("linked_drain")
 	var health = float(stats["max_health"]) * difficulty_modifier * (1.0 + wave_num * 0.3)
-	var speed  = float(stats["speed"]) * difficulty_modifier
+	var speed  = float(stats["speed"])
 	var part_data = {"partner": enemy}
 	var partner = EnemyFactory.create("linked_drain", path_waypoints, health * 0.8, speed, part_data)
 	if partner == null:
@@ -182,7 +184,7 @@ func _spawn_linked_partner(enemy: Node, wave_num: int) -> void:
 func _spawn_merge_twin(enemy: Node, wave_num: int) -> void:
 	var stats = _base_stats_for("merge_twin")
 	var health = float(stats["max_health"]) * difficulty_modifier * (1.0 + wave_num * 0.3)
-	var speed  = float(stats["speed"]) * difficulty_modifier
+	var speed  = float(stats["speed"])
 	var part_data = {"partner": enemy}
 	var partner = EnemyFactory.create("merge_twin", path_waypoints, health, speed, part_data)
 	if partner == null:

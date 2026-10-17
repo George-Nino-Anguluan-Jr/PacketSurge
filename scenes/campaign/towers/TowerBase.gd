@@ -34,6 +34,8 @@ var _selected: bool = false
 # Upgrade state
 var current_level: int         = 1
 var max_level: int             = 3
+# Total RAM spent on this tower (placement + upgrades). Sell refunds 70%.
+var total_invested: int        = 0
 
 # ─── PREVIEW MODE ──────────────────────────────────────
 var preview_mode: bool         = false
@@ -88,6 +90,7 @@ func initialize(data: TowerData, cell: Vector2i, e_layer: Node2D) -> void:
 	grid_cell     = cell
 	enemy_layer   = e_layer
 	current_level = 1
+	total_invested = ram_cost
 	_setup_visual()
 	z_index = 1
 	if is_inside_tree():
@@ -173,9 +176,6 @@ func _on_enemy_entered(body: Node) -> void:
 		return
 	if not targets.has(body):
 		targets.append(body)
-		if not preview_mode:
-			attack_timer = 0.0
-			_perform_attack()
 
 func _on_enemy_exited(body: Node) -> void:
 	targets.erase(body)
@@ -566,8 +566,6 @@ func _update_pierce_beam(p: Dictionary, delta: float) -> bool:
 func _on_projectile_impact(p: Dictionary) -> bool:
 	if is_instance_valid(p["target"]) and p["target"].has_method("take_damage"):
 		p["target"].take_damage(p["damage"], tower_id)
-	if p.get("pop", false):
-		_pop_burst(p)
 	_on_style_impact(p)
 	var track: Node = p["target"] if is_instance_valid(p["target"]) else null
 	_spawn_impact_explosion(p["target_last_pos"], p["style"], track)
@@ -607,16 +605,9 @@ func _on_projectile_impact(p: Dictionary) -> bool:
 	return false
 
 func _pop_burst(p: Dictionary) -> void:
-	# Stack POP: burst damage to enemies near the impact point.
-	var origin: Vector2 = p["target_last_pos"]
-	var radius: float = p.get("pop_radius", 80.0)
-	for e in targets:
-		if not is_instance_valid(e) or e.is_dead or e == p["target"]:
-			continue
-		if origin.distance_to(e.position) <= radius:
-			e.take_damage(p["damage"] * 0.5, tower_id)
-			var aim = e.get_aim_point() if e.has_method("get_aim_point") else e.position
-			_spawn_impact_explosion(aim, "stack_mortar", e)
+	# DEPRECATED: pop splash is handled by TowerStack._on_style_impact.
+	# Kept as no-op hook to avoid breaking any external p.get("pop") callers.
+	pass
 
 
 func _on_style_impact(p: Dictionary) -> void:

@@ -8,6 +8,7 @@ extends TowerBase
 
 var _kill_streak: int = 0
 var _streak_target: Node = null
+const MAX_STREAK: int = 5
 
 func get_type_id() -> String:
 	return "tower_selection"
@@ -27,13 +28,19 @@ func _perform_attack() -> void:
 	SoundManager.play_tower_attack(tower_id)
 	_recoil = 1.0
 	_flash_targets.clear()
-	if _streak_target == current_target:
-		_kill_streak += 1
-	else:
+	if _streak_target != current_target:
 		_kill_streak = 0
 	_streak_target = current_target
 	var mult: float = 1.8 + _kill_streak * 0.25
-	_spawn_projectile("selection_sniper", damage * mult, 500.0, current_target)
+	_spawn_projectile("selection_sniper", damage * mult, 500.0, current_target, {"on_hit": _on_selection_hit})
+
+func _on_selection_hit(p: Dictionary) -> void:
+	# Ramp only when this tower's own hit lands the kill; reset otherwise.
+	var t = p.get("target")
+	if is_instance_valid(t) and t.is_dead:
+		_kill_streak = mini(_kill_streak + 1, MAX_STREAK)
+	else:
+		_kill_streak = 0
 
 func _get_upgrade_stats(level: int) -> Dictionary:
 	return {"damage": 1.35, "speed": 1.0, "range": 1.15}
