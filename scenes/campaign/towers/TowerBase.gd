@@ -80,18 +80,9 @@ var style: TowerStyle = null
 @onready var muzzle_point: Node2D   = $TurretHead/MuzzlePoint
 @onready var projectile_layer: Node2D = $ProjectileLayer
 
-# ─── SPRITE ───────────────────────────────────────────
-var _base_sprite_2d: Sprite2D = null
-var _using_sprites: bool = false
-var _spire: Node2D = null
-
-const SPIRE_VARIANT_MAP: Dictionary = {}
-
 func _ready() -> void:
 	if tower_id == "":
 		_setup_visual()
-	if not _using_sprites and tower_id != "":
-		_load_sprites()
 
 func initialize(data: TowerData, cell: Vector2i, e_layer: Node2D) -> void:
 	tower_id      = data.tower_id
@@ -123,10 +114,6 @@ func initialize(data: TowerData, cell: Vector2i, e_layer: Node2D) -> void:
 	total_invested = ram_cost
 	_setup_visual()
 	z_index = 1
-	if is_inside_tree():
-		_load_sprites()
-	else:
-		tree_entered.connect(_load_sprites)
 	if not preview_mode:
 		_setup_range_area()
 		_animate_placement()
@@ -134,54 +121,25 @@ func initialize(data: TowerData, cell: Vector2i, e_layer: Node2D) -> void:
 
 func _setup_visual() -> void:
 	if base_sprite:
-		base_sprite.visible = true
+		base_sprite.visible = false
 	if turret_head:
 		turret_head.position = Vector2(0, -14)
 	if muzzle_point:
 		muzzle_point.position = Vector2.ZERO
-
-func _load_sprites() -> void:
-	if tower_id == "":
-		return
-	if not is_inside_tree():
-		return
-	if _using_sprites:
-		return
-	if not SPIRE_VARIANT_MAP.has(tower_id):
-		return
-
-	var variant: String = str(SPIRE_VARIANT_MAP[tower_id])
-	var test_path: String = "res://assets/sprites/towers/spire/imported/" + variant + "/base/level_01.png"
-	if not ResourceLoader.exists(test_path):
-		return
-
-	var SpireTowerScript = preload("res://scenes/campaign/towers/SpireTower.gd")
-	_spire = SpireTowerScript.new()
-	add_child(_spire)
-	_spire.setup(variant)
-	_spire.set_level(current_level)
-	_using_sprites = true
-
-	if turret_head:
-		turret_head.visible = false
-	if base_sprite:
-		base_sprite.visible = false
-	queue_redraw()
 
 func ensure_style() -> TowerStyle:
 	if style == null:
 		style = TowerStyle.new()
 	return style
 
-func get_muzzle_position() -> Vector2:
-	# Returns spawn point in parent (tower_layer) local space — same coordinate
-	# space as the original `position + Vector2(0, -14).rotated(_turret_angle)`.
-	# Projectiles and targets are in this same parent space when layers
-	# are siblings at origin.
+func _get_custom_muzzle_position() -> Vector2:
 	var head_offset = turret_head.position if turret_head else Vector2(0, -14)
 	var muzzle_offset = muzzle_point.position if muzzle_point else Vector2.ZERO
 	var total_offset = (head_offset + muzzle_offset).rotated(_turret_angle)
-	return position + total_offset
+	return global_position + total_offset
+
+func get_muzzle_position() -> Vector2:
+	return _get_custom_muzzle_position()
 
 func _setup_range_area() -> void:
 	var range_area = Area2D.new()
@@ -255,8 +213,13 @@ func _get_closest_to_point(point: Vector2, exclude: Array[Node], max_dist: float
 	_clean_targets()
 	var best: Node = null
 	var best_dist: float = attack_range + ENEMY_RADIUS * 2 if max_dist < 0.0 else max_dist
-	for e in targets:
-		if exclude.has(e):
+	var candidates: Array = []
+	if is_inside_tree():
+		candidates = get_tree().get_nodes_in_group("enemies")
+	if candidates.is_empty():
+		candidates = targets
+	for e in candidates:
+		if not is_instance_valid(e) or e.is_dead or exclude.has(e):
 			continue
 		var d = point.distance_to(e.global_position)
 		if d <= best_dist:
@@ -294,25 +257,27 @@ func _get_median_target() -> Node:
 	return list[int(list.size() / 2)]
 
 func _get_next_along_path(anchor, exclude: Array[Node], max_dist: float) -> Node:
-	# Linked List / Quick: following the linked nodes in path order == the next enemy
-	# along the route (lowest progress greater than the anchor's), within range.
-	if not anchor or not is_instance_valid(anchor) or not anchor.has_method("get_path_progress"):
+	# Linked List / Chain: finds the nearest unchained neighboring enemy in the chain sequence.
+	if not anchor or not is_instance_valid(anchor):
 		return null
-	var anchor_prog: float = anchor.get_path_progress()
+	var anchor_pos = anchor.global_position
 	var best: Node = null
-	var best_prog: float = INF
-	for e in targets:
+	var best_dist: float = max_dist
+
+	var candidates: Array = []
+	if is_inside_tree():
+		candidates = get_tree().get_nodes_in_group("enemies")
+	if candidates.is_empty():
+		candidates = targets
+
+	for e in candidates:
 		if not is_instance_valid(e) or e.is_dead or exclude.has(e):
 			continue
-		if not e.has_method("get_path_progress"):
+		var d = anchor_pos.distance_to(e.global_position)
+		if d > max_dist:
 			continue
-		var prog: float = e.get_path_progress()
-		if prog <= anchor_prog:
-			continue
-		if anchor.global_position.distance_to(e.global_position) > max_dist:
-			continue
-		if prog < best_prog:
-			best_prog = prog
+		if d < best_dist:
+			best_dist = d
 			best = e
 	return best
 
@@ -384,8 +349,6 @@ func upgrade() -> int:
 		if shape:
 			shape.radius = attack_range + ENEMY_RADIUS
 	SignalBus.tower_upgraded.emit(tower_id, current_level)
-	if _spire:
-		_spire.set_level(current_level)
 	_animate_upgrade()
 	return current_level
 
@@ -438,9 +401,6 @@ func _process(delta: float) -> void:
 	if turret_head:
 		turret_head.rotation = _turret_angle
 
-	if _spire:
-		_spire.aim(_turret_angle)
-
 	if _shoot_flash > 0:
 		_shoot_flash -= delta * 4.0
 
@@ -473,9 +433,6 @@ func _play_attack_sound() -> void:
 func _spawn_projectile(p_style: String, p_damage: float, p_speed: float, p_target: Node, extra: Dictionary = {}) -> void:
 	if not is_instance_valid(p_target):
 		return
-	if _spire:
-		_spire.fire(p_target, p_damage)
-		return
 	var spawn_origin = get_muzzle_position()
 	var p = {
 		"pos": spawn_origin,
@@ -495,11 +452,6 @@ func _spawn_projectile(p_style: String, p_damage: float, p_speed: float, p_targe
 	_projectiles.append(p)
 
 func _spawn_custom_projectile(p: Dictionary) -> void:
-	if _spire and p.has("damage"):
-		var t = p.get("target", current_target)
-		if is_instance_valid(t):
-			_spire.fire(t, p["damage"])
-			return
 	_projectiles.append(p)
 
 func _update_projectiles(delta: float) -> void:
@@ -569,18 +521,24 @@ func _update_pierce_beam(p: Dictionary, delta: float) -> bool:
 	var falloff: float = p.get("falloff", 1.0)
 	var beam_dir: Vector2 = p["beam_dir"]
 	var perp = Vector2(-beam_dir.y, beam_dir.x)
-	var half_width: float = p.get("beam_width", 12.0)
-	for e in targets:
+	var half_width: float = p.get("beam_width", 16.0)
+
+	var candidates: Array = []
+	if is_inside_tree():
+		candidates = get_tree().get_nodes_in_group("enemies")
+	if candidates.is_empty():
+		candidates = targets
+
+	for e in candidates:
 		if not is_instance_valid(e) or e.is_dead:
 			continue
 		if hit_list.has(e):
 			continue
-		var offset = e.position - p["start_pos"]
+		var offset = e.global_position - p["start_pos"]
 		var along = offset.dot(beam_dir)
 		if along < -ENEMY_RADIUS:
 			continue
-		var ahead = offset.length() - p["traveled"]
-		if ahead > 18.0 + ENEMY_RADIUS:
+		if along > p["traveled"] + 25.0:
 			continue
 		var lateral = abs(offset.dot(perp))
 		if lateral > half_width + ENEMY_RADIUS:
@@ -588,9 +546,14 @@ func _update_pierce_beam(p: Dictionary, delta: float) -> bool:
 		if e.has_method("take_damage"):
 			e.take_damage(p["damage"] * falloff, tower_id, p.get("armor_pierce", false))
 			_apply_on_hit_effects(e, p["damage"] * falloff)
+			if e.has_method("show_floating_tag"):
+				if hit_list.size() > 0:
+					e.show_floating_tag("⚡ PIERCE x%d!" % (hit_list.size() + 1), Color("#00FF88"))
+				else:
+					e.show_floating_tag("⚡ PIERCE!", Color("#00E5FF"))
 		hit_list.append(e)
 		falloff *= p.get("decay", 0.8)
-		var aim = e.get_aim_point() if e.has_method("get_aim_point") else e.position
+		var aim = e.get_aim_point() if e.has_method("get_aim_point") else e.global_position
 		_spawn_impact_explosion(aim, "linear_scan", e)
 		if p.get("max_hits", 0) > 0 and hit_list.size() >= p["max_hits"]:
 			p["falloff"] = falloff
@@ -614,11 +577,13 @@ func _on_projectile_impact(p: Dictionary) -> bool:
 		var anchor: Node = p["target"] if is_instance_valid(p["target"]) else null
 		if anchor != null:
 			chained.append(anchor)
+			if anchor.has_method("show_floating_tag"):
+				anchor.show_floating_tag("🔗 HEAD", Color("#00FF88"))
 		for n in p["chained_targets"]:
 			chained.append(n)
 		var current_damage = p["damage"]
 		var chains_left = p["chains_left"]
-		var chain_radius = p.get("chain_radius", 60.0)
+		var chain_radius = p.get("chain_radius", 120.0)
 		var traverse_path: bool = p.get("traverse_path", false)
 		while chains_left > 0 and anchor != null and is_instance_valid(anchor):
 			var next_target: Node = null
@@ -631,10 +596,12 @@ func _on_projectile_impact(p: Dictionary) -> bool:
 			chains_left -= 1
 			chained.append(next_target)
 			current_damage *= 0.8
-			var next_pos = next_target.get_aim_point() if next_target.has_method("get_aim_point") else next_target.position
+			var next_pos = next_target.get_aim_point() if next_target.has_method("get_aim_point") else next_target.global_position
 			_spawn_chain_arc(last_pos, next_pos)
 			if next_target.has_method("take_damage"):
 				next_target.take_damage(current_damage, tower_id)
+				if next_target.has_method("show_floating_tag"):
+					next_target.show_floating_tag("🔗 LINK [%d]" % (chained.size() - 1), Color("#00FF88"))
 			_spawn_impact_explosion(next_pos, "chain_lightning", next_target)
 			last_pos = next_pos
 			anchor = next_target
@@ -685,7 +652,8 @@ func _update_explosions(delta: float) -> void:
 		e["elapsed"] += delta
 		var track = e.get("track")
 		if track != null and is_instance_valid(track):
-			e["pos"] = (track.get_aim_point() if track.has_method("get_aim_point") else track.position) - position
+			var track_pos = track.get_aim_point() if track.has_method("get_aim_point") else track.global_position
+			e["pos"] = to_local(track_pos)
 		e["radius"] = lerp(0.0, e["max_radius"], e["elapsed"] / e["lifetime"])
 		if e["elapsed"] < e["lifetime"]:
 			remaining.append(e)
@@ -702,13 +670,13 @@ func _update_arcs(delta: float) -> void:
 func _spawn_impact_explosion(pos: Vector2, style: String, track: Node = null) -> void:
 	var radius_map = {
 		"stack_mortar": 18.0, "chain_lightning": 22.0, "queue_rail": 14.0,
-		"binary_sniper": 16.0, "index_bolt": 8.0, "merge_beam": 14.0,
-		"counting_pellet": 10.0, "radix_digit": 8.0, "linear_scan": 12.0,
-		"linear_beam": 16.0, "queue_pierce": 14.0
+		"binary_sniper": 16.0, "index_bolt": 8.0, "merge_beam": 18.0,
+		"counting_pellet": 10.0, "radix_digit": 8.0, "linear_scan": 14.0,
+		"linear_beam": 18.0, "queue_pierce": 16.0, "quick_split": 16.0
 	}
 	var max_r = radius_map.get(style, 8.0)
 	var e = {
-		"pos": pos - position,
+		"pos": to_local(pos),
 		"style": style,
 		"radius": 0.0,
 		"max_radius": max_r,
@@ -721,22 +689,19 @@ func _spawn_impact_explosion(pos: Vector2, style: String, track: Node = null) ->
 
 func _spawn_chain_arc(from_pos: Vector2, to_pos: Vector2) -> void:
 	_chain_arcs.append({
-		"from": from_pos - position,
-		"to": to_pos - position,
+		"from": to_local(from_pos),
+		"to": to_local(to_pos),
 		"elapsed": 0.0,
 		"lifetime": 0.35
 	})
 
-# ─── DRAW ───────────────────────────────────────────────
-func _draw() -> void:
-	if _using_sprites:
-		if _selected:
-			draw_circle(Vector2.ZERO, attack_range + ENEMY_RADIUS, Color(tower_color, 0.06))
-			draw_arc(Vector2.ZERO, attack_range + ENEMY_RADIUS, 0, TAU, 64, Color(tower_color, 0.25), 1.5)
-		_draw_overlays(tower_color)
-		return
+func _draw_custom_tower(_color: Color) -> void:
 	_draw_base()
 	_draw_turret()
+
+# ─── DRAW ───────────────────────────────────────────────
+func _draw() -> void:
+	_draw_custom_tower(tower_color)
 	_draw_overlays(tower_color)
 	_draw_hud_elements()
 
@@ -780,8 +745,8 @@ func _draw_hud_elements() -> void:
 func _draw_overlays(color: Color) -> void:
 	# ── PROJECTILES — full redesign: one distinct silhouette per tower ──
 	for p in _projectiles:
-		var rd = p["draw_pos"] - position
-		var rp = p["pos"] - position
+		var rd = to_local(p["draw_pos"])
+		var rp = to_local(p["pos"])
 		match p["style"]:
 			"index_bolt":
 				# Array: O(1) memory chip — square PCB chip with index digit, neon rim + drop shadow + trailing ghost chips
@@ -881,7 +846,7 @@ func _draw_overlays(color: Color) -> void:
 			"chain_lightning":
 				# LinkedList: chain lightning — jagged bolt with node beads at kinks + dual glow
 				var bolt_from = rd
-				var bolt_to = p["target_last_pos"] - position
+				var bolt_to = to_local(p["target_last_pos"])
 				var segments = 7
 				var pts: PackedVector2Array = PackedVector2Array()
 				pts.append(bolt_from)
@@ -910,28 +875,33 @@ func _draw_overlays(color: Color) -> void:
 				draw_circle(bolt_to, 3.0, Color.WHITE)
 				draw_circle(bolt_to, 5.5, Color(color, 0.35))
 			"merge_beam":
-				# Merge: twin spiraling beams converging — ribbon + orbiting particle
+				# Merge: twin contrasting helical beams (Cyan Left / Magenta Right) converging into 1
 				var frac = clamp(p["elapsed_time"] / (p["total_dist"] / p["speed"] if p["total_dist"] > 0 else 1.0), 0.0, 1.0)
 				var side = p.get("merge_side", "left")
-				var sway = sin(_anim_time * 14.0 + (0 if side == "left" else 3)) * 1.5 * (1.0 - frac)
-				var perp_m = Vector2(-(p["target_last_pos"] - p["pos"]).normalized().y, (p["target_last_pos"] - p["pos"]).normalized().x) if (p["target_last_pos"] - p["pos"]).length() > 0 else Vector2.UP
-				var offset = (perp_m * (6 if side == "left" else -6) * (1.0 - frac)) + perp_m * sway
+				var beam_col = Color("#00E5FF") if side == "left" else Color("#E040FB")
+				var to_target = (p["target_last_pos"] - p["pos"]).normalized() if (p["target_last_pos"] - p["pos"]).length() > 0 else Vector2.RIGHT
+				var perp_m = Vector2(-to_target.y, to_target.x)
+				var helix_phase = p["elapsed_time"] * 18.0 + (0.0 if side == "left" else PI)
+				var spread = (8.0 if side == "left" else -8.0) * (1.0 - frac)
+				var corkscrew = sin(helix_phase) * 10.0 * (1.0 - frac)
+				var offset = perp_m * (spread + corkscrew)
 				var head = rd + offset
-				var tail = rd - (p["target_last_pos"] - p["pos"]).normalized() * 14.0 + offset * 0.3
-				# ribbon
-				draw_line(tail, head, Color(color, 0.18), 6.0)
-				draw_line(tail, head, Color.WHITE, 2.4)
-				draw_line(tail, head, color, 1.3)
-				# spiral particle orbiting head
-				var orb_r = 4.5
-				var orb_a = _anim_time * 10.0 + (0 if side == "left" else PI)
-				draw_circle(head + Vector2(cos(orb_a), sin(orb_a)) * orb_r, 1.5, Color(color, 0.9))
-				draw_circle(head, 3.2, Color.WHITE)
-				draw_circle(head, 5.8, Color(color, 0.28))
-				# merge line toward center when close
-				if frac > 0.5:
-					var mid = rd.lerp(head, 0.5)
-					draw_line(head, mid, Color(color, 0.35 * (frac - 0.5) * 2.0), 1.0)
+				var tail = rd - to_target * 16.0 + offset * 0.4
+				# Twin energy ribbon
+				draw_line(tail, head, Color(beam_col, 0.25), 7.0)
+				draw_line(tail, head, Color(beam_col, 0.85), 2.8)
+				draw_line(tail, head, Color.WHITE, 1.2)
+				# Orbiting sub-quantum charge
+				var orb_r = 5.0 * (1.0 - frac * 0.5)
+				var orb_a = helix_phase * 1.5
+				draw_circle(head + Vector2(cos(orb_a), sin(orb_a)) * orb_r, 1.8, Color.WHITE)
+				draw_circle(head, 4.0, Color(beam_col, 0.7))
+				draw_circle(head, 1.8, Color.WHITE)
+				# Focal merge fusion ring when nearing impact
+				if frac > 0.6:
+					var fusion_alpha = (frac - 0.6) / 0.4
+					draw_line(head, rd, Color(Color.WHITE, fusion_alpha * 0.8), 1.5)
+					draw_circle(rd, 4.0 * fusion_alpha, Color("#E040FB", fusion_alpha * 0.5))
 			"counting_pellet":
 				# Counting: numbered pellet — solid sphere with digit hud + counting tick trail
 				var digit = p.get("digit", 1)

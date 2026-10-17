@@ -1,6 +1,9 @@
 # EnemyMergeTwin.gd
 # Merge Twin — Spawns as paired enemies. If one dies, the other gains
 # 50% of the partner's HP + 30% current HP and 1.3x speed.
+# Bespoke Procedural Design: "The Polarity Scarabs"
+# Cybernetic twin scarabs with magnetic runes. When one falls, the survivor absorbs
+# its polarity energy, expanding in scale into a supercharged golden juggernaut.
 
 extends Enemy
 
@@ -16,8 +19,6 @@ func set_partner(p: Node) -> void:
 	type_data["partner_id"] = p.get_instance_id() if p != null else 0
 
 func get_partner() -> Node:
-	# Store the partner's instance ID, never a raw reference, so a freed
-	# partner resolves to null instead of a dangling pointer.
 	var pid: int = int(type_data.get("partner_id", 0))
 	if pid == 0:
 		return null
@@ -40,28 +41,62 @@ func _on_merge_partner_died(partner_hp: float) -> void:
 	max_health += partner_hp * 0.5
 	current_health = min(current_health + partner_hp * 0.3, max_health)
 	move_speed *= 1.3
-	enemy_color = Color("#FFB800")  # Gold = merged state
+	enemy_color = Color("#FFB800")  # Gold = merged supercharge
 	queue_redraw()
 
-func _draw_type_body(col: Color, bob: float) -> void:
+func _draw_custom_enemy(col: Color, bob: float) -> void:
 	var merged = type_data.get("merged", false)
-	var draw_col = Color("#FFB800") if merged else col
-	# Left sphere
-	_draw_3d_sphere(Vector2(-8, bob - 2), 7.0, draw_col)
-	# Right sphere
-	_draw_3d_sphere(Vector2(8, bob - 2), 7.0, draw_col)
-	# Merge bridge
-	_draw_3d_box(Vector2(0, bob - 1), Vector2(7, 1.5), 3.0, Color("#0D141C"), draw_col, 1.2)
-	# Merge arrows on top of bridge
-	draw_line(Vector2(-3, bob - 4), Vector2(3, bob - 4), Color(draw_col, 0.7), 1.2)
-	draw_line(Vector2(3, bob - 4), Vector2(1, bob - 6), Color(draw_col, 0.7), 1.2)
-	draw_line(Vector2(3, bob - 4), Vector2(1, bob - 2), Color(draw_col, 0.7), 1.2)
-	# Drop shadow
-	var s = ensure_style()
-	draw_set_transform(Vector2(0, bob + 6), 0.0, Vector2(1.0, 0.3))
-	draw_circle(Vector2.ZERO, 14, Color(0, 0, 0, s.shadow_alpha))
-	draw_set_transform(Vector2.ZERO, 0.0, Vector2.ONE)
+	var scale_mult = 1.35 if merged else 1.0
+	var scarab_col = Color("#FFB800") if merged else col
+	var center = Vector2(0, bob - 2)
 
-func _draw_status_effects(col: Color, bob: float) -> void:
-	if type_data.get("merged", false):
-		draw_arc(Vector2(0, 0 + bob), 18, 0, TAU, 16, Color("#FFB800", 0.5), 2.0)
+	# 1. Ground Drop Shadow
+	CyberVectorCanvas.draw_drop_shadow(
+		self,
+		Vector2(0, bob + 10),
+		16.0 * scale_mult,
+		8.0 * scale_mult,
+		0.4 if merged else 0.35
+	)
+
+	# 2. Dual Biomagnetic Shell Hemispheres
+	var left_c = center + Vector2(-7.0 * scale_mult, 0.0)
+	var right_c = center + Vector2(7.0 * scale_mult, 0.0)
+	var shell_r = 7.5 * scale_mult
+
+	# Left Carapace
+	draw_circle(left_c, shell_r, Color("#0F1722"))
+	draw_circle(left_c, shell_r - 1.0, scarab_col.darkened(0.2))
+	draw_circle(left_c - Vector2(1.5, 1.5) * scale_mult, shell_r * 0.4, Color.WHITE)
+
+	# Right Carapace
+	draw_circle(right_c, shell_r, Color("#0F1722"))
+	draw_circle(right_c, shell_r - 1.0, scarab_col.darkened(0.2))
+	draw_circle(right_c - Vector2(1.5, 1.5) * scale_mult, shell_r * 0.4, Color.WHITE)
+
+	# 3. Central Magnetic Fusion Core
+	var core_rect = Rect2(center.x - 3.5 * scale_mult, center.y - 7.0 * scale_mult, 7.0 * scale_mult, 14.0 * scale_mult)
+	draw_rect(core_rect, Color("#091017"))
+	draw_rect(core_rect, scarab_col, false, 1.2)
+
+	# Core Diode / Fusion Arc
+	var pulse = 0.8 + 0.2 * sin(_bob_time * 6.0)
+	draw_circle(center, 3.5 * scale_mult, Color(scarab_col, 0.5 * pulse))
+	draw_circle(center, 1.8 * scale_mult, Color.WHITE)
+
+	# 4. Merged Supercharge Aura & Overload Lightning
+	if merged:
+		var aura_pulse = 0.5 + 0.5 * sin(_bob_time * 8.0)
+		draw_arc(center, 20.0, 0, TAU, 20, Color("#FFB800", 0.6 * aura_pulse), 2.0)
+		draw_arc(center, 23.0, 0, TAU, 20, Color("#FF3366", 0.35 * aura_pulse), 1.2)
+
+		# Overload arc between left and right shell
+		CyberVectorCanvas.draw_plasma_arc(
+			self,
+			left_c + Vector2(0, -shell_r),
+			right_c + Vector2(0, -shell_r),
+			Color("#FFE57F"),
+			3.0,
+			4,
+			1.5
+		)

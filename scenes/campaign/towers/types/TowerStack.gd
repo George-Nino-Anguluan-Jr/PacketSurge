@@ -1,8 +1,9 @@
 # TowerStack.gd
 # Stack Tower — LIFO targeting. Stacks damage charges; on 4th hit POPs a massive burst.
-# REDESIGN: Pancake stack foundry — hexagonal base with 4 stacked plates
-# + mortar ejector. Mechanic = LIFO stack push/pop with POP explosion.
-
+# BESPOKE DESIGN: The LIFO Hydraulic Mortar Silo
+# An industrial pressure chamber with an exposed vertical containment tube showing
+# physical data plates stacked inside (1..4). Hits 1-3 compress the piston down;
+# the 4th hit violently snaps the hydraulic piston upward with a seismic Pop explosion.
 extends TowerBase
 
 var _stack_charge: int = 0
@@ -25,19 +26,28 @@ func _perform_attack() -> void:
 	SoundManager.play_tower_attack(tower_id)
 	_recoil = 1.0
 	_flash_targets.clear()
+
 	if _stack_target == current_target and is_instance_valid(_stack_target):
 		_stack_charge += 1
 	else:
 		_stack_charge = 1
 		_stack_target = current_target
+
+	var spawn_origin = get_muzzle_position()
 	if _stack_charge >= STACK_CAPACITY:
 		_stack_charge = 0
 		_spawn_projectile("stack_mortar", damage * 3.0, projectile_speed, current_target, {"pop": true})
 	else:
 		_spawn_projectile("stack_mortar", damage * 0.7, projectile_speed, current_target)
 
+func _get_custom_muzzle_position() -> Vector2:
+	return global_position + Vector2(0, -22.0)
+
 func _on_style_impact(p: Dictionary) -> void:
 	if p.get("pop", false):
+		var target = p.get("target")
+		if is_instance_valid(target) and not target.is_dead and target.has_method("show_floating_tag"):
+			target.show_floating_tag("💥 POP! (AoE)", Color("#FF3366"))
 		var origin = p["target_last_pos"]
 		var radius = splash_radius
 		for e in targets:
@@ -57,60 +67,130 @@ func _get_ability_targets() -> Array:
 		return []
 	return [all[-1]]
 
-func _draw_base_geometry(color: Color, height: float) -> void:
-	# Stack base: hexagonal platform with 4 clearly numbered plate slots
-	var is_shadow = color.a < 0.5
-	var base_col = Color("#0D1A2E") if not is_shadow else Color("#0D131A")
-	_draw_3d_hexagon(Vector2(0, 0), 19.0, height, base_col, color, 1.5)
-	if not is_shadow:
-		# 4 plate slots — recessed rectangles showing capacity
-		for i in range(4):
-			var slot_y = -6.0 + i * 4.0
-			var slot_rect = Rect2(Vector2(-5.0, slot_y * SQUASH), Vector2(10.0, 3.0 * SQUASH))
-			draw_rect(slot_rect, Color("#08111F"), true)
-			draw_rect(slot_rect, Color(color, 0.2), false, 0.7)
-			# Slot number
-			draw_string(ThemeDB.fallback_font, Vector2(-7.0, (slot_y + 2.5) * SQUASH), str(i + 1), HORIZONTAL_ALIGNMENT_CENTER, -1, 6, Color(color, 0.4))
-			# Filled indicator
-			if i < _stack_charge:
-				draw_rect(slot_rect, Color(color, 0.25), true)
-				draw_rect(slot_rect, Color(color, 0.6), false, 0.9)
-		# PUSH/POP labels
-		draw_string(ThemeDB.fallback_font, Vector2(7.0, -4.0), "P", HORIZONTAL_ALIGNMENT_CENTER, -1, 6, Color(color, 0.4))
-		draw_string(ThemeDB.fallback_font, Vector2(7.0, 6.0), "O", HORIZONTAL_ALIGNMENT_CENTER, -1, 6, Color(color, 0.4))
-		# Arrow from POP to PUSH (LIFO direction)
-		draw_arc(Vector2(9.0, 0.0), 4.0, -PI * 0.4, PI * 0.4, 10, Color(color, 0.25), 0.8)
-	# Hex outline
-	var hex_pts = PackedVector2Array()
-	for i in range(6):
-		var a = -PI / 2.0 + i * (TAU / 6.0)
-		hex_pts.append(Vector2(cos(a) * 19.0, sin(a) * 19.0 * SQUASH))
-	hex_pts.append(hex_pts[0])
-	draw_polyline(hex_pts, color, 1.0 if not is_shadow else 0.8)
+# ─── BESPOKE PROCEDURAL RENDERING ──────────────────────────────────────────
 
-func _draw_turret_assembly(color: Color) -> void:
-	var recoil = -_recoil * 8.0
+func _draw_custom_tower(color: Color) -> void:
 	var t = _anim_time
-	# 4 stacked plates — clean cylinders, bob when charged
+	var is_popping = _recoil > 0.4 and _stack_charge == 0
+
+	# 1. Ground Drop Shadow
+	CyberVectorCanvas.draw_drop_shadow(self, Vector2(0, 6), 24.0, 15.0, 0.4)
+
+	# 2. Heavy Hexagonal Industrial Silo Base
+	var base_col = Color("#141B26")
+	var side_col = Color("#0A0F17")
+	CyberVectorCanvas.draw_iso_hexagon(
+		self,
+		Vector2.ZERO,
+		20.0,
+		8.0,
+		base_col,
+		side_col,
+		Color(color, 0.4),
+		1.4
+	)
+
+	# 3. Outer Silo Ring with Industrial Hazard Markings
+	var ring_color = Color("#1B2636")
+	CyberVectorCanvas.draw_iso_cylinder(
+		self,
+		Vector2.ZERO,
+		15.0,
+		5.0,
+		ring_color,
+		side_col,
+		Color(color, 0.3),
+		1.0,
+		20
+	)
+
+	# 4. Vertical Stack Containment Core (Exposed Piston Tube)
+	# Piston compression: downward offset increases as charge accumulates
+	var compression = float(_stack_charge) * 2.5
+	var piston_y = -8.0 + compression * (1.0 - _recoil)
+	if is_popping:
+		piston_y -= 8.0 * _recoil # Violent upward kickback on Pop
+
+	# Glass containment cylinder
+	CyberVectorCanvas.draw_iso_cylinder(
+		self,
+		Vector2(0, 0),
+		9.0,
+		14.0,
+		Color("#0B131D", 0.6),
+		Color("#050A10", 0.8),
+		Color(color, 0.5),
+		1.0,
+		18
+	)
+
+	# 5. Physical Stacked Plates Inside Chamber (1..4)
 	for i in range(4):
-		var sy = 5.0 - i * 3.2
-		var plate_w = 5.0 - i * 0.3
-		var is_charged = i < _stack_charge
-		var plate_col = Color(color, 0.7 if is_charged else 0.2 + i * 0.04)
-		var bob = sin(t * 1.8 + i * 0.7) * 0.2 if is_charged else 0.0
-		_draw_3d_cylinder(Vector2(0, sy + bob), plate_w, 2.0, Color("#0F1F33"), plate_col, 0.9)
-		if is_charged:
-			draw_circle(Vector2(0, sy + bob), 0.6, Color(1, 1, 1, 0.5))
-	# Mortar ejector — simple angled tube
-	_draw_3d_cylinder(Vector2(recoil, -7.0), 3.5, 9.0, Color("#1A2E4A"), color, 1.2)
-	var muzz = Vector2(recoil + 8.8, -7.0 * SQUASH)
-	draw_circle(muzz, 2.5, Color.BLACK)
-	draw_circle(muzz, 1.0, Color(color, 0.9))
-	# Muzzle glow when firing
-	if _recoil > 0.25:
-		draw_circle(muzz, 4.0, Color(color, 0.2))
-		draw_circle(muzz, 1.5, Color("#FFB800", 0.3))
-	# Charge indicator dots on the side
-	for i in range(_stack_charge):
-		var dot_y = -2.0 - i * 2.0
-		draw_circle(Vector2(6.0, dot_y), 0.8, Color(color, 0.7))
+		var plate_h = -2.0 - i * 3.5
+		var is_filled = i < _stack_charge
+		var plate_col = color if is_filled else Color(color, 0.15)
+		var plate_top = color.lightened(0.25) if is_filled else Color("#0C1520")
+
+		if is_filled:
+			# Shaded glowing stack plate
+			CyberVectorCanvas.draw_iso_cylinder(
+				self,
+				Vector2(0, plate_h),
+				7.0,
+				2.0,
+				plate_top,
+				plate_col.darkened(0.3),
+				Color.WHITE if i == _stack_charge - 1 else plate_col,
+				0.8,
+				16
+			)
+			# Level/plate number pip
+			draw_circle(Vector2(0, plate_h - 2.0), 1.0, Color.WHITE)
+
+	# 6. Top Piston Head & Mortar Bore
+	var piston_head_y = piston_y - 8.0
+	CyberVectorCanvas.draw_iso_cylinder(
+		self,
+		Vector2(0, piston_head_y),
+		8.5,
+		4.0,
+		Color("#223044"),
+		Color("#101824"),
+		Color(color, 0.7),
+		1.2,
+		18
+	)
+
+	# Open Mortar Muzzle Hole
+	var bore_center = Vector2(0, piston_head_y - 4.0)
+	draw_circle(bore_center, 4.5, Color.BLACK)
+	draw_arc(bore_center, 4.5, 0, TAU, 20, Color(color, 0.8), 1.2)
+
+	# 7. Pop Explosion & Steam Vent VFX
+	if is_popping:
+		# Blast ring
+		draw_arc(bore_center, 12.0 * _recoil, 0, TAU, 24, Color("#FFB800", 0.8), 2.0)
+		draw_circle(bore_center, 6.0 * _recoil, Color.WHITE)
+		# Side steam jets
+		draw_line(Vector2(-12, -10), Vector2(-20 * _recoil - 12, -10), Color(Color.WHITE, 0.6), 2.5)
+		draw_line(Vector2(12, -10), Vector2(20 * _recoil + 12, -10), Color(Color.WHITE, 0.6), 2.5)
+	elif _stack_charge > 0:
+		# Glowing core heat
+		var charge_pulse = float(_stack_charge) / 4.0
+		draw_circle(bore_center, 2.5 * charge_pulse, Color(color, 0.6))
+
+	# 8. Level 2 & 3 Reinforced Seismic Footing
+	if current_level >= 2:
+		for i in range(3):
+			var a = i * TAU / 3.0 + PI / 6.0
+			var foot_pos = Vector2(cos(a) * 20.0, sin(a) * 20.0 * SQUASH)
+			CyberVectorCanvas.draw_iso_prism(
+				self,
+				foot_pos,
+				Vector2(3.5, 3.5),
+				4.0,
+				Color("#1A2432"),
+				Color("#0C121B"),
+				Color(color, 0.4),
+				1.0
+			)

@@ -1,10 +1,10 @@
 # TowerRadix.gd
 # Radix Tower — radix sort buckets. Fires 3 digit orbs (1, 10, 100) each
-# sorted into a different "bucket" = each orb targets a different enemy,
-# distributing damage place-value style across the group.
-# REDESIGN: Digit sorter drum — cylindrical base with 3 bucket levels + orbital
-# digit rings. Mechanic = place-value bucket distribution (1s/10s/100s).
-
+# sorted into a different "bucket" place-value style across the group.
+# BESPOKE DESIGN: The Three-Tier Decimal Pagoda
+# A three-tiered stepped cylindrical pagoda tower representing 1s (Base), 10s (Mid),
+# and 100s (Crown) place values. The tiers counter-rotate at different gear ratios,
+# each discharging its dedicated digit pass in rapid succession.
 extends TowerBase
 
 func get_type_id() -> String:
@@ -22,11 +22,13 @@ func _perform_attack() -> void:
 	SoundManager.play_tower_attack(tower_id)
 	_recoil = 1.0
 	_flash_targets.clear()
+
 	var digits = [1, 10, 100]
 	var spawn_origin = get_muzzle_position()
 	var bucket_targets = _get_nearest(digits.size())
 	if bucket_targets.is_empty():
 		bucket_targets.append(current_target)
+
 	for i in range(digits.size()):
 		var t: Node = current_target
 		if i < bucket_targets.size():
@@ -36,7 +38,7 @@ func _perform_attack() -> void:
 			"start_pos": spawn_origin,
 			"draw_pos": spawn_origin,
 			"target": t,
-			"target_last_pos": t.position if is_instance_valid(t) else spawn_origin,
+			"target_last_pos": t.global_position if is_instance_valid(t) else spawn_origin,
 			"speed": projectile_speed,
 			"damage": damage * 0.4,
 			"style": "radix_digit",
@@ -48,64 +50,98 @@ func _perform_attack() -> void:
 		_spawn_custom_projectile(p)
 	queue_redraw()
 
+func _get_custom_muzzle_position() -> Vector2:
+	return global_position + Vector2(0, -20.0) + Vector2(12.0, 0).rotated(_turret_angle)
+
 func _get_upgrade_stats(level: int) -> Dictionary:
 	return {"damage": 1.2, "speed": 1.3, "range": 1.0}
 
-func _draw_base_geometry(color: Color, height: float) -> void:
-	# Radix base: circular drum with 3 concentric bucket rings labeled 1, 10, 100
-	var is_shadow = color.a < 0.5
-	var drum_col = Color("#0D1A2E") if not is_shadow else Color("#0D131A")
-	_draw_3d_cylinder(Vector2(0, 0), 18.0, height, drum_col, color, 1.5)
-	if not is_shadow:
-		# 3 bucket rings — concentric with labels
-		var bucket_cols = [Color("#00D4FF"), Color("#FFB800"), Color("#FF4D8D")]
-		var labels = ["1", "10", "100"]
-		for ri in range(3):
-			var rr = 6.0 + ri * 3.5
-			var pts = PackedVector2Array()
-			for i in range(22):
-				var a = i * TAU / 22.0
-				pts.append(Vector2(cos(a) * rr, sin(a) * rr * SQUASH))
-			draw_polyline(pts, Color(bucket_cols[ri], 0.25), 0.9)
-			# Label at top
-			var ly = -rr * SQUASH
-			var off = -2 if ri < 2 else -5
-			draw_string(ThemeDB.fallback_font, Vector2(off, ly - 1), labels[ri], HORIZONTAL_ALIGNMENT_CENTER, -1, 5, Color(bucket_cols[ri], 0.6))
-		# Center hub
-		draw_circle(Vector2.ZERO, 2.5, Color("#08111F"))
-		draw_circle(Vector2.ZERO, 2.5, Color(color, 0.3), false, 0.8)
-		draw_circle(Vector2.ZERO, 1.0, Color(color, 0.8))
-		draw_circle(Vector2(-0.4, -0.3), 0.4, Color.WHITE)
-	# Drum outline
-	draw_arc(Vector2.ZERO, 18.0, 0, TAU, 28, color, 1.0 if not is_shadow else 0.8)
+# ─── BESPOKE PROCEDURAL RENDERING ──────────────────────────────────────────
 
-func _draw_turret_assembly(color: Color) -> void:
-	var recoil = -_recoil * 6.0
+func _draw_custom_tower(color: Color) -> void:
 	var t = _anim_time
-	# Central digit core
-	draw_circle(Vector2.ZERO, 4.5, Color(color, 0.15))
-	_draw_3d_sphere(Vector2(0, 0), 3.8, color)
-	# 3 orbital digit rings with colored beads
-	var bucket_cols = [Color("#00D4FF"), Color("#FFB800"), Color("#FF4D8D")]
-	var labels = ["1", "10", "100"]
-	for ri in range(3):
-		var rr = 7.5 + ri * 2.2
-		var rot = t * (0.7 + ri * 0.35) + ri * 1.2
-		# Ring
-		var pts = PackedVector2Array()
-		for i in range(18):
-			var a = i * TAU / 18.0 + rot
-			pts.append(Vector2(cos(a) * rr, sin(a) * rr * SQUASH))
-		draw_polyline(pts, Color(bucket_cols[ri], 0.2), 0.9)
-		# Orbiting bead
-		var bx = cos(rot) * rr
-		var by = sin(rot) * rr * SQUASH
-		draw_circle(Vector2(bx, by), 1.5, Color(bucket_cols[ri], 0.85))
-		draw_circle(Vector2(bx, by), 0.6, Color.WHITE)
-	# Emitter barrel
-	_draw_3d_cylinder(Vector2(5 + recoil, 0), 2.0, 7.0, Color("#1A2E4A"), color, 1.0)
-	var muzz = Vector2(12.0 + recoil, 0)
-	draw_circle(muzz, 1.6, Color.BLACK)
-	draw_circle(muzz, 0.7, Color(color, 0.9))
-	if _recoil > 0.3:
-		draw_circle(muzz, 3.5, Color(color, 0.2))
+	var is_firing = _recoil > 0.15
+
+	# 1. Ground Drop Shadow
+	CyberVectorCanvas.draw_drop_shadow(self, Vector2(0, 6), 26.0, 15.0, 0.35)
+
+	# 2. Tier 1 (Base Cylinder — The "1s" Place Bucket, Fast Rotation)
+	var col_1s = Color("#00D4FF")
+	CyberVectorCanvas.draw_iso_cylinder(
+		self,
+		Vector2.ZERO,
+		18.0,
+		6.0,
+		Color("#1A1208"),
+		Color("#0C0904"),
+		Color(col_1s, 0.4),
+		1.2,
+		24
+	)
+	# 1s digit markings around perimeter
+	var t1_rot = t * 2.5
+	for i in range(4):
+		var a = t1_rot + i * TAU / 4.0
+		var pos_1s = Vector2(cos(a) * 15.0, sin(a) * 15.0 * SQUASH - 3.0)
+		draw_circle(pos_1s, 1.2, Color(col_1s, 0.7))
+
+	# 3. Tier 2 (Mid Cylinder — The "10s" Place Bucket, Medium Counter-Rotation)
+	var col_10s = Color("#FFB800")
+	var t2_y = -6.0
+	CyberVectorCanvas.draw_iso_cylinder(
+		self,
+		Vector2(0, t2_y),
+		13.0,
+		6.0,
+		Color("#25190C"),
+		Color("#120C06"),
+		Color(col_10s, 0.5),
+		1.1,
+		20
+	)
+	var t2_rot = -t * 1.5
+	for i in range(3):
+		var a = t2_rot + i * TAU / 3.0
+		var pos_10s = Vector2(cos(a) * 10.5, sin(a) * 10.5 * SQUASH + t2_y - 3.0)
+		draw_circle(pos_10s, 1.4, Color(col_10s, 0.8))
+
+	# 4. Tier 3 (Crown Cylinder — The "100s" Place Bucket, Slow Rotation)
+	var col_100s = Color("#FF5722")
+	var t3_y = -12.0
+	CyberVectorCanvas.draw_iso_cylinder(
+		self,
+		Vector2(0, t3_y),
+		8.5,
+		6.0,
+		Color("#301E10"),
+		Color("#170E08"),
+		Color(col_100s, 0.6),
+		1.0,
+		16
+	)
+	var t3_rot = t * 0.8
+	var pos_100s = Vector2(cos(t3_rot) * 6.5, sin(t3_rot) * 6.5 * SQUASH + t3_y - 3.0)
+	draw_circle(pos_100s, 1.8, Color(col_100s, 0.9))
+
+	# 5. Crown Pagoda Finial (Aperture Pointer)
+	var aim_dir = Vector2.RIGHT.rotated(_turret_angle)
+	var crown_center = Vector2(0, t3_y - 6.0)
+
+	draw_circle(crown_center, 4.0, Color("#1A0E06"))
+	draw_circle(crown_center, 3.0, Color(color, 0.8))
+	draw_circle(crown_center, 1.2, Color.WHITE)
+
+	# Emitter Pointer Horn
+	var horn_tip = crown_center + aim_dir * 10.0
+	draw_line(crown_center, horn_tip, Color("#4A2810"), 3.0)
+	draw_line(crown_center, horn_tip, Color(color, 0.9), 1.2)
+	draw_circle(horn_tip, 2.0, Color.WHITE)
+
+	# 6. Multi-Pass Digit Orbitals when Firing
+	if is_firing:
+		draw_circle(horn_tip, 6.0 * _recoil, Color(color, 0.5))
+		draw_circle(horn_tip, 2.5 * _recoil, Color.WHITE)
+		# 3 color-coded concentric flash rings
+		draw_arc(crown_center, 14.0 * _recoil, 0, TAU, 18, Color(col_1s, 0.6), 1.0)
+		draw_arc(crown_center, 18.0 * _recoil, 0, TAU, 20, Color(col_10s, 0.6), 1.2)
+		draw_arc(crown_center, 22.0 * _recoil, 0, TAU, 22, Color(col_100s, 0.6), 1.4)

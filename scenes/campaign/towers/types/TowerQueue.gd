@@ -1,8 +1,9 @@
 # TowerQueue.gd
 # Queue Tower — FIFO targeting. Fires a piercing rail shot.
-# REDESIGN: Conveyor FIFO foundry — long conveyor belt base with queuing blocks
-# + rail ejector. Mechanic = FIFO dequeue + pierce through line.
-
+# BESPOKE DESIGN: The FIFO Maglev Accelerator Corridor
+# An elongated linear electromagnetic railgun with 3 sequential circular induction coils
+# mounted along twin maglev guide rails. Energy pulses sequentially through the coils
+# (FIFO pipeline) before accelerating an armor-piercing supersonic rail slug.
 extends TowerBase
 
 func get_type_id() -> String:
@@ -21,8 +22,9 @@ func _perform_attack() -> void:
 	SoundManager.play_tower_attack(tower_id)
 	_recoil = 1.0
 	_flash_targets.clear()
+
 	var spawn_origin = get_muzzle_position()
-	var dir = (current_target.global_position - global_position).normalized()
+	var dir = (current_target.global_position - spawn_origin).normalized() if (current_target.global_position - spawn_origin).length() > 0 else Vector2.RIGHT.rotated(_turret_angle)
 	var p = {
 		"pos": spawn_origin,
 		"start_pos": spawn_origin,
@@ -34,16 +36,19 @@ func _perform_attack() -> void:
 		"style": "queue_pierce",
 		"elapsed_time": 0.0,
 		"traveled": 0.0,
-		"max_range": attack_range,
+		"max_range": attack_range + 160.0,
 		"hit_list": [],
 		"falloff": 1.0,
-		"decay": 0.7,
-		"beam_width": 10.0,
+		"decay": 0.8,
+		"beam_width": 18.0,
 		"armor_pierce": armor_pierce,
 		"max_hits": max_targets,
 	}
 	_spawn_custom_projectile(p)
 	queue_redraw()
+
+func _get_custom_muzzle_position() -> Vector2:
+	return global_position + Vector2(22.0, 0.0).rotated(_turret_angle)
 
 func _get_upgrade_stats(level: int) -> Dictionary:
 	return {"damage": 1.25, "speed": 1.2, "range": 1.1}
@@ -51,60 +56,96 @@ func _get_upgrade_stats(level: int) -> Dictionary:
 func _get_ability_damage_multiplier() -> float:
 	return 0.6
 
-func _draw_base_geometry(color: Color, height: float) -> void:
-	# Queue base: clean conveyor belt with FIFO queue blocks
-	var is_shadow = color.a < 0.5
-	var belt_col = Color("#0D1A2E") if not is_shadow else Color("#0D131A")
-	var groove_col = Color("#08111F") if not is_shadow else Color("#0D131A")
-	_draw_3d_box(Vector2(0, 0), Vector2(24, 12), height, belt_col, color, 1.5)
-	if not is_shadow:
-		# Belt surface groove
-		var belt_rect = PackedVector2Array([
-			Vector2(-20, -7 * SQUASH), Vector2(20, -7 * SQUASH),
-			Vector2(20, 7 * SQUASH), Vector2(-20, 7 * SQUASH)
-		])
-		draw_colored_polygon(belt_rect, groove_col)
-		draw_polyline(PackedVector2Array([belt_rect[0], belt_rect[1], belt_rect[2], belt_rect[3], belt_rect[0]]), Color(color, 0.2), 0.7)
-		# Belt dashes (animated conveyor)
-		for i in range(8):
-			var bx = -17 + i * 4.5 + fmod(_anim_time * 8.0, 4.5)
-			if bx > 18:
-				continue
-			draw_line(Vector2(bx, -7 * SQUASH), Vector2(bx, 7 * SQUASH), Color(color, 0.12), 0.7)
-		# FIFO direction arrows
-		for i in range(3):
-			var ax = -8 + i * 8.0
-			draw_line(Vector2(ax - 2, 0), Vector2(ax + 2, 0), Color(color, 0.3), 0.8)
-			draw_line(Vector2(ax + 2, 0), Vector2(ax + 0.5, -1.2), Color(color, 0.35), 0.8)
-			draw_line(Vector2(ax + 2, 0), Vector2(ax + 0.5, 1.2), Color(color, 0.35), 0.8)
-		# IN / OUT labels
-		draw_string(ThemeDB.fallback_font, Vector2(-18, -8 * SQUASH), "IN", HORIZONTAL_ALIGNMENT_CENTER, -1, 5, Color(color, 0.35))
-		draw_string(ThemeDB.fallback_font, Vector2(16, -8 * SQUASH), "OUT", HORIZONTAL_ALIGNMENT_CENTER, -1, 5, Color(color, 0.35))
-	# Belt outline
-	draw_polyline(PackedVector2Array([
-		Vector2(-24, -12 * SQUASH), Vector2(24, -12 * SQUASH),
-		Vector2(24, 12 * SQUASH), Vector2(-24, 12 * SQUASH),
-		Vector2(-24, -12 * SQUASH)
-	]), color, 1.0 if not is_shadow else 0.8)
+# ─── BESPOKE PROCEDURAL RENDERING ──────────────────────────────────────────
 
-func _draw_turret_assembly(color: Color) -> void:
-	var recoil = -_recoil * 9.0
-	var shift = fmod(_anim_time * 3.0, 4.5)
-	# Turret housing
-	_draw_3d_box(Vector2(0, 0), Vector2(20, 3.0), 4.0, Color("#0F1F33"), color, 1.1)
-	# 4 queue blocks sliding left-to-right (FIFO: left = oldest, right = newest)
+func _draw_custom_tower(color: Color) -> void:
+	var t = _anim_time
+	var is_firing = _recoil > 0.15
+
+	# 1. Ground Drop Shadow
+	CyberVectorCanvas.draw_drop_shadow(self, Vector2(0, 6), 28.0, 14.0, 0.35)
+
+	# 2. Main Maglev Platform Slab
+	CyberVectorCanvas.draw_iso_chamfered_slab(
+		self,
+		Vector2.ZERO,
+		Vector2(25, 14),
+		5.0,
+		6.0,
+		Color("#111625"),
+		Color("#090C14"),
+		Color(color, 0.35),
+		1.2
+	)
+
+	# 3. Animated FIFO Conveyor Glyphs on Slab Top
 	for i in range(4):
-		var qx = -9 + i * 4.8 + (shift * 0.15 if i == 0 else 0)
-		var is_head = i == 3
-		var bcol = Color(color, 0.5 if is_head else 0.2 + i * 0.06)
-		_draw_3d_box(Vector2(qx + recoil * 0.15, -1.5), Vector2(2.6, 1.6), 3.2, Color("#1A2E4A"), bcol, 0.9)
-		# Block index
-		draw_string(ThemeDB.fallback_font, Vector2(qx - 0.8 + recoil * 0.15, 0.5), str(i), HORIZONTAL_ALIGNMENT_CENTER, -1, 5, Color.WHITE if is_head else Color(color, 0.3))
-	# Rail ejector at front
-	_draw_3d_box(Vector2(10 + recoil, 0), Vector2(2.8, 6.0), 5.5, Color("#1A2E4A"), color, 1.1)
-	var eject_tip = Vector2(13.0 + recoil, 0)
-	draw_circle(eject_tip, 2.0, Color.BLACK)
-	draw_circle(eject_tip, 0.8, Color(color, 0.85))
-	# Muzzle flash
-	if _recoil > 0.3:
-		draw_circle(eject_tip, 3.5, Color(color, 0.2))
+		var step_x = -14.0 + i * 9.0 + fmod(t * 12.0, 9.0)
+		if step_x < 16.0:
+			draw_line(Vector2(step_x - 3, 2 * SQUASH), Vector2(step_x + 3, 2 * SQUASH), Color(color, 0.25), 1.0)
+			draw_line(Vector2(step_x + 3, 2 * SQUASH), Vector2(step_x + 1, 2 * SQUASH - 1.5), Color(color, 0.35), 1.0)
+			draw_line(Vector2(step_x + 3, 2 * SQUASH), Vector2(step_x + 1, 2 * SQUASH + 1.5), Color(color, 0.35), 1.0)
+
+	# 4. Central Rotating Maglev Turret Assembly (Aims along _turret_angle)
+	var recoil_offset = Vector2(-_recoil * 7.0, 0).rotated(_turret_angle)
+	var turret_center = Vector2(0, -10.0) + recoil_offset
+
+	# Turret swivel turntable
+	CyberVectorCanvas.draw_iso_cylinder(
+		self,
+		turret_center,
+		10.0,
+		3.0,
+		Color("#1A2234"),
+		Color("#0B0E17"),
+		Color(color, 0.5),
+		1.0,
+		16
+	)
+
+	# 5. Twin Parallel Maglev Guide Rails (Extending in aiming direction)
+	var aim_dir = Vector2.RIGHT.rotated(_turret_angle)
+	var perp_dir = Vector2(-aim_dir.y, aim_dir.x)
+	var rail_len = 24.0
+	var rail_spacing = 4.5
+
+	var r1_start = turret_center + perp_dir * rail_spacing - aim_dir * 6.0
+	var r1_end   = turret_center + perp_dir * rail_spacing + aim_dir * rail_len
+	var r2_start = turret_center - perp_dir * rail_spacing - aim_dir * 6.0
+	var r2_end   = turret_center - perp_dir * rail_spacing + aim_dir * rail_len
+
+	draw_line(r1_start, r1_end, Color("#2C3B52"), 2.5)
+	draw_line(r1_start, r1_end, Color(color, 0.6), 1.0)
+	draw_line(r2_start, r2_end, Color("#2C3B52"), 2.5)
+	draw_line(r2_start, r2_end, Color(color, 0.6), 1.0)
+
+	# 6. The 3 Sequential Induction Acceleration Coils (FIFO order)
+	var coil_count = clamp(2 + (current_level - 1), 2, 4)
+	for i in range(coil_count):
+		var frac = float(i) / float(coil_count - 1)
+		var coil_pos = turret_center + aim_dir * (frac * (rail_len - 4.0))
+
+		# Sequential wave pulse along coils (FIFO pipeline)
+		var wave = fmod(t * 5.0 - float(i) * 0.35, 1.0)
+		var coil_alpha = 0.3 + (0.7 if wave > 0.6 else 0.0)
+		if is_firing:
+			coil_alpha = 0.95
+
+		var coil_rad = 6.0 - frac * 0.8
+		CyberVectorCanvas.draw_induction_coil(
+			self,
+			coil_pos,
+			coil_rad,
+			color,
+			coil_alpha,
+			2.0
+		)
+
+	# 7. Muzzle Discharge Flash on Attack
+	if is_firing:
+		var muzz_pt = turret_center + aim_dir * (rail_len + 2.0)
+		draw_circle(muzz_pt, 6.0 * _recoil, Color(color, 0.4))
+		draw_circle(muzz_pt, 2.5 * _recoil, Color.WHITE)
+		# Linear pierce laser flare
+		draw_line(muzz_pt, muzz_pt + aim_dir * 18.0 * _recoil, Color.WHITE, 2.0)
+		draw_line(muzz_pt, muzz_pt + aim_dir * 28.0 * _recoil, Color(color, 0.6), 1.0)

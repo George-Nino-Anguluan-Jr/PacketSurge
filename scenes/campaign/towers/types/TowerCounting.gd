@@ -1,10 +1,12 @@
 # TowerCounting.gd
 # Count Tower — counting sort. Fires 1..N numbered pellets, where N is the
-# number of enemies counted in range (one pellet per enemy, capped at 5).
-# REDESIGN: Tally abacus tower — counting frame base with abacus beads,
-# rotary counter turret. 3D isometric intact.
-
+# number of enemies counted in range (one pellet per enemy, capped at 6).
+# BESPOKE DESIGN: The Rotary Tally Gatling
+# Features a heavy industrial hexagonal base with an illuminated frequency tally display
+# and an articulated 6-barrel rotary minigun drum that spins up to fire rapid counting volleys.
 extends TowerBase
+
+var _spin_angle: float = 0.0
 
 func get_type_id() -> String:
 	return "tower_counting"
@@ -21,88 +23,146 @@ func _perform_attack() -> void:
 	SoundManager.play_tower_attack(tower_id)
 	_recoil = 1.0
 	_flash_targets.clear()
-	var count: int = clamp(_count_live_enemies(), 1, max_targets)
+
+	var tallied_enemies: int = _count_live_enemies()
 	var spawn_origin = get_muzzle_position()
-	var pellet_damage = (damage * 0.25) * (1.0 + (count - 1) * bonus_per_enemy)
-	for i in range(count):
+	# Base 5-pellet minigun volley; scales with swarm count
+	var pellet_count: int = clamp(4 + clampi(tallied_enemies - 1, 0, 4), 4, 8)
+	var pellet_damage = (damage * 0.28) * (1.0 + (tallied_enemies - 1) * bonus_per_enemy)
+
+	if current_target.has_method("show_floating_tag"):
+		current_target.show_floating_tag("TALLY x%d!" % max(1, tallied_enemies), Color("#00E5FF"))
+
+	for i in range(pellet_count):
 		var p = {
 			"pos": spawn_origin,
 			"start_pos": spawn_origin,
 			"draw_pos": spawn_origin,
 			"target": current_target,
-			"target_last_pos": current_target.position,
-			"speed": projectile_speed * (0.85 + i * 0.08),
+			"target_last_pos": current_target.global_position,
+			"speed": projectile_speed * (0.9 + i * 0.06),
 			"damage": pellet_damage,
 			"style": "counting_pellet",
 			"elapsed_time": 0.0,
 			"digit": i + 1,
-			"delay": i * 0.05,
+			"delay": i * 0.04,
 			"armor_pierce": armor_pierce,
 		}
 		_spawn_custom_projectile(p)
 	queue_redraw()
 
 func _count_live_enemies() -> int:
+	var list: Array = []
+	if is_inside_tree():
+		list = get_tree().get_nodes_in_group("enemies")
+	if list.is_empty():
+		list = targets
 	var n: int = 0
-	for e in targets:
+	for e in list:
 		if is_instance_valid(e) and not e.is_dead:
 			n += 1
 	return n
 
+func _get_custom_muzzle_position() -> Vector2:
+	return global_position + Vector2(18.0, 0.0).rotated(_turret_angle)
+
 func _get_upgrade_stats(level: int) -> Dictionary:
 	return {"damage": 1.2, "speed": 1.25, "range": 1.0}
 
-func _draw_base_geometry(color: Color, height: float) -> void:
-	# Counting base: clean tally frame with 5 numbered count slots
-	var is_shadow = color.a < 0.5
-	var frame_col = Color("#0D1A2E") if not is_shadow else Color("#0D131A")
-	_draw_3d_box(Vector2(0, 0), Vector2(20, 16), height, frame_col, color, 1.5)
-	if not is_shadow:
-		# 5 count slots — recessed rectangles with tally marks above
-		var slot_w = 6.0
-		var spacing = 1.2
-		var total = 5.0 * slot_w + 4.0 * spacing
-		var start_x = -total / 2.0 + slot_w / 2.0
-		for i in range(5):
-			var sx = start_x + i * (slot_w + spacing)
-			# Slot recess
-			var slot_rect = Rect2(Vector2(sx - slot_w / 2.0, -5.0 * SQUASH), Vector2(slot_w, 10.0 * SQUASH))
-			draw_rect(slot_rect, Color("#08111F"), true)
-			draw_rect(slot_rect, Color(color, 0.2), false, 0.7)
-			# Count number
-			draw_string(ThemeDB.fallback_font, Vector2(sx - 1.5, -6.0 * SQUASH), str(i + 1), HORIZONTAL_ALIGNMENT_CENTER, -1, 6, Color(color, 0.45))
-			# Tally tick marks inside slot
-			var tally_count = i + 1
-			for t_idx in range(tally_count):
-				var ty = -3.0 + t_idx * 1.5
-				draw_line(Vector2(sx - 1.0, ty * SQUASH), Vector2(sx + 1.0, ty * SQUASH), Color(color, 0.35), 0.7)
-		# "N=" label at center bottom
-		draw_string(ThemeDB.fallback_font, Vector2(-3, 8.0 * SQUASH), "N=", HORIZONTAL_ALIGNMENT_CENTER, -1, 6, Color(color, 0.4))
-	# Slab outline
-	draw_polyline(PackedVector2Array([
-		Vector2(-20, -16 * SQUASH), Vector2(20, -16 * SQUASH),
-		Vector2(20, 16 * SQUASH), Vector2(-20, 16 * SQUASH),
-		Vector2(-20, -16 * SQUASH)
-	]), color, 1.0 if not is_shadow else 0.8)
+# ─── BESPOKE PROCEDURAL RENDERING ──────────────────────────────────────────
 
-func _draw_turret_assembly(color: Color) -> void:
-	var recoil = -_recoil * 6.0
-	# Turret housing — clean rectangular block
-	_draw_3d_box(Vector2(0, 0), Vector2(18, 3.5), 5.0, Color("#0F1F33"), color, 1.2)
-	# Count display — 5 small windows showing current count
-	for i in range(5):
-		var wx = -8 + i * 4.0
-		var is_active = i < clamp(_count_live_enemies(), 1, max_targets)
-		var win_col = Color(color, 0.6 if is_active else 0.15)
-		draw_rect(Rect2(Vector2(wx - 1.5, -1.2), Vector2(3.0, 2.4)), Color("#08111F"), true)
-		draw_rect(Rect2(Vector2(wx - 1.5, -1.2), Vector2(3.0, 2.4)), win_col, false, 0.7)
-		if is_active:
-			draw_string(ThemeDB.fallback_font, Vector2(wx - 1.0, 0.8), str(i + 1), HORIZONTAL_ALIGNMENT_CENTER, -1, 6, Color(color, 0.8))
-	# Emitter barrel
-	_draw_3d_cylinder(Vector2(8 + recoil, 0), 2.0, 7.0, Color("#1A2E4A"), color, 1.0)
-	var muzz = Vector2(15.0 + recoil, 0)
-	draw_circle(muzz, 1.8, Color.BLACK)
-	draw_circle(muzz, 0.7, Color(color, 0.9))
-	# Muzzle flash when firing
-	if _recoil > 0.3:
-		draw_circle(muzz, 3.0, Color(color, 0.2))
+func _draw_custom_tower(color: Color) -> void:
+	var t = _anim_time
+	var is_firing = _recoil > 0.15
+	var enemy_count = clamp(_count_live_enemies(), 0, max_targets)
+
+	# Barrel spin animation (accelerates on fire)
+	var spin_speed = 18.0 if is_firing else 2.5
+	_spin_angle += get_process_delta_time() * spin_speed if is_inside_tree() else 0.0
+
+	# 1. Ground Drop Shadow
+	CyberVectorCanvas.draw_drop_shadow(self, Vector2(0, 6), 25.0, 15.0, 0.35)
+
+	# 2. Hexagonal Rotary Turntable Base
+	CyberVectorCanvas.draw_iso_hexagon(
+		self,
+		Vector2.ZERO,
+		19.0,
+		6.0,
+		Color("#0C1C18"),
+		Color("#050F0D"),
+		Color(color, 0.4),
+		1.2
+	)
+
+	# 3. Illuminated Digital LED Frequency Tally Bar on Base Top
+	for i in range(6):
+		var tx = -11.0 + i * 4.4
+		var is_tallied = i < enemy_count
+		var slot_rect = Rect2(Vector2(tx - 1.5, 3.5 * SQUASH), Vector2(3.0, 4.0 * SQUASH))
+		draw_rect(slot_rect, Color("#040B0A"), true)
+		var led_col = color if is_tallied else Color(color, 0.15)
+		draw_rect(slot_rect, led_col, false, 0.8)
+		if is_tallied:
+			draw_circle(Vector2(tx, 5.5 * SQUASH), 1.0, Color.WHITE)
+
+	# 4. Swiveling Gatling Carriage & Feed Hopper
+	var aim_dir = Vector2.RIGHT.rotated(_turret_angle)
+	var perp_dir = Vector2(-aim_dir.y, aim_dir.x)
+	var recoil_offset = -aim_dir * _recoil * 5.0
+	var turret_center = Vector2(0, -9.0) + recoil_offset
+
+	# Heavy Turret Trunnion
+	CyberVectorCanvas.draw_iso_cylinder(
+		self,
+		turret_center,
+		8.5,
+		3.5,
+		Color("#132A24"),
+		Color("#091612"),
+		Color(color, 0.5),
+		1.0,
+		16
+	)
+
+	# Ammo Drum Hopper on side
+	var drum_pos = turret_center - perp_dir * 7.0
+	draw_circle(drum_pos, 4.0, Color("#1A3830"))
+	draw_circle(drum_pos, 3.2, Color(color, 0.6))
+	draw_circle(drum_pos, 1.2, Color.WHITE)
+
+	# 5. The 6-Barrel Rotary Minigun Drum
+	var barrel_cluster_rad = 4.5
+	var barrel_len = 16.0
+	var barrel_count = 6
+
+	# Center rotor axis
+	var muzzle_center = turret_center + aim_dir * barrel_len
+	draw_line(turret_center, muzzle_center, Color("#1E3F36"), 4.0)
+
+	# 6 individual barrels positioned around rotating perimeter
+	for b in range(barrel_count):
+		var ba = _spin_angle + b * TAU / float(barrel_count)
+		var b_offset = perp_dir * cos(ba) * barrel_cluster_rad + Vector2.UP * sin(ba) * barrel_cluster_rad * 0.6
+		var b_start = turret_center + b_offset
+		var b_end   = b_start + aim_dir * barrel_len
+
+		# Barrel pipe
+		draw_line(b_start, b_end, Color("#264F44"), 2.0)
+		draw_line(b_start, b_end, Color(color, 0.7), 0.8)
+
+		# Muzzle tip hole
+		draw_circle(b_end, 1.2, Color.BLACK)
+		if is_firing and b % 2 == 0:
+			draw_circle(b_end, 2.0, Color(color, 0.8))
+
+	# Front retaining clamp ring
+	draw_circle(muzzle_center, barrel_cluster_rad + 1.5, Color(color, 0.3), false, 1.2)
+
+	# 6. Rotary Muzzle Flash on Attack
+	if is_firing:
+		draw_circle(muzzle_center, 7.0 * _recoil, Color(color, 0.5))
+		draw_circle(muzzle_center, 3.0 * _recoil, Color.WHITE)
+		for sp in range(5):
+			var sp_dir = aim_dir.rotated(randf_range(-0.4, 0.4))
+			draw_line(muzzle_center, muzzle_center + sp_dir * 12.0 * _recoil, Color.WHITE, 1.2)

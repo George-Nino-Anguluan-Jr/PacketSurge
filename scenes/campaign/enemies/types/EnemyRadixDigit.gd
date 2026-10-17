@@ -1,6 +1,9 @@
 # EnemyRadixDigit.gd
 # Radix Digit — 3-segment HP bar (units/tens/hundreds). Must deplete
 # segments in order. Each segment must be fully depleted before the next.
+# Bespoke Procedural Design: "The Articulated Centipede"
+# An articulated 3-pod crawler train linked by flex-joints (Units: 1s, Tens: 10s, Hundreds: 100s).
+# Depleted pods physically detach with sparking debris as each digit place is eliminated!
 
 extends Enemy
 
@@ -17,7 +20,6 @@ func take_damage(amount: float, source: String = "", armor_pierce: bool = false)
 	if is_dead:
 		return
 
-	# Shield absorbs the first N hits (data-driven; 0 = no shield).
 	if type_data.get("shield_max_hits", 0) > 0 and type_data.get("shield_hp", 0) > 0:
 		type_data["shield_hp"] = float(type_data["shield_hp"]) - 1.0
 		_flash_timer = 0.15
@@ -27,7 +29,6 @@ func take_damage(amount: float, source: String = "", armor_pierce: bool = false)
 	var mult = _get_source_damage_multiplier(source)
 	var final_damage = _modify_damage(amount) * mult
 
-	# Armor: flat reduction first, then percent (skipped by armor_pierce towers).
 	if not armor_pierce:
 		final_damage = maxf(0.0, final_damage - float(type_data.get("armor_flat", 0.0)))
 		final_damage *= (1.0 - clampf(float(type_data.get("armor_percent", 0.0)), 0.0, 0.95))
@@ -35,8 +36,7 @@ func take_damage(amount: float, source: String = "", armor_pierce: bool = false)
 	if source != "" and mult != 1.0:
 		_show_floating_multiplier(mult)
 
-	# Radix uses segment-based HP instead of direct current_health
-	var seg = type_data["segment"]
+	var seg = int(type_data["segment"])
 	var seg_hp = type_data["segment_hp"]
 	if seg < 3:
 		seg_hp[seg] -= final_damage
@@ -70,46 +70,83 @@ func get_health_ratio() -> float:
 		return clamp(total_hp / total_max, 0.0, 1.0)
 	return 1.0
 
-func _draw_type_body(col: Color, bob: float) -> void:
-	var seg = type_data.get("segment", 0)
-	var seg_hp = type_data.get("segment_hp", [])
+func _draw_custom_enemy(col: Color, bob: float) -> void:
+	var seg = int(type_data.get("segment", 0))
+	var seg_hp = type_data.get("segment_hp", [100, 100, 100])
 	var seg_max = type_data.get("segment_max", [100, 100, 100])
-	# 3 small 3D boxes side by side with different brightness based on depletion
+	var center = Vector2(0, bob - 2)
+
+	# 1. Ground Drop Shadows for active pods
+	CyberVectorCanvas.draw_drop_shadow(self, Vector2(0, bob + 10), 18.0, 7.0, 0.35)
+
+	# 3 Pod Colors & Labels: Pod 0 = Units (Rear), Pod 1 = Tens (Mid), Pod 2 = Hundreds (Head)
+	var pod_colors = [Color("#00D4FF"), Color("#FFB800"), Color("#FF3366")]
+	var pod_labels = ["1", "10", "100"]
+	var pod_x_offsets = [-11.0, 0.0, 11.0]
+
+	# Draw connecting flex-joint spines between remaining pods
+	for i in range(2):
+		if i >= seg and (i + 1) >= seg:
+			var p1 = center + Vector2(pod_x_offsets[i], -3.0)
+			var p2 = center + Vector2(pod_x_offsets[i + 1], -3.0)
+			draw_line(p1, p2, Color("#3A4B60"), 3.0)
+			draw_line(p1, p2, Color.WHITE, 1.0)
+
+	# Draw each pod
 	for i in range(3):
-		var x_off = (i - 1) * 9.0
-		var is_depleted = i < seg
-		var is_current = i == seg
-		var box_col = col
+		var p_center = center + Vector2(pod_x_offsets[i], 0.0)
+		var is_depleted = (i < seg)
+		var is_current = (i == seg)
+		var pod_col = pod_colors[i]
+
 		if is_depleted:
-			box_col = Color("#1A2A3A")
-		elif is_current and seg_hp.size() > i:
-			var frac = seg_hp[i] / seg_max[i] if seg_max[i] > 0 else 0
-			box_col = Color(col).lerp(Color("#FFB800"), 1.0 - frac)
-		_draw_3d_box(Vector2(x_off, bob - 2), Vector2(7, 8), 6.0, Color("#15202E"), box_col, 1.3)
-	# Top digit labels
-	draw_set_transform(Vector2(0, bob - 12), 0.0, Vector2.ONE)
-	var labels = ["1", "10", "100"]
-	for i in range(3):
-		var dx = (i - 1) * 9.0
-		var lbl_col = Color("#FFFFFF", 0.9) if i == seg else Color("#FFFFFF", 0.25)
-		draw_string(ThemeDB.fallback_font, Vector2(dx - 5, 0),
-			labels[i], HORIZONTAL_ALIGNMENT_LEFT, -1, 8, lbl_col)
-	draw_set_transform(Vector2.ZERO, 0.0, Vector2.ONE)
-	# Drop shadow
-	var s = ensure_style()
-	draw_set_transform(Vector2(0, bob + 5), 0.0, Vector2(1.0, 0.3))
-	draw_circle(Vector2.ZERO, 15, Color(0, 0, 0, s.shadow_alpha))
-	draw_set_transform(Vector2.ZERO, 0.0, Vector2.ONE)
+			# Pod is severed! Show trailing spark connector
+			draw_circle(p_center + Vector2(3, -3), 1.5, Color("#FF3366"))
+			draw_line(p_center + Vector2(0, -3), p_center + Vector2(4, -3), Color.WHITE, 1.0)
+			continue
+
+		# Active or incoming pod
+		var frac = seg_hp[i] / seg_max[i] if seg_max[i] > 0 else 0.0
+		var display_col = pod_col if is_current else pod_col.darkened(0.3)
+
+		# 3D Prism Pod Body
+		CyberVectorCanvas.draw_iso_prism(
+			self,
+			p_center,
+			Vector2(5.5, 7.5),
+			6.0,
+			Color("#152233"),
+			Color("#0C141F"),
+			display_col,
+			1.5 if is_current else 1.0
+		)
+
+		# Digit label on top face
+		var top_y = p_center.y - 6.0
+		draw_circle(Vector2(p_center.x, top_y), 2.2, Color("#091017"))
+		draw_circle(Vector2(p_center.x, top_y), 1.2, display_col)
+
+		draw_string(
+			ThemeDB.fallback_font,
+			Vector2(p_center.x - 4.5, top_y - 3.5),
+			pod_labels[i],
+			HORIZONTAL_ALIGNMENT_CENTER,
+			-1,
+			7,
+			Color.WHITE if is_current else Color("#FFFFFF", 0.5)
+		)
 
 func _draw_type_overlay(bob: float) -> void:
-	var seg = type_data.get("segment", 0)
+	var seg = int(type_data.get("segment", 0))
 	var seg_hp = type_data.get("segment_hp", [])
+	var seg_max = type_data.get("segment_max", [100, 100, 100])
+	var pod_colors = [Color("#00D4FF"), Color("#FFB800"), Color("#FF3366")]
+
+	# 3 segmented micro bars below
 	for i in range(3):
-		var x = -14 + i * 14
-		var frac = 0.0 if i < seg else \
-			(seg_hp[i] / type_data["segment_max"][i] if i < seg_hp.size() else 0.0)
-		var h = 4.0
-		var c = Color("#FFFFFF", 0.15) if i < seg else \
-			(Color("#FF5722") if frac > 0.5 else Color("#FFB800"))
-		draw_rect(Rect2(x, 10 + bob, 10, h), Color("#1A0A0A"))
-		draw_rect(Rect2(x, 10 + bob, 10 * frac, h), c)
+		var x = -13 + i * 9
+		var is_depleted = i < seg
+		var frac = 0.0 if is_depleted else (seg_hp[i] / seg_max[i] if i < seg_hp.size() else 0.0)
+		draw_rect(Rect2(x, 10 + bob, 7, 3), Color("#0B121C"))
+		if not is_depleted:
+			draw_rect(Rect2(x, 10 + bob, 7 * frac, 3), pod_colors[i])

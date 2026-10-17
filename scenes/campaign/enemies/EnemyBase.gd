@@ -62,27 +62,17 @@ var style: EnemyStyle = null
 @onready var health_bar: Node2D         = $HealthBar
 @onready var status_layer: Node2D       = $StatusEffectLayer
 
-# ─── SPRITE ──────────────────────────────────────────────
-var _spire: Node2D = null
-var _using_sprites: bool = false
+# ─── DIRECTION & ORIENTATION ────────────────────────────
 var _last_position: Vector2 = Vector2.ZERO
-# Procedural-only mode: leave the spire code in place but disconnect it from enemy visuals.
-var spire_visuals_enabled: bool = false
 
-const SPIRE_VARIANT_MAP: Dictionary = {
-	"basic_packet":    { "variant": "Clampbeetle",    "pack": "enemy_pack1" },
-	"bubble_shield":   { "variant": "Firewasp",       "pack": "enemy_pack1" },
-	"binary_mask":     { "variant": "Flying_Locust",  "pack": "enemy_pack1" },
-	"indexed_packet":  { "variant": "Voidbutterfly",  "pack": "enemy_pack1" },
-	"count_meter":     { "variant": "Firebug",        "pack": "enemy_pack2" },
-	"insertion_stack": { "variant": "Leafbug",        "pack": "enemy_pack2" },
-	"linked_drain":    { "variant": "Magma_Crab",     "pack": "enemy_pack2" },
-	"merge_twin":      { "variant": "Scorpion",       "pack": "enemy_pack2" },
-	"overflow_packet": { "variant": "Beetle",         "pack": "enemy_pack3" },
-	"pivot_splitter":  { "variant": "EggCluster",     "pack": "enemy_pack3" },
-	"queue_jumper":    { "variant": "Maggot",          "pack": "enemy_pack3" },
-	"radix_digit":     { "variant": "Mantis",          "pack": "enemy_pack3" },
-}
+func get_travel_direction() -> Vector2:
+	if velocity.length_squared() > 1.0:
+		return velocity.normalized()
+	if waypoints.size() > 0 and current_waypoint < waypoints.size():
+		var diff = waypoints[current_waypoint] - position
+		if diff.length_squared() > 1.0:
+			return diff.normalized()
+	return Vector2.RIGHT
 
 func initialize(
 		p_waypoints: Array[Vector2],
@@ -102,14 +92,9 @@ func initialize(
 		position = waypoints[0]
 		_last_position = position
 	collision_mask = 0
-	if is_inside_tree():
-		_load_sprites()
-	else:
-		tree_entered.connect(_load_sprites, CONNECT_ONE_SHOT)
 
 func _ready() -> void:
-	if not _using_sprites and enemy_type != "":
-		_load_sprites()
+	add_to_group("enemies")
 	_setup_mouse_detection()
 
 func _setup_mouse_detection() -> void:
@@ -128,35 +113,6 @@ func _setup_mouse_detection() -> void:
 	shape.shape = circle
 	area.add_child(shape)
 	add_child(area)
-
-func _load_sprites() -> void:
-	if not spire_visuals_enabled:
-		_using_sprites = false
-		return
-	if enemy_type == "":
-		return
-	if not is_inside_tree():
-		return
-	if _using_sprites:
-		return
-	if not SPIRE_VARIANT_MAP.has(enemy_type):
-		return
-
-	var entry = SPIRE_VARIANT_MAP[enemy_type]
-	var variant_name: String = str(entry["variant"])
-	var pack_name: String = str(entry["pack"])
-
-	var check_path: String = "res://assets/sprites/enemies/imported/" + pack_name + "/" + variant_name + "/idle_down"
-	if not DirAccess.dir_exists_absolute(check_path):
-		return
-
-	var SpireEnemyScript = preload("res://scenes/campaign/enemies/SpireEnemy.gd")
-	_spire = SpireEnemyScript.new()
-	_spire.name = "SpireSprite"
-	add_child(_spire)
-	var sprite_scale: float = 1.6 if enemy_type in ["overflow_packet", "pivot_splitter", "queue_jumper", "radix_digit"] else 0.7
-	_spire.setup(variant_name, pack_name, sprite_scale)
-	_using_sprites = true
 
 func _setup_type() -> void:
 	var edef = GameManager.ENEMY_DEFINITIONS.get(enemy_type, {})
@@ -254,17 +210,7 @@ func _physics_process(delta: float) -> void:
 		_reach_end()
 		return
 	_move_toward_waypoint(delta)
-
-	# Update spire animation state based on movement
-	if _spire:
-		var is_moving = current_waypoint < waypoints.size() and not is_dead
-		_spire.set_state("move" if is_moving else "idle")
-		var move_delta = position - _last_position
-		if move_delta.length() > 0.5:
-			var dir_str = _dir_from_velocity(move_delta)
-			_spire.set_direction(dir_str)
-			_spire.set_flip_h(move_delta.x < 0)
-		_last_position = position
+	_last_position = position
 
 	_mobile_redraw_skip += 1
 	if _mobile_redraw_skip % 2 == 0:
@@ -468,6 +414,21 @@ func _show_damage_number(damage: float) -> void:
 	tween.parallel().tween_property(label, "modulate:a", 0.0, 0.45).set_delay(0.1)
 	tween.tween_callback(label.queue_free)
 
+func show_floating_tag(tag_text: String, tag_color: Color = Color.WHITE) -> void:
+	var label = Label.new()
+	label.text = tag_text
+	label.add_theme_font_size_override("font_size", 14)
+	label.add_theme_color_override("font_color", tag_color)
+	label.z_index = 101
+	label.position = Vector2(-28, -52)
+	label.modulate.a = 0.0
+	add_child(label)
+	var tween = create_tween()
+	tween.tween_property(label, "modulate:a", 1.0, 0.06)
+	tween.tween_property(label, "position:y", label.position.y - 24, 0.75)
+	tween.parallel().tween_property(label, "modulate:a", 0.0, 0.4).set_delay(0.35)
+	tween.tween_callback(label.queue_free)
+
 func _modify_damage(amount: float) -> float:
 	# Virtual — subclasses override for type-specific resistance/absorption
 	# Default: no modification
@@ -514,21 +475,6 @@ func _die() -> void:
 	is_dead = true
 
 	_notify_overflow_ahead()
-
-	# For spire enemies, play death animation then fade out
-	if _spire:
-		_spire.set_state("death")
-		set_physics_process(false)
-		set_process(false)
-		_on_death()
-		SoundManager.play_enemy_death()
-		SignalBus.enemy_defeated.emit(enemy_type)
-		enemy_defeated.emit(self)
-		var tween = create_tween()
-		tween.tween_property(self, "modulate:a", 0.0, 0.8)
-		tween.tween_callback(queue_free)
-		return
-
 	_on_death()
 
 	SoundManager.play_enemy_death()
@@ -591,16 +537,16 @@ func _draw_extra_health_bar() -> void:
 		draw_rect(Rect2(-s.health_bar_width / 2.0, s.health_bar_offset.y + s.shield_bar_offset,
 			s.health_bar_width * shield_ratio, s.shield_bar_height), s.shield_bar_color)
 
+func _draw_custom_enemy(col: Color, bob: float) -> void:
+	_draw_type_body(col, bob)
+
 # ─── DRAW ────────────────────────────────────────────────
 func _draw() -> void:
-	if _using_sprites:
-		_draw_health_bar()
-		return
 	var flash = _flash_timer > 0
 	var col   = Color("#FFFFFF") if flash else enemy_color
 	var bob   = sin(_bob_time) * 2.0
 
-	_draw_type_body(col, bob)
+	_draw_custom_enemy(col, bob)
 
 	_draw_health_bar()
 
