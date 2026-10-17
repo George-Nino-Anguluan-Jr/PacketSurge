@@ -37,6 +37,9 @@ var _exercise_bubble: PanelContainer = null
 var _tower_exercise_shown: bool = false
 var _challenge_is_auto_trigger: bool = false
 var _challenge_close_btn: Button = null
+var _challenge_continue_btn: Button = null
+var _challenge_run_btn: Button = null
+var _challenge_submit_btn: Button = null
 var _auto_challenge_level: int = -1
 var _tower_lesson_shown_by_tower: Dictionary = {}
 @onready var micro_panel: PanelContainer     = $HUD/HUDControl/MicroCodingPanel
@@ -49,6 +52,7 @@ var _sound_fail: AudioStreamPlayer2D
 var _prev_ram: int = -1
 var _challenge_index: int  = 0
 var _challenge_progress: int = 0
+var _challenge_running: bool = false
 
 # ─── LEVEL STATE ───────────────────────────────────────
 var level_number: int              = 1
@@ -2172,9 +2176,9 @@ func _apply_responsive_challenge() -> void:
 
 func _apply_hud_styles() -> void:
 	var top_style := StyleBoxFlat.new()
-	top_style.bg_color = grid_system._theme.get("bg_color", Color("#050D1A"))
-	# Opaque so the HUD blends seamlessly with the grid background.
-	top_style.bg_color.a = 1.0
+	# Match GridTilemap's hardcoded base tile color so the HUD blends
+	# seamlessly with the visible playfield on every sector theme.
+	top_style.bg_color = Color(0.02, 0.04, 0.08, 1.0)
 	top_style.border_color = Color("#00D4FF")
 	top_style.border_width_left = 0
 	top_style.border_width_right = 0
@@ -2441,17 +2445,28 @@ func _build_challenge_panel() -> void:
 	var btn_row = HBoxContainer.new()
 	var btn_h := _fs(0.055, 36.0, 44.0)
 	var run_btn = Button.new()
+	_challenge_run_btn = run_btn
 	run_btn.text = "▶ Run Code"
 	run_btn.custom_minimum_size = Vector2(_fs(0.22, 110.0, 140.0), btn_h)
 	run_btn.pressed.connect(_on_challenge_run)
 	_style_challenge_btn(run_btn, Color("#00FF88"))
 	btn_row.add_child(run_btn)
 	var submit_btn = Button.new()
+	_challenge_submit_btn = submit_btn
 	submit_btn.text = "✔ Submit"
 	submit_btn.custom_minimum_size = Vector2(_fs(0.22, 110.0, 140.0), btn_h)
 	submit_btn.pressed.connect(_on_challenge_submit)
 	_style_challenge_btn(submit_btn, Color("#00D4FF"))
 	btn_row.add_child(submit_btn)
+	# Hidden until the player submits an auto-triggered (first-time tower)
+	# challenge, so they can read the correct/wrong feedback before closing.
+	_challenge_continue_btn = Button.new()
+	_challenge_continue_btn.text = "▶ Continue"
+	_challenge_continue_btn.custom_minimum_size = Vector2(_fs(0.22, 110.0, 140.0), btn_h)
+	_challenge_continue_btn.visible = false
+	_challenge_continue_btn.pressed.connect(_hide_challenge)
+	_style_challenge_btn(_challenge_continue_btn, Color("#00FF88"))
+	btn_row.add_child(_challenge_continue_btn)
 	btn_row.add_theme_constant_override("separation", 6)
 	layout.add_child(btn_row)
 
@@ -2575,6 +2590,12 @@ func _show_challenge() -> void:
 		micro_panel.move_to_front()
 	if _challenge_close_btn and is_instance_valid(_challenge_close_btn):
 		_challenge_close_btn.visible = not _challenge_is_auto_trigger
+	if _challenge_continue_btn and is_instance_valid(_challenge_continue_btn):
+		_challenge_continue_btn.visible = false
+	if _challenge_run_btn and is_instance_valid(_challenge_run_btn):
+		_challenge_run_btn.disabled = false
+	if _challenge_submit_btn and is_instance_valid(_challenge_submit_btn):
+		_challenge_submit_btn.disabled = false
 	var challenges = _get_active_challenges()
 	if challenges.is_empty():
 		return
@@ -3028,6 +3049,8 @@ func _hide_challenge() -> void:
 		_challenge_close_btn.visible = true
 
 func _on_challenge_run() -> void:
+	if _challenge_running:
+		return
 	if _get_active_challenges().is_empty() or _challenge_index < 0 or _challenge_index >= _get_active_challenges().size():
 		_challenge_output.text = "No challenge loaded. Close and reopen the exercise."
 		_challenge_output.add_theme_color_override("font_color", Color("#FF3366"))
@@ -3045,8 +3068,13 @@ func _on_challenge_run() -> void:
 			_challenge_output.text = "Type your code first, then press Run."
 			_challenge_output.add_theme_color_override("font_color", Color("#FFB800"))
 			return
+	_challenge_running = true
 	_challenge_output.text = "Running..."
+	_challenge_output.add_theme_color_override("font_color", Color("#E8F4FD"))
+	await get_tree().process_frame
+	await get_tree().process_frame
 	var result = PythonTranspiler.run_code(code)
+	_challenge_running = false
 	if result.success:
 		_challenge_output.text = result.output if result.output != "" else "(no output)"
 		_challenge_output.add_theme_color_override("font_color", Color("#00FF88"))
@@ -3074,6 +3102,8 @@ func _apply_tower_lesson_price_adjustment(correct: bool) -> void:
 	_update_ram_label()
 
 func _on_challenge_submit() -> void:
+	if _challenge_running:
+		return
 	if _challenge_progress > _challenge_index:
 		return
 	var challenges = _get_active_challenges()
@@ -3095,7 +3125,13 @@ func _on_challenge_submit() -> void:
 			_challenge_output.text = "Type your code first, then press Submit."
 			_challenge_output.add_theme_color_override("font_color", Color("#FFB800"))
 			return
+	_challenge_running = true
+	_challenge_output.text = "Checking..."
+	_challenge_output.add_theme_color_override("font_color", Color("#E8F4FD"))
+	await get_tree().process_frame
+	await get_tree().process_frame
 	var result = PythonTranspiler.run_code(code)
+	_challenge_running = false
 	var expected = c.expected_output.strip_edges(false, true)
 	var reward = 0
 	if result.success and result.output == expected:
@@ -3120,16 +3156,23 @@ func _on_challenge_submit() -> void:
 			_apply_tower_lesson_price_adjustment(false)
 	var user_out = result.output.replace("\n", "  ") if result.success else "Error: " + result.error
 	_challenge_output.text = "Your output:  " + user_out + "\nExpected:     " + expected.replace("\n", "  ")
-	if not _challenge_is_auto_trigger:
-		_challenge_progress += 1
+	if _challenge_is_auto_trigger:
+		# Hold the popup open so the player can read the feedback,
+		# then let them dismiss it with the Continue button.
+		if _challenge_run_btn and is_instance_valid(_challenge_run_btn):
+			_challenge_run_btn.disabled = true
+		if _challenge_submit_btn and is_instance_valid(_challenge_submit_btn):
+			_challenge_submit_btn.disabled = true
+		if _challenge_close_btn and is_instance_valid(_challenge_close_btn):
+			_challenge_close_btn.visible = true
+		if _challenge_continue_btn and is_instance_valid(_challenge_continue_btn):
+			_challenge_continue_btn.visible = true
+			_challenge_continue_btn.grab_focus()
+		return
+	_challenge_progress += 1
 	_advance_challenge.call_deferred()
 
 func _advance_challenge() -> void:
-	if _challenge_is_auto_trigger:
-		await get_tree().create_timer(0.8).timeout
-		if is_instance_valid(micro_panel):
-			_hide_challenge()
-		return
 	var total = _get_active_challenges().size()
 	if _challenge_progress >= total:
 		_challenge_result.text = "All challenges complete!"

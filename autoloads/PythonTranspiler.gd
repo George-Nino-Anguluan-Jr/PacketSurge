@@ -35,6 +35,11 @@ const MAX_CALL_DEPTH  := 200
 # Max elements produced by one range()/repetition. Anything bigger would
 # freeze the game building giant arrays — fail with an error instead.
 const MAX_SEQ_SIZE    := 100000
+# Hard wall-clock budget. The interpreter is synchronous on the main
+# thread, so anything beyond this looks like a crash to the player.
+const MAX_RUNTIME_MS  := 1000
+# Cap total printed output so loops can't build multi-MB strings.
+const MAX_OUTPUT_CHARS := 50000
 
 const BUILTIN_NAMES := [
 	"len", "str", "int", "float", "bool", "list", "dict",
@@ -56,7 +61,7 @@ func _new_state() -> Dictionary:
 	return {
 		"ok": true, "err": "", "line": 0, "output": "",
 		"brk": false, "cnt": false, "ret": false, "retval": null,
-		"ops": 0, "depth": 0,
+		"ops": 0, "depth": 0, "start_ms": Time.get_ticks_msec(),
 	}
 
 func _fail(state: Dictionary, msg: String) -> void:
@@ -70,7 +75,19 @@ func _bump(state: Dictionary) -> bool:
 	if state.ops > MAX_STATEMENTS:
 		_fail(state, "Program exceeded maximum operation count (%d)." % MAX_STATEMENTS)
 		return false
+	if (state.ops & 31) == 0 and _over_time_budget(state):
+		_fail(state, "Program exceeded the %d ms time limit. Use smaller loops or ranges." % MAX_RUNTIME_MS)
+		return false
 	return true
+
+func _over_time_budget(state: Dictionary) -> bool:
+	return Time.get_ticks_msec() - state.start_ms > MAX_RUNTIME_MS
+
+func _append_output(state: Dictionary, text: String) -> void:
+	if state.output.length() + text.length() > MAX_OUTPUT_CHARS:
+		_fail(state, "Program produced too much output (max %d characters)." % MAX_OUTPUT_CHARS)
+		return
+	state.output += text
 
 # ── Pre-processing ──────────────────────────────────────────
 
@@ -363,6 +380,9 @@ func _exec_for(lines: Array, i: int, depth: int, env: Dictionary, state: Diction
 		if iter_count > MAX_LOOP_ITERS:
 			_fail(state, "Loop exceeded maximum iterations (%d)." % MAX_LOOP_ITERS)
 			break
+		if (iter_count & 63) == 0 and _over_time_budget(state):
+			_fail(state, "Program exceeded the %d ms time limit. Use smaller loops or ranges." % MAX_RUNTIME_MS)
+			break
 		if not _assign_loop_var(var_part, element, env, state):
 			break
 		_exec_block(lines, body_start, depth + 1, env, state)
@@ -406,6 +426,9 @@ func _exec_while(lines: Array, i: int, depth: int, env: Dictionary, state: Dicti
 		iter_count += 1
 		if iter_count > MAX_LOOP_ITERS:
 			_fail(state, "Loop exceeded maximum iterations (%d)." % MAX_LOOP_ITERS)
+			break
+		if (iter_count & 63) == 0 and _over_time_budget(state):
+			_fail(state, "Program exceeded the %d ms time limit. Use smaller loops or ranges." % MAX_RUNTIME_MS)
 			break
 		_exec_block(lines, body_start, depth + 1, env, state)
 		if not state.ok:
@@ -767,7 +790,7 @@ func _exec_print(st: String, env: Dictionary, state: Dictionary) -> void:
 		if out != "":
 			out += sep
 		out += _to_str(v)
-	state.output += out + end
+	_append_output(state, out + end)
 
 func _split_kwarg(p: String) -> Array:
 	var eq = _find_top_eq(p)
@@ -2260,7 +2283,7 @@ func _call_builtin_core(name: String, args: Array, env: Dictionary, state: Dicti
 			var out := ""
 			for a in args:
 				out += _to_str(a)
-			state.output += out + "\n"
+			_append_output(state, out + "\n")
 			return null
 		_:
 			_fail(state, "Name '%s' is not defined." % name)

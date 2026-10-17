@@ -36,6 +36,7 @@ const STEP_NAMES: Array[String] = [
 var topic_buttons: Dictionary = {}
 var _lesson_start_time: float = 0.0
 var _lesson_timer_started: bool = false
+var _code_running: bool = false
 
 # ─── HELPERS ───────────────────────────────────────────
 func _min_dim() -> float:
@@ -441,13 +442,22 @@ func _show_code_editor(layout: VBoxContainer) -> void:
 	layout.add_child(result_label)
 
 func _on_run_code(editor: TextEdit) -> void:
+	if _code_running:
+		return
 	if editor == null or editor.get_parent() == null:
 		return
 	var code = editor.text
-	var result = PythonTranspiler.run_code(code)
 	var parent = editor.get_parent()
 	var output_label = parent.get_node_or_null("OutputLabel") as Label
 	var result_label = parent.get_node_or_null("CodeResultLabel") as Label
+	if output_label:
+		output_label.text = "Running..."
+		output_label.add_theme_color_override("font_color", Color("#E8F4FD"))
+	_code_running = true
+	await get_tree().process_frame
+	await get_tree().process_frame
+	var result = PythonTranspiler.run_code(code)
+	_code_running = false
 	if output_label:
 		if result.success:
 			output_label.text = "Output:\n" + result.output if result.output else "Output:\n(no output)"
@@ -459,13 +469,22 @@ func _on_run_code(editor: TextEdit) -> void:
 		result_label.text = ""
 
 func _on_check_code_answer(editor: TextEdit) -> void:
+	if _code_running:
+		return
 	if editor == null or editor.get_parent() == null:
 		return
 	var code = editor.text
-	var result = PythonTranspiler.run_code(code)
 	var parent = editor.get_parent()
 	var result_label = parent.get_node_or_null("CodeResultLabel") as Label
 	var output_label = parent.get_node_or_null("OutputLabel") as Label
+	if output_label:
+		output_label.text = "Running..."
+		output_label.add_theme_color_override("font_color", Color("#E8F4FD"))
+	_code_running = true
+	await get_tree().process_frame
+	await get_tree().process_frame
+	var result = PythonTranspiler.run_code(code)
+	_code_running = false
 	if not result.success:
 		SoundManager.play_error()
 		if output_label:
