@@ -229,10 +229,17 @@ func _get_closest_to_point(point: Vector2, exclude: Array[Node], max_dist: float
 
 func _get_nearest(count: int) -> Array:
 	# Returns the closest `count` live enemies to this tower (by global distance).
+	var candidates: Array = []
+	if is_inside_tree():
+		candidates = get_tree().get_nodes_in_group("enemies")
+	if candidates.is_empty():
+		candidates = targets
 	var list: Array = []
-	for e in targets:
+	var max_d = attack_range + ENEMY_RADIUS + 30.0
+	for e in candidates:
 		if is_instance_valid(e) and not e.is_dead:
-			list.append(e)
+			if global_position.distance_to(e.global_position) <= max_d:
+				list.append(e)
 	list.sort_custom(func(a, b): return global_position.distance_to(a.global_position) < global_position.distance_to(b.global_position))
 	var out: Array = []
 	for i in range(min(count, list.size())):
@@ -459,7 +466,7 @@ func _update_projectiles(delta: float) -> void:
 	for p in _projectiles:
 		if p.get("impacted"):
 			if is_instance_valid(p["target"]):
-				var aim: Vector2 = p["target"].get_aim_point() if p["target"].has_method("get_aim_point") else p["target"].position
+				var aim: Vector2 = p["target"].get_aim_point() if p["target"].has_method("get_aim_point") else p["target"].global_position
 				p["pos"] = aim
 				p["draw_pos"] = aim
 			p["impacted_frames"] = p.get("impacted_frames", 1) - 1
@@ -478,7 +485,7 @@ func _update_projectiles(delta: float) -> void:
 			continue
 		var target_pos = p["target_last_pos"]
 		if is_instance_valid(p["target"]):
-			target_pos = p["target"].get_aim_point() if p["target"].has_method("get_aim_point") else p["target"].position
+			target_pos = p["target"].get_aim_point() if p["target"].has_method("get_aim_point") else p["target"].global_position
 			p["target_last_pos"] = target_pos
 		var current_pos = p["pos"]
 		var next_pos = current_pos.move_toward(target_pos, p["speed"] * delta)
@@ -495,20 +502,41 @@ func _update_projectiles(delta: float) -> void:
 				p["draw_pos"] = next_pos
 		else:
 			p["draw_pos"] = next_pos
+
+		# For queue_rail: sweep damage to any live enemy the kinetic slug physically passes through
+		if p.get("style") == "queue_rail" and p.has("hit_list"):
+			var candidates: Array = []
+			if is_inside_tree():
+				candidates = get_tree().get_nodes_in_group("enemies")
+			for e in candidates:
+				if is_instance_valid(e) and not e.is_dead and not p["hit_list"].has(e):
+					var e_pos = e.get_aim_point() if e.has_method("get_aim_point") else e.global_position
+					if next_pos.distance_to(e_pos) <= 22.0:
+						p["hit_list"].append(e)
+						if e.has_method("take_damage"):
+							e.take_damage(p["damage"], tower_id, p.get("armor_pierce", true))
+							_apply_on_hit_effects(e, p["damage"])
+							if e.has_method("show_floating_tag"):
+								e.show_floating_tag("⚡ PIERCE [%d]" % p["hit_list"].size(), Color("#03DAC6"))
+						_spawn_impact_explosion(e_pos, "queue_rail", e)
+
 		if next_pos.distance_to(target_pos) < IMPACT_DISTANCE:
 			p["pos"] = target_pos
 			p["draw_pos"] = target_pos
 			_on_projectile_impact(p)
-			p["impacted"] = true
-			p["impacted_frames"] = 3
-			remaining.append(p)
+			if p.get("continue_pierce", false):
+				p["continue_pierce"] = false
+				remaining.append(p)
+			else:
+				p["impacted"] = true
+				p["impacted_frames"] = 3
+				remaining.append(p)
 		else:
 			remaining.append(p)
 	_projectiles = remaining
 
 func _is_pierce_beam(p: Dictionary) -> bool:
-	var s: String = p.get("style", "")
-	return s == "queue_pierce" or s == "linear_beam"
+	return p.has("beam_dir")
 
 func _update_pierce_beam(p: Dictionary, delta: float) -> bool:
 	# Straight-line beam: flies along beam_dir, sweeps a lateral hit zone,
@@ -547,14 +575,22 @@ func _update_pierce_beam(p: Dictionary, delta: float) -> bool:
 			e.take_damage(p["damage"] * falloff, tower_id, p.get("armor_pierce", false))
 			_apply_on_hit_effects(e, p["damage"] * falloff)
 			if e.has_method("show_floating_tag"):
-				if hit_list.size() > 0:
+				if p.get("style") == "queue_rail":
+					if hit_list.size() == 0:
+						e.show_floating_tag("⚡ FIFO [0]", Color("#BB86FC"))
+					else:
+						e.show_floating_tag("⚡ PIERCE [%d]" % hit_list.size(), Color("#03DAC6"))
+				elif hit_list.size() > 0:
 					e.show_floating_tag("⚡ PIERCE x%d!" % (hit_list.size() + 1), Color("#00FF88"))
 				else:
 					e.show_floating_tag("⚡ PIERCE!", Color("#00E5FF"))
 		hit_list.append(e)
 		falloff *= p.get("decay", 0.8)
 		var aim = e.get_aim_point() if e.has_method("get_aim_point") else e.global_position
-		_spawn_impact_explosion(aim, "linear_scan", e)
+		var exp_style = p.get("style", "linear_scan")
+		_spawn_impact_explosion(aim, exp_style, e)
+		if p.get("style") == "queue_rail":
+			_spawn_chain_arc(p["start_pos"], aim)
 		if p.get("max_hits", 0) > 0 and hit_list.size() >= p["max_hits"]:
 			p["falloff"] = falloff
 			return false
@@ -565,16 +601,20 @@ func _update_pierce_beam(p: Dictionary, delta: float) -> bool:
 
 func _on_projectile_impact(p: Dictionary) -> bool:
 	if is_instance_valid(p["target"]) and p["target"].has_method("take_damage"):
-		p["target"].take_damage(p["damage"], tower_id, p.get("armor_pierce", false))
-		_apply_on_hit_effects(p["target"], p["damage"])
+		var already_hit = p.has("hit_list") and p["hit_list"].has(p["target"])
+		if not already_hit:
+			p["target"].take_damage(p["damage"], tower_id, p.get("armor_pierce", false))
+			_apply_on_hit_effects(p["target"], p["damage"])
+			if p.has("hit_list"):
+				p["hit_list"].append(p["target"])
 	_on_style_impact(p)
-	var track: Node = p["target"] if is_instance_valid(p["target"]) else null
+	var track = p["target"] if is_instance_valid(p["target"]) else null
 	_spawn_impact_explosion(p["target_last_pos"], p["style"], track)
 	_apply_splash(p)
 	if p["style"] == "chain_lightning" and p.has("chains_left") and p["chains_left"] > 0:
 		var last_pos = p["target_last_pos"]
-		var chained: Array[Node] = []
-		var anchor: Node = p["target"] if is_instance_valid(p["target"]) else null
+		var chained: Array = []
+		var anchor = p["target"] if is_instance_valid(p["target"]) else null
 		if anchor != null:
 			chained.append(anchor)
 			if anchor.has_method("show_floating_tag"):
@@ -586,7 +626,7 @@ func _on_projectile_impact(p: Dictionary) -> bool:
 		var chain_radius = p.get("chain_radius", 120.0)
 		var traverse_path: bool = p.get("traverse_path", false)
 		while chains_left > 0 and anchor != null and is_instance_valid(anchor):
-			var next_target: Node = null
+			var next_target = null
 			if traverse_path:
 				next_target = _get_next_along_path(anchor, chained, chain_radius)
 			else:
@@ -628,17 +668,22 @@ func _apply_on_hit_effects(target: Node, base_damage: float) -> void:
 		target.apply_slow(slow_percent, slow_duration)
 
 func _apply_splash(p: Dictionary) -> void:
-	# Generic AoE splash around the impact point (stack mortar / bubble pulse).
+	# Generic AoE splash around the impact point (merge blast / stack mortar).
 	if splash_radius <= 0.0:
 		return
 	var origin: Vector2 = p["target_last_pos"]
 	var dmg: float = p["damage"] * 0.5
-	for e in targets:
+	var candidates: Array = []
+	if is_inside_tree():
+		candidates = get_tree().get_nodes_in_group("enemies")
+	if candidates.is_empty():
+		candidates = targets
+	for e in candidates:
 		if not is_instance_valid(e) or e.is_dead or e == p.get("target"):
 			continue
-		if origin.distance_to(e.position) <= splash_radius:
+		if origin.distance_to(e.global_position) <= splash_radius:
 			e.take_damage(dmg, tower_id)
-			var aim = e.get_aim_point() if e.has_method("get_aim_point") else e.position
+			var aim = e.get_aim_point() if e.has_method("get_aim_point") else e.global_position
 			_spawn_impact_explosion(aim, p.get("style", ""), e)
 
 
@@ -692,7 +737,7 @@ func _spawn_chain_arc(from_pos: Vector2, to_pos: Vector2) -> void:
 		"from": to_local(from_pos),
 		"to": to_local(to_pos),
 		"elapsed": 0.0,
-		"lifetime": 0.35
+		"lifetime": 0.45
 	})
 
 func _draw_custom_tower(_color: Color) -> void:
@@ -812,37 +857,44 @@ func _draw_overlays(color: Color) -> void:
 					# charged POP shell rings
 					draw_arc(rd, grow + 4.0, 0, TAU, 22, Color("#FFB800", 0.55), 1.2)
 					draw_arc(rd, grow + 7.0, 0, TAU, 22, Color(color, 0.25), 0.8)
-			"queue_rail", "queue_pierce":
-				# Queue: FIFO rail slug — arrowhead slug with queue blocks trailing + speed streak
-				var heading = p.get("beam_dir", (p["target_last_pos"] - p["pos"]).normalized() if (p["target_last_pos"] - p["pos"]).length() > 0 else Vector2.RIGHT)
+			"queue_rail":
+				# Queue: FIFO rail slug — heavy supersonic kinetic penetrating wedge with maglev block trail
+				var heading: Vector2 = p.get("heading", Vector2.ZERO)
+				if heading == Vector2.ZERO:
+					heading = p.get("beam_dir", Vector2.ZERO)
+				if heading == Vector2.ZERO:
+					var target_lp = p.get("target_last_pos", p["pos"])
+					heading = (target_lp - p["pos"]).normalized() if (target_lp - p["pos"]).length() > 0 else Vector2.RIGHT
 				var perp = Vector2(-heading.y, heading.x)
-				var trail_len = 18.0
+				var trail_len = 24.0
 				# speed streak wedge
 				var streak_start = rd - heading * trail_len
-				var streak_pts = PackedVector2Array([rd + perp * 2.2, streak_start + perp * 0.6, streak_start - perp * 0.6, rd - perp * 2.2])
-				draw_colored_polygon(streak_pts, Color(color, 0.22))
-				draw_line(streak_start, rd, Color(color, 0.55), 1.2)
-				# slug body: rounded rect
-				var slug_len = 10.0
-				var slug_w = 5.0
+				var streak_pts = PackedVector2Array([rd + perp * 3.0, streak_start + perp * 0.8, streak_start - perp * 0.8, rd - perp * 3.0])
+				draw_colored_polygon(streak_pts, Color(color, 0.28))
+				draw_line(streak_start, rd, Color(color, 0.65), 1.6)
+				# slug body: heavy kinetic penetrating wedge
+				var slug_len = 14.0
+				var slug_w = 6.0
 				var body_pts = PackedVector2Array([
 					rd - heading * slug_len * 0.7 + perp * slug_w * 0.5,
 					rd + heading * slug_len * 0.3 + perp * slug_w * 0.45,
-					rd + heading * slug_len * 0.65,
+					rd + heading * slug_len * 0.75,
 					rd + heading * slug_len * 0.3 - perp * slug_w * 0.45,
 					rd - heading * slug_len * 0.7 - perp * slug_w * 0.5
 				])
 				draw_colored_polygon(body_pts, Color.WHITE)
 				draw_colored_polygon(body_pts, Color(color, 0.85))
-				draw_polyline(body_pts, Color.WHITE, 0.8, true)
+				draw_polyline(body_pts, Color.WHITE, 1.0, true)
 				# arrow chevron
-				draw_line(rd + heading * 2.0 - perp * 2.0, rd + heading * 4.2, Color.WHITE, 1.0)
-				draw_line(rd + heading * 2.0 + perp * 2.0, rd + heading * 4.2, Color.WHITE, 1.0)
-				# queue block ghosts trailing
+				draw_line(rd + heading * 3.0 - perp * 3.0, rd + heading * 6.0, Color.WHITE, 1.4)
+				draw_line(rd + heading * 3.0 + perp * 3.0, rd + heading * 6.0, Color.WHITE, 1.4)
+				# queue block ghosts trailing (FIFO packets)
 				for j in range(3):
-					var bpos = streak_start + heading * j * 4.0
-					draw_rect(Rect2(bpos - Vector2(1.2, 1.2), Vector2(2.4, 2.4)), Color(color, 0.35 - j * 0.08), true)
-				draw_circle(rd - heading * slug_len * 0.35, 1.1, Color.WHITE)
+					var bpos = streak_start + heading * j * 5.0
+					draw_rect(Rect2(bpos - Vector2(1.5, 1.5), Vector2(3.0, 3.0)), Color(color, 0.45 - j * 0.10), true)
+					draw_rect(Rect2(bpos - Vector2(1.5, 1.5), Vector2(3.0, 3.0)), Color(1, 1, 1, 0.5 - j * 0.12), false, 0.8)
+				draw_circle(rd, 2.5, Color.WHITE)
+				draw_circle(rd, 5.0, Color(color, 0.4))
 			"chain_lightning":
 				# LinkedList: chain lightning — jagged bolt with node beads at kinks + dual glow
 				var bolt_from = rd
@@ -1054,23 +1106,31 @@ func _draw_overlays(color: Color) -> void:
 				draw_line(rd - perp_l * 10.0, rd + perp_l * 10.0, Color(color, 0.55), 1.0)
 				draw_circle(rd, 2.4, Color.WHITE)
 				draw_circle(rd, 5.0, Color(color, 0.28))
-			"linear_beam", "queue_pierce":
-				# Linear/Queue pierce beam — wide energy bar with scanning ticks + bloom
+			"linear_beam":
+				# Phased-Array Radar Sweep — sleek luminous scan bar that sweeps cleanly down the road
 				var beam_heading = p.get("beam_dir", Vector2.RIGHT)
 				var beam_perp = Vector2(-beam_heading.y, beam_heading.x)
-				# bloom trail behind
-				draw_line(rd - beam_heading * 32.0, rd, Color(color, 0.20), 7.0)
-				draw_line(rd - beam_heading * 32.0, rd, Color(1, 1, 1, 0.65), 2.0)
-				draw_line(rd - beam_heading * 32.0, rd, color, 1.0)
-				# scan bar (perpendicular)
-				draw_line(rd - beam_perp * 11.0, rd + beam_perp * 11.0, Color.WHITE, 2.6)
-				draw_line(rd - beam_perp * 11.0, rd + beam_perp * 11.0, color, 1.4)
-				# tick marks along bar
-				for tk in [-5.0, 0.0, 5.0]:
+				var half_w: float = p.get("beam_width", 22.0)
+
+				# 1. Subtle glowing trail behind the scan bar (thin laser streak)
+				draw_line(rd - beam_heading * 16.0, rd, Color(color, 0.25), 3.0)
+				draw_line(rd - beam_heading * 8.0, rd, Color.WHITE, 1.2)
+
+				# 2. Sleek planar scan bar (perpendicular to travel, matching road width)
+				draw_line(rd - beam_perp * half_w, rd + beam_perp * half_w, Color(color, 0.35), 4.0)
+				draw_line(rd - beam_perp * half_w, rd + beam_perp * half_w, Color.WHITE, 2.0)
+				draw_line(rd - beam_perp * half_w, rd + beam_perp * half_w, color, 1.0)
+
+				# 3. Small diode emitter dots at tips and center
+				draw_circle(rd - beam_perp * half_w, 1.8, Color.WHITE)
+				draw_circle(rd + beam_perp * half_w, 1.8, Color.WHITE)
+				draw_circle(rd, 2.2, Color.WHITE)
+				draw_circle(rd, 4.0, Color(color, 0.45))
+
+				# 4. Tiny radar tick notches
+				for tk in [-half_w * 0.5, half_w * 0.5]:
 					var tkp = rd + beam_perp * tk
-					draw_line(tkp - beam_heading * 2.0, tkp + beam_heading * 2.0, Color(1, 1, 1, 0.7), 0.8)
-				draw_circle(rd, 2.8, Color.WHITE)
-				draw_circle(rd, 6.2, Color(color, 0.28))
+					draw_line(tkp - beam_heading * 2.5, tkp + beam_heading * 2.5, Color.WHITE, 1.0)
 			"binary_sniper":
 				# Binary: sniper tracer — needle tracer with binary 0/1 digits trailing + pulsing crosshair
 				var heading_b = (p["target_last_pos"] - p["pos"]).normalized() if (p["target_last_pos"] - p["pos"]).length() > 0 else Vector2.RIGHT
@@ -1224,20 +1284,24 @@ func _draw_overlays(color: Color) -> void:
 		pts.append(arc["from"])
 		var dir = arc["to"] - arc["from"]
 		var dist = dir.length()
-		if dist > 4.0:
+		var segs = clamp(int(dist / 22.0), 4, 8)
+		if dist > 6.0:
 			var n = Vector2(-dir.y, dir.x).normalized()
-			for i in range(1, 4):
-				var f = float(i) / 4.0
-				var jag = sin(_anim_time * 25.0 + i * 5.0) * (dist * 0.14)
+			for i in range(1, segs):
+				var f = float(i) / float(segs)
+				var jag = sin(_anim_time * 30.0 + i * 4.2) * min(14.0, dist * 0.15)
 				pts.append(arc["from"] + dir * f + n * jag)
 		pts.append(arc["to"])
-		draw_polyline(pts, Color(color, life * 0.45), 5.0)
-		draw_polyline(pts, Color(color, life), 2.2)
-		draw_polyline(pts, Color(1, 1, 1, life * 0.9), 1.0)
+		var arc_col = Color("#00FF88") if tower_id == "tower_linked_list" else color
+		draw_polyline(pts, Color(arc_col, life * 0.45), 6.0)
+		draw_polyline(pts, Color(arc_col, life * 0.9), 2.5)
+		draw_polyline(pts, Color(1, 1, 1, life), 1.2)
 		# node beads along chain
 		for i in range(1, pts.size() - 1):
-			draw_circle(pts[i], 1.6 * life + 0.4, Color(color, life))
-			draw_circle(pts[i], 0.7, Color(1, 1, 1, life))
+			draw_circle(pts[i], 2.2 * life + 0.5, Color(arc_col, life))
+			draw_circle(pts[i], 1.0, Color(1, 1, 1, life))
+		draw_circle(arc["to"], 5.0 * life, Color(arc_col, life * 0.5))
+		draw_circle(arc["to"], 2.5 * life, Color.WHITE)
 
 # ─── 3D PRIMITIVE HELPERS (shared) ──────────────────────
 func _draw_3d_cylinder(center: Vector2, radius: float, height: float, color: Color, outline_color: Color = Color.WHITE, line_width: float = 1.5) -> void:

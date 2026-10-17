@@ -31,7 +31,7 @@ func _perform_attack() -> void:
 	if behind_e:
 		_spawn_custom_projectile(_make_quick_bolt(behind_e, spawn_origin, false, 0.65))
 
-func _make_quick_bolt(target: Node, spawn_origin: Vector2, is_pivot: bool, mult: float) -> Dictionary:
+func _make_quick_bolt(target, spawn_origin: Vector2, is_pivot: bool, mult: float) -> Dictionary:
 	return {
 		"pos": spawn_origin,
 		"start_pos": spawn_origin,
@@ -50,7 +50,9 @@ func _make_quick_bolt(target: Node, spawn_origin: Vector2, is_pivot: bool, mult:
 
 func _quick_partition(p: Dictionary) -> void:
 	var target = p.get("target")
-	if is_instance_valid(target) and not target.is_dead and target.has_method("show_floating_tag"):
+	if not is_instance_valid(target) or target.is_dead:
+		return
+	if target.has_method("show_floating_tag"):
 		target.show_floating_tag("🎯 PIVOT!", Color("#FFB800"))
 
 	var sorted = _get_enemies_sorted_by_progress()
@@ -72,10 +74,12 @@ func _quick_partition(p: Dictionary) -> void:
 				else:
 					e.show_floating_tag("[<P] PARTITION", Color("#E040FB"))
 
-func _get_path_progress_of(e: Node) -> float:
-	return e.get_path_progress() if is_instance_valid(e) and e.has_method("get_path_progress") else 0.0
+func _get_path_progress_of(e) -> float:
+	return e.get_path_progress() if is_instance_valid(e) and not e.is_dead and e.has_method("get_path_progress") else 0.0
 
-func _get_prev_along_path(anchor: Node, exclude: Array[Node], max_dist: float) -> Node:
+func _get_prev_along_path(anchor, exclude: Array, max_dist: float) -> Node:
+	if not is_instance_valid(anchor):
+		return null
 	var anchor_prog: float = _get_path_progress_of(anchor)
 	var best: Node = null
 	var best_prog: float = -1.0

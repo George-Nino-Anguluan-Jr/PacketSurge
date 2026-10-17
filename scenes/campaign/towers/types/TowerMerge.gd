@@ -10,9 +10,15 @@ func get_type_id() -> String:
 
 func _select_target() -> Node:
 	_clean_targets()
-	if targets.is_empty():
-		return null
-	return _get_closest(targets)
+	if not targets.is_empty():
+		return _get_closest(targets)
+	var candidates: Array = []
+	if is_inside_tree():
+		candidates = get_tree().get_nodes_in_group("enemies")
+	for e in candidates:
+		if is_instance_valid(e) and not e.is_dead and global_position.distance_to(e.global_position) <= attack_range + 35.0:
+			return e
+	return null
 
 func _perform_attack() -> void:
 	if not current_target:
@@ -51,7 +57,7 @@ func _on_style_impact(p: Dictionary) -> void:
 	if p.get("style") == "merge_beam" and p.get("merge_side") == "left":
 		var target = p.get("target")
 		if is_instance_valid(target) and not target.is_dead and target.has_method("show_floating_tag"):
-			target.show_floating_tag("⚛ MERGED!", Color("#E040FB"))
+			target.show_floating_tag("⚛ [L]+[R] MERGE!", Color("#E040FB"))
 
 func _get_custom_muzzle_position() -> Vector2:
 	return global_position + Vector2(16.0, 0.0).rotated(_turret_angle)

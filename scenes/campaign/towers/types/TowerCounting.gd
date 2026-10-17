@@ -13,9 +13,15 @@ func get_type_id() -> String:
 
 func _select_target() -> Node:
 	_clean_targets()
-	if targets.is_empty():
-		return null
-	return _get_closest(targets)
+	if not targets.is_empty():
+		return _get_closest(targets)
+	var candidates: Array = []
+	if is_inside_tree():
+		candidates = get_tree().get_nodes_in_group("enemies")
+	for e in candidates:
+		if is_instance_valid(e) and not e.is_dead and global_position.distance_to(e.global_position) <= attack_range + 35.0:
+			return e
+	return null
 
 func _perform_attack() -> void:
 	if not current_target:

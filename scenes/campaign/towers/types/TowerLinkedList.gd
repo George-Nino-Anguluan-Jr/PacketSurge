@@ -24,23 +24,38 @@ func _perform_attack() -> void:
 	_flash_targets.clear()
 
 	var spawn_origin = get_muzzle_position()
-	var p = {
-		"pos": spawn_origin,
-		"start_pos": spawn_origin,
-		"draw_pos": spawn_origin,
-		"target": current_target,
-		"target_last_pos": current_target.global_position,
-		"speed": projectile_speed,
-		"damage": damage,
-		"style": "chain_lightning",
-		"elapsed_time": 0.0,
-		"total_dist": (current_target.global_position - spawn_origin).length(),
-		"chains_left": chain_count,
-		"chained_targets": [],
-		"chain_radius": chain_radius,
-		"traverse_path": true,
-	}
-	_spawn_custom_projectile(p)
+	var chain_limit = clamp(2 + current_level, 3, 5) # 3 at Lv1, 4 at Lv2, 5 at Lv3
+	var chained: Array[Node] = []
+	var chain_dmg = damage
+
+	# 1. Primary Target (HEAD)
+	chained.append(current_target)
+	current_target.take_damage(chain_dmg, tower_id)
+	if current_target.has_method("show_floating_tag"):
+		current_target.show_floating_tag("🔗 HEAD", Color("#00FF88"))
+	var p1 = current_target.get_aim_point() if current_target.has_method("get_aim_point") else current_target.global_position
+	_spawn_chain_arc(spawn_origin, p1)
+	_spawn_impact_explosion(p1, "chain_lightning", current_target)
+
+	# 2. Sequential Linked Nodes (POINTERS)
+	var last_node = current_target
+	var last_pos = p1
+	while chained.size() < chain_limit:
+		var next_target = _get_next_along_path(last_node, chained, 180.0)
+		if not next_target:
+			break
+		chained.append(next_target)
+		chain_dmg *= 0.8
+		var next_pos = next_target.get_aim_point() if next_target.has_method("get_aim_point") else next_target.global_position
+		next_target.take_damage(chain_dmg, tower_id)
+		if next_target.has_method("show_floating_tag"):
+			next_target.show_floating_tag("🔗 LINK [%d]" % (chained.size() - 1), Color("#00FF88"))
+		_spawn_chain_arc(last_pos, next_pos)
+		_spawn_impact_explosion(next_pos, "chain_lightning", next_target)
+		last_node = next_target
+		last_pos = next_pos
+
+	queue_redraw()
 
 func _get_custom_muzzle_position() -> Vector2:
 	return global_position + Vector2(16.0, -8.0).rotated(_turret_angle)

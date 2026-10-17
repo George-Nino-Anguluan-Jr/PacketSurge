@@ -11,14 +11,19 @@ func get_type_id() -> String:
 
 func _select_target() -> Node:
 	_clean_targets()
-	if targets.is_empty():
-		return null
-	return _get_closest(targets)
+	if not targets.is_empty():
+		return _get_closest(targets)
+	var candidates: Array = []
+	if is_inside_tree():
+		candidates = get_tree().get_nodes_in_group("enemies")
+	for e in candidates:
+		if is_instance_valid(e) and not e.is_dead and global_position.distance_to(e.global_position) <= attack_range + 40.0:
+			return e
+	return null
 
 func _perform_attack() -> void:
-	if targets.is_empty():
-		return
-	current_target = _get_closest(targets)
+	_clean_targets()
+	current_target = _select_target()
 	if not current_target:
 		return
 	SoundManager.play_tower_attack(tower_id)
@@ -31,19 +36,21 @@ func _perform_attack() -> void:
 		"pos": spawn_origin,
 		"start_pos": spawn_origin,
 		"draw_pos": spawn_origin,
+		"target": current_target,
+		"target_last_pos": current_target.global_position,
 		"beam_dir": dir,
 		"speed": projectile_speed,
-		"damage": damage * 0.75,
+		"damage": damage * 0.85,
 		"style": "linear_beam",
 		"elapsed_time": 0.0,
 		"traveled": 0.0,
-		"max_range": attack_range + 140.0,
-		"beam_width": 26.0,
+		"max_range": attack_range + 60.0,
+		"beam_width": 22.0, # 44px wide crisp radar scan bar matching road width
 		"hit_list": [],
 		"falloff": 1.0,
-		"decay": 0.85,
+		"decay": 0.88,
 		"armor_pierce": armor_pierce,
-		"max_hits": max_targets,
+		"max_hits": 999, # Pierces all enemies along the sweeping scan line
 	}
 	_spawn_custom_projectile(p)
 	queue_redraw()

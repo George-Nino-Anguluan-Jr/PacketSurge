@@ -13,26 +13,61 @@ func get_type_id() -> String:
 
 func _select_target() -> Node:
 	_clean_targets()
-	if targets.is_empty():
-		return null
-	return _get_closest(targets)
+	if not targets.is_empty():
+		return _get_closest(targets)
+	var pool = _get_array_targets(1)
+	return pool[0] if not pool.is_empty() else null
+
+func _get_array_targets(count: int) -> Array:
+	_clean_targets()
+	var pool: Array = []
+	for t in targets:
+		if is_instance_valid(t) and not t.is_dead and not pool.has(t):
+			pool.append(t)
+
+	if pool.size() < count:
+		var candidates: Array = []
+		if is_inside_tree():
+			candidates = get_tree().get_nodes_in_group("enemies")
+		var max_d = attack_range + 35.0
+		for e in candidates:
+			if is_instance_valid(e) and not e.is_dead and not pool.has(e):
+				if global_position.distance_to(e.global_position) <= max_d:
+					pool.append(e)
+
+	# Sort by distance to this tower (closest first)
+	pool.sort_custom(func(a, b): return global_position.distance_to(a.global_position) < global_position.distance_to(b.global_position))
+
+	var result: Array = []
+	for i in range(min(count, pool.size())):
+		result.append(pool[i])
+	return result
 
 func _perform_attack() -> void:
-	if not current_target:
+	_clean_targets()
+	var active_slots: int = clamp(2 + current_level, 3, max_targets)
+	var enemy_pool: Array = _get_array_targets(active_slots)
+	if enemy_pool.is_empty():
 		return
+	current_target = enemy_pool[0]
 	SoundManager.play_tower_attack(tower_id)
 	_recoil = 1.0
 	_flash_targets.clear()
 
-	var active_slots: int = clamp(2 + current_level, 3, max_targets)
-	var nearest = _get_nearest(active_slots)
-	if nearest.is_empty():
-		return
-
 	_active_indices.clear()
 	for i in range(active_slots):
 		_active_indices.append(i)
-		var assigned_target = nearest[i % nearest.size()]
+		# O(1) multi-target assignment:
+		# Silo 0 -> Enemy 0, Silo 1 -> Enemy 1, Silo 2 -> Enemy 2!
+		var assigned_target: Node = null
+		if i < enemy_pool.size():
+			assigned_target = enemy_pool[i]
+		else:
+			assigned_target = enemy_pool[i % enemy_pool.size()]
+
+		if not is_instance_valid(assigned_target) or assigned_target.is_dead:
+			continue
+
 		var muzzle = _get_silo_muzzle_pos(i)
 		var p = {
 			"pos": muzzle,
@@ -41,14 +76,21 @@ func _perform_attack() -> void:
 			"target": assigned_target,
 			"target_last_pos": assigned_target.global_position,
 			"speed": projectile_speed,
-			"damage": damage * (0.45 if nearest.size() > 1 else 0.35),
+			"damage": damage * 0.5,
 			"style": "index_bolt",
 			"elapsed_time": 0.0,
+			"delay": i * 0.04, # Sequential silo launch stagger so all distinct bolts are visible
 			"total_dist": (assigned_target.global_position - muzzle).length(),
 			"armor_pierce": armor_pierce,
 			"index": i,
+			"on_hit": func(p_hit):
+				var ht = p_hit.get("target")
+				if is_instance_valid(ht) and not ht.is_dead and ht.has_method("show_floating_tag"):
+					ht.show_floating_tag("[%d] ARR" % p_hit.get("index", 0), Color("#00E5FF"))
 		}
 		_spawn_custom_projectile(p)
+
+	queue_redraw()
 
 func _get_silo_muzzle_pos(idx: int) -> Vector2:
 	# Calculate world spawn point of silo index [0..4]
