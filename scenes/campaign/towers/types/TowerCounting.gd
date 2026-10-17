@@ -21,8 +21,9 @@ func _perform_attack() -> void:
 	SoundManager.play_tower_attack(tower_id)
 	_recoil = 1.0
 	_flash_targets.clear()
-	var count: int = clamp(_count_live_enemies(), 1, 5)
+	var count: int = clamp(_count_live_enemies(), 1, max_targets)
 	var spawn_origin = get_muzzle_position()
+	var pellet_damage = (damage * 0.25) * (1.0 + (count - 1) * bonus_per_enemy)
 	for i in range(count):
 		var p = {
 			"pos": spawn_origin,
@@ -30,12 +31,13 @@ func _perform_attack() -> void:
 			"draw_pos": spawn_origin,
 			"target": current_target,
 			"target_last_pos": current_target.position,
-			"speed": 200.0 + i * 40.0,
-			"damage": damage * 0.25,
+			"speed": projectile_speed * (0.85 + i * 0.08),
+			"damage": pellet_damage,
 			"style": "counting_pellet",
 			"elapsed_time": 0.0,
 			"digit": i + 1,
-			"delay": i * 0.05
+			"delay": i * 0.05,
+			"armor_pierce": armor_pierce,
 		}
 		_spawn_custom_projectile(p)
 	queue_redraw()
@@ -90,7 +92,7 @@ func _draw_turret_assembly(color: Color) -> void:
 	# Count display — 5 small windows showing current count
 	for i in range(5):
 		var wx = -8 + i * 4.0
-		var is_active = i < clamp(_count_live_enemies(), 1, 5)
+		var is_active = i < clamp(_count_live_enemies(), 1, max_targets)
 		var win_col = Color(color, 0.6 if is_active else 0.15)
 		draw_rect(Rect2(Vector2(wx - 1.5, -1.2), Vector2(3.0, 2.4)), Color("#08111F"), true)
 		draw_rect(Rect2(Vector2(wx - 1.5, -1.2), Vector2(3.0, 2.4)), win_col, false, 0.7)

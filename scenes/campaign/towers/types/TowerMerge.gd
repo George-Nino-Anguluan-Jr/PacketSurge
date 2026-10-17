@@ -30,12 +30,13 @@ func _perform_attack() -> void:
 			"draw_pos": spawn_origin + offset,
 			"target": current_target,
 			"target_last_pos": current_target.position,
-			"speed": 260.0,
+			"speed": projectile_speed,
 			"damage": damage * 0.6,
 			"style": "merge_beam",
 			"elapsed_time": 0.0,
 			"total_dist": (current_target.position - spawn_origin).length(),
-			"merge_side": "left" if offset == offset_l else "right"
+			"merge_side": "left" if offset == offset_l else "right",
+			"armor_pierce": armor_pierce,
 		}
 		_spawn_custom_projectile(p)
 	queue_redraw()

@@ -846,8 +846,9 @@ func _show_tower_menu(cell: Vector2i, tower: Node) -> void:
 		upg_btn.pressed.connect(_on_upgrade_tower.bind(tower, cost))
 		bg.add_child(upg_btn)
 
-	# Sell button — 70% of total invested (placement + upgrades)
-	var sell_value = int(tower.total_invested * 0.7)
+	# Sell button — data-driven % of total invested (placement + upgrades)
+	var ratio: float = tower.sell_ratio if "sell_ratio" in tower else 0.7
+	var sell_value = int(tower.total_invested * ratio)
 	var sell_btn := Button.new()
 	sell_btn.text = "SELL\n" + str(sell_value) + "⚡"
 	sell_btn.position = Vector2(right_x + half_btn_w + btn_sep, right_y)

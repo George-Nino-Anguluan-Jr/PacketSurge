@@ -307,6 +307,14 @@ func build_enemy_definitions() -> Dictionary:
 			"speed": r.speed,
 			"ram_reward": r.ram_reward,
 			"is_boss": r.is_boss,
+			"armor_flat": r.armor_flat,
+			"armor_percent": r.armor_percent,
+			"slow_immune": r.slow_immune,
+			"regen_per_sec": r.regen_per_sec,
+			"shield_max_hits": r.shield_max_hits,
+			"shield_regen_per_sec": r.shield_regen_per_sec,
+			"wave_hp_mult": r.wave_hp_mult,
+			"wave_speed_mult": r.wave_speed_mult,
 		}
 	return out
 

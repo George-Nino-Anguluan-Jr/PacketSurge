@@ -1,7 +1,6 @@
 [gd_resource type="Resource" script_class="EnemyData" format=3]
 
 [ext_resource type="Script" path="res://scripts/data/EnemyData.gd" id="1_5ms66"]
-
 [ext_resource type="Resource" path="res://resources/styles/enemy_style_default.tres" id="2_style"]
 
 [resource]
@@ -12,9 +11,17 @@ max_health = 300.0
 speed = 40.0
 ram_reward = 30
 is_boss = false
+armor_flat = 1.0
+armor_percent = 0.1
+slow_immune = true
+regen_per_sec = 0.0
+shield_max_hits = 0
+shield_regen_per_sec = 0.0
+wave_hp_mult = 1.25
+wave_speed_mult = 1.0
 title = "Overflow Packet"
 tagline = "Grows stronger as enemies behind it die. Kill front-to-back."
-icon = "â'â""
+icon = "[*]"
 threat = "High"
 special = "Gains HP when enemies behind it die. Must be killed LIFO."
 lesson = "Stack LIFO — last in, first out targeting."

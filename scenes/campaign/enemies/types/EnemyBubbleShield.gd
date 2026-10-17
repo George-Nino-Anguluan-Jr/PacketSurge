@@ -7,38 +7,12 @@ extends Enemy
 func get_type_id() -> String:
 	return "bubble_shield"
 
-func _init_type_state() -> void:
-	type_data["shield_hp"] = 3
-	type_data["shield_max"] = 3
-
-func _modify_damage(amount: float) -> float:
-	if type_data.get("shield_hp", 0) > 0:
-		type_data["shield_hp"] -= 1
-		# Flash for blocked hit
-		_flash_timer = 0.1
-		queue_redraw()
-		return 0.0
-	return amount
-
-func _process_type_logic(delta: float) -> void:
-	if type_data["shield_hp"] < type_data["shield_max"]:
-		type_data["shield_hp"] += delta * 0.5
-
-func _has_shield() -> bool:
-	return true
-
-func _draw_extra_health_bar() -> void:
-	var s = ensure_style()
-	var shield_ratio = clamp(float(type_data["shield_hp"]) / float(type_data["shield_max"]), 0.0, 1.0)
-	draw_rect(Rect2(-s.health_bar_width / 2.0, s.health_bar_offset.y + s.shield_bar_offset,
-		s.health_bar_width * shield_ratio, s.shield_bar_height), s.shield_bar_color)
-
 func _draw_type_body(col: Color, bob: float) -> void:
 	# 3D sphere core
 	_draw_3d_sphere(Vector2(0, bob - 2), 11.0, col)
 	# Shield ring (orbiting segments)
-	var shield_hp = type_data.get("shield_hp", 0)
-	var shield_max = type_data.get("shield_max", 3)
+	var shield_hp = int(type_data.get("shield_hp", 0))
+	var shield_max = int(type_data.get("shield_max_hits", 3))
 	if shield_hp > 0:
 		var seg_angle = TAU / shield_max
 		for i in range(shield_max):

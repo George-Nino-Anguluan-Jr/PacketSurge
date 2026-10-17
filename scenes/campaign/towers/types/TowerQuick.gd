@@ -36,13 +36,14 @@ func _make_quick_bolt(target: Node, spawn_origin: Vector2, is_pivot: bool, mult:
 		"draw_pos": spawn_origin,
 		"target": target,
 		"target_last_pos": target.position if is_instance_valid(target) else spawn_origin,
-		"speed": 500.0,
+		"speed": projectile_speed,
 		"damage": damage * mult,
 		"style": "quick_split",
 		"elapsed_time": 0.0,
 		"total_dist": (target.position - spawn_origin).length() if is_instance_valid(target) else 0.0,
 		"is_pivot": is_pivot,
 		"on_hit": _quick_partition if is_pivot else null,
+		"armor_pierce": armor_pierce,
 	}
 
 func _quick_partition(p: Dictionary) -> void:

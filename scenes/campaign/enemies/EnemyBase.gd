@@ -162,6 +162,15 @@ func _setup_type() -> void:
 	var edef = GameManager.ENEMY_DEFINITIONS.get(enemy_type, {})
 	enemy_color = edef.get("color", Color.WHITE)
 	ram_reward = int(edef.get("ram_reward", 10))
+	type_data["armor_flat"]        = float(edef.get("armor_flat", 0.0))
+	type_data["armor_percent"]     = float(edef.get("armor_percent", 0.0))
+	type_data["slow_immune"]       = bool(edef.get("slow_immune", false))
+	type_data["regen_per_sec"]     = float(edef.get("regen_per_sec", 0.0))
+	type_data["shield_max_hits"]   = int(edef.get("shield_max_hits", 0))
+	type_data["shield_hp"]         = float(edef.get("shield_max_hits", 0))
+	type_data["shield_regen_per_sec"] = float(edef.get("shield_regen_per_sec", 0.0))
+	type_data["wave_hp_mult"]      = float(edef.get("wave_hp_mult", 1.0))
+	type_data["wave_speed_mult"]   = float(edef.get("wave_speed_mult", 1.0))
 	_init_type_state()
 	_build_tower_multipliers()
 
@@ -215,6 +224,26 @@ func _physics_process(delta: float) -> void:
 			take_damage(dot_amt, _dot_source)
 			_dot_tick_timer = _dot_tick_interval
 
+	# Slow timer tick
+	if float(type_data.get("slow_timer", 0.0)) > 0.0:
+		type_data["slow_timer"] = float(type_data["slow_timer"]) - delta
+		if float(type_data["slow_timer"]) <= 0.0:
+			type_data["slow_factor"] = 1.0
+			queue_redraw()
+
+	# Regen tick (data-driven; 0 = no regen)
+	var regen = float(type_data.get("regen_per_sec", 0.0))
+	if regen > 0.0 and current_health < max_health:
+		current_health = minf(max_health, current_health + regen * delta)
+
+	# Shield regen (data-driven; 0 = no regen)
+	var s_regen = float(type_data.get("shield_regen_per_sec", 0.0))
+	if s_regen > 0.0 and type_data.get("shield_max_hits", 0) > 0:
+		var shp = float(type_data.get("shield_hp", 0.0))
+		var shmax = float(type_data.get("shield_max_hits", 0))
+		if shp < shmax:
+			type_data["shield_hp"] = minf(shmax, shp + s_regen * delta)
+
 	# Type-specific per-frame logic
 	_process_type_logic(delta)
 
@@ -267,7 +296,7 @@ func _move_toward_waypoint(delta: float) -> void:
 	if offset != Vector2.ZERO:
 		position += offset
 
-	velocity = direction * move_speed
+	velocity = direction * _get_effective_speed()
 	move_and_slide()
 
 	# Path correction
@@ -346,12 +375,24 @@ func _get_dot_scaling_on_apply() -> float:
 	# (e.g., insertion_stack: 1.5x on apply AND 1.5x on tick = 2.25x total)
 	return 1.0
 
-func take_damage(amount: float, source: String = "") -> void:
+func take_damage(amount: float, source: String = "", armor_pierce: bool = false) -> void:
 	if is_dead:
 		return
 
 	var mult = _get_source_damage_multiplier(source)
 	var final_damage = _modify_damage(amount) * mult
+
+	# Shield absorbs the first N hits (data-driven; 0 = no shield).
+	if type_data.get("shield_max_hits", 0) > 0 and type_data.get("shield_hp", 0) > 0:
+		type_data["shield_hp"] = float(type_data["shield_hp"]) - 1.0
+		_flash_timer = 0.15
+		queue_redraw()
+		return
+
+	# Armor: flat reduction first, then percent (skipped by armor_pierce towers).
+	if not armor_pierce:
+		final_damage = maxf(0.0, final_damage - float(type_data.get("armor_flat", 0.0)))
+		final_damage *= (1.0 - clampf(float(type_data.get("armor_percent", 0.0)), 0.0, 0.95))
 
 	# Show floating multiplier text for educational feedback
 	if source != "" and mult != 1.0:
@@ -372,6 +413,22 @@ func take_damage(amount: float, source: String = "") -> void:
 
 	if current_health <= 0:
 		_die()
+
+func apply_slow(percent: float, duration: float) -> void:
+	# Data-driven slow. Slow-immune enemies ignore it entirely.
+	if is_dead or type_data.get("slow_immune", false):
+		return
+	var factor = clampf(1.0 - clampf(percent, 0.0, 0.9), 0.1, 1.0)
+	type_data["slow_factor"] = minf(float(type_data.get("slow_factor", 1.0)), factor)
+	type_data["slow_timer"]  = maxf(float(type_data.get("slow_timer", 0.0)), duration)
+	queue_redraw()
+
+func _get_effective_speed() -> float:
+	# Base speed with any active slow applied.
+	var s = move_speed
+	if float(type_data.get("slow_timer", 0.0)) > 0.0:
+		s *= float(type_data.get("slow_factor", 1.0))
+	return s
 
 func _show_floating_multiplier(mult: float) -> void:
 	var label = Label.new()
@@ -521,11 +578,18 @@ func get_health_ratio() -> float:
 	return clamp(current_health / max_health, 0.0, 1.0)
 
 func _has_shield() -> bool:
-	return false
+	return int(type_data.get("shield_max_hits", 0)) > 0
 
 func _draw_extra_health_bar() -> void:
-	# Virtual — subclasses override for shield bar etc.
-	pass
+	if not _has_shield():
+		return
+	var s = ensure_style()
+	var shmax = maxf(1.0, float(type_data.get("shield_max_hits", 1)))
+	var shp = maxf(0.0, float(type_data.get("shield_hp", 0)))
+	var shield_ratio = clampf(shp / shmax, 0.0, 1.0)
+	if shield_ratio > 0.0:
+		draw_rect(Rect2(-s.health_bar_width / 2.0, s.health_bar_offset.y + s.shield_bar_offset,
+			s.health_bar_width * shield_ratio, s.shield_bar_height), s.shield_bar_color)
 
 # ─── DRAW ────────────────────────────────────────────────
 func _draw() -> void:

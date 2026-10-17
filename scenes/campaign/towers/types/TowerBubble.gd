@@ -20,14 +20,14 @@ func _perform_attack() -> void:
 	if sorted.size() >= 2:
 		var a: Node = sorted[0]
 		var b: Node = sorted[1]
-		_spawn_projectile("bubble_pulse", damage * 0.8, 280.0, a)
-		_spawn_projectile("bubble_pulse", damage * 0.8, 280.0, b, {
+		_spawn_projectile("bubble_pulse", damage * 0.8, projectile_speed, a)
+		_spawn_projectile("bubble_pulse", damage * 0.8, projectile_speed, b, {
 			"on_hit": _bubble_swap,
 			"swap_a": a,
 			"swap_b": b,
 		})
 	else:
-		_spawn_projectile("bubble_pulse", damage * 0.8, 280.0, current_target, {"on_hit": _bubble_pop})
+		_spawn_projectile("bubble_pulse", damage * 0.8, projectile_speed, current_target, {"on_hit": _bubble_pop})
 
 func _bubble_swap(p: Dictionary) -> void:
 	var a = p.get("swap_a")

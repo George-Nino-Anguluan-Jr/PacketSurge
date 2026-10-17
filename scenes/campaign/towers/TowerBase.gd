@@ -21,6 +21,22 @@ var ram_cost: int         = 50
 var tower_color: Color    = Color("#00D4FF")
 var icon_text: String     = "[ ]"
 
+# ─── COMBAT PARAMETERS (data-driven; unique per tower) ──────
+var projectile_speed: float   = 350.0
+var splash_radius: float      = 0.0
+var max_targets: int          = 1
+var sell_ratio: float         = 0.7
+var armor_pierce: bool        = false
+var slow_percent: float       = 0.0
+var slow_duration: float      = 0.0
+var burn_dps: float           = 0.0
+var burn_duration: float      = 0.0
+var chain_count: int          = 0
+var chain_radius: float       = 0.0
+var ramp_per_kill: float      = 0.25
+var ramp_max: int             = 5
+var bonus_per_enemy: float    = 0.15
+
 # ─── STATE ─────────────────────────────────────────────
 var current_target: Node       = null
 var attack_timer: float        = 0.0
@@ -87,6 +103,20 @@ func initialize(data: TowerData, cell: Vector2i, e_layer: Node2D) -> void:
 	tower_color   = data.color
 	icon_text     = data.icon_text
 	style         = data.get("style") if data.has_method("get") and data.get("style") != null else null
+	projectile_speed = data.projectile_speed
+	splash_radius    = data.splash_radius
+	max_targets      = data.max_targets
+	sell_ratio       = data.sell_ratio
+	armor_pierce     = data.armor_pierce
+	slow_percent     = data.slow_percent
+	slow_duration    = data.slow_duration
+	burn_dps         = data.burn_dps
+	burn_duration    = data.burn_duration
+	chain_count      = data.chain_count
+	chain_radius     = data.chain_radius
+	ramp_per_kill    = data.ramp_per_kill
+	ramp_max         = data.ramp_max
+	bonus_per_enemy  = data.bonus_per_enemy
 	grid_cell     = cell
 	enemy_layer   = e_layer
 	current_level = 1
@@ -458,6 +488,7 @@ func _spawn_projectile(p_style: String, p_damage: float, p_speed: float, p_targe
 		"style": p_style,
 		"elapsed_time": 0.0,
 		"total_dist": (p_target.position - spawn_origin).length(),
+		"armor_pierce": armor_pierce,
 	}
 	for k in extra.keys():
 		p[k] = extra[k]
@@ -555,20 +586,28 @@ func _update_pierce_beam(p: Dictionary, delta: float) -> bool:
 		if lateral > half_width + ENEMY_RADIUS:
 			continue
 		if e.has_method("take_damage"):
-			e.take_damage(p["damage"] * falloff, tower_id)
+			e.take_damage(p["damage"] * falloff, tower_id, p.get("armor_pierce", false))
+			_apply_on_hit_effects(e, p["damage"] * falloff)
 		hit_list.append(e)
 		falloff *= p.get("decay", 0.8)
 		var aim = e.get_aim_point() if e.has_method("get_aim_point") else e.position
 		_spawn_impact_explosion(aim, "linear_scan", e)
+		if p.get("max_hits", 0) > 0 and hit_list.size() >= p["max_hits"]:
+			p["falloff"] = falloff
+			return false
 	p["falloff"] = falloff
+	if p.get("max_hits", 0) > 0 and hit_list.size() >= p["max_hits"]:
+		return false
 	return p["traveled"] < p["max_range"]
 
 func _on_projectile_impact(p: Dictionary) -> bool:
 	if is_instance_valid(p["target"]) and p["target"].has_method("take_damage"):
-		p["target"].take_damage(p["damage"], tower_id)
+		p["target"].take_damage(p["damage"], tower_id, p.get("armor_pierce", false))
+		_apply_on_hit_effects(p["target"], p["damage"])
 	_on_style_impact(p)
 	var track: Node = p["target"] if is_instance_valid(p["target"]) else null
 	_spawn_impact_explosion(p["target_last_pos"], p["style"], track)
+	_apply_splash(p)
 	if p["style"] == "chain_lightning" and p.has("chains_left") and p["chains_left"] > 0:
 		var last_pos = p["target_last_pos"]
 		var chained: Array[Node] = []
@@ -608,6 +647,32 @@ func _pop_burst(p: Dictionary) -> void:
 	# DEPRECATED: pop splash is handled by TowerStack._on_style_impact.
 	# Kept as no-op hook to avoid breaking any external p.get("pop") callers.
 	pass
+
+func _apply_on_hit_effects(target: Node, base_damage: float) -> void:
+	# Generic data-driven on-hit effects. Each tower enables the subset
+	# matching its algorithm (slow for linear/burn for insertion/etc).
+	if not is_instance_valid(target) or target.is_dead:
+		return
+	# Burn (insertion sort): needle leaves a burning ember.
+	if burn_dps > 0.0 and burn_duration > 0.0 and target.has_method("apply_dot"):
+		target.apply_dot(burn_dps * burn_duration, burn_duration, tower_id)
+	# Slow (linear scan / bubble): decelerate the target.
+	if slow_percent > 0.0 and slow_duration > 0.0 and target.has_method("apply_slow"):
+		target.apply_slow(slow_percent, slow_duration)
+
+func _apply_splash(p: Dictionary) -> void:
+	# Generic AoE splash around the impact point (stack mortar / bubble pulse).
+	if splash_radius <= 0.0:
+		return
+	var origin: Vector2 = p["target_last_pos"]
+	var dmg: float = p["damage"] * 0.5
+	for e in targets:
+		if not is_instance_valid(e) or e.is_dead or e == p.get("target"):
+			continue
+		if origin.distance_to(e.position) <= splash_radius:
+			e.take_damage(dmg, tower_id)
+			var aim = e.get_aim_point() if e.has_method("get_aim_point") else e.position
+			_spawn_impact_explosion(aim, p.get("style", ""), e)
 
 
 func _on_style_impact(p: Dictionary) -> void:

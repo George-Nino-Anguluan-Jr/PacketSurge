@@ -16,6 +16,34 @@ extends Resource
 @export var attack_speed: float      = 1.0
 @export var attack_range: float      = 150.0
 
+# ── Combat parameters (data-driven; unique per tower) ──────────────
+# Projectile travel speed — matters vs fast enemies (travel time).
+@export var projectile_speed: float  = 350.0
+# AoE splash radius on impact. 0 = single-target only.
+@export var splash_radius: float     = 0.0
+# Max enemies a single shot can hit. 1 = single, higher = multi/pierce.
+@export var max_targets: int         = 1
+# Sell-back fraction of total invested (0.6–0.8 typical).
+@export var sell_ratio: float        = 0.7
+
+# ── Signature effects (each tower uses the ones matching its algorithm) ──
+# Binary search: sniper round ignores enemy armor (cuts the search space).
+@export var armor_pierce: bool       = false
+# Linear search / Bubble: on-hit slow.
+@export var slow_percent: float      = 0.0
+@export var slow_duration: float     = 0.0
+# Insertion sort: on-hit burn damage-over-time.
+@export var burn_dps: float          = 0.0
+@export var burn_duration: float     = 0.0
+# Linked list: chain lightning hops.
+@export var chain_count: int         = 0
+@export var chain_radius: float      = 0.0
+# Selection sort: ramping damage per consecutive kill (already in code, now data).
+@export var ramp_per_kill: float     = 0.25
+@export var ramp_max: int            = 5
+# Counting sort: bonus damage per extra enemy in range.
+@export var bonus_per_enemy: float   = 0.15
+
 # Complexity info for Index
 @export var time_complexity: String  = "O(1)"
 @export var space_complexity: String = "O(n)"

@@ -37,12 +37,13 @@ func _perform_attack() -> void:
 			"draw_pos": spawn_origin,
 			"target": t,
 			"target_last_pos": t.position if is_instance_valid(t) else spawn_origin,
-			"speed": 320.0,
+			"speed": projectile_speed,
 			"damage": damage * 0.4,
 			"style": "radix_digit",
 			"elapsed_time": 0.0,
 			"digit": digits[i],
-			"delay": i * 0.08
+			"delay": i * 0.08,
+			"armor_pierce": armor_pierce,
 		}
 		_spawn_custom_projectile(p)
 	queue_redraw()

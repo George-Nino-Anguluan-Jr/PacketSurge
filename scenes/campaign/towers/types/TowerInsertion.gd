@@ -21,9 +21,7 @@ func _perform_attack() -> void:
 	SoundManager.play_tower_attack(tower_id)
 	_recoil = 1.0
 	_flash_targets.clear()
-	_spawn_projectile("insertion_needle", damage, 350.0, current_target, {"on_hit": _insert_shift})
-	if current_target.has_method("apply_dot"):
-		current_target.apply_dot(damage * 0.3, 3.0, tower_id)
+	_spawn_projectile("insertion_needle", damage, projectile_speed, current_target, {"on_hit": _insert_shift})
 
 func _insert_shift(p: Dictionary) -> void:
 	var target = p["target"]

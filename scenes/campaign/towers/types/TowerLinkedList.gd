@@ -28,14 +28,14 @@ func _perform_attack() -> void:
 		"draw_pos": spawn_origin,
 		"target": current_target,
 		"target_last_pos": current_target.position,
-		"speed": 350.0,
+		"speed": projectile_speed,
 		"damage": damage,
 		"style": "chain_lightning",
 		"elapsed_time": 0.0,
 		"total_dist": (current_target.position - spawn_origin).length(),
-		"chains_left": 3,
+		"chains_left": chain_count,
 		"chained_targets": [],
-		"chain_radius": 60.0,
+		"chain_radius": chain_radius,
 		"traverse_path": true,
 	}
 	_spawn_custom_projectile(p)

@@ -13,13 +13,27 @@ func _init_type_state() -> void:
 	type_data["segment_hp"] = [seg_hp, seg_hp, seg_hp]
 	type_data["segment_max"] = [seg_hp, seg_hp, seg_hp]
 
-func take_damage(amount: float, source: String = "") -> void:
+func take_damage(amount: float, source: String = "", armor_pierce: bool = false) -> void:
 	if is_dead:
 		return
 
-	var final_damage = _modify_damage(amount) * _get_source_damage_multiplier(source)
-	if is_dead:
+	# Shield absorbs the first N hits (data-driven; 0 = no shield).
+	if type_data.get("shield_max_hits", 0) > 0 and type_data.get("shield_hp", 0) > 0:
+		type_data["shield_hp"] = float(type_data["shield_hp"]) - 1.0
+		_flash_timer = 0.15
+		queue_redraw()
 		return
+
+	var mult = _get_source_damage_multiplier(source)
+	var final_damage = _modify_damage(amount) * mult
+
+	# Armor: flat reduction first, then percent (skipped by armor_pierce towers).
+	if not armor_pierce:
+		final_damage = maxf(0.0, final_damage - float(type_data.get("armor_flat", 0.0)))
+		final_damage *= (1.0 - clampf(float(type_data.get("armor_percent", 0.0)), 0.0, 0.95))
+
+	if source != "" and mult != 1.0:
+		_show_floating_multiplier(mult)
 
 	# Radix uses segment-based HP instead of direct current_health
 	var seg = type_data["segment"]

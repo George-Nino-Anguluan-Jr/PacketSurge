@@ -21,14 +21,14 @@ func _perform_attack() -> void:
 	SoundManager.play_tower_attack(tower_id)
 	_recoil = 1.0
 	_flash_targets.clear()
-	var index_count: int = clamp(1 + current_level, 1, 5)
+	var index_count: int = clamp(1 + current_level, 1, max_targets)
 	var hit_list: Array = []
 	var nearest = _get_nearest(index_count)
 	for e in nearest:
 		if is_instance_valid(e) and not hit_list.has(e):
 			hit_list.append(e)
 	for i in range(hit_list.size()):
-		_spawn_projectile("index_bolt", damage * 0.4, 350.0, hit_list[i], {"index": i})
+		_spawn_projectile("index_bolt", damage * 0.4, projectile_speed, hit_list[i], {"index": i})
 
 func _get_upgrade_stats(level: int) -> Dictionary:
 	return {"damage": 1.3, "speed": 1.15, "range": 1.1}
@@ -78,7 +78,7 @@ func _draw_turret_assembly(color: Color) -> void:
 	# Turret body — simple rectangular housing
 	_draw_3d_box(Vector2(0, -1.0), Vector2(22, 4.0), 6.0, Color("#0F1E32"), color, 1.2)
 	# 5 indexed barrels — each a clean cylinder with index digit
-	var barrel_count = clamp(1 + current_level, 1, 5)
+	var barrel_count = clamp(1 + current_level, 1, max_targets)
 	var barrel_spacing = 4.5
 	var total_barrels_w = (barrel_count - 1) * barrel_spacing
 	var start_x = -total_barrels_w / 2.0

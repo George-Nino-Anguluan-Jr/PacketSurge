@@ -32,9 +32,12 @@ func _process(_delta: float) -> void:
 	# the scale factor never stays locked to the wrong aspect ratio.
 	if _settle_frames > 0:
 		_settle_frames -= 1
-		update_content_scale()
+var _updating_scale := false
 
 func update_content_scale() -> void:
+	if _updating_scale:
+		return
+	_updating_scale = true
 	var size := get_screen_size()
 
 	if is_mobile() or is_tablet() or OS.has_feature("web"):
@@ -52,9 +55,7 @@ func update_content_scale() -> void:
 		var target := minf(size.x / MOBILE_WIDTH, size.y / MOBILE_HEIGHT) / stretch_scale
 		if not is_equal_approx(get_window().content_scale_factor, target):
 			get_window().content_scale_factor = target
-	else:
-		# Desktop uses Godot's built-in stretch mode — no manual content scale needed
-		return
+	_updating_scale = false
 
 # ─── SCREEN SIZE ───────────────────────────────────────
 func get_screen_size() -> Vector2:

@@ -32,14 +32,14 @@ func _perform_attack() -> void:
 		_stack_target = current_target
 	if _stack_charge >= STACK_CAPACITY:
 		_stack_charge = 0
-		_spawn_projectile("stack_mortar", damage * 3.0, 280.0, current_target, {"pop": true})
+		_spawn_projectile("stack_mortar", damage * 3.0, projectile_speed, current_target, {"pop": true})
 	else:
-		_spawn_projectile("stack_mortar", damage * 0.7, 300.0, current_target)
+		_spawn_projectile("stack_mortar", damage * 0.7, projectile_speed, current_target)
 
 func _on_style_impact(p: Dictionary) -> void:
 	if p.get("pop", false):
 		var origin = p["target_last_pos"]
-		var radius = 80.0
+		var radius = splash_radius
 		for e in targets:
 			if e == p["target"] or not is_instance_valid(e) or e.is_dead:
 				continue

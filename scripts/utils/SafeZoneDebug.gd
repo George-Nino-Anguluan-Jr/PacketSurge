@@ -17,9 +17,10 @@ func _ready() -> void:
 	layer.layer = 100
 	var overlay := SafeZoneOverlay.new()
 	overlay.set_anchors_preset(Control.PRESET_FULL_RECT)
+	overlay.visible = false
 	overlay.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	layer.add_child(overlay)
-	get_tree().root.add_child(layer)
+	get_tree().root.add_child.call_deferred(layer)
 	_overlay = overlay
 
 func _input(event: InputEvent) -> void:
@@ -34,6 +35,8 @@ class SafeZoneOverlay extends Control:
 		if not visible:
 			return
 		var vp := get_viewport_rect()
+		if vp.size.x <= 0 or vp.size.y <= 0:
+			return
 		# 16:9 core — the width visible on the narrowest supported aspect.
 		var safe_w := minf(vp.size.x, vp.size.y * 16.0 / 9.0)
 		var safe_x := (vp.size.x - safe_w) / 2.0

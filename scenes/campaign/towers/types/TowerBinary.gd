@@ -26,12 +26,13 @@ func _perform_attack() -> void:
 		"draw_pos": spawn_origin,
 		"target": current_target,
 		"target_last_pos": current_target.position,
-		"speed": 450.0,
+		"speed": projectile_speed,
 		"damage": damage * 2.2,
 		"style": "binary_sniper",
 		"elapsed_time": 0.0,
 		"total_dist": (current_target.position - spawn_origin).length(),
 		"on_hit": _binary_split,
+		"armor_pierce": armor_pierce,
 	}
 	_spawn_custom_projectile(p)
 	queue_redraw()
@@ -47,7 +48,7 @@ func _binary_split(p: Dictionary) -> void:
 		if not is_instance_valid(e) or e.is_dead or e == p["target"]:
 			continue
 		if i < mid_idx or i > mid_idx:
-			e.take_damage(split_dmg, tower_id)
+			e.take_damage(split_dmg, tower_id, p.get("armor_pierce", false))
 			var aim = e.get_aim_point() if e.has_method("get_aim_point") else e.position
 			_spawn_impact_explosion(aim, "binary_sniper", e)
 

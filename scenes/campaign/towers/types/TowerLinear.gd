@@ -30,7 +30,7 @@ func _perform_attack() -> void:
 		"start_pos": spawn_origin,
 		"draw_pos": spawn_origin,
 		"beam_dir": dir,
-		"speed": 520.0,
+		"speed": projectile_speed,
 		"damage": damage * 0.7,
 		"style": "linear_beam",
 		"elapsed_time": 0.0,
@@ -39,6 +39,8 @@ func _perform_attack() -> void:
 		"hit_list": [],
 		"falloff": 1.0,
 		"decay": 0.8,
+		"armor_pierce": armor_pierce,
+		"max_hits": max_targets,
 	}
 	_spawn_custom_projectile(p)
 	queue_redraw()
